@@ -12,6 +12,7 @@ namespace Engine
             using (Window window = new(800, 600, "Display"))
             {
                 window.Run();
+                window.Focus();
             }
         }
     }
