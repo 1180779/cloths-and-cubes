@@ -113,12 +113,12 @@ namespace Engine.Physics
         public static float[] ConcatAndNormalize(params Vector3[] vectors)
         {
             List<float> result = new List<float>();
-            foreach(var v in vectors)
+            foreach (var v in vectors)
             {
                 v.Normalize();
                 result.Add(v.x);
                 result.Add(v.y);
-                result.Add(v.z);
+                result.Add(v.z);               
             }
             return [.. result];
         }
@@ -139,7 +139,7 @@ namespace Engine.Physics
             Real x = (Real)random.NextDouble() * (max.x - min.x) + min.x;
             Real y = (Real)random.NextDouble() * (max.y - min.y) + min.y;
             Real z = (Real)random.NextDouble() * (max.z - min.z) + min.z;
-
+            
             return new Vector3(x, y, z);
         }
     }
