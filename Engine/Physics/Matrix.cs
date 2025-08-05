@@ -82,6 +82,19 @@ namespace Engine.Physics
             result.setTranspose(this);
             return result;
         }
+        void setOrientation(Quaternion q)
+        {
+            data[0] = 1 - (2 * q.j * q.j + 2 * q.k * q.k);
+            data[1] = 2 * q.i * q.j + 2 * q.k * q.r;
+            data[2] = 2 * q.i * q.k - 2 * q.j * q.r;
+            data[3] = 2 * q.i * q.j - 2 * q.k * q.r;
+            data[4] = 1 - (2 * q.i * q.i + 2 * q.k * q.k);
+            data[5] = 2 * q.j * q.k + 2 * q.i * q.r;
+            data[6] = 2 * q.i * q.k + 2 * q.j * q.r;
+            data[7] = 2 * q.j * q.k - 2 * q.i * q.r;
+            data[8] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
+        }
+        
 
     }
     public class Matrix4
@@ -186,6 +199,146 @@ namespace Engine.Physics
             + m.data[0] * m.data[9] * m.data[7]
             + m.data[4] * m.data[1] * m.data[11]
             - m.data[0] * m.data[5] * m.data[11]) * det;
+        }
+        void setOrientationAndPos(Quaternion q, Vector3 pos)
+        {
+            data[0] = 1 - (2 * q.j * q.j + 2 * q.k * q.k);
+            data[1] = 2 * q.i * q.j + 2 * q.k * q.r;
+            data[2] = 2 * q.i * q.k - 2 * q.j * q.r;
+            data[3] = pos.x;
+            data[4] = 2 * q.i * q.j - 2 * q.k * q.r;
+            data[5] = 1 - (2 * q.i * q.i + 2 * q.k * q.k);
+            data[6] = 2 * q.j * q.k + 2 * q.i * q.r;
+            data[7] = pos.y;
+            data[8] = 2 * q.i * q.k + 2 * q.j * q.r;
+            data[9] = 2 * q.j * q.k - 2 * q.i * q.r;
+            data[10] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
+            data[11] = pos.z;
+        }
+        Vector3 transformInverse(Vector3 vector)
+        {
+            Vector3 tmp = vector;
+            tmp.x -= data[3];
+            tmp.y -= data[7];
+            tmp.z -= data[11];
+            return new Vector3(
+            tmp.x * data[0] +
+            tmp.y * data[4] +
+            tmp.z * data[8],
+            tmp.x * data[1] +
+            tmp.y * data[5] +
+            tmp.z * data[9],
+            tmp.x * data[2] +
+            tmp.y * data[6] +
+            tmp.z * data[10]
+            );
+        }
+        Vector3 transformDirection(Vector3 vector)
+        {
+            return new Vector3(
+            vector.x * data[0] +
+            vector.y * data[1] +
+            vector.z * data[2],
+            vector.x * data[4] +
+            vector.y * data[5] +
+            vector.z * data[6],
+            vector.x * data[8] +
+            vector.y * data[9] +
+            vector.z * data[10]
+            );
+        }
+
+        Vector3 transformInverseDirection(Vector3 vector)
+        {
+            return new Vector3(
+            vector.x * data[0] +
+            vector.y * data[4] +
+            vector.z * data[8],
+            vector.x * data[1] +
+            vector.y * data[5] +
+            vector.z * data[9],
+            vector.x * data[2] +
+            vector.y * data[6] +
+            vector.z * data[10]
+            );
+        }
+    }
+    class Quaternion
+    {
+        public float i, j, k, r;
+        public float[] data;
+        Quaternion(float r, float i, float j, float k)
+        {
+            r = r;
+            i = i;
+            j = j;
+            k = k;
+
+            data = [r, i, j, k];
+        }
+        Quaternion()
+        {
+            r = 1;
+            i = 0;
+            j = 0;
+            k = 0;
+            data = [1f, 0f, 0f, 0f];
+        }
+        void normalise()
+        {
+            float d = r * r + i * i + j * j + k * k;
+
+            // Check for zero length quaternion, and use the no-rotation
+            // quaternion in that case.
+            if (d < float.Epsilon)
+            {
+                r = 1;
+                return;
+            }
+
+            d = (1f) / MathF.Sqrt(d);
+            r *= d;
+            i *= d;
+            j *= d;
+            k *= d;
+        }
+        public void operator *=(Quaternion multiplier) =>
+        (r, i, j, k) =
+        (
+
+            r * multiplier.r - i * multiplier.i -
+                j * multiplier.j - k * multiplier.k,
+             r * multiplier.i + i * multiplier.r +
+                j * multiplier.k - k * multiplier.j,
+            r * multiplier.j + j * multiplier.r +
+                k * multiplier.i - i * multiplier.k,
+            r * multiplier.k + k * multiplier.r +
+                i * multiplier.j - j * multiplier.i
+        );
+        void addScaledVector(Vector3 vector, float scale)
+        {
+            Quaternion q = new Quaternion(0,
+                vector.x * scale,
+                vector.y * scale,
+                vector.z * scale);
+            q *= this;
+            r += q.r * 0.5f;
+            i += q.i * 0.5f;
+            j += q.j * 0.5f;
+            k += q.k * 0.5f;
+            data = [r, i, j, k];
+        }
+        void rotateByVector(Vector3 vector)
+        {
+            Quaternion q = new Quaternion(0, vector.x, vector.y,
+            vector.z);
+            Quaternion p = this;
+            p *= q;
+            r = p.r;
+            j = p.j;
+            k = p.k;
+            i = p.i;
+            data = [r, i, j, k];
         }
     }
     
