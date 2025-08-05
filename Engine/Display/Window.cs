@@ -3,12 +3,19 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
 using Engine.Physics;
+using OpenTK.Mathematics;
+using System.Reflection;
+using Vector3 = Engine.Physics.Vector3;
+using vec3 = OpenTK.Mathematics.Vector3;
+
 
 
 namespace Engine.Display
 {
+
     public class Window : GameWindow
     {
+
         int VertexBufferObject;
         Shader shader;
         int VertexArrayObject;
@@ -16,6 +23,15 @@ namespace Engine.Display
         Random r;
         Real secCounter = (Real)0;
         ParticleForceRegistry particleForceRegistry = new ParticleForceRegistry();
+        private Matrix4 _view;
+        private Matrix4 _projection;
+        private OpenTK.Mathematics.Vector3 cameraPos = new OpenTK.Mathematics.Vector3(0.0f, 0.0f, 3.0f);
+        private OpenTK.Mathematics.Vector3 front = new(0, 0, -1.0f);
+        private OpenTK.Mathematics.Vector3 cameraDirection = new(0, 0, 0);        
+        private OpenTK.Mathematics.Vector3 up = OpenTK.Mathematics.Vector3.UnitY;
+        private OpenTK.Mathematics.Vector3 cameraRight;
+        private OpenTK.Mathematics.Vector3 cameraUp;
+        private float speed = 1.5f;
 
         // TODO: REMOVE
         Engine.Physics.Particle[] particles;
@@ -37,17 +53,59 @@ namespace Engine.Display
         {
             Size = (width, height);
             Title = title;
+
+            cameraDirection = OpenTK.Mathematics.Vector3.Normalize(cameraPos + front);
+            cameraRight = OpenTK.Mathematics.Vector3.Normalize(OpenTK.Mathematics.Vector3.Cross(up, cameraDirection));
+            cameraUp = OpenTK.Mathematics.Vector3.Cross(cameraDirection, cameraRight);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
 
-            if (KeyboardState.IsKeyDown(Keys.Escape))
+            
+            if (!IsFocused) // check to see if the window is focused
+            {
+                return;
+            }
+
+            KeyboardState input = KeyboardState;
+
+            if (input.IsKeyDown(Keys.Escape))
             {
                 Close();
             }
+            if (input.IsKeyDown(Keys.W))
+            {
+                cameraPos += front * speed  * (float)e.Time; //Forward 
+            }
+
+            if (input.IsKeyDown(Keys.S))
+            {
+                cameraPos -= front * speed * (float)e.Time; //Backwards
+            }
+
+            if (input.IsKeyDown(Keys.A))
+            {
+                cameraPos -= vec3.Normalize(vec3.Cross(front, up)) * speed * (float)e.Time; //Left
+            }
+
+            if (input.IsKeyDown(Keys.D))
+            {
+                cameraPos += vec3.Normalize(vec3.Cross(front, up)) * speed * (float)e.Time; //Right
+            }
+
+            if (input.IsKeyDown(Keys.Space))
+            {
+                cameraPos += up * speed * (float)e.Time; //Up 
+            }
+
+            if (input.IsKeyDown(Keys.LeftShift))
+            {
+                cameraPos -= up * speed * (float)e.Time; //Down
+            }
         }
+        
 
         protected override void OnLoad()
         {
@@ -55,11 +113,22 @@ namespace Engine.Display
 
             GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
 
+            GL.Enable(EnableCap.DepthTest);
+
             VertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
 
             VertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(VertexArrayObject);
+
+            var transform = Matrix4.Identity;
+
+            transform = transform * Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(20f));
+
+            transform = transform * Matrix4.CreateScale(1.1f);
+
+            transform = transform * Matrix4.CreateTranslation(0.1f, 0.1f, 0.0f);
+
 
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
@@ -74,7 +143,7 @@ namespace Engine.Display
 
             // TODO: REMOVE
             r = new Random();
-            positions = [new Engine.Physics.Vector3(0.5f, 0.5f, 0.0f), new Engine.Physics.Vector3(0.5f, -0.5f, 0.0f), new Engine.Physics.Vector3(-0.5f, -0.5f, 0.0f), new Vector3(-0.5f, 0.5f)];
+            positions = [new Engine.Physics.Vector3(0.5f, 0.5f, 0.0f), new Engine.Physics.Vector3(0.5f, -0.5f, 0.0f), new Engine.Physics.Vector3(-0.5f, -0.5f, 0.0f), new Engine.Physics.Vector3(-0.5f, 0.5f)];
             Real[] dampingfactors = [0.99f, 0.99f, 0.99f, 0.99f];
             particles = [new Particle(), new Particle(), new Particle(), new Particle()];
             
@@ -96,7 +165,14 @@ namespace Engine.Display
             shader = new(vertexPath, fragmentPath);
             shader.Use();
 
-            
+            _view = Matrix4.LookAt(cameraPos, cameraPos + front, up);
+
+            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Size.X / (float)Size.Y, 0.1f, 100.0f);
+
+            shader.SetMatrix4("view", _view);
+            shader.SetMatrix4("projection", _projection);
+
+
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -125,9 +201,18 @@ namespace Engine.Display
             vertices = Engine.Physics.Vector3.ConcatAndNormalize(positions);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             shader.Use();
+
+            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(4.0 * secCounter));
+            _view = Matrix4.LookAt(cameraPos, cameraPos + front, up);
+            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Size.X / (float)Size.Y, 0.1f, 100.0f);
+
+            shader.SetMatrix4("model", model);
+            shader.SetMatrix4("view", _view);
+            shader.SetMatrix4("projection", _projection);
+
             GL.BindVertexArray(VertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
             //GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
