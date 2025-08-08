@@ -3,7 +3,7 @@ namespace Engine.Physics
     public class Matrix3
     {
 
-        float[] data;
+        public float[] data;
         Matrix3()
         {
             data = new float[12];
@@ -31,7 +31,7 @@ namespace Engine.Physics
             ]
             );
         }
-        void setInverse(Matrix3 m)
+        public void setInverse(Matrix3 m)
         {
             float t4 = m.data[0] * m.data[4];
             float t6 = m.data[0] * m.data[5];
@@ -94,13 +94,13 @@ namespace Engine.Physics
             data[7] = 2 * q.j * q.k - 2 * q.i * q.r;
             data[8] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
         }
-        
+
 
     }
     public class Matrix4
     {
         //assumes 3x4 with extra 0,0,0,1
-        float[] data;
+        public float[] data;
         Matrix4()
         {
             data = new float[12];
@@ -262,6 +262,10 @@ namespace Engine.Physics
             vector.z * data[10]
             );
         }
+        public Vector3 transform(Vector3 vector)
+        {
+            return this * vector;
+        }
     }
     class Quaternion
     {
@@ -341,5 +345,5 @@ namespace Engine.Physics
             data = [r, i, j, k];
         }
     }
-    
+
 }

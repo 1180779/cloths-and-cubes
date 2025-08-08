@@ -9,14 +9,14 @@ namespace Engine.Physics
 {
     public class Vector3
     {
-        public static Vector3 GRAVITY = new  Vector3(0, (Real)(-9.81), 0);
-        public static Vector3 HIGH_GRAVITY = new  Vector3(0, (Real)(-19.62), 0);
-        public static Vector3 UP = new  Vector3(0, 1, 0);
-        public static Vector3 RIGHT = new  Vector3(1, 0, 0);
-        public static Vector3 OUT_OF_SCREEN = new  Vector3(0, 0, 1);
-        public static Vector3 X = new  Vector3(0, 1, 0);
-        public static Vector3 Y = new  Vector3(1, 0, 0);
-        public static Vector3 Z = new  Vector3(0, 0, 1);
+        public static Vector3 GRAVITY = new Vector3(0, (Real)(-9.81), 0);
+        public static Vector3 HIGH_GRAVITY = new Vector3(0, (Real)(-19.62), 0);
+        public static Vector3 UP = new Vector3(0, 1, 0);
+        public static Vector3 RIGHT = new Vector3(1, 0, 0);
+        public static Vector3 OUT_OF_SCREEN = new Vector3(0, 0, 1);
+        public static Vector3 X = new Vector3(0, 1, 0);
+        public static Vector3 Y = new Vector3(1, 0, 0);
+        public static Vector3 Z = new Vector3(0, 0, 1);
 
 
 
@@ -45,26 +45,26 @@ namespace Engine.Physics
 
         public Real Magnitude()
         {
-            return Real.Sqrt(x*x + y*y + z*z);
+            return Real.Sqrt(x * x + y * y + z * z);
         }
 
         public void Normalize()
         {
             var mag = Magnitude();
-            if(mag == 0)  return;
+            if (mag == 0) return;
             x /= mag;
             y /= mag;
             z /= mag;
         }
 
-        public static Vector3 operator*(Vector3 v, Real scalar)
+        public static Vector3 operator *(Vector3 v, Real scalar)
         {
-            return new Vector3(v.x*scalar, v.y*scalar, v.z*scalar);
+            return new Vector3(v.x * scalar, v.y * scalar, v.z * scalar);
         }
 
-        public static Real operator*(Vector3 v, Vector3 u)
+        public static Real operator *(Vector3 v, Vector3 u)
         {
-            return v.x*u.x + v.y * u.y + v.z*u.z;
+            return v.x * u.x + v.y * u.y + v.z * u.z;
         }
 
 
@@ -75,7 +75,7 @@ namespace Engine.Physics
 
         public static Vector3 ComponentProduct(Vector3 v1, Vector3 v2)
         {
-            return new Vector3(v1.x*v2.x, v1.y * v2.y, v1.z*v2.z);
+            return new Vector3(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z);
         }
 
         public static Vector3 CrossProduct(Vector3 v, Vector3 u)
@@ -95,9 +95,9 @@ namespace Engine.Physics
             z = temp.z;
         }
 
-        public static Vector3 operator+(Vector3 v, Vector3 u) => new Vector3(v.x + u.x, v.y + u.y, v.z + u.z);
-        public static Vector3 operator-(Vector3 v, Vector3 u) => new Vector3(v.x - u.x, v.y - u.y, v.z - u.z);
-        public static Vector3 operator%(Vector3 v, Vector3 u) => CrossProduct(v, u);
+        public static Vector3 operator +(Vector3 v, Vector3 u) => new Vector3(v.x + u.x, v.y + u.y, v.z + u.z);
+        public static Vector3 operator -(Vector3 v, Vector3 u) => new Vector3(v.x - u.x, v.y - u.y, v.z - u.z);
+        public static Vector3 operator %(Vector3 v, Vector3 u) => CrossProduct(v, u);
 
         public static (Vector3 v1, Vector3 v2, Vector3? v3) GetOrthogonalBasis(Vector3 u, Vector3 v)
         {
@@ -118,7 +118,7 @@ namespace Engine.Physics
                 v.Normalize();
                 result.Add(v.x);
                 result.Add(v.y);
-                result.Add(v.z);               
+                result.Add(v.z);
             }
             return [.. result];
         }
@@ -139,8 +139,13 @@ namespace Engine.Physics
             Real x = (Real)random.NextDouble() * (max.x - min.x) + min.x;
             Real y = (Real)random.NextDouble() * (max.y - min.y) + min.y;
             Real z = (Real)random.NextDouble() * (max.z - min.z) + min.z;
-            
+
             return new Vector3(x, y, z);
         }
+        public void clear()
+        {
+            x = y = z = 0;
+        }
+
     }
 }
