@@ -1,125 +1,89 @@
-﻿using Engine.Physics;
+using Engine.Display.Inputs;
+using Engine.Physics;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 using Vector3 = OpenTK.Mathematics.Vector3;
 using Matrix4 = OpenTK.Mathematics.Matrix4;
-using vec3 = OpenTK.Mathematics.Vector3;
-
-
 
 namespace Engine.Display
 {
 
     public class Window : GameWindow
     {
-
-        int VertexBufferObject;
+        public readonly IInputProvider InputProvider;
+        
+        int vertexBufferObject;
         Shader shader;
-        int VertexArrayObject;
-        int ElementBufferObject;
+        int vertexArrayObject;
+        int elementBufferObject;
         Random r;
         Real secCounter = 0;
-        ParticleForceRegistry particleForceRegistry = new ParticleForceRegistry();
-        private Matrix4 _view;
-        private Matrix4 _projection;
-        private Vector3 cameraPos = new(0.0f, 0.0f, 3.0f);
-        private Vector3 front = new(0, 0, -1.0f);
-        private Vector3 cameraDirection = new(0, 0, 0);        
-        private Vector3 up = Vector3.UnitY;
-        private Vector3 cameraRight;
-        private Vector3 cameraUp;
-        private float speed = 1.5f;
+        ParticleForceRegistry particleForceRegistry = new();
+        private Camera _camera;
 
         // TODO: REMOVE
-        Particle[] particles;
-        Physics.Vector3[] positions;
+        Particle[] particles = [];
+        Physics.Vector3[] positions = [];
 
 
-        float[] vertices = {
-             0.5f,  0.5f, 0.0f,  // top right
-             0.5f, -0.5f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f   // top left
+        float[] vertices =
+        {
+            0.5f, 0.5f, 0.0f, // top right
+            0.5f, -0.5f, 0.0f, // bottom right
+            -0.5f, -0.5f, 0.0f, // bottom left
+            -0.5f, 0.5f, 0.0f // top left
         };
 
-        uint[] indices = {  // note that we start from 0!
-            0, 1, 3,   // first triangle
-            1, 2, 3    // second triangle
+        uint[] indices =
+        {
+            // note that we start from 0!
+            0, 1, 3, // first triangle
+            1, 2, 3 // second triangle
         };
-        public Window(int width, int height, string title) : base(GameWindowSettings.Default, new NativeWindowSettings())
+
+        public Window(int width, int height, string title) : base(GameWindowSettings.Default,
+            new NativeWindowSettings())
         {
             Size = (width, height);
             Title = title;
-
-            cameraDirection = Vector3.Normalize(cameraPos + front);
-            cameraRight = Vector3.Normalize(Vector3.Cross(up, cameraDirection));
-            cameraUp = Vector3.Cross(cameraDirection, cameraRight);
+            InputProvider = new OpenTkInputProvider(this);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-
             
             if (!IsFocused) // check to see if the window is focused
             {
                 return;
             }
 
-            KeyboardState input = KeyboardState;
-
-            if (input.IsKeyDown(Keys.Escape))
+            if (InputProvider.IsKeyDown(InputKey.Escape))
             {
                 Close();
             }
-            if (input.IsKeyDown(Keys.W))
-            {
-                cameraPos += front * speed  * (float)e.Time; //Forward 
-            }
-
-            if (input.IsKeyDown(Keys.S))
-            {
-                cameraPos -= front * speed * (float)e.Time; //Backwards
-            }
-
-            if (input.IsKeyDown(Keys.A))
-            {
-                cameraPos -= vec3.Normalize(vec3.Cross(front, up)) * speed * (float)e.Time; //Left
-            }
-
-            if (input.IsKeyDown(Keys.D))
-            {
-                cameraPos += vec3.Normalize(vec3.Cross(front, up)) * speed * (float)e.Time; //Right
-            }
-
-            if (input.IsKeyDown(Keys.Space))
-            {
-                cameraPos += up * speed * (float)e.Time; //Up 
-            }
-
-            if (input.IsKeyDown(Keys.LeftShift))
-            {
-                cameraPos -= up * speed * (float)e.Time; //Down
-            }
+            
+            _camera.ProcessInput(InputProvider, (float)e.Time);
+            
+            InputProvider.UpdateMousePosition();
         }
-        
+
 
         protected override void OnLoad()
         {
             base.OnLoad();
-
+            
             GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
 
             GL.Enable(EnableCap.DepthTest);
 
-            VertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
+            vertexBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferObject);
 
-            VertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(VertexArrayObject);
+            vertexArrayObject = GL.GenVertexArray();
+            GL.BindVertexArray(vertexArrayObject);
 
             var transform = Matrix4.Identity;
 
@@ -133,21 +97,29 @@ namespace Engine.Display
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
-            ElementBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferObject);
+            elementBufferObject = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, elementBufferObject);
             // TODO: CHANGE BACK TO STATIC DRAW
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices,
+                BufferUsageHint.DynamicDraw);
 
             // TODO: CHANGE BACK TO STATIC DRAW
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices,
+                BufferUsageHint.DynamicDraw);
 
             // TODO: REMOVE
             r = new Random();
-            positions = [new Physics.Vector3(0.5f, 0.5f, 0.0f), new Physics.Vector3(0.5f, -0.5f, 0.0f), new Physics.Vector3(-0.5f, -0.5f, 0.0f), new Physics.Vector3(-0.5f, 0.5f, 0.0f)];
+            positions =
+            [
+                new Physics.Vector3(0.5f, 0.5f), new Physics.Vector3(0.5f, -0.5f),
+                new Physics.Vector3(0.5f, 0.5f, 0.0f), new Physics.Vector3(0.5f, -0.5f, 0.0f),
+                new Physics.Vector3(-0.5f, -0.5f, 0.0f), new Physics.Vector3(-0.5f, 0.5f, 0.0f)
+            ];
             Real[] dampingfactors = [0.99f, 0.99f, 0.99f, 0.99f];
             particles = [new Particle(), new Particle(), new Particle(), new Particle()];
-            
-            for(int i = 0; i<particles.Length; i++) { 
+
+            for (int i = 0; i < particles.Length; i++)
+            {
                 particles[i].position = positions[i];
                 particles[i].damping = dampingfactors[i];
             }
@@ -156,23 +128,14 @@ namespace Engine.Display
             ParticleAnchoredSpring pas2 = new(positions[2], 1, 0.5f);
             particleForceRegistry.Add(particles[0], pas1);
             particleForceRegistry.Add(particles[1], pas2);
-
-
-
+            
             string fragmentPath = Shader.LoadShader("shader.frag");
             string vertexPath = Shader.LoadShader("shader.vert");
 
             shader = new(vertexPath, fragmentPath);
             shader.Use();
-
-            _view = Matrix4.LookAt(cameraPos, cameraPos + front, up);
-
-            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Size.X / (float)Size.Y, 0.1f, 100.0f);
-
-            shader.SetMatrix4("view", _view);
-            shader.SetMatrix4("projection", _projection);
-
-
+            _camera = new Camera(Vector3.UnitZ * 3, Size.X / (float)Size.Y);
+            InputProvider.SetCursorState(Inputs.CursorState.Grabbed);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -189,7 +152,7 @@ namespace Engine.Display
             //    Console.WriteLine($"[DEBUG]: Applying force: {force}");
             //}
             particleForceRegistry.UpdateForces((Real)args.Time);
-            for (int i = 0; i< particles.Length; i++)
+            for (int i = 0; i < particles.Length; i++)
             {
                
                 particles[i].Integrate((Real)args.Time);
@@ -198,22 +161,22 @@ namespace Engine.Display
                 positions[i] = particles[i].position;
                 //Console.WriteLine(particles[i].position);
             }
+
             vertices = Physics.Vector3.ConcatAndNormalize(positions);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices,
+                BufferUsageHint.DynamicDraw);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             shader.Use();
 
             var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(4.0 * secCounter));
-            _view = Matrix4.LookAt(cameraPos, cameraPos + front, up);
-            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Size.X / (float)Size.Y, 0.1f, 100.0f);
 
             shader.SetMatrix4("model", model);
-            shader.SetMatrix4("view", _view);
-            shader.SetMatrix4("projection", _projection);
+            shader.SetMatrix4("view", _camera.GetViewMatrix());
+            shader.SetMatrix4("projection", _camera.GetProjectionMatrix());
 
-            GL.BindVertexArray(VertexArrayObject);
+            GL.BindVertexArray(vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
             //GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
@@ -235,12 +198,31 @@ namespace Engine.Display
             GL.UseProgram(0);
 
             // Delete all the resources.
-            GL.DeleteBuffer(VertexBufferObject);
-            GL.DeleteVertexArray(VertexArrayObject);
+            GL.DeleteBuffer(vertexBufferObject);
+            GL.DeleteVertexArray(vertexArrayObject);
 
             GL.DeleteProgram(shader.Handle);
 
             base.OnUnload();
+        }
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
+            _camera.Fov -= e.OffsetY;
+        }
+
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            base.OnResize(e);
+
+            GL.Viewport(0, 0, Size.X, Size.Y);
+            
+            if (_camera != null)
+            {
+                _camera.AspectRatio = Size.X / (float)Size.Y;
+            }
         }
     }
 }
