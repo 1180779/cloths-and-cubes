@@ -306,19 +306,18 @@ namespace Engine.Physics
             j *= d;
             k *= d;
         }
-        public void operator *=(Quaternion multiplier) =>
-        (r, i, j, k) =
-        (
-
-            r * multiplier.r - i * multiplier.i -
-                j * multiplier.j - k * multiplier.k,
-             r * multiplier.i + i * multiplier.r +
-                j * multiplier.k - k * multiplier.j,
-            r * multiplier.j + j * multiplier.r +
-                k * multiplier.i - i * multiplier.k,
-            r * multiplier.k + k * multiplier.r +
-                i * multiplier.j - j * multiplier.i
-        );
+        public static Quaternion operator *(Quaternion q, Quaternion multiplier) =>
+        new()
+        {
+            r = q.r * multiplier.r - q.i * multiplier.i -
+                q.j * multiplier.j - q.k * multiplier.k,
+            i = q.r * multiplier.i + q.i * multiplier.r +
+                q.j * multiplier.k - q.k * multiplier.j,
+            j = q.r * multiplier.j + q.j * multiplier.r +
+                q.k * multiplier.i - q.i * multiplier.k,
+            k = q.r * multiplier.k + q.k * multiplier.r +
+                q.i * multiplier.j - q.j * multiplier.i,
+        };
         void addScaledVector(Vector3 vector, float scale)
         {
             Quaternion q = new Quaternion(0,

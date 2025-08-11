@@ -1,11 +1,11 @@
-﻿using OpenTK.Windowing.Common;
+﻿using Engine.Physics;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using OpenTK.Graphics.OpenGL4;
-using Engine.Physics;
-using OpenTK.Mathematics;
-using System.Reflection;
-using Vector3 = Engine.Physics.Vector3;
+using Vector3 = OpenTK.Mathematics.Vector3;
+using Matrix4 = OpenTK.Mathematics.Matrix4;
 using vec3 = OpenTK.Mathematics.Vector3;
 
 
@@ -21,21 +21,21 @@ namespace Engine.Display
         int VertexArrayObject;
         int ElementBufferObject;
         Random r;
-        Real secCounter = (Real)0;
+        Real secCounter = 0;
         ParticleForceRegistry particleForceRegistry = new ParticleForceRegistry();
         private Matrix4 _view;
         private Matrix4 _projection;
-        private OpenTK.Mathematics.Vector3 cameraPos = new OpenTK.Mathematics.Vector3(0.0f, 0.0f, 3.0f);
-        private OpenTK.Mathematics.Vector3 front = new(0, 0, -1.0f);
-        private OpenTK.Mathematics.Vector3 cameraDirection = new(0, 0, 0);        
-        private OpenTK.Mathematics.Vector3 up = OpenTK.Mathematics.Vector3.UnitY;
-        private OpenTK.Mathematics.Vector3 cameraRight;
-        private OpenTK.Mathematics.Vector3 cameraUp;
+        private Vector3 cameraPos = new(0.0f, 0.0f, 3.0f);
+        private Vector3 front = new(0, 0, -1.0f);
+        private Vector3 cameraDirection = new(0, 0, 0);        
+        private Vector3 up = Vector3.UnitY;
+        private Vector3 cameraRight;
+        private Vector3 cameraUp;
         private float speed = 1.5f;
 
         // TODO: REMOVE
-        Engine.Physics.Particle[] particles;
-        Engine.Physics.Vector3[] positions;
+        Particle[] particles;
+        Physics.Vector3[] positions;
 
 
         float[] vertices = {
@@ -54,9 +54,9 @@ namespace Engine.Display
             Size = (width, height);
             Title = title;
 
-            cameraDirection = OpenTK.Mathematics.Vector3.Normalize(cameraPos + front);
-            cameraRight = OpenTK.Mathematics.Vector3.Normalize(OpenTK.Mathematics.Vector3.Cross(up, cameraDirection));
-            cameraUp = OpenTK.Mathematics.Vector3.Cross(cameraDirection, cameraRight);
+            cameraDirection = Vector3.Normalize(cameraPos + front);
+            cameraRight = Vector3.Normalize(Vector3.Cross(up, cameraDirection));
+            cameraUp = Vector3.Cross(cameraDirection, cameraRight);
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
@@ -143,7 +143,7 @@ namespace Engine.Display
 
             // TODO: REMOVE
             r = new Random();
-            positions = [new Engine.Physics.Vector3(0.5f, 0.5f, 0.0f), new Engine.Physics.Vector3(0.5f, -0.5f, 0.0f), new Engine.Physics.Vector3(-0.5f, -0.5f, 0.0f), new Engine.Physics.Vector3(-0.5f, 0.5f)];
+            positions = [new Physics.Vector3(0.5f, 0.5f, 0.0f), new Physics.Vector3(0.5f, -0.5f, 0.0f), new Physics.Vector3(-0.5f, -0.5f, 0.0f), new Physics.Vector3(-0.5f, 0.5f, 0.0f)];
             Real[] dampingfactors = [0.99f, 0.99f, 0.99f, 0.99f];
             particles = [new Particle(), new Particle(), new Particle(), new Particle()];
             
@@ -198,7 +198,7 @@ namespace Engine.Display
                 positions[i] = particles[i].position;
                 //Console.WriteLine(particles[i].position);
             }
-            vertices = Engine.Physics.Vector3.ConcatAndNormalize(positions);
+            vertices = Physics.Vector3.ConcatAndNormalize(positions);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
