@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
 namespace Engine.Display
@@ -64,7 +59,6 @@ namespace Engine.Display
             GL.DeleteShader(VertexShader);
 
             GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
-            _uniformLocations = new Dictionary<string, int>();
 
             // Loop over all the uniforms,
             for (var i = 0; i < numberOfUniforms; i++)
@@ -119,7 +113,6 @@ namespace Engine.Display
             // Assuming shaders are in "Shaders" subfolder of output directory
             string shaderPath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                @"..\..\..",
                 "Shaders",
                 shaderName);
 
