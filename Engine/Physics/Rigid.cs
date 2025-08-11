@@ -1,3 +1,4 @@
+
 namespace Engine.Physics
 {
         class RigidBody
@@ -105,6 +106,13 @@ Matrix4 transformMatrix;
                  * previous frame.
                  */
                 Vector3 lastFrameAcceleration;
+                float angularDamping;
+                /**
+        * Holds the amount of damping applied to linear
+        * motion.  Damping is required to remove energy added
+        * through numerical instability in the integrator.
+        */
+                float linearDamping;
 
                 /*@}*/
                 public Matrix3 inverseInertiaTensor;
@@ -199,12 +207,37 @@ Matrix4 transformMatrix;
                         t57 * rotmat.data[9] +
                         t62 * rotmat.data[10];
                 }
-                void addForce(Vector3 force)
+                public void addForce(Vector3 force)
                 {
                         forceAccum += force;
                 }
                 void integrate(float duration)
                 {
+                        // Calculate linear acceleration from force inputs.
+                        lastFrameAcceleration = acceleration;
+                        lastFrameAcceleration.addScaledVector(forceAccum, inverseMass);
+                        // Calculate angular acceleration from torque inputs.
+                        Vector3 angularAcceleration =
+                        inverseInertiaTensorWorld.transform(torqueAccum);
+                        // Adjust velocities
+                        // Update linear velocity from both acceleration and impulse.
+                        velocity.addScaledVector(lastFrameAcceleration, duration);
+                        // Update angular velocity from both acceleration and impulse.
+                        rotation.addScaledVector(angularAcceleration, duration);
+                        // Impose drag.
+                        velocity *= MathF.Pow(linearDamping, duration);
+                        rotation *= MathF.Pow(angularDamping, duration);
+                        // Adjust positions
+                        // Update linear position.
+                        position.addScaledVector(velocity, duration);
+                        // Update angular position.
+                        orientation.addScaledVector(rotation, duration);
+                        // Impose drag.
+                        velocity *= MathF.Pow(linearDamping, duration);
+                        rotation *= MathF.Pow(angularDamping, duration);
+                        // Normalize the orientation, and update the matrices with the new
+                        // position and orientation.
+                        calculateDerivedData();
                         // Clear accumulators.
                         clearAccumulators();
                 }
@@ -219,11 +252,11 @@ Matrix4 transformMatrix;
                         Vector3 pt = getPointInWorldSpace(point);
                         addForceAtPoint(force, pt);
                 }
-                Vector3 getPointInWorldSpace(Vector3 point)
+                public Vector3 getPointInWorldSpace(Vector3 point)
                 {
                         return transformMatrix.transform(point);
                 }
-                void addForceAtPoint(Vector3 force, Vector3 point)
+                public void addForceAtPoint(Vector3 force, Vector3 point)
                 {
                         // Convert to coordinates relative to center of mass.
                         Vector3 pt = point;
@@ -235,5 +268,13 @@ Matrix4 transformMatrix;
                         isAwake = true;
                 }
 
+                internal float getMass()
+                {
+                        if (inverseMass == 0)
+                        {
+                                return float.MaxValue;
+                        }
+                        else return 1 / inverseMass;
+                }
         }
 }

@@ -146,6 +146,28 @@ namespace Engine.Physics
         {
             x = y = z = 0;
         }
+        /** Gets the magnitude of this vector. */
+        public float magnitude()
+        {
+            return float.Sqrt(x * x + y * y + z * z);
+        }
+        public void normalise()
+        {
+            float l = magnitude();
+            if (l > 0)
+            {
+                x = x / l;
+                y = y / l;
+                z = z / l;
+            }
+        }
+               public void addScaledVector(Vector3 vector,float scale)
+        {
+            x += vector.x * scale;
+            y += vector.y * scale;
+            z += vector.z * scale;
+        }
+        
 
     }
 }

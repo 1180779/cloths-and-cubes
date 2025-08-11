@@ -94,6 +94,18 @@ namespace Engine.Physics
             data[7] = 2 * q.j * q.k - 2 * q.i * q.r;
             data[8] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
         }
+            public static     Vector3 operator*(Matrix3 matrix3, Vector3 vector) 
+        {
+            return new Vector3(
+                vector.x * matrix3.data[0] + vector.y * matrix3.data[1] + vector.z * matrix3.data[2],
+                vector.x * matrix3.data[3] + vector.y * matrix3.data[4] + vector.z * matrix3.data[5],
+                vector.x * matrix3.data[6] + vector.y * matrix3.data[7] + vector.z * matrix3.data[8]
+            );
+        }
+        public Vector3 transform(Vector3 vector)
+        {
+            return this * vector;
+        }
 
 
     }
@@ -319,7 +331,7 @@ namespace Engine.Physics
             r * multiplier.k + k * multiplier.r +
                 i * multiplier.j - j * multiplier.i
         );
-        void addScaledVector(Vector3 vector, float scale)
+        public void addScaledVector(Vector3 vector, float scale)
         {
             Quaternion q = new Quaternion(0,
                 vector.x * scale,
@@ -332,7 +344,7 @@ namespace Engine.Physics
             k += q.k * 0.5f;
             data = [r, i, j, k];
         }
-        void rotateByVector(Vector3 vector)
+        public void rotateByVector(Vector3 vector)
         {
             Quaternion q = new Quaternion(0, vector.x, vector.y,
             vector.z);
