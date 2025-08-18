@@ -227,7 +227,7 @@ namespace Engine.Physics
             data[10] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
             data[11] = pos.z;
         }
-        Vector3 transformInverse(Vector3 vector)
+        public Vector3 transformInverse(Vector3 vector)
         {
             Vector3 tmp = vector;
             tmp.x -= data[3];
@@ -278,8 +278,12 @@ namespace Engine.Physics
         {
             return this * vector;
         }
+         public Vector3 getAxisVector(int i) 
+        {
+            return new Vector3(data[i], data[i+4], data[i+8]);
+        }
     }
-    class Quaternion
+    public class Quaternion
     {
         public float i, j, k, r;
         public float[] data;

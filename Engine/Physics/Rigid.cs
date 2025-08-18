@@ -1,7 +1,7 @@
 
 namespace Engine.Physics
 {
-        class RigidBody
+        public class RigidBody
         {
                 /**
         * Holds the inverse of the mass of the rigid body. It is more

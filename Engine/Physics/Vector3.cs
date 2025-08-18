@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpenTK.Graphics.ES11;
 
 namespace Engine.Physics
 {
@@ -161,13 +162,64 @@ namespace Engine.Physics
                 z = z / l;
             }
         }
-               public void addScaledVector(Vector3 vector,float scale)
+        public void addScaledVector(Vector3 vector, float scale)
         {
             x += vector.x * scale;
             y += vector.y * scale;
             z += vector.z * scale;
         }
-        
+        public float squareMagnitude()
+        {
+            return x * x + y * y + z * z;
+        }
+        public static Vector3 vectorProduct(Vector3 o, Vector3 vector)
+        {
+            return new Vector3(o.y * vector.z - o.z * vector.y,
+                           o.z * vector.x - o.x * vector.z,
+                           o.x * vector.y - o.y * vector.x);
+        }
+        public float this[uint key]
+        {
+            get => GetValue(key);
+            set => SetValue(key, value);
+        }
+        public float GetValue(uint key)
+        {
+            if (key == 0)
+            {
+                return x;
+            }
+            if (key == 1)
+            {
+                return y;
+            }
+            return z;
+        }
+        public void SetValue(uint key, float value)
+        {
+            if (key == 0)
+            {
+                x = value;
+            }
+            if (key == 1)
+            {
+                y = value;
+            }
+            if (key == 2)
+            {
+                z = value;
+            }
+
+        }
+        public void componentProductUpdate(Vector3 vector)
+        {
+            x *= vector.x;
+            y *= vector.y;
+            z *= vector.z;
+        }
+
+
+
 
     }
 }
