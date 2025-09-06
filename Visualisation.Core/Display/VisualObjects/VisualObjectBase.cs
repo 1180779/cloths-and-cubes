@@ -16,8 +16,6 @@ public abstract class VisualObjectBase : IIdentifiable
 
     public Matrix4 Model => Matrix4.CreateScale(Scale) * Matrix4.CreateFromQuaternion(Rotation) *
         Matrix4.CreateTranslation(Position);
-    //
-    // Matrix4.CreateScale(Scale);
 
     public void SetForShader(Shader sh)
     {

@@ -93,17 +93,21 @@ public class BoxesFallingDemo : RigidBodyApplication
     /// </summary>
     protected override void Reset()
     {
-        boxes[0].EngineBox.SetState(new Engine.Vector3(0, 3, 0),
-            new Engine.Quaternion(),
-            new Engine.Vector3(4, 1, 1),
-            new Engine.Vector3(0, 0, 0));
+        boxes[0].EngineBox.SetState(
+            position: new Engine.Vector3(0, 3, 0),
+            orientation: new Engine.Quaternion(),
+            extents: new Engine.Vector3(4, 1, 1),
+            velocity: new Engine.Vector3(0, 0, 0)
+        );
 
         if (Boxes > 1)
         {
-            boxes[1].EngineBox.SetState(new Engine.Vector3(0, 4.75f, 2),
-                new Engine.Quaternion(1.0f, 0.1f, 0.05f, 0.01f),
-                new Engine.Vector3(1, 1, 4),
-                new Engine.Vector3(0, 0, 0));
+            boxes[1].EngineBox.SetState(
+                position: new Engine.Vector3(0, 4.75f, 2),
+                orientation: new Engine.Quaternion(1.0f, 0.1f, 0.05f, 0.01f),
+                extents: new Engine.Vector3(1, 1, 4),
+                velocity: new Engine.Vector3(0, 0, 0)
+            );
         }
 
         // Create the random objects

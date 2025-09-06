@@ -7,21 +7,21 @@ public class Box : CollisionBox
     public bool IsOverlapping { get; set; } = false; // previously used for some rendering (???)
 
 
-    static readonly Engine.Vector3 MinPos = new(-15, 5, -15);
-    static readonly Engine.Vector3 MaxPos = new(15, 10, 15);
-    static readonly Engine.Vector3 MinSize = new(0.5f, 0.5f, 0.5f);
-    static readonly Engine.Vector3 MaxSize = new(4.5f, 1.5f, 1.5f);
+    static readonly Vector3 MinPos = new(-15, 5, -15);
+    static readonly Vector3 MaxPos = new(15, 10, 15);
+    static readonly Vector3 MinSize = new(0.5f, 0.5f, 0.5f);
+    static readonly Vector3 MaxSize = new(4.5f, 1.5f, 1.5f);
 
     /// <summary>
     /// Positions the box at a random location.
     /// </summary>
-    public void Random(Engine.Random random)
+    public void Random(Random random)
     {
         SetState(
-            random.RandomVector(MinPos, MaxPos),
-            random.RandomQuaternion(),
-            random.RandomVector(MinSize, MaxSize),
-            new Engine.Vector3()
+            position: random.RandomVector(MinPos, MaxPos),
+            orientation: random.RandomQuaternion(),
+            extents: random.RandomVector(MinSize, MaxSize),
+            velocity: new Vector3()
         );
     }
 
@@ -29,10 +29,10 @@ public class Box : CollisionBox
     /// Sets the box to a specific location.
     /// </summary>
     public void SetState(
-        Engine.Vector3 position,
-        Engine.Quaternion orientation,
-        Engine.Vector3 extents,
-        Engine.Vector3 velocity)
+        Vector3 position,
+        Quaternion orientation,
+        Vector3 extents,
+        Vector3 velocity)
     {
         Body.Position = position;
 
@@ -45,7 +45,7 @@ public class Box : CollisionBox
         float mass = (float)(HalfSize.X * HalfSize.Y * HalfSize.Z * 8.0f);
         Body.Mass = mass;
 
-        Engine.Matrix3 tensor = new();
+        Matrix3 tensor = new();
         tensor.SetBlockInertiaTensor(HalfSize, mass);
         Body.SetInertiaTensor(tensor);
 

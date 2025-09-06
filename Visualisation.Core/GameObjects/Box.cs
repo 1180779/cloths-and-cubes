@@ -25,17 +25,32 @@ public class Box : VisualObjects_IVisualObject
     /// </summary>
     public void Render()
     {
-        // Set the cube's transform from the physics body
-        VisualBox.Position = new Vector3((float)EngineBox.Body.Position.X, (float)EngineBox.Body.Position.Y,
+        VisualBox.Position = new Vector3(
+            (float)EngineBox.Body.Position.X,
+            (float)EngineBox.Body.Position.Y,
             (float)EngineBox.Body.Position.Z);
-        VisualBox.Scale = new Vector3((float)Math.Abs(EngineBox.HalfSize.X * 2),
-            (float)Math.Abs(EngineBox.HalfSize.Y * 2), (float)Math.Abs(EngineBox.HalfSize.Z * 2));
-        VisualBox.Rotation = new Quaternion((float)EngineBox.Body.Orientation.R, (float)EngineBox.Body.Orientation.I,
-            (float)EngineBox.Body.Orientation.J, (float)EngineBox.Body.Orientation.K);
 
-        // Render the cube
+        var halfSize = new Vector3(
+            (float)EngineBox.HalfSize.X,
+            (float)EngineBox.HalfSize.Y,
+            (float)EngineBox.HalfSize.Z);
+        VisualBox.Scale = halfSize * 2f;
+
+        var q = new Quaternion(
+            (float)EngineBox.Body.Orientation.I,
+            (float)EngineBox.Body.Orientation.J,
+            (float)EngineBox.Body.Orientation.K,
+            (float)EngineBox.Body.Orientation.R);
+
+        // Normalize to guard against drift
+        if (MathF.Abs(1f - q.Length) > 1e-3f)
+            q = Quaternion.Normalize(q);
+
+        VisualBox.Rotation = q;
+
         VisualBox.Render();
     }
+
 
     public VisualObjectBase VisualObject => VisualBox;
     public object PhysicsObject => EngineBox;
