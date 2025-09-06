@@ -29,6 +29,10 @@ public class Vector3 : ICloneable
         Debug.Assert(!Real.IsInfinity(Z));
     }
 
+    public Vector3()
+    {
+    }
+
     public Vector3(Vector3 v)
     {
         X = v.X;
@@ -239,7 +243,7 @@ public class Vector3 : ICloneable
         get => GetValue(key);
         set => SetValue(key, value);
     }
-    
+
     public Real this[uint key]
     {
         get => GetValue(key);

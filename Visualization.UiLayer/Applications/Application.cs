@@ -1,0 +1,225 @@
+using ImGuiNET;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.FrameCapsule;
+using Visualisation.Core.GameObjects.Scenes;
+using Visualisation.Core.Inputs;
+using Visualization.UiLayer.Inputs;
+using Visualization.UiLayer.UI;
+using Visualization.UiLayer.UI.Windows;
+
+namespace Visualization.UiLayer.Applications
+{
+    public class Application : GameWindow
+    {
+        ImGuiController imGuiController;
+        public readonly IInputProvider InputProvider;
+        protected WindowFrameBuffer WindowFrameBuffer;
+        protected SceneManager Scene = null!;
+        protected FrameSaver FrameSaver = new(1000);
+
+        protected const int DefaultWidth = 800;
+        protected const int DefaultHeight = 600;
+        protected const string DefaultTitle = "Display";
+
+        public Application(int width = DefaultWidth, int height = DefaultHeight, string title = DefaultTitle) : base(
+            GameWindowSettings.Default,
+            new NativeWindowSettings())
+        {
+            Size = (width, height);
+            Title = title;
+            imGuiController = new ImGuiController(width, height);
+            InputProvider = new ImGuiInputProvider(this, imGuiController);
+            WindowFrameBuffer = new(width, height);
+        }
+
+        public bool StepsLimit { get; set; }
+        public Int64 AvailableSteps { get; set; }
+
+        protected bool DoUpdate
+        {
+            get
+            {
+                if (StepsLimit)
+                {
+                    if (AvailableSteps > 0)
+                    {
+                        AvailableSteps--;
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        protected virtual void Update(float deltaTime)
+        {
+            if (!DoUpdate)
+                return;
+        }
+
+        protected override void OnUpdateFrame(FrameEventArgs e)
+        {
+            base.OnUpdateFrame(e);
+
+            InputProvider.UpdateMousePosition();
+        }
+
+        /// <summary>
+        /// This method is called after doing some initial setup.
+        /// It can overriden to add game objects to the initial scene. 
+        /// </summary>
+        protected virtual void InitializeScene()
+        {
+        }
+
+
+        protected override void OnLoad()
+        {
+            base.OnLoad();
+
+            GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
+            GL.Enable(EnableCap.DepthTest);
+
+            imGuiController.HookToWindow(this);
+
+            Scene = new SceneLightningOnly(Size.X / (float)Size.Y);
+            InitializeScene();
+
+            // set up internal scene objects after the scene is initialized
+            // this way some objects are already in the scene and can be accessed
+            // during the scene setup (e.g. attach camera to an object from demo)
+            Scene.SetUp();
+            Scene.Init(InputProvider);
+        }
+
+        protected override void OnRenderFrame(FrameEventArgs args)
+        {
+            base.OnRenderFrame(args);
+
+            imGuiController.Update((float)args.Time);
+
+            Update((float)args.Time); // Update game/app logic before any rendering
+
+            // --- ImGui Docking Setup ---
+            ImGuiWindowFlags dockspaceFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse |
+                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus |
+                ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
+            ImGuiViewportPtr viewport = ImGui.GetMainViewport();
+            ImGui.SetNextWindowPos(viewport.Pos);
+            ImGui.SetNextWindowSize(viewport.Size);
+            ImGui.SetNextWindowViewport(viewport.ID);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new System.Numerics.Vector2(0.0f, 0.0f));
+            ImGui.Begin("DockSpace Host", dockspaceFlags);
+            ImGui.PopStyleVar(3);
+
+            uint dockspaceId = ImGui.GetID("MyDockSpace");
+            ImGui.DockSpace(dockspaceId, new System.Numerics.Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
+
+            HelpWindow.Draw();
+            RenderObjectInspectorWindow();
+            RenderSceneWindow((float)args.Time);
+            ImGui.End();
+
+            // clear the screen underneath the imGui windows (now background only)
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            imGuiController.Render();
+
+            SwapBuffers();
+        }
+
+        protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
+        {
+            base.OnFramebufferResize(e);
+
+            GL.Viewport(0, 0, e.Width, e.Height);
+        }
+
+        protected override void OnUnload()
+        {
+            // Unbind all the resources by binding the targets to 0/null.
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            GL.BindVertexArray(0);
+            GL.UseProgram(0);
+
+            imGuiController.UnhookFromWindow(this);
+            WindowFrameBuffer.Dispose();
+            Scene.Dispose();
+
+            base.OnUnload();
+        }
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
+            if (!ImGui.GetIO().WantCaptureMouse && Scene.CamerasManager.CameraMode)
+            {
+                Scene.CamerasManager.CurrentCamera.Fov -= e.OffsetY;
+            }
+        }
+
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            base.OnResize(e);
+
+            GL.Viewport(0, 0, Size.X, Size.Y);
+        }
+
+        private void RenderSceneWindow(float dt)
+        {
+            // --- Create the ImGui Window to display the scene ---
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding,
+                new System.Numerics.Vector2(0, 0)); // Remove padding for the viewport window
+            ImGui.Begin("Game Viewport");
+            ImGui.PopStyleVar();
+
+            bool isWindowHovered = ImGui.IsWindowHovered(); //|| ImGui.IsAnyItemHovered());
+            if (isWindowHovered)
+            {
+                Scene.ProcessInput(InputProvider, dt);
+            }
+            else
+            {
+                Scene.ProcessInputOutOfFocus(InputProvider, dt);
+            }
+
+            // Resize the framebuffer to match the window if necessary
+            System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
+            WindowFrameBuffer.Resize((int)viewportSize.X, (int)viewportSize.Y);
+
+            WindowFrameBuffer.Bind();
+            GL.Viewport(0, 0, (int)viewportSize.X, (int)viewportSize.Y);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            Scene.RenderSceneWindow();
+            WindowFrameBuffer.Unbind();
+
+            // Restore the viewport to the window size for ImGui rendering
+            GL.Viewport(0, 0, Size.X, Size.Y);
+
+            ImGui.Image(WindowFrameBuffer.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
+                new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
+            ImGui.End();
+        }
+
+        private void RenderObjectInspectorWindow()
+        {
+            if (Scene.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
+            {
+                var o = Scene.GameObjects.First(g => g.VisualObject == followingCamera.TargetObject);
+                ObjectInspectorWindow.Draw([o?.PhysicsObject]);
+            }
+            else
+            {
+                ObjectInspectorWindow.Draw(Scene.GameObjects.Select(g => g.PhysicsObject).ToArray());
+            }
+        }
+    }
+}
