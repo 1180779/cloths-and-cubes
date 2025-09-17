@@ -1,11 +1,7 @@
-namespace Visualization.Display.Light;
+namespace Visualisation.Core.Display.Light;
 
 public class LightSpotlight : LightLocatableBase
 {
-    public LightSpotlight()
-    {
-    }
-
     public float Cutoff = 12.5f;
     public float OuterCutoff = 25.0f;
     public Vector3 Direction = Vector3.UnitY;

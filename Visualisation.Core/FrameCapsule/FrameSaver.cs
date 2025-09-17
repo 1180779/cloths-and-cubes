@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Visualisation.Core.Display.VisualObjects;
+using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.GameObjects.Scenes;
 
 namespace Visualisation.Core.FrameCapsule;

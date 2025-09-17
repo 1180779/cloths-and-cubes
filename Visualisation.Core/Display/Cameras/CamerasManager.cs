@@ -1,11 +1,10 @@
 using Visualisation.Core.Inputs;
-using Visualization.Display.Inputs;
 
-namespace Visualization.Display.Cameras;
+namespace Visualisation.Core.Display.Cameras;
 
 public class CamerasManager
 {
-    private List<CameraBase> cameras = new();
+    private readonly List<CameraBase> cameras = [];
 
     private int currentCameraIndex = 0;
 
@@ -56,20 +55,17 @@ public class CamerasManager
             return;
         }
 
-        // update CameraMode
         if (input.IsKeyPressed(InputKey.Escape))
         {
             input.SetCursorState(CursorState.Normal);
             CameraMode = false;
         }
 
-        // move to the next camera
         if (input.IsKeyPressed(InputKey.C))
         {
             CurrentCameraIndex++;
         }
 
-        // process the current camera
         CurrentCamera.ProcessInput(input, dt);
     }
 

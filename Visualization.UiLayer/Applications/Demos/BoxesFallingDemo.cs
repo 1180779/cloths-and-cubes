@@ -1,11 +1,9 @@
 using Engine.Collision;
 using Visualisation.Core.GameObjects;
-using Visualization.GameObjects;
-using Visualization.UiLayer.Applications;
 using IntersectionTests = Engine.Collision.IntersectionTests;
 using Random = Engine.Random;
 
-namespace Visualization.Applications.Demos;
+namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesFallingDemo : RigidBodyApplication
 {

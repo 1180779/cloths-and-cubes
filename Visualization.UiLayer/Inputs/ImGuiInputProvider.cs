@@ -1,8 +1,7 @@
 using OpenTK.Windowing.Desktop;
 using Visualisation.Core.Inputs;
-using Visualization.Display.Inputs;
 using Visualization.UiLayer.UI;
-using MouseButton = Visualization.Display.Inputs.MouseButton;
+using MouseButton = Visualisation.Core.Inputs.MouseButton;
 
 namespace Visualization.UiLayer.Inputs;
 

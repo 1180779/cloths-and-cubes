@@ -1,5 +1,5 @@
-﻿using Visualization.Applications.Demos;
-using Visualization.UiLayer.Applications;
+﻿using Visualization.UiLayer.Applications;
+using Visualization.UiLayer.Applications.Demos;
 
 namespace Visualization.UiLayer
 {

@@ -1,11 +1,11 @@
-namespace Visualization.Display;
+namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
-public class Material(Vector3 ambient, Vector3 diffuse, Vector3 specular, float shininess)
+public sealed class Material(Vector3 ambient, Vector3 diffuse, Vector3 specular, float shininess)
 {
-    public static readonly string AmbientShaderName = "material.ambient";
-    public static readonly string DiffuseShaderName = "material.diffuse";
-    public static readonly string SpecularShaderName = "material.specular";
-    public static readonly string ShininessShaderName = "material.shininess";
+    private static readonly string AmbientShaderName = "material.ambient";
+    private static readonly string DiffuseShaderName = "material.diffuse";
+    private static readonly string SpecularShaderName = "material.specular";
+    private static readonly string ShininessShaderName = "material.shininess";
 
     public override string ToString()
     {

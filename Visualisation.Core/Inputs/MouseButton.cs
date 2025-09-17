@@ -1,4 +1,4 @@
-namespace Visualization.Display.Inputs;
+namespace Visualisation.Core.Inputs;
 
 public enum MouseButton
 {

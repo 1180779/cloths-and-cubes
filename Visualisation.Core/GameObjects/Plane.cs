@@ -1,13 +1,11 @@
 using Engine.Collision;
-using Visualization.Display;
-using Visualization.Display.VisualObjects;
-using VisualObjects_IVisualObject = Visualisation.Core.Display.VisualObjects.IVisualObject;
+using Visualisation.Core.Display.Mesh.VisualObjects;
 
-namespace Visualization.GameObjects;
+namespace Visualisation.Core.GameObjects;
 
-public class Plane : VisualObjects_IVisualObject
+public class Plane : IVisualObject
 {
-    public readonly Display.VisualObjects.Plane VisualPlane = new();
+    public readonly Display.Mesh.VisualObjects.Plane AbstractVisualPlane = new();
 
     public CollisionPlane EnginePlane = new()
     {
@@ -17,25 +15,25 @@ public class Plane : VisualObjects_IVisualObject
 
     public void Dispose()
     {
-        VisualPlane.Dispose();
+        AbstractVisualPlane.Dispose();
     }
 
     public void Init()
     {
-        VisualPlane.Init();
+        AbstractVisualPlane.Init();
     }
 
     public void SetForShader(Shader sh)
     {
-        VisualPlane.SetForShader(sh);
+        AbstractVisualPlane.SetForShader(sh);
     }
 
     public void Render()
     {
-        VisualPlane.Render();
+        AbstractVisualPlane.Render();
     }
 
-    public VisualObjectBase VisualObject => VisualPlane;
+    public AbstractVisualObject AbstractVisualObject => AbstractVisualPlane;
     public object PhysicsObject => EnginePlane;
-    public Guid Id => VisualPlane.Id;
+    public Guid Id => AbstractVisualPlane.Id;
 }

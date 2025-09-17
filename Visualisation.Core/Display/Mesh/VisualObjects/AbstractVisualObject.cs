@@ -1,9 +1,6 @@
-using Visualisation.Core.Display.VisualObjects;
+namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
-namespace Visualization.Display.VisualObjects;
-
-/* TODO: change name to more appropriate? Like IGameObject? */
-public abstract class VisualObjectBase : IIdentifiable
+public abstract class AbstractVisualObject : IIdentifiable, IMesh
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Material Material { get; set; } = Material.Copper;

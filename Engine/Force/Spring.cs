@@ -1,7 +1,6 @@
-using Engine.Force;
 using Engine.RigidBodies;
 
-namespace Engine.ForceGenerators;
+namespace Engine.Force;
 
 class Spring : IForceGenerator
 {

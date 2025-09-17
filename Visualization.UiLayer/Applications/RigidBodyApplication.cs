@@ -1,7 +1,7 @@
 using Engine;
 using Engine.Collision;
 using OpenTK.Windowing.Common;
-using Visualization.Display.Inputs;
+using Visualisation.Core.Inputs;
 
 namespace Visualization.UiLayer.Applications;
 
@@ -53,12 +53,11 @@ public abstract class RigidBodyApplication : Application
     {
         base.OnUpdateFrame(e);
 
-        if (!IsFocused) // check to see if the window is focused
+        if (!IsFocused)
         {
             return;
         }
 
-        // simulation step
         if (InputProvider.IsKeyPressed(InputKey.LeftBracket))
         {
             StepsLimit = true;

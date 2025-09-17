@@ -1,4 +1,4 @@
-namespace Visualisation.Core.Display;
+namespace Visualisation.Core.Display.Mesh;
 
 public static class MeshManager
 {

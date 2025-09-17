@@ -1,5 +1,5 @@
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Visualization.Display.Inputs;
+using Visualisation.Core.Inputs;
 
 namespace Visualization.UiLayer.Inputs;
 

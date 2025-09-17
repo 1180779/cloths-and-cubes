@@ -1,4 +1,4 @@
-namespace Visualization.Display.Light;
+namespace Visualisation.Core.Display.Light;
 
 public abstract class LightLocatableBase : LightBase
 {

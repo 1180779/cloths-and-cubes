@@ -1,16 +1,14 @@
+using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
-using Visualization.Display.Cameras;
-using Visualization.Display.Inputs;
-using Visualization.Display.VisualObjects;
 
 namespace Visualisation.Core.Display.Cameras;
 
 public class FollowingCamera : CameraBase
 {
-    private VisualObjectBase[] targetObjects = [];
+    private AbstractVisualObject[] targetObjects = [];
     private int currentTargetIndex;
 
-    public VisualObjectBase? TargetObject => targetObjects.Length != 0 ? targetObjects[currentTargetIndex] : null;
+    public AbstractVisualObject? TargetObject => targetObjects.Length != 0 ? targetObjects[currentTargetIndex] : null;
 
     public int CurrentTargetIndex
     {
@@ -35,13 +33,13 @@ public class FollowingCamera : CameraBase
     {
     }
 
-    public void AttachTo(VisualObjectBase target)
+    public void AttachTo(AbstractVisualObject target)
     {
         targetObjects = [target];
         UpdatePositionFromTarget();
     }
 
-    public void AttachTo(VisualObjectBase[] targets)
+    public void AttachTo(AbstractVisualObject[] targets)
     {
         targetObjects = targets;
     }
@@ -57,8 +55,8 @@ public class FollowingCamera : CameraBase
     public override void ProcessInput(IInputProvider input, float dt)
     {
         var mouseDelta = input.GetMouseDelta();
-        Yaw += mouseDelta.X * Sensitivity;
-        Pitch -= mouseDelta.Y * Sensitivity;
+        YawDegrees += mouseDelta.X * Sensitivity;
+        PitchDegrees -= mouseDelta.Y * Sensitivity;
 
         if (input.IsKeyPressed(InputKey.N))
         {

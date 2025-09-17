@@ -1,10 +1,10 @@
 using Visualisation.Core.Inputs;
 
-namespace Visualization.Display.Cameras;
+namespace Visualisation.Core.Display.Cameras;
 
 public class CameraBase
 {
-    protected const float CameraSpeed = 1.5f;
+    protected const float CameraSpeed = 15f;
     protected const float Sensitivity = 0.2f;
 
     protected Vector3 front = -Vector3.UnitZ;
@@ -33,7 +33,10 @@ public class CameraBase
     public Vector3 Up => up;
     public Vector3 Right => right;
 
-    public float Pitch
+    public float NearPlane => 0.01f;
+    public float FarPlane => 100f;
+
+    public float PitchDegrees
     {
         get => MathHelper.RadiansToDegrees(pitch);
         set
@@ -44,7 +47,7 @@ public class CameraBase
         }
     }
 
-    public float Yaw
+    public float YawDegrees
     {
         get => MathHelper.RadiansToDegrees(yaw);
         set
@@ -54,7 +57,17 @@ public class CameraBase
         }
     }
 
-    public float Fov
+    public float FovRadians
+    {
+        get => fov;
+        set
+        {
+            var angleRadians = MathHelper.Clamp(value, 1f, MathHelper.PiOver2);
+            fov = angleRadians;
+        }
+    }
+
+    public float FovDegrees
     {
         get => MathHelper.RadiansToDegrees(fov);
         set
@@ -64,21 +77,11 @@ public class CameraBase
         }
     }
 
-    public Matrix4 GetViewMatrix()
-    {
-        return Matrix4.LookAt(Position, Position + front, up);
-    }
+    public Matrix4 ViewMatrix => Matrix4.LookAt(Position, Position + front, up);
 
-    public Matrix4 GetProjectionMatrix()
-    {
-        return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 100f);
-    }
+    public Matrix4 ProjectionMatrix => Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, NearPlane, FarPlane);
 
     public virtual void ProcessInput(IInputProvider input, float dt)
-    {
-    }
-
-    public virtual void Update(float dt)
     {
     }
 
@@ -97,7 +100,8 @@ public class CameraBase
     public void SetForShader(Shader sh)
     {
         sh.SetVector3("viewPos", Position);
-        sh.SetMatrix4("view", GetViewMatrix());
-        sh.SetMatrix4("projection", GetProjectionMatrix());
+        sh.SetMatrix4("view", ViewMatrix);
+        sh.SetMatrix4("projection", ProjectionMatrix);
+        sh.SetFloat("farPlane", FarPlane);
     }
 }

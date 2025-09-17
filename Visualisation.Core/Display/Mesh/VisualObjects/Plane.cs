@@ -1,9 +1,8 @@
 using OpenTK.Graphics.OpenGL4;
-using Visualisation.Core.Display;
 
-namespace Visualization.Display.VisualObjects;
+namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
-public class Plane : VisualObjectBase
+public sealed class Plane : AbstractVisualObject
 {
     public Plane()
     {

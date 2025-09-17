@@ -1,8 +1,9 @@
 using OpenTK.Graphics.OpenGL4;
+using Visualisation.Core;
 
 namespace Visualization.UiLayer.UI;
 
-public class WindowFrameBuffer : IDisposable
+public class WindowFrameBuffer : IDisposable, IBindable
 {
     public int FboId { get; private set; }
     public int TextureId { get; private set; }

@@ -1,7 +1,6 @@
 ﻿using Visualisation.Core.Inputs;
-using Visualization.Display.Inputs;
 
-namespace Visualization.Display.Cameras;
+namespace Visualisation.Core.Display.Cameras;
 
 public class FreeMovingCamera : CameraBase
 {
@@ -46,8 +45,8 @@ public class FreeMovingCamera : CameraBase
         }
 
         var mouseDelta = input.GetMouseDelta();
-        Yaw += mouseDelta.X * Sensitivity;
-        Pitch -= mouseDelta.Y * Sensitivity; // Reversed since y-coordinates range from bottom to top
+        YawDegrees += mouseDelta.X * Sensitivity;
+        PitchDegrees -= mouseDelta.Y * Sensitivity; // Reversed since y-coordinates range from bottom to top
     }
 
     private Int64 i = 0;

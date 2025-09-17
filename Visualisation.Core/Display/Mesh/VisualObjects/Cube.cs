@@ -1,15 +1,14 @@
 using OpenTK.Graphics.OpenGL4;
-using Visualization.Display.VisualObjects;
 
-namespace Visualisation.Core.Display.VisualObjects;
+namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
-public class Cube : VisualObjectBase
+public sealed class Cube : AbstractVisualObject
 {
     private static readonly string MeshName = nameof(Cube);
     private static MeshManager.MeshData? _meshData;
 
     private static readonly float[] Vertices =
-    {
+    [
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
         0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -51,7 +50,7 @@ public class Cube : VisualObjectBase
         0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
         -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
         -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
-    };
+    ];
 
     private static readonly int VerticesTriangleCount = Vertices.Length / 6;
 

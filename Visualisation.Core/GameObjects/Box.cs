@@ -1,11 +1,8 @@
-using Visualisation.Core.Display.VisualObjects;
-using Visualization.Display;
-using Visualization.Display.VisualObjects;
-using VisualObjects_IVisualObject = Visualisation.Core.Display.VisualObjects.IVisualObject;
+using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public class Box : VisualObjects_IVisualObject
+public class Box : IVisualObject
 {
     public Engine.RigidBodies.Box EngineBox { get; private set; } = new();
     public Cube VisualBox { get; private set; } = new();
@@ -52,7 +49,7 @@ public class Box : VisualObjects_IVisualObject
     }
 
 
-    public VisualObjectBase VisualObject => VisualBox;
+    public AbstractVisualObject AbstractVisualObject => VisualBox;
     public object PhysicsObject => EngineBox;
 
 

@@ -1,5 +1,3 @@
-using Visualization.Display.Inputs;
-
 namespace Visualisation.Core.Inputs;
 
 /// <summary>

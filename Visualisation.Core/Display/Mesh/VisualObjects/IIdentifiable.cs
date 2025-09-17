@@ -1,4 +1,4 @@
-namespace Visualisation.Core.Display.VisualObjects;
+namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
 public interface IIdentifiable
 {

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Engine.RigidBodies;
 
 namespace Engine.Collision;
