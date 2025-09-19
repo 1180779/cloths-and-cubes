@@ -22,10 +22,10 @@ public class Application : GameWindow
     protected readonly WindowFrameBuffer SceneRenderWindowFrb;
     protected readonly WindowFrameBuffer DepthMapWindowFrb;
 
-    private ShadowSettingsWindow shadowSettingsWindow;
+    private readonly ShadowSettingsWindow shadowSettingsWindow;
 
-    protected SceneManager Scene = null!;
-    protected Shader QuadShader = null!;
+    protected readonly SceneManager Scene;
+    protected readonly Shader QuadShader;
     protected readonly FrameSaver FrameSaver = new(1000);
 
     protected const int DefaultWidth = 800;
@@ -38,15 +38,25 @@ public class Application : GameWindow
     {
         Size = (width, height);
         Title = title;
-        imGuiController = new ImGuiController(width, height);
+
+        imGuiController = new ImGuiController(this);
+        imGuiController.HookToWindow(this);
         InputProvider = new ImGuiInputProvider(this, imGuiController);
 
         SceneRenderWindowFrb = new(width, height);
         DepthMapWindowFrb = new(width, height);
+
         QuadMesh = new();
+
+        QuadShader = new("depthMapShader.vert", "depthMapShader.frag");
+        Scene = new SceneLightningOnly(Size.X / (float)Size.Y);
 
         // windows
         shadowSettingsWindow = new ShadowSettingsWindow(() => this.Scene.LightsManager.DirectionalLight);
+
+        // GL
+        GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
+        GL.Enable(EnableCap.DepthTest);
     }
 
     protected bool StepsLimit { get; set; }
@@ -111,15 +121,6 @@ public class Application : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
-
-        GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
-        GL.Enable(EnableCap.DepthTest);
-
-        QuadShader = new("depthMapShader.vert", "depthMapShader.frag");
-        imGuiController.HookToWindow(this);
-
-
-        Scene = new SceneLightningOnly(Size.X / (float)Size.Y);
         InitializeScene();
 
         // set up internal scene objects after the scene is initialized
@@ -232,8 +233,7 @@ public class Application : GameWindow
         ImGui.Begin("Cascading Depth Maps");
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        // Resize FBO in framebuffer pixels: multiply logical ImGui size by ImGui framebuffer scale
-        var fbScale = imGuiController.DisplayFramebufferScale;
+        var fbScale = imGuiController.ScaleFactor;
         int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
         int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
         DepthMapWindowFrb.Resize(fbWidth, fbHeight);
@@ -246,7 +246,7 @@ public class Application : GameWindow
         QuadMesh.Render();
 
         DepthMapWindowFrb.Unbind();
-        // Reset viewport to the window framebuffer size (physical pixels)
+
         GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
         ImGui.Image(DepthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
@@ -268,16 +268,13 @@ public class Application : GameWindow
         }
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        // Resize scene FBO in framebuffer pixels
-        var fbScale = imGuiController.DisplayFramebufferScale;
+        var fbScale = imGuiController.ScaleFactor;
         int fbW = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
         int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
         SceneRenderWindowFrb.Resize(fbW, fbH);
-        // Render into the FBO; SceneRenderWindow expects the framebuffer to be bound by the FBO itself
         Scene.RenderSceneWindow(fbW, fbH, SceneRenderWindowFrb);
 
         SceneRenderWindowFrb.Unbind();
-        // Restore viewport to the window framebuffer size (physical pixels)
         GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
         ImGui.Image(SceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));

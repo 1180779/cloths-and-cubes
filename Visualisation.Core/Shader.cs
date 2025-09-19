@@ -7,18 +7,22 @@ namespace Visualisation.Core
         private readonly int handle;
         private readonly Dictionary<string, int> uniformLocations = new();
 
-        private readonly string vertexShaderPath;
-        private readonly string fragmentShaderPath;
-        private readonly string? geometryShaderPath;
+#if DEBUG
+        public readonly string VertexShaderPath;
+        public readonly string FragmentShaderPath;
+        public readonly string? GeometryShaderPath;
+#endif
 
         public Shader(string vertexPath, string fragmentPath, string? geometryPath = null)
         {
-            vertexShaderPath = vertexPath;
-            fragmentShaderPath = fragmentPath;
-            geometryShaderPath = geometryPath;
+#if DEBUG
+            VertexShaderPath = vertexPath;
+            FragmentShaderPath = fragmentPath;
+            GeometryShaderPath = geometryPath;
+#endif
 
-            string vertexShaderSource = File.ReadAllText(LoadShader(vertexPath));
-            string fragmentShaderSource = File.ReadAllText(LoadShader(fragmentPath));
+            var vertexShaderSource = File.ReadAllText(LoadShader(vertexPath));
+            var fragmentShaderSource = File.ReadAllText(LoadShader(fragmentPath));
 
             var vertexShader = GL.CreateShader(ShaderType.VertexShader);
             var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
@@ -31,7 +35,7 @@ namespace Visualisation.Core
             GL.GetShader(vertexShader, ShaderParameter.CompileStatus, out int success);
             if (success == 0)
             {
-                string infoLog = GL.GetShaderInfoLog(vertexShader);
+                var infoLog = GL.GetShaderInfoLog(vertexShader);
                 Console.WriteLine(infoLog);
                 throw new Exception($"Vertex shader compilation failed! {infoLog}");
             }
@@ -41,7 +45,7 @@ namespace Visualisation.Core
             GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, out success);
             if (success == 0)
             {
-                string infoLog = GL.GetShaderInfoLog(fragmentShader);
+                var infoLog = GL.GetShaderInfoLog(fragmentShader);
                 Console.WriteLine(infoLog);
                 throw new Exception($"Fragment shader compilation failed! {infoLog}");
             }
@@ -50,7 +54,7 @@ namespace Visualisation.Core
 
             GL.AttachShader(handle, vertexShader);
             GL.AttachShader(handle, fragmentShader);
-            // optionally handle geometry shader
+
             int geometryShader = 0;
             if (geometryPath != null)
             {
@@ -63,7 +67,7 @@ namespace Visualisation.Core
                 GL.GetShader(geometryShader, ShaderParameter.CompileStatus, out success);
                 if (success == 0)
                 {
-                    string infoLog = GL.GetShaderInfoLog(geometryShader);
+                    var infoLog = GL.GetShaderInfoLog(geometryShader);
                     Console.WriteLine(infoLog);
                     throw new Exception($"GeometryShader shader compilation failed! {infoLog}");
                 }
@@ -76,7 +80,7 @@ namespace Visualisation.Core
             GL.GetProgram(handle, GetProgramParameterName.LinkStatus, out success);
             if (success == 0)
             {
-                string infoLog = GL.GetProgramInfoLog(handle);
+                var infoLog = GL.GetProgramInfoLog(handle);
                 Console.WriteLine(infoLog);
                 throw new Exception($"Shader linking failed! {infoLog}");
             }
