@@ -232,7 +232,11 @@ public class Application : GameWindow
         ImGui.Begin("Cascading Depth Maps");
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        DepthMapWindowFrb.Resize((int)viewportSize.X, (int)viewportSize.Y);
+        // Resize FBO in framebuffer pixels: multiply logical ImGui size by ImGui framebuffer scale
+        var fbScale = imGuiController.DisplayFramebufferScale;
+        int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
+        int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
+        DepthMapWindowFrb.Resize(fbWidth, fbHeight);
 
         DepthMapWindowFrb.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -242,7 +246,8 @@ public class Application : GameWindow
         QuadMesh.Render();
 
         DepthMapWindowFrb.Unbind();
-        GL.Viewport(0, 0, Size.X, Size.Y);
+        // Reset viewport to the window framebuffer size (physical pixels)
+        GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
         ImGui.Image(DepthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
         ImGui.End();
@@ -263,11 +268,17 @@ public class Application : GameWindow
         }
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        SceneRenderWindowFrb.Resize((int)viewportSize.X, (int)viewportSize.Y);
-        Scene.RenderSceneWindow(Size.X, Size.Y, SceneRenderWindowFrb);
+        // Resize scene FBO in framebuffer pixels
+        var fbScale = imGuiController.DisplayFramebufferScale;
+        int fbW = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
+        int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
+        SceneRenderWindowFrb.Resize(fbW, fbH);
+        // Render into the FBO; SceneRenderWindow expects the framebuffer to be bound by the FBO itself
+        Scene.RenderSceneWindow(fbW, fbH, SceneRenderWindowFrb);
 
         SceneRenderWindowFrb.Unbind();
-        GL.Viewport(0, 0, Size.X, Size.Y);
+        // Restore viewport to the window framebuffer size (physical pixels)
+        GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
         ImGui.Image(SceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
         ImGui.End();

@@ -28,10 +28,23 @@ public class ImGuiController : IDisposable
     private int shaderFontTextureLocation;
     private int shaderProjectionMatrixLocation;
 
+    // window framebuffer size in pixels (used for GL projection/scissor)
+    private int framebufferWidth;
+
+    private int framebufferHeight;
+
+    // logical window size (in window units / logical pixels)
     private int windowWidth;
     private int windowHeight;
 
+    // scale from logical/window coordinates to framebuffer pixels (fb / logical)
     private System.Numerics.Vector2 scaleFactor = System.Numerics.Vector2.One;
+
+    // attached window reference so we can query sizes on resize events
+    private GameWindow? attachedWindow = null;
+
+    // expose framebuffer scale to callers (e.g. for FBO sizing)
+    public System.Numerics.Vector2 DisplayFramebufferScale => scaleFactor;
 
     private static bool khrDebugAvailable = false;
 
@@ -45,6 +58,9 @@ public class ImGuiController : IDisposable
     {
         windowWidth = width;
         windowHeight = height;
+
+        framebufferWidth = width;
+        framebufferHeight = height;
 
         int major = GL.GetInteger(GetPName.MajorVersion);
         int minor = GL.GetInteger(GetPName.MinorVersion);
@@ -63,7 +79,6 @@ public class ImGuiController : IDisposable
         io.Fonts.AddFontDefault();
 
         io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
-        // Enable Docking
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         CreateDeviceResources();
@@ -76,6 +91,8 @@ public class ImGuiController : IDisposable
 
     public void HookToWindow(GameWindow window)
     {
+        attachedWindow = window;
+
         window.MouseMove += MouseMove;
         window.MouseDown += MouseDown;
         window.MouseUp += MouseUp;
@@ -86,6 +103,30 @@ public class ImGuiController : IDisposable
         window.TextInput += TextInput;
 
         window.Resize += Resize;
+        window.FramebufferResize += FramebufferResize;
+
+        try
+        {
+            var fb = window.FramebufferSize;
+            var sz = window.Size;
+            if (sz.X > 0 && sz.Y > 0)
+            {
+                scaleFactor = new System.Numerics.Vector2(fb.X / (float)sz.X, fb.Y / (float)sz.Y);
+            }
+            else
+            {
+                scaleFactor = System.Numerics.Vector2.One;
+            }
+
+            windowWidth = sz.X;
+            windowHeight = sz.Y;
+            framebufferWidth = fb.X;
+            framebufferHeight = fb.Y;
+        }
+        catch
+        {
+            scaleFactor = System.Numerics.Vector2.One;
+        }
     }
 
     public void UnhookFromWindow(GameWindow window)
@@ -100,17 +141,7 @@ public class ImGuiController : IDisposable
         window.TextInput -= TextInput;
 
         window.Resize -= Resize;
-    }
-
-    public void WindowResized(int width, int height)
-    {
-        windowWidth = width;
-        windowHeight = height;
-    }
-
-    public void DestroyDeviceObjects()
-    {
-        Dispose();
+        window.FramebufferResize -= FramebufferResize;
     }
 
     public void CreateDeviceResources()
@@ -266,11 +297,9 @@ public class ImGuiController : IDisposable
     private void SetPerFrameImGuiData(float deltaSeconds)
     {
         ImGuiIOPtr io = ImGui.GetIO();
-        io.DisplaySize = new System.Numerics.Vector2(
-            windowWidth / scaleFactor.X,
-            windowHeight / scaleFactor.Y);
+        io.DisplaySize = new System.Numerics.Vector2(windowWidth, windowHeight);
         io.DisplayFramebufferScale = scaleFactor;
-        io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
+        io.DeltaTime = deltaSeconds;
     }
 
     public void KeyDown(KeyboardKeyEventArgs e)
@@ -303,7 +332,7 @@ public class ImGuiController : IDisposable
 
     public void MouseDown(MouseButtonEventArgs e)
     {
-        ImGuiIOPtr io = ImGui.GetIO();
+        var io = ImGui.GetIO();
         if (e.Button == MouseButton.Left) io.MouseDown[0] = true;
         if (e.Button == MouseButton.Right) io.MouseDown[1] = true;
         if (e.Button == MouseButton.Middle) io.MouseDown[2] = true;
@@ -313,7 +342,7 @@ public class ImGuiController : IDisposable
 
     public void MouseUp(MouseButtonEventArgs e)
     {
-        ImGuiIOPtr io = ImGui.GetIO();
+        var io = ImGui.GetIO();
         if (e.Button == MouseButton.Left) io.MouseDown[0] = false;
         if (e.Button == MouseButton.Right) io.MouseDown[1] = false;
         if (e.Button == MouseButton.Middle) io.MouseDown[2] = false;
@@ -328,14 +357,48 @@ public class ImGuiController : IDisposable
 
     public void TextInput(TextInputEventArgs e)
     {
-        ImGuiIOPtr io = ImGui.GetIO();
+        var io = ImGui.GetIO();
         io.AddInputCharacter((char)e.Unicode);
     }
 
     public void Resize(ResizeEventArgs e)
     {
-        windowWidth = e.Width;
-        windowHeight = e.Height;
+        if (attachedWindow != null)
+        {
+            var fb = attachedWindow.FramebufferSize;
+            if (e.Width > 0 && e.Height > 0)
+            {
+                scaleFactor = new System.Numerics.Vector2(fb.X / (float)e.Width, fb.Y / (float)e.Height);
+            }
+
+            windowWidth = e.Width;
+            windowHeight = e.Height;
+            framebufferWidth = fb.X;
+            framebufferHeight = fb.Y;
+        }
+        else
+        {
+            windowWidth = e.Width;
+            windowHeight = e.Height;
+            framebufferWidth = e.Width;
+            framebufferHeight = e.Height;
+        }
+    }
+
+    private void FramebufferResize(FramebufferResizeEventArgs e)
+    {
+        framebufferWidth = e.Width;
+        framebufferHeight = e.Height;
+
+        if (attachedWindow != null && attachedWindow.Size.X > 0 && attachedWindow.Size.Y > 0)
+        {
+            scaleFactor = new System.Numerics.Vector2(e.Width / (float)attachedWindow.Size.X,
+                e.Height / (float)attachedWindow.Size.Y);
+        }
+        else
+        {
+            scaleFactor = System.Numerics.Vector2.One;
+        }
     }
 
     private void RenderImDrawData(ImDrawDataPtr drawData)
@@ -399,14 +462,13 @@ public class ImGuiController : IDisposable
             ImDrawListPtr cmdList = drawData.CmdLists[i];
 
             int vertexSize = cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>();
+
             if (vertexSize > vertexBufferSize)
             {
                 int newSize = (int)Math.Max(vertexBufferSize * 1.5f, vertexSize);
 
                 GL.BufferData(BufferTarget.ArrayBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
                 vertexBufferSize = newSize;
-
-                Console.WriteLine($"Resized dear imgui vertex buffer to new size {vertexBufferSize}");
             }
 
             int indexSize = cmdList.IdxBuffer.Size * sizeof(ushort);
@@ -420,10 +482,15 @@ public class ImGuiController : IDisposable
 
         // Setup orthographic projection matrix into our constant buffer
         ImGuiIOPtr io = ImGui.GetIO();
+        // Compute framebuffer size from logical DisplaySize and DisplayFramebufferScale
+        int fbWidth = (int)(io.DisplaySize.X * io.DisplayFramebufferScale.X);
+        int fbHeight = (int)(io.DisplaySize.Y * io.DisplayFramebufferScale.Y);
+
+        // Use framebuffer pixel dimensions for the projection so GL coordinates match vertex positions
         Matrix4 mvp = Matrix4.CreateOrthographicOffCenter(
             0.0f,
-            io.DisplaySize.X,
-            io.DisplaySize.Y,
+            fbWidth,
+            fbHeight,
             0.0f,
             -1.0f,
             1.0f);
@@ -436,6 +503,7 @@ public class ImGuiController : IDisposable
         GL.BindVertexArray(vertexArray);
         CheckGlError("VAO");
 
+        // clip rects are expected to be scaled from logical to framebuffer pixels by ImGui using DisplayFramebufferScale
         drawData.ScaleClipRects(io.DisplayFramebufferScale);
 
         GL.Enable(EnableCap.Blend);
@@ -473,7 +541,8 @@ public class ImGuiController : IDisposable
 
                     // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
                     var clip = pcmd.ClipRect;
-                    GL.Scissor((int)clip.X, windowHeight - (int)clip.W, (int)(clip.Z - clip.X),
+                    // Use framebuffer height for flipping Y
+                    GL.Scissor((int)clip.X, fbHeight - (int)clip.W, (int)(clip.Z - clip.X),
                         (int)(clip.W - clip.Y));
                     CheckGlError("Scissor");
 
