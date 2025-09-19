@@ -33,6 +33,7 @@ namespace Visualisation.Core
             GL.CompileShader(vertexShader);
 
             GL.GetShader(vertexShader, ShaderParameter.CompileStatus, out int success);
+            GlHelper.CheckGlError("Vertex shader compilation");
             if (success == 0)
             {
                 var infoLog = GL.GetShaderInfoLog(vertexShader);
@@ -41,6 +42,7 @@ namespace Visualisation.Core
             }
 
             GL.CompileShader(fragmentShader);
+            GlHelper.CheckGlError("Fragment shader compilation");
 
             GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, out success);
             if (success == 0)
@@ -65,6 +67,7 @@ namespace Visualisation.Core
                 GL.CompileShader(geometryShader);
 
                 GL.GetShader(geometryShader, ShaderParameter.CompileStatus, out success);
+                GlHelper.CheckGlError("Geometry shader compilation");
                 if (success == 0)
                 {
                     var infoLog = GL.GetShaderInfoLog(geometryShader);
@@ -76,6 +79,7 @@ namespace Visualisation.Core
             }
 
             GL.LinkProgram(handle);
+            GlHelper.CheckGlError("Shader program linking");
 
             GL.GetProgram(handle, GetProgramParameterName.LinkStatus, out success);
             if (success == 0)
@@ -95,6 +99,7 @@ namespace Visualisation.Core
 
             GL.DeleteShader(fragmentShader);
             GL.DeleteShader(vertexShader);
+            GlHelper.CheckGlError("Shader cleanup");
 
             // get uniform locations
             GL.GetProgram(handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
@@ -109,6 +114,7 @@ namespace Visualisation.Core
         public void Use()
         {
             GL.UseProgram(handle);
+            GlHelper.CheckGlError("Shader use");
         }
 
         private bool disposedValue;
@@ -127,6 +133,7 @@ namespace Visualisation.Core
             if (!disposedValue)
             {
                 GL.DeleteProgram(handle);
+                GlHelper.CheckGlError("Shader deletion");
 
                 disposedValue = true;
             }
@@ -143,7 +150,9 @@ namespace Visualisation.Core
                 shaderName);
 
             if (!File.Exists(shaderPath))
+            {
                 throw new FileNotFoundException($"Shader not found at: {shaderPath}");
+            }
 
             return shaderPath;
         }
@@ -168,8 +177,8 @@ namespace Visualisation.Core
         public void SetFloat(string name, float v)
         {
             GL.UseProgram(handle);
-            // will not work for arrays
             GL.Uniform1(uniformLocations[name], v);
+            GlHelper.CheckGlError("Shader SetFloat");
         }
 
         /// <summary>
@@ -181,12 +190,14 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.Uniform1(GL.GetUniformLocation(handle, name), v);
+            GlHelper.CheckGlError("Shader SetFloatMember");
         }
 
         public void SetFloat(string name, int count, float[] values)
         {
             GL.UseProgram(handle);
             GL.Uniform1(uniformLocations[name], count, values);
+            GlHelper.CheckGlError("Shader SetFloat");
         }
 
         /// <summary>
@@ -199,12 +210,14 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.Uniform1(uniformLocations[name], n, ref data[0]);
+            GlHelper.CheckGlError("Shader SetFloatN");
         }
 
         public void SetVector3(string name, float v0, float v1, float v2)
         {
             GL.UseProgram(handle);
             GL.Uniform3(uniformLocations[name], v0, v1, v2);
+            GlHelper.CheckGlError("Shader SetVector3");
         }
 
         /// <summary>
@@ -216,6 +229,7 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.Uniform3(GL.GetUniformLocation(handle, name), v0, v1, v2);
+            GlHelper.CheckGlError("Shader SetVector3Member");
         }
 
         /// <summary>
@@ -227,6 +241,7 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.Uniform3(GL.GetUniformLocation(handle, name), v);
+            GlHelper.CheckGlError("Shader SetVector3Member");
         }
 
 
@@ -239,18 +254,21 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.Uniform3(uniformLocations[name], v);
+            GlHelper.CheckGlError("Shader SetVector3");
         }
 
         public void SetVector4(string name, float v0, float v1, float v2, float v3)
         {
             GL.UseProgram(handle);
             GL.Uniform4(uniformLocations[name], v0, v1, v2, v3);
+            GlHelper.CheckGlError("Shader SetVector4");
         }
 
         public void SetVector4(string name, Vector4 v)
         {
             GL.UseProgram(handle);
             GL.Uniform4(uniformLocations[name], v);
+            GlHelper.CheckGlError("Shader SetVector4");
         }
 
         /// <summary>
@@ -267,6 +285,7 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.UniformMatrix4(uniformLocations[name], false, ref data);
+            GlHelper.CheckGlError("Shader SetMatrix4");
         }
 
         /// <summary>
@@ -284,14 +303,16 @@ namespace Visualisation.Core
         {
             GL.UseProgram(handle);
             GL.UniformMatrix4(uniformLocations[name], n, false, ref data[0].Row0.X);
+            GlHelper.CheckGlError("Shader SetMatrix4N");
         }
 
-        public void SetTexture(string name, TextureUnit unit, int textureHandle)
+        public void SetTexture(string name, TextureTarget textureTarget, TextureUnit unit, int textureHandle)
         {
             GL.UseProgram(handle);
             GL.ActiveTexture(unit);
-            GL.BindTexture(TextureTarget.Texture2D, textureHandle);
+            GL.BindTexture(textureTarget, textureHandle);
             GL.Uniform1(uniformLocations[name], (int)unit - (int)TextureUnit.Texture0);
+            GlHelper.CheckGlError("Shader SetTexture");
         }
     }
 }

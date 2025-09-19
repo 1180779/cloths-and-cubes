@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
@@ -6,7 +5,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Visualisation.Core;
-using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
 
 // based on
 // https://github.com/NogginBops/ImGui.NET_OpenTK_Sample
@@ -145,7 +143,7 @@ public class ImGuiController : IDisposable
         GL.BindVertexArray(prevVao);
         GL.BindBuffer(BufferTarget.ArrayBuffer, prevArrayBuffer);
 
-        CheckGlError("End of ImGui setup");
+        GlHelper.CheckGlError("End of ImGui setup");
     }
 
     /// <summary>
@@ -319,6 +317,7 @@ public class ImGuiController : IDisposable
 
     private void RenderImDrawData(ImDrawDataPtr drawData)
     {
+        GlHelper.CheckGlError("Start Projection (RenderImDrawData imGuiController)");
         if (drawData.CmdListsCount == 0)
         {
             return;
@@ -414,10 +413,10 @@ public class ImGuiController : IDisposable
         shader.Use();
         shader.SetMatrix4("projection_matrix", mvp);
         shader.SetInt("in_fontTexture", 0);
-        CheckGlError("Projection");
+        GlHelper.CheckGlError("Projection");
 
         GL.BindVertexArray(vertexArray);
-        CheckGlError("VAO");
+        GlHelper.CheckGlError("VAO");
 
         // clip rects are expected to be scaled from logical to framebuffer pixels by ImGui using DisplayFramebufferScale
         drawData.ScaleClipRects(io.DisplayFramebufferScale);
@@ -436,11 +435,11 @@ public class ImGuiController : IDisposable
 
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero,
                 cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>(), cmdList.VtxBuffer.Data);
-            CheckGlError($"Data Vert {n}");
+            GlHelper.CheckGlError($"Data Vert {n}");
 
             GL.BufferSubData(BufferTarget.ElementArrayBuffer, IntPtr.Zero, cmdList.IdxBuffer.Size * sizeof(ushort),
                 cmdList.IdxBuffer.Data);
-            CheckGlError($"Data Idx {n}");
+            GlHelper.CheckGlError($"Data Idx {n}");
 
             for (int cmdI = 0; cmdI < cmdList.CmdBuffer.Size; cmdI++)
             {
@@ -452,14 +451,14 @@ public class ImGuiController : IDisposable
 
                 GL.ActiveTexture(TextureUnit.Texture0);
                 GL.BindTexture(TextureTarget.Texture2D, (int)pcmd.TextureId);
-                CheckGlError("Texture");
+                GlHelper.CheckGlError("Texture");
 
                 // We do _windowHeight - (int)clip.W instead of (int)clip.Y because gl has flipped Y when it comes to these coordinates
                 var clip = pcmd.ClipRect;
                 // Use framebuffer height for flipping Y
                 GL.Scissor((int)clip.X, fbHeight - (int)clip.W, (int)(clip.Z - clip.X),
                     (int)(clip.W - clip.Y));
-                CheckGlError("Scissor");
+                GlHelper.CheckGlError("Scissor");
 
                 if ((io.BackendFlags & ImGuiBackendFlags.RendererHasVtxOffset) != 0)
                 {
@@ -473,7 +472,7 @@ public class ImGuiController : IDisposable
                         (int)pcmd.IdxOffset * sizeof(ushort));
                 }
 
-                CheckGlError("Draw");
+                GlHelper.CheckGlError("Draw");
             }
         }
 
@@ -542,17 +541,6 @@ public class ImGuiController : IDisposable
         }
 
         return false;
-    }
-
-    public static void CheckGlError(string title)
-    {
-        ErrorCode error;
-        int i = 1;
-        while ((error = GL.GetError()) != ErrorCode.NoError)
-        {
-            Debug.Print($"{title} ({i}): {error}");
-            ++i;
-        }
     }
 
     public static ImGuiKey TranslateKey(Keys key)

@@ -319,7 +319,7 @@ public class LightDirectional : LightPoint
         base.SetForShader(sh, structShName);
         sh.SetVector3Member(structShName + ".direction", -Direction);
 
-        sh.SetTexture($"shadowMap", TextureUnit.Texture0, DepthMapsTextureArray);
+        sh.SetTexture($"shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
         sh.SetInt("cascadeCount", ShadowCascadeLevels.Length);
 
         var matrices = GetLightSpaceMatrices();
