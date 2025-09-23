@@ -14,6 +14,8 @@ public static class MeshManager
         /// </summary>
         public int Vao { get; init; }
 
+        public int? Ebo { get; init; }
+
         /// <summary>
         /// Name used to identify the mesh.
         /// </summary>

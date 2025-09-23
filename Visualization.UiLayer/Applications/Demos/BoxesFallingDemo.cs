@@ -1,4 +1,5 @@
 using Engine.Collision;
+using OpenTK.Graphics.OpenGL;
 using Visualisation.Core.GameObjects;
 using IntersectionTests = Engine.Collision.IntersectionTests;
 using Random = Engine.Random;
@@ -8,9 +9,11 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class BoxesFallingDemo : RigidBodyApplication
 {
     /* The number of boxes in the simulation. */
-    private const uint Boxes = 20;
+    private const uint Boxes = 5;
+    private const uint Balls = 5;
 
     private Box[] boxes = new Box[Boxes];
+    private Ball[] balls = new Ball[Balls];
     private Plane plane = null!;
 
     protected override void InitializeScene()
@@ -21,6 +24,14 @@ public class BoxesFallingDemo : RigidBodyApplication
             boxes[i] = new Box();
             var box = boxes[i];
             Scene.AddGameObject(box);
+
+        }
+
+        for (var i = 0; i < Balls; i++)
+        {
+            balls[i] = new Ball();
+            var ball = balls[i];
+            Scene.AddGameObject(ball);
         }
 
         /* add ground plane to the scene */
@@ -66,6 +77,37 @@ public class BoxesFallingDemo : RigidBodyApplication
                     box.EngineBox.IsOverlapping = other.EngineBox.IsOverlapping = true;
                 }
             }
+
+            // Check for collisions with each ball
+            for (var j = 0; j < Balls; j++)
+            {
+                var other = balls[j];
+                if (!CollisionData.HasMoreContacts()) return;
+                CollisionDetector.BoxAndSphere(box.EngineBox, other.EngineBall, CollisionData);
+                //if (IntersectionTests.BoxAndSphere(box.EngineBox, other.EngineBall))
+                //{
+                //    box.EngineBox.IsOverlapping = true;
+                //    other.EngineBall.IsOverlapping = true;
+                //}
+            }
+        }
+
+        for (var j = 0; j < Balls; ++j) 
+        {
+            var ball = balls[j];
+            if(!CollisionData.HasMoreContacts()) return;
+            CollisionDetector.SphereAndHalfSpace(ball.EngineBall, plane.EnginePlane, CollisionData);
+
+            for (var k = j + 1; k < Balls; ++k)
+            {
+                var other = balls[k];
+                if (!CollisionData.HasMoreContacts()) return;
+                CollisionDetector.SphereAndSphere(ball.EngineBall, other.EngineBall, CollisionData);
+                if (IntersectionTests.SphereAndSphere(ball.EngineBall, other.EngineBall))
+                {
+                    ball.EngineBall.IsOverlapping = other.EngineBall.IsOverlapping = true;
+                }
+            }
         }
     }
 
@@ -84,6 +126,14 @@ public class BoxesFallingDemo : RigidBodyApplication
             box.EngineBox.CalculateInternals();
             box.EngineBox.IsOverlapping = false;
         }
+        for (var i = 0; i < Balls; i++)
+        {
+            var ball = balls[i];
+            // Run the physics
+            ball.EngineBall.Body.Integrate(duration);
+            ball.EngineBall.CalculateInternals();
+            ball.EngineBall.IsOverlapping = false;
+        }
     }
 
     /// <summary>
@@ -98,6 +148,12 @@ public class BoxesFallingDemo : RigidBodyApplication
             velocity: new Engine.Vector3(0, 0, 0)
         );
 
+        balls[0].EngineBall.SetState(
+            position: new Engine.Vector3(0, 10, 0),
+            orientation: new Engine.Quaternion(),
+            radius: 1.0f,
+            velocity: new Engine.Vector3(0, 0, 0));
+
         if (Boxes > 1)
         {
             boxes[1].EngineBox.SetState(
@@ -108,11 +164,25 @@ public class BoxesFallingDemo : RigidBodyApplication
             );
         }
 
+        if (Balls > 1)
+        {
+            balls[1].EngineBall.SetState(
+                position: new Engine.Vector3(3, 4.75f, 2),
+                orientation: new Engine.Quaternion(),
+                radius: 1.0f,
+                velocity: new Engine.Vector3(0, 0, 0));
+        }
+
         // Create the random objects
         Random random = new();
         for (var i = 2; i < Boxes; i++)
         {
             boxes[i].EngineBox.Random(random);
+        }
+
+        for (var i = 2; i < Balls; i++)
+        {
+            balls[i].EngineBall.Random(random);
         }
 
         // Reset the contacts

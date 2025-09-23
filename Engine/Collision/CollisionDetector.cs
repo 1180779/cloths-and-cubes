@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Engine.RigidBodies;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Engine.Collision;
 
@@ -401,5 +403,95 @@ public class CollisionDetector
         cTwo = pTwo + dTwo * mub;
 
         return cOne * 0.5f + cTwo * 0.5f;
+    }
+
+    public static bool BoxAndSphere(CollisionBox engineBox, CollisionSphere engineBall, CollisionData collisionData)
+    {
+        Vector3 center = engineBall.GetAxis(3);
+        Vector3 relCenter = engineBox.Transform.TransformInverse(center);
+
+        if(Math.Abs(relCenter.X) - engineBox.HalfSize.X > engineBall.Radius ||
+           Math.Abs(relCenter.Y) - engineBox.HalfSize.Y > engineBall.Radius ||
+           Math.Abs(relCenter.Z) - engineBox.HalfSize.Z > engineBall.Radius)
+        {
+            return false;
+        }
+
+        Vector3 closestPt = new Vector3();
+        Real dist = relCenter.X;
+        if (dist > engineBox.HalfSize.X) dist = engineBox.HalfSize.X;
+        if (dist < -engineBox.HalfSize.X) dist = -engineBox.HalfSize.X;
+        closestPt.X = dist;
+
+        dist = relCenter.Y;
+        if (dist > engineBox.HalfSize.Y) dist = engineBox.HalfSize.Y;
+        if (dist < -engineBox.HalfSize.Y) dist = -engineBox.HalfSize.Y;
+        closestPt.Y = dist;
+
+        dist = relCenter.Z;
+        if (dist > engineBox.HalfSize.Z) dist = engineBox.HalfSize.Z;
+        if (dist < -engineBox.HalfSize.Z) dist = -engineBox.HalfSize.Z;
+        closestPt.Z = dist;
+        
+        dist = (closestPt - relCenter).SquareMagnitude();
+        if (dist > engineBall.Radius * engineBall.Radius) return false;
+
+        Vector3 closestPtWorld = engineBox.Transform.Transform(closestPt);
+
+        Contact contact = collisionData.ContactList[collisionData.NextContactIndex];
+        contact.ContactNormal = closestPtWorld - center;
+        contact.ContactNormal.Normalise();
+        contact.ContactPoint = closestPtWorld;
+        contact.Penetration = engineBall.Radius - (Real)Math.Sqrt(dist);
+        contact.SetBodyData(engineBox.Body, engineBall.Body, collisionData.Friction, collisionData.Restitution);
+        collisionData.AddContacts(1);
+        collisionData.NextContactIndex++;
+
+        return true;
+    }
+
+    public static bool SphereAndSphere(CollisionSphere one, CollisionSphere two, CollisionData data)
+    {
+        if (data.ContactsLeft <= 0) return false;
+
+        Vector3 midline = one.GetAxis(3) - two.GetAxis(3);
+        Real size = midline.Magnitude;
+
+        if(size <= 0.0f || size >= one.Radius + two.Radius) return false;
+
+        Vector3 normal = midline * (1.0f / size);
+
+        Contact contact = data.ContactList[data.NextContactIndex];
+        contact.ContactNormal = normal;
+        contact.ContactPoint = one.GetAxis(3) + midline * 0.5f;
+        contact.Penetration = (one.Radius + two.Radius - size);
+        contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
+        data.AddContacts(1);
+        data.NextContactIndex++;
+        return true;
+    }
+
+    public static bool SphereAndHalfSpace(CollisionSphere sphere, CollisionPlane plane, CollisionData data)
+    {
+        if (data.ContactsLeft <= 0) return false;
+
+        var position = sphere.GetAxis(3);
+        // Find the distance from the sphere's center to the plane
+        Real ballDistance = plane.Direction * position - plane.Offset - sphere.Radius;
+
+        if (ballDistance >= 0.0f) return false;
+        // Check if we're within radius
+        // Create the contact - it has a normal in the plane direction
+        // and a contact point in the sphere's center, shifted by
+        // the radius in the plane direction.
+        Contact contact = data.ContactList[data.NextContactIndex];
+        contact.ContactNormal = plane.Direction;
+        contact.Penetration = - ballDistance;
+        contact.ContactPoint = position - plane.Direction * (ballDistance + sphere.Radius);
+        contact.SetBodyData(sphere.Body, null, data.Friction, data.Restitution);
+        data.AddContacts(1);
+
+        data.NextContactIndex++;
+        return true;
     }
 }

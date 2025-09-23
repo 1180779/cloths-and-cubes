@@ -1,3 +1,5 @@
+using Engine.RigidBodies;
+
 namespace Engine.Collision;
 
 public static class IntersectionTests
@@ -94,5 +96,20 @@ public static class IntersectionTests
 
         // Check for the intersection
         return boxDistance <= plane.Offset;
+    }
+
+    public static bool SphereAndHalfSpace(CollisionSphere sphere, CollisionPlane plane)
+    {
+        Real ballDistance =
+            plane.Direction * sphere.GetAxis(3) - sphere.Radius;
+        return ballDistance <= plane.Offset;
+    }
+
+    public static bool SphereAndSphere(CollisionSphere one, CollisionSphere two)
+    {
+        Vector3 midline = one.GetAxis(3) - two.GetAxis(3);
+        Real size = midline.SquareMagnitude();
+        Real radiusSum = one.Radius + two.Radius;
+        return size < radiusSum * radiusSum;
     }
 };
