@@ -7,19 +7,10 @@ const float PI = 3.14159265359;
 
 struct LightDirectional {
     vec3 direction;
-    vec3 diffuse;
-    vec3 specular;
 };
 
 struct LightPoint {
     vec3 pos;
-
-    vec3 diffuse;
-    vec3 specular;
-
-    float constant;
-    float linear;
-    float quadratic;
 };
 
 struct LightSpotlight {
@@ -27,9 +18,6 @@ struct LightSpotlight {
     vec3 direction;
     float cutoff;
     float outerCutoff;
-
-    vec3 diffuse;
-    vec3 specular;
 };
 
 /* PBR parameters */

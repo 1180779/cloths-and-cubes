@@ -316,7 +316,6 @@ public class LightDirectional : LightPoint
 
     public override void SetForShader(Shader sh, string structShName)
     {
-        base.SetForShader(sh, structShName);
         sh.SetVector3Member(structShName + ".direction", -Direction);
 
         sh.SetTexture($"shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
