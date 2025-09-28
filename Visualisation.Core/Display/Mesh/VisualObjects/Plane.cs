@@ -6,7 +6,7 @@ public sealed class Plane : AbstractVisualObject
 {
     public Plane()
     {
-        Material = Material.CyanRubber;
+        Material = Material.Plastic;
         Scale = new(1000.0f, 1000.0f, 1000.0f);
     }
 
