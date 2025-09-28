@@ -7,12 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\AssetPathGenerator\AssetPathGenerator.csproj"/>
         <ProjectReference Include="..\Engine\Engine.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.8.2"/>
         <PackageReference Include="OpenTK" Version="4.9.4"/>
         <PackageReference Include="OpenTK.Mathematics" Version="4.9.4"/>
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -35,7 +38,7 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="Shaders\shadowDepthMapShader.geom">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="Shaders\imguiShader.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

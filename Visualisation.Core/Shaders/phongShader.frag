@@ -5,6 +5,14 @@ const float PI = 3.14159265359;
 
 /* struct definitions */
 
+struct PbrMaterial {
+    vec3 albedo;
+    vec3 normal;
+    float metallic;
+    float roughness;
+    float ao;
+};
+
 struct LightDirectional {
     vec3 direction;
 };
@@ -20,11 +28,27 @@ struct LightSpotlight {
     float outerCutoff;
 };
 
+struct LightDirectionalOut {
+    vec3 direction;
+};
+
+struct LightSpotlightOut {
+    vec3 tangentPos;
+    vec3 direction;
+    float cutoff;
+    float outerCutoff;
+};
+
+struct LightPointOut {
+    vec3 tangentPos;
+};
+
 /* PBR parameters */
-uniform vec3  albedo;
-uniform float metallic;
-uniform float roughness;
-uniform float ao;
+uniform sampler2D albedoMap;
+uniform sampler2D normalMap;
+uniform sampler2D metallicMap;
+uniform sampler2D roughnessMap;
+uniform sampler2D aoMap;
 
 /* biad parameters */
 uniform float BIAS_MAX;
@@ -40,21 +64,24 @@ uniform mat4 view;
 uniform float farPlane;
 
 /* inputs from vertex shader */
-in vec3 normal;
-in vec3 P;
+in vec3 Normal;
+in vec3 TangentFragPosition;
+in vec3 FragPosition;
+in vec2 TexCoords;
 
 /* lights data */
 uniform vec3 globalAmbient;
 
 uniform LightDirectional lightD;
-uniform LightSpotlight lightS[4];
-uniform LightPoint lightP[4];
+in LightDirectionalOut tangentLightD;
+in LightSpotlightOut tangentLightS[4];
+in LightPointOut tangentLightP[4];
 
 uniform int lightDCount;
 uniform int lightSCount;
 uniform int lightPCount;
 
-uniform vec3 viewPos;
+in vec3 TangentViewPos;
 
 /* for parameters */
 uniform vec3 fogColor;
@@ -110,10 +137,10 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 /* other helper functions */
 
-float ShadowCalculation(vec3 fragPosWorldSpace)
+float ShadowCalculation()
 {
     // select cascade layer
-    vec4 fragPosViewSpace = view * vec4(fragPosWorldSpace, 1.0);
+    vec4 fragPosViewSpace = view * vec4(FragPosition, 1.0);
     float depthValue = abs(fragPosViewSpace.z);
 
     int layer = -1;
@@ -130,7 +157,7 @@ float ShadowCalculation(vec3 fragPosWorldSpace)
         layer = cascadeCount;
     }
 
-    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);
+    vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(FragPosition, 1.0);
     // perform perspective divide
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     // transform to [0,1] range
@@ -145,7 +172,7 @@ float ShadowCalculation(vec3 fragPosWorldSpace)
         return 0.0;
     }
     // calculate bias (based on depth map resolution and slope)
-    vec3 normal = normalize(normal);
+    vec3 normal = normalize(Normal);
     float bias = max(BIAS_MAX * (1.0 - dot(normal, lightD.direction)), BIAS_MIN);
     if (layer == cascadeCount)
     {
@@ -172,7 +199,7 @@ float ShadowCalculation(vec3 fragPosWorldSpace)
     return shadow;
 }
 
-vec3 lightdirectionalCalculate(LightDirectional light, vec3 N, vec3 V, vec3 F0) {
+vec3 lightdirectionalCalculate(LightDirectionalOut light, vec3 N, vec3 V, vec3 F0, PbrMaterial material) {
     vec3 L = light.direction;
     vec3 H = normalize(V + L);
 
@@ -180,8 +207,8 @@ vec3 lightdirectionalCalculate(LightDirectional light, vec3 N, vec3 V, vec3 F0) 
     vec3 radiance = vec3(1.0, 1.0, 1.0); /* directional light = no attenuation */
 
     // Cook-Torrance BRDF
-    float NDF = DistributionGGX(N, H, roughness);
-    float G   = GeometrySmith(N, V, L, roughness);
+    float NDF = DistributionGGX(N, H, material.roughness);
+    float G   = GeometrySmith(N, V, L, material.roughness);
     vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
 
     vec3 numerator    = NDF * G * F;
@@ -197,29 +224,29 @@ vec3 lightdirectionalCalculate(LightDirectional light, vec3 N, vec3 V, vec3 F0) 
     // multiply kD by the inverse metalness such that only non-metals 
     // have diffuse lighting, or a linear blend if partly metal (pure metals
     // have no diffuse light).
-    kD *= 1.0 - metallic;
+    kD *= 1.0 - material.metallic;
 
     // scale light by NdotL
     float NdotL = max(dot(N, L), 0.0);
 
-    float shadow = ShadowCalculation(P);
+    float shadow = ShadowCalculation();
 
     // add to outgoing radiance Lo
-    return (kD * albedo / PI + specular) * radiance * NdotL * (1.0 - shadow);// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+    return (kD * material.albedo / PI + specular) * radiance * NdotL * (1.0 - shadow);// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 }
 
-vec3 pointlightCalculate(LightPoint light, vec3 N, vec3 V, vec3 F0) {
-    vec3 L = normalize(light.pos - P);
+vec3 pointlightCalculate(LightPointOut light, vec3 N, vec3 V, vec3 F0, PbrMaterial material) {
+    vec3 L = normalize(light.tangentPos - TangentFragPosition);
     vec3 H = normalize(V + L);
 
-    vec3 d = light.pos - P;
+    vec3 d = light.tangentPos - TangentFragPosition;
     float distance = length(d);
     float attenuation = 1.0 / (distance * distance);
     vec3 radiance = vec3(1.0, 1.0, 1.0) * attenuation; /* add light colors as a dynamic parameter */
 
     // Cook-Torrance BRDF
-    float NDF = DistributionGGX(N, H, roughness);
-    float G   = GeometrySmith(N, V, L, roughness);
+    float NDF = DistributionGGX(N, H, material.roughness);
+    float G   = GeometrySmith(N, V, L, material.roughness);
     vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
 
     vec3 numerator    = NDF * G * F;
@@ -235,31 +262,31 @@ vec3 pointlightCalculate(LightPoint light, vec3 N, vec3 V, vec3 F0) {
     // multiply kD by the inverse metalness such that only non-metals 
     // have diffuse lighting, or a linear blend if partly metal (pure metals
     // have no diffuse light).
-    kD *= 1.0 - metallic;
+    kD *= 1.0 - material.metallic;
 
     // scale light by NdotL
     float NdotL = max(dot(N, L), 0.0);
 
     // add to outgoing radiance Lo
-    return (kD * albedo / PI + specular) * radiance * NdotL;// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+    return (kD * material.albedo / PI + specular) * radiance * NdotL;// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 }
 
-vec3 spotlightCalculate(LightSpotlight light, vec3 N, vec3 V, vec3 F0) {
-    vec3 L = normalize(light.pos - P);
+vec3 spotlightCalculate(LightSpotlightOut light, vec3 N, vec3 V, vec3 F0, PbrMaterial material) {
+    vec3 L = normalize(light.tangentPos - TangentFragPosition);
     vec3 H = normalize(V + L);
 
     float theta = dot(L, light.direction);
     float epsilon = light.cutoff - light.outerCutoff;
     float intensity = clamp((theta - light.outerCutoff) / epsilon, 0.0, 1.0);
 
-    vec3 d = light.pos - P;
+    vec3 d = light.tangentPos - TangentFragPosition;
     float distance = length(d);
     float attenuation = 1.0 / (distance * distance);
     vec3 radiance = vec3(1.0, 1.0, 1.0) * attenuation * intensity; /* add light colors as a dynamic parameter */
 
     // Cook-Torrance BRDF
-    float NDF = DistributionGGX(N, H, roughness);
-    float G   = GeometrySmith(N, V, L, roughness);
+    float NDF = DistributionGGX(N, H, material.roughness);
+    float G   = GeometrySmith(N, V, L, material.roughness);
     vec3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
 
     vec3 numerator    = NDF * G * F;
@@ -275,13 +302,13 @@ vec3 spotlightCalculate(LightSpotlight light, vec3 N, vec3 V, vec3 F0) {
     // multiply kD by the inverse metalness such that only non-metals 
     // have diffuse lighting, or a linear blend if partly metal (pure metals
     // have no diffuse light).
-    kD *= 1.0 - metallic;
+    kD *= 1.0 - material.metallic;
 
     // scale light by NdotL
     float NdotL = max(dot(N, L), 0.0);
 
     // add to outgoing radiance Lo
-    return (kD * albedo / PI + specular) * radiance * NdotL;// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+    return (kD * material.albedo / PI + specular) * radiance * NdotL;// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 
 }
 
@@ -292,8 +319,24 @@ vec3 spotlightCalculate(LightSpotlight light, vec3 N, vec3 V, vec3 F0) {
 
 void main()
 {
-    vec3 N = normalize(normal);
-    vec3 V = normalize(viewPos - P);
+    vec3 albedoRgb = texture(albedoMap, TexCoords).rgb;
+    vec3 albedo     = pow(albedoRgb, vec3(2.2));
+    vec3 normal     = texture(normalMap, TexCoords).rgb;
+    float metallic  = texture(metallicMap, TexCoords).r;
+    float roughness = texture(roughnessMap, TexCoords).r;
+    float ao        = texture(aoMap, TexCoords).r;
+
+    //    vec3 N = normalize(Normal);
+    vec3 N = normalize(normal * 2.0 - 1.0);// this normal is in tangent space, so is the light direction
+    vec3 V = normalize(TangentViewPos - TangentFragPosition);
+    
+    PbrMaterial material = PbrMaterial(
+    albedo,
+    normal,
+    metallic,
+    roughness,
+    ao
+    );
 
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)    
@@ -305,27 +348,27 @@ void main()
 
     // calculate per-light radiance
     if (lightDCount > 0) {
-        Lo += lightdirectionalCalculate(lightD, N, V, F0);
+        Lo += lightdirectionalCalculate(tangentLightD, N, V, F0, material);
     }
     for (int i = 0; i < lightSCount; ++i)
     {
-        Lo += spotlightCalculate(lightS[i], N, V, F0);
+        Lo += spotlightCalculate(tangentLightS[i], N, V, F0, material);
     }
     for (int i = 0; i < lightPCount; ++i)
     {
-        Lo += pointlightCalculate(lightP[i], N, V, F0);
+        Lo += pointlightCalculate(tangentLightP[i], N, V, F0, material);
     }
 
     // ambient lighting (note that the next IBL tutorial will replace 
     // this ambient lighting with environment lighting).
-    vec3 ambient = globalAmbient * albedo * ao;
+    vec3 ambient = globalAmbient * material.albedo * material.ao;
     vec3 color = ambient + Lo;
 
     // calculate fog
-    float fogFactor = 1.0f - exp(-fogDensity * length(viewPos - P));
+    float fogFactor = 1.0f - exp(-fogDensity * length(TangentViewPos - TangentFragPosition));
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
-    // TODO: move HDR tonemapping to post-processing shader
+    // TODO: move HDR tonemapping and gamma correct to post-processing shader
     // HDR tonemapping
     color = color / (color + vec3(1.0));
     // gamma correct
