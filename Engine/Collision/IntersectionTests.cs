@@ -40,6 +40,7 @@ public static class IntersectionTests
 
         bool TestOverlap(Vector3 axis)
         {
+            if(axis.SquareMagnitude() < (Real)0.0001) return true;
             return OverlapOnAxis(one, two, axis, toCentre);
         }
 
