@@ -1,4 +1,6 @@
 using Engine.Collision;
+using Engine.Collision.Bounding_Volume_Hierarchy;
+using OpenTK.Windowing.Common;
 using Visualisation.Core.GameObjects;
 using IntersectionTests = Engine.Collision.IntersectionTests;
 using Random = Engine.Random;
@@ -117,5 +119,39 @@ public class BoxesFallingDemo : RigidBodyApplication
 
         // Reset the contacts
         CollisionData.ContactCount = 0;
+    }
+
+
+    // TODO: REMOVE
+    protected override void OnUpdateFrame(FrameEventArgs e)
+    {
+        base.OnUpdateFrame(e);
+
+        if (InputProvider.IsKeyPressed(Visualisation.Core.Inputs.InputKey.Q))
+        {
+            Engine.Vector3 minV = new(-1000, -1000, -1000);
+            Engine.Vector3 maxV = new(1000, 1000, 1000);
+
+            for (var i = 0; i < Boxes; i++)
+            {
+                if (boxes[i].EngineBox.Body.Position.X < minV.X) minV.X = boxes[i].EngineBox.Body.Position.X;
+                if (boxes[i].EngineBox.Body.Position.Y < minV.Y) minV.Y = boxes[i].EngineBox.Body.Position.Y;
+                if (boxes[i].EngineBox.Body.Position.Z < minV.Z) minV.Z = boxes[i].EngineBox.Body.Position.Z;
+                if (boxes[i].EngineBox.Body.Position.X > maxV.X) maxV.X = boxes[i].EngineBox.Body.Position.X;
+                if (boxes[i].EngineBox.Body.Position.Y > maxV.Y) maxV.Y = boxes[i].EngineBox.Body.Position.Y;
+                if (boxes[i].EngineBox.Body.Position.Z > maxV.Z) maxV.Z = boxes[i].EngineBox.Body.Position.Z;
+            }
+                
+            foreach(var box in boxes)
+            {
+                Console.WriteLine($"{box.EngineBox.Body.Position}: {MortonCodes.Encode(box.EngineBox.Body.Position, minV, maxV):B}");
+            }
+        }
+
+        if(InputProvider.IsKeyPressed(Visualisation.Core.Inputs.InputKey.P))
+        {
+            Console.WriteLine($"Currently at: {this.Scene.CamerasManager.CurrentCamera.Position}");
+            Console.WriteLine($"Looking at: {this.Scene.CamerasManager.CurrentCamera.Front}");
+        }
     }
 }
