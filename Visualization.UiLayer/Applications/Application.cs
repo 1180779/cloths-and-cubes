@@ -60,23 +60,15 @@ public class Application : GameWindow
     }
 
     protected bool StepsLimit { get; set; }
-    protected Int64 AvailableSteps { get; set; }
+    protected long AvailableSteps { get; set; }
 
     protected bool DoUpdate
     {
         get
         {
-            if (StepsLimit)
-            {
-                if (AvailableSteps > 0)
-                {
-                    AvailableSteps--;
-                    return true;
-                }
-
-                return false;
-            }
-
+            if (!StepsLimit) return true;
+            if (AvailableSteps <= 0) return false;
+            AvailableSteps--;
             return true;
         }
     }

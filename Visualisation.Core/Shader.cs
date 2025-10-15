@@ -7,20 +7,8 @@ namespace Visualisation.Core
         private readonly int handle;
         private readonly Dictionary<string, int> uniformLocations = new();
 
-#if DEBUG
-        public readonly string VertexShaderPath;
-        public readonly string FragmentShaderPath;
-        public readonly string? GeometryShaderPath;
-#endif
-
         public Shader(string vertexPath, string fragmentPath, string? geometryPath = null)
         {
-#if DEBUG
-            VertexShaderPath = vertexPath;
-            FragmentShaderPath = fragmentPath;
-            GeometryShaderPath = geometryPath;
-#endif
-
             var vertexShaderSource = File.ReadAllText(LoadShader(vertexPath));
             var fragmentShaderSource = File.ReadAllText(LoadShader(fragmentPath));
 

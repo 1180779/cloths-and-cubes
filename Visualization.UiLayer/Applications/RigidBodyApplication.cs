@@ -12,13 +12,9 @@ public abstract class RigidBodyApplication : Application
 
     protected ContactResolver ContactResolver = new(MaxContacts * 8);
 
-    // TODO: implement this after adding some ui elements
-    // protected bool RenderDebugInfo = false;
     protected abstract void GenerateContacts();
     protected abstract void UpdateObjects(float duration);
     protected abstract void Reset();
-
-    private int simulationStep = 0;
 
     protected override void Update(float deltaTime)
     {
@@ -32,8 +28,6 @@ public abstract class RigidBodyApplication : Application
             deltaTime = 0.05f;
         }
 
-        simulationStep++;
-        // Console.WriteLine($"Simulation step: {simulationStep}");
         UpdateObjects(deltaTime);
 
         // Perform the contact generation
