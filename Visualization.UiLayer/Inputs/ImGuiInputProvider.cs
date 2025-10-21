@@ -45,13 +45,11 @@ public class ImGuiInputProvider : IInputProvider
 
     public float GetMouseScroll()
     {
-        // Return current scroll value
         return mouseScrollDelta;
     }
 
     public void ResetMouseScroll()
     {
-        // Reset scroll value after reading it (for per-frame usage)
         mouseScrollDelta = 0;
     }
 

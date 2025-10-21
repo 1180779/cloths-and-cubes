@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using ImageMagick;
 using OpenTK.Graphics.OpenGL4;
 using SixLabors.ImageSharp;
@@ -51,9 +52,14 @@ public static class TexturesManager
             var pngPath = Path.ChangeExtension(texturePath, ".png");
             if (!File.Exists(pngPath))
             {
+                Debug.WriteLine($"Converting PSD to PNG ({texturePath})");
                 using var magickImage = new MagickImage(texturePath);
                 magickImage.Format = MagickFormat.Png;
                 magickImage.Write(pngPath);
+            }
+            else
+            {
+                Debug.WriteLine($"Loading previously converted PNG ({pngPath})");
             }
 
             pathToLoad = pngPath;
