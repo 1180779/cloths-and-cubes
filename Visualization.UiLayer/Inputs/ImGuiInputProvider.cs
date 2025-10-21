@@ -1,3 +1,4 @@
+using ImGuiNET;
 using OpenTK.Windowing.Desktop;
 using Visualisation.Core.Inputs;
 using Visualization.UiLayer.UI;
@@ -33,6 +34,11 @@ public class ImGuiInputProvider : IInputProvider
 
     public bool IsKeyDown(InputKey key)
     {
+        if (ImGui.GetIO().WantCaptureKeyboard)
+        {
+            return false;
+        }
+
         if (!KeyMap.OpenTkKeysMap.TryGetValue(key, out var mappedKey))
         {
             throw new ArgumentOutOfRangeException(nameof(key), key, null);
@@ -43,6 +49,11 @@ public class ImGuiInputProvider : IInputProvider
 
     public bool IsKeyPressed(InputKey key)
     {
+        if (ImGui.GetIO().WantCaptureKeyboard)
+        {
+            return false;
+        }
+
         if (!KeyMap.OpenTkKeysMap.TryGetValue(key, out var mappedKey))
         {
             throw new ArgumentOutOfRangeException(nameof(key), key, null);

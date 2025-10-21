@@ -71,6 +71,7 @@ public static class HelpWindow
                     },
                 }
             },
+#if DEBUG
             {
                 " Objects in time", new()
                 {
@@ -86,6 +87,7 @@ public static class HelpWindow
                     }
                 }
             },
+#endif
             {
                 "Scene", new()
                 {

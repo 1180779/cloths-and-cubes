@@ -4,6 +4,11 @@ using Visualisation.Core.GameObjects.Scenes;
 
 namespace Visualisation.Core.FrameCapsule;
 
+/// <summary>
+/// Represents a snapshot of the frame, containing the state of the visual objects
+/// present in the scene at a specific point in time. This allows storing and
+/// restoring the state of the scene as it existed during the snapshot's creation.
+/// </summary>
 public struct FrameSnapshot
 {
     public FrameSnapshot(IVisualObject[] gameObjects)
@@ -15,41 +20,27 @@ public struct FrameSnapshot
 
     public void Restore(SceneManager scene)
     {
-        // 1. Create a fast-lookup map of the CURRENT live objects by their unique ID.
-        // This is the key to decoupling from list order and count.
         Dictionary<Guid, IVisualObject> liveObjectsMap =
             scene.GameObjects.ToDictionary(go => go.Id, go => go);
 
-        // 2. Iterate through the objects in the snapshot.
         foreach (IVisualObject snapshotObject in GameObjects)
         {
-            // 3. Find the corresponding live object in the map using the snapshot's ID.
             if (liveObjectsMap.TryGetValue(snapshotObject.Id, out IVisualObject liveObject))
             {
-                // 4. We found a match! Restore the state.
                 ObjectStateRestorer.RestoreStateFrom(liveObject, snapshotObject);
             }
-            else
-            {
-                // This object existed in the snapshot but has since been destroyed
-                // in the live scene. We can safely ignore it.
-                // You could add logging here if needed:
-                // Console.WriteLine($"Could not find live object with ID {snapshotObject.Id} to restore.");
-            }
         }
-
-        // Note: Any new objects created in the live scene since the snapshot was taken
-        // will simply be ignored, as they won't have a corresponding entry in the snapshot.
-        // This is usually the desired behavior.
     }
 }
 
+/// <summary>
+/// Facilitates the saving and restoring of frames by maintaining a buffer of frame snapshots.
+/// It allows navigation through saved frames to either analyze or restore past states of the scene.
+///
+/// Not intended to be used in the final product. 
+/// </summary>
 public class FrameSaver
 {
-    public FrameSaver()
-    {
-    }
-
     public FrameSaver(int frameBufferLimit)
     {
         FrameBufferLimit = frameBufferLimit;
@@ -64,14 +55,10 @@ public class FrameSaver
         {
             currentFrameIndex = value;
             // wrap around the buffer if necessary
-            if (currentFrameIndex >= FrameBufferLimit || currentFrameIndex < 0)
-            {
-                currentFrameIndex %= FrameBufferLimit;
-                if (currentFrameIndex < 0)
-                {
-                    currentFrameIndex += FrameBufferLimit;
-                }
-            }
+            if (currentFrameIndex < FrameBufferLimit && currentFrameIndex >= 0) return;
+            currentFrameIndex %= FrameBufferLimit;
+            if (currentFrameIndex >= 0) return;
+            currentFrameIndex += FrameBufferLimit;
         }
     }
 
@@ -135,17 +122,11 @@ public class FrameSaver
             return;
 
         CurrentFrameIndex = NextIndexToSaveTo;
-        // TODO: do something with the nullability of the CreateDeepCopy method return value
         FrameSnapshot snapshot = new(scene.GameObjects.Select(go =>
         {
             var clone = ObjectCloner.CreateDeepCopy(go);
-            if (clone is { })
-            {
-                return clone;
-            }
-
-            return null;
-        }).Where(o => o != null).ToArray());
+            return clone ?? null;
+        }).Where(o => o != null).ToArray()!);
         frameBuffer[CurrentFrameIndex] = snapshot;
         savedFrameIndex = CurrentFrameIndex;
     }

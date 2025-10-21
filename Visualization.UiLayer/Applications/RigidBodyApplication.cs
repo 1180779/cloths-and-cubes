@@ -39,8 +39,9 @@ public abstract class RigidBodyApplication : Application
             CollisionData.ContactCount,
             deltaTime
         );
-
+#if DEBUG
         FrameSaver.SaveFrame(Scene);
+#endif
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
@@ -86,6 +87,7 @@ public abstract class RigidBodyApplication : Application
             StepsLimit = false;
         }
 
+#if DEBUG
         // frame saver
         if (InputProvider.IsKeyDown(InputKey.Right))
         {
@@ -98,6 +100,7 @@ public abstract class RigidBodyApplication : Application
             FrameSaver.GoBackNFrames(1);
             FrameSaver.CurrentFrame?.Restore(Scene);
         }
+#endif
 
         // reset
         if (InputProvider.IsKeyPressed(InputKey.R))

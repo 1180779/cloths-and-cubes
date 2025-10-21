@@ -7,7 +7,7 @@ namespace Visualization.UiLayer
     {
         private static void Main(string[] args)
         {
-            using Application application = new BoxesFallingDemo();
+            using Application application = new PbrMaterialsDemo();
             application.Run();
             application.Focus();
         }

@@ -3,7 +3,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects;
 public abstract class AbstractVisualObject : IIdentifiable, IMesh
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    protected Material Material { get; set; } = Material.Organic.Feathers;
+    public Material Material { get; set; } = Material.Organic.Feathers;
 
     public Vector3 Position { get; set; } = new(0.0f, 0.0f, 0.0f);
     public Vector3 Scale { get; set; } = new(1.0f, 1.0f, 1.0f);
