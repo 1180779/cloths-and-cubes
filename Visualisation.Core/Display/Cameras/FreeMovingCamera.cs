@@ -48,6 +48,4 @@ public class FreeMovingCamera : CameraBase
         YawDegrees += mouseDelta.X * Sensitivity;
         PitchDegrees -= mouseDelta.Y * Sensitivity; // Reversed since y-coordinates range from bottom to top
     }
-
-    private Int64 i = 0;
 }

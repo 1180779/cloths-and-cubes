@@ -197,7 +197,7 @@ public class Application : GameWindow
 
         if (!ImGui.GetIO().WantCaptureMouse && Scene.CamerasManager.CameraMode)
         {
-            Scene.CamerasManager.CurrentCamera.FovDegrees -= e.OffsetY;
+            Scene.CamerasManager.CurrentCamera.FovDegrees -= InputProvider.GetMouseScroll();
         }
     }
 

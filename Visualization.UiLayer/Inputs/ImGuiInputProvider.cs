@@ -1,7 +1,9 @@
 using ImGuiNET;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Visualisation.Core.Inputs;
 using Visualization.UiLayer.UI;
+using CursorState = Visualisation.Core.Inputs.CursorState;
 using MouseButton = Visualisation.Core.Inputs.MouseButton;
 
 namespace Visualization.UiLayer.Inputs;
@@ -13,11 +15,20 @@ public class ImGuiInputProvider : IInputProvider
     private Vector2 mousePosition, lastMousePosition;
     private bool isMousePositionSet;
     private CursorState lastCursorState = CursorState.Normal;
+    private float mouseScrollDelta;
 
     public ImGuiInputProvider(GameWindow gameWindow, ImGuiController imGuiController)
     {
         this.gameWindow = gameWindow;
         this.imGuiController = imGuiController;
+
+        // Subscribe to the mouse wheel event to capture scroll data
+        this.gameWindow.MouseWheel += OnMouseWheel;
+    }
+
+    private void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        mouseScrollDelta = e.OffsetY;
     }
 
     public bool IsMouseButtonPressed(MouseButton button)
@@ -30,6 +41,18 @@ public class ImGuiInputProvider : IInputProvider
             _ => throw new ArgumentOutOfRangeException(nameof(button), button, null)
         };
         return gameWindow.MouseState.IsButtonPressed(mappedButton);
+    }
+
+    public float GetMouseScroll()
+    {
+        // Return current scroll value
+        return mouseScrollDelta;
+    }
+
+    public void ResetMouseScroll()
+    {
+        // Reset scroll value after reading it (for per-frame usage)
+        mouseScrollDelta = 0;
     }
 
     public bool IsKeyDown(InputKey key)
