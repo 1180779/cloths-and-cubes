@@ -16,9 +16,9 @@ public static class Program
     private static readonly Dictionary<string, string[]> MaterialMapIdentifiers = new()
     {
         { "albedo", ["_albedo", "albedo"] },
-        { "normal", ["_normal", "normalogl"] },
+        { "normal", ["_normal", "normal"] },
         { "metallic", ["_metallic", "metallic"] },
-        { "roughness", ["_roughness", "_height", "roughness"] },
+        { "roughness", ["_roughness", "_height", "roughness", "height"] },
         { "ao", ["_ao", "ao"] }
     };
 
@@ -26,7 +26,6 @@ public static class Program
     {
         if (args.Length is 0 or > 2)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Please provide the path to the source asset folder.");
             Console.WriteLine("Usage: MaterialGenerator <source_directory> [output_file]");
             Console.WriteLine(
@@ -115,9 +114,8 @@ public static class Program
                 materialName += "Material";
             }
 
-            var materialMaps = GetMaterialPaths(materialDir, rootPath)!; // We know it's a valid material dir.
+            var materialMaps = GetMaterialPaths(materialDir, rootPath);
 
-            sb.AppendLine($"{indent}/// <summary>Auto-generated material for '{materialDir.Name}'.</summary>");
             sb.AppendLine($"{indent}public static Material {materialName} {{ get; }} = new(");
             sb.AppendLine($"{indent}    \"{materialMaps["albedo"]}\",");
             sb.AppendLine($"{indent}    \"{materialMaps["normal"]}\",");
@@ -145,15 +143,16 @@ public static class Program
         }
     }
 
-    /// <summary>Checks if a directory contains a full set of PBR textures.</summary>
+    /// <summary>
+    /// Checks if a directory contains a full set of PBR textures.
+    /// </summary>
     private static bool IsMaterialDirectory(DirectoryInfo directory)
     {
         var files = directory.GetFiles();
         foreach (var mapType in MaterialMapIdentifiers)
         {
             bool found = mapType.Value.Any(identifier =>
-                files.Any(f =>
-                    Path.GetFileNameWithoutExtension(f.Name).EndsWith(identifier, StringComparison.OrdinalIgnoreCase))
+                files.Any(f => FileContainsIdentifier(f, identifier))
             );
             if (!found) return false;
         }
@@ -161,24 +160,37 @@ public static class Program
         return true;
     }
 
-    /// <summary>Gets the paths for a known material directory.</summary>
+    /// <summary>
+    /// Checks if a file contains the specified identifier in its name (excluding extension).
+    /// </summary>
+    /// <param name="file">The file to check</param>
+    /// <param name="identifier">The identifier to look for in the filename</param>
+    /// <returns>True if the file contains the identifier, false otherwise</returns>
+    private static bool FileContainsIdentifier(FileInfo file, string identifier)
+    {
+        return !Path.GetFileName(file.Name).EndsWith(".meta") &&
+            Path.GetFileNameWithoutExtension(file.Name).Contains(identifier, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Gets the paths for a known material directory.
+    /// </summary>
     private static Dictionary<string, string> GetMaterialPaths(DirectoryInfo directory, string rootPath)
     {
         var files = directory.GetFiles();
-        var foundMaps = new Dictionary<string, string>();
+        var foundMaps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var mapType in MaterialMapIdentifiers)
         {
             FileInfo? foundFile = null;
             foreach (var identifier in mapType.Value)
             {
-                foundFile = files.FirstOrDefault(f =>
-                    Path.GetFileNameWithoutExtension(f.Name).EndsWith(identifier, StringComparison.OrdinalIgnoreCase));
+                foundFile = files.FirstOrDefault(f => FileContainsIdentifier(f, identifier));
                 if (foundFile != null) break;
             }
 
             var relativePath = Path.GetRelativePath(rootPath, foundFile!.FullName).Replace('\\', '/');
-            foundMaps[mapType.Key] = $"{AssetRootFolder}/{relativePath}";
+            foundMaps[mapType.Key.ToLowerInvariant()] = $"{AssetRootFolder}/{relativePath}";
         }
 
         return foundMaps;

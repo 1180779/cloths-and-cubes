@@ -6,9 +6,28 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
 public sealed partial class Material
 {
+    public static partial class Roofing
+    {
+        public static Material OldCedarShinglesUnity { get; } = new(
+            "Textures/roofing/old-cedar-shingles-unity/old-cedar-shingles_albedo.png",
+            "Textures/roofing/old-cedar-shingles-unity/old-cedar-shingles_normal-ogl.png",
+            "Textures/roofing/old-cedar-shingles-unity/old-cedar-shingles_metallic.psd",
+            "Textures/roofing/old-cedar-shingles-unity/old-cedar-shingles_height.png",
+            "Textures/roofing/old-cedar-shingles-unity/old-cedar-shingles_ao.png"
+        );
+
+        public static Material LaminatedShinglesUnity { get; } = new(
+            "Textures/roofing/laminated-shingles-unity/laminated-shingles_1_albedo.png",
+            "Textures/roofing/laminated-shingles-unity/laminated-shingles_1_normal-ogl.png",
+            "Textures/roofing/laminated-shingles-unity/laminated-shingles_1_metallic.psd",
+            "Textures/roofing/laminated-shingles-unity/laminated-shingles_1_height.png",
+            "Textures/roofing/laminated-shingles-unity/laminated-shingles_1_ao.png"
+        );
+
+    }
+
     public static partial class Fabric
     {
-        /// <summary>Auto-generated material for 'dirty-padded-leather'.</summary>
         public static Material DirtyPaddedLeather { get; } = new(
             "Textures/fabric/dirty-padded-leather/dirty-padded-leather_albedo.png",
             "Textures/fabric/dirty-padded-leather/dirty-padded-leather_Normal.png",
@@ -17,7 +36,6 @@ public sealed partial class Material
             "Textures/fabric/dirty-padded-leather/dirty-padded-leather_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'soft-blanket'.</summary>
         public static Material SoftBlanket { get; } = new(
             "Textures/fabric/soft-blanket/soft-blanket_albedo.png",
             "Textures/fabric/soft-blanket/soft-blanket_Normal.png",
@@ -26,7 +44,14 @@ public sealed partial class Material
             "Textures/fabric/soft-blanket/soft-blanket_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'coarse-old-fabric'.</summary>
+        public static Material GreyUpholsteryUnity { get; } = new(
+            "Textures/fabric/grey-upholstery-unity/grey-upholstery_albedo.png",
+            "Textures/fabric/grey-upholstery-unity/grey-upholstery_normal-ogl.png",
+            "Textures/fabric/grey-upholstery-unity/grey-upholstery_metallic.psd",
+            "Textures/fabric/grey-upholstery-unity/grey-upholstery_height.png",
+            "Textures/fabric/grey-upholstery-unity/grey-upholstery_ao.png"
+        );
+
         public static Material CoarseOldFabric { get; } = new(
             "Textures/fabric/coarse-old-fabric/coarse-old-fabric_albedo.png",
             "Textures/fabric/coarse-old-fabric/coarse-old-fabric_Normal.png",
@@ -35,7 +60,6 @@ public sealed partial class Material
             "Textures/fabric/coarse-old-fabric/coarse-old-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dirty-wicker-weave1'.</summary>
         public static Material DirtyWickerWeave1 { get; } = new(
             "Textures/fabric/dirty-wicker-weave1/dirty-wicker-weave1_albedo.png",
             "Textures/fabric/dirty-wicker-weave1/dirty-wicker-weave1_Normal.png",
@@ -44,7 +68,14 @@ public sealed partial class Material
             "Textures/fabric/dirty-wicker-weave1/dirty-wicker-weave1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'brown-leather'.</summary>
+        public static Material RoughCouchFabricUnity { get; } = new(
+            "Textures/fabric/rough-couch-fabric-unity/rough-couch-fabric_albedo.png",
+            "Textures/fabric/rough-couch-fabric-unity/rough-couch-fabric_normal-ogl.png",
+            "Textures/fabric/rough-couch-fabric-unity/rough-couch-fabric_metallic.psd",
+            "Textures/fabric/rough-couch-fabric-unity/rough-couch-fabric_height.png",
+            "Textures/fabric/rough-couch-fabric-unity/rough-couch-fabric_ao.png"
+        );
+
         public static Material BrownLeather { get; } = new(
             "Textures/fabric/brown-leather/brown-leather_albedo.png",
             "Textures/fabric/brown-leather/brown-leather_Normal.png",
@@ -53,7 +84,6 @@ public sealed partial class Material
             "Textures/fabric/brown-leather/brown-leather_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wrinkled-paper'.</summary>
         public static Material WrinkledPaper { get; } = new(
             "Textures/fabric/wrinkled-paper/wrinkled-paper_albedo.png",
             "Textures/fabric/wrinkled-paper/wrinkled-paper_Normal.png",
@@ -62,7 +92,6 @@ public sealed partial class Material
             "Textures/fabric/wrinkled-paper/wrinkled-paper_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'old-soiled-cloth1'.</summary>
         public static Material OldSoiledCloth1 { get; } = new(
             "Textures/fabric/old-soiled-cloth1/old-soiled-cloth1_albedo.png",
             "Textures/fabric/old-soiled-cloth1/old-soiled-cloth1_Normal.png",
@@ -71,7 +100,6 @@ public sealed partial class Material
             "Textures/fabric/old-soiled-cloth1/old-soiled-cloth1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'houndstooth-fabric-weave'.</summary>
         public static Material HoundstoothFabricWeave { get; } = new(
             "Textures/fabric/houndstooth-fabric-weave/houndstooth-fabric-weave_albedo.png",
             "Textures/fabric/houndstooth-fabric-weave/houndstooth-fabric-weave_Normal.png",
@@ -80,7 +108,6 @@ public sealed partial class Material
             "Textures/fabric/houndstooth-fabric-weave/houndstooth-fabric-weave_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'brown-suede'.</summary>
         public static Material BrownSuede { get; } = new(
             "Textures/fabric/brown-suede/brown-suede_albedo.png",
             "Textures/fabric/brown-suede/brown-suede_Normal.png",
@@ -89,7 +116,6 @@ public sealed partial class Material
             "Textures/fabric/brown-suede/brown-suede_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'worn-braided-carpet'.</summary>
         public static Material WornBraidedCarpet { get; } = new(
             "Textures/fabric/worn-braided-carpet/worn-braided-carpet_albedo.png",
             "Textures/fabric/worn-braided-carpet/worn-braided-carpet_Normal.png",
@@ -98,7 +124,14 @@ public sealed partial class Material
             "Textures/fabric/worn-braided-carpet/worn-braided-carpet_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'white-quilted-fabric'.</summary>
+        public static Material RedPlaidUnity { get; } = new(
+            "Textures/fabric/red-plaid-unity/red-plaid_albedo.png",
+            "Textures/fabric/red-plaid-unity/red-plaid_normal-ogl.png",
+            "Textures/fabric/red-plaid-unity/red-plaid_metallic.psd",
+            "Textures/fabric/red-plaid-unity/red-plaid_height.png",
+            "Textures/fabric/red-plaid-unity/red-plaid_ao.png"
+        );
+
         public static Material WhiteQuiltedFabric { get; } = new(
             "Textures/fabric/white-quilted-fabric/white-quilted-fabric_albedo.png",
             "Textures/fabric/white-quilted-fabric/white-quilted-fabric_Normal.png",
@@ -107,7 +140,6 @@ public sealed partial class Material
             "Textures/fabric/white-quilted-fabric/white-quilted-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'diagonal-stripe-weave'.</summary>
         public static Material DiagonalStripeWeave { get; } = new(
             "Textures/fabric/diagonal-stripe-weave/diagonal-stripe-weave_albedo.png",
             "Textures/fabric/diagonal-stripe-weave/diagonal-stripe-weave_Normal.png",
@@ -116,7 +148,6 @@ public sealed partial class Material
             "Textures/fabric/diagonal-stripe-weave/diagonal-stripe-weave_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'white-quilted-diamond'.</summary>
         public static Material WhiteQuiltedDiamond { get; } = new(
             "Textures/fabric/white-quilted-diamond/white-quilted-diamond_albedo.png",
             "Textures/fabric/white-quilted-diamond/white-quilted-diamond_Normal.png",
@@ -125,7 +156,6 @@ public sealed partial class Material
             "Textures/fabric/white-quilted-diamond/white-quilted-diamond_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'worn-blue-burlap'.</summary>
         public static Material WornBlueBurlap { get; } = new(
             "Textures/fabric/worn-blue-burlap/worn-blue-burlap_albedo.png",
             "Textures/fabric/worn-blue-burlap/worn-blue-burlap_Normal.png",
@@ -134,7 +164,6 @@ public sealed partial class Material
             "Textures/fabric/worn-blue-burlap/worn-blue-burlap_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'barred-weave'.</summary>
         public static Material BarredWeave { get; } = new(
             "Textures/fabric/barred-weave/barred-weave_albedo.png",
             "Textures/fabric/barred-weave/barred-weave_Normal.png",
@@ -143,7 +172,6 @@ public sealed partial class Material
             "Textures/fabric/barred-weave/barred-weave_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'simple-basket-weave1'.</summary>
         public static Material SimpleBasketWeave1 { get; } = new(
             "Textures/fabric/simple-basket-weave1/simple-basket-weave1_albedo.png",
             "Textures/fabric/simple-basket-weave1/simple-basket-weave1_Normal.png",
@@ -152,7 +180,6 @@ public sealed partial class Material
             "Textures/fabric/simple-basket-weave1/simple-basket-weave1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'black-leather'.</summary>
         public static Material BlackLeather { get; } = new(
             "Textures/fabric/black-leather/black-leather_albedo.png",
             "Textures/fabric/black-leather/black-leather_Normal.png",
@@ -161,7 +188,6 @@ public sealed partial class Material
             "Textures/fabric/black-leather/black-leather_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'loose-tablecloth'.</summary>
         public static Material LooseTablecloth { get; } = new(
             "Textures/fabric/loose-tablecloth/loose-tablecloth_albedo.png",
             "Textures/fabric/loose-tablecloth/loose-tablecloth_Normal.png",
@@ -170,7 +196,14 @@ public sealed partial class Material
             "Textures/fabric/loose-tablecloth/loose-tablecloth_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'nylon-tent-fabric'.</summary>
+        public static Material RoughSofaFabricUnity { get; } = new(
+            "Textures/fabric/rough-sofa-fabric-unity/rough-sofa-fabric_albedo.png",
+            "Textures/fabric/rough-sofa-fabric-unity/rough-sofa-fabric_normal-ogl.png",
+            "Textures/fabric/rough-sofa-fabric-unity/rough-sofa-fabric_metallic.psd",
+            "Textures/fabric/rough-sofa-fabric-unity/rough-sofa-fabric_height.png",
+            "Textures/fabric/rough-sofa-fabric-unity/rough-sofa-fabric_ao.png"
+        );
+
         public static Material NylonTentFabric { get; } = new(
             "Textures/fabric/nylon-tent-fabric/nylon-tent-fabric_albedo.png",
             "Textures/fabric/nylon-tent-fabric/nylon-tent-fabric_Normal.png",
@@ -179,7 +212,22 @@ public sealed partial class Material
             "Textures/fabric/nylon-tent-fabric/nylon-tent-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'twill-fabric'.</summary>
+        public static Material LightSofaUpholsteryUnity { get; } = new(
+            "Textures/fabric/light-sofa-upholstery-unity/light-sofa-upholstery_albedo.png",
+            "Textures/fabric/light-sofa-upholstery-unity/light-sofa-upholstery_normal-ogl.png",
+            "Textures/fabric/light-sofa-upholstery-unity/light-sofa-upholstery_metallic.psd",
+            "Textures/fabric/light-sofa-upholstery-unity/light-sofa-upholstery_height.png",
+            "Textures/fabric/light-sofa-upholstery-unity/light-sofa-upholstery_ao.png"
+        );
+
+        public static Material JeansFabricUnity { get; } = new(
+            "Textures/fabric/jeans-fabric-unity/jeans-fabric_albedo.png",
+            "Textures/fabric/jeans-fabric-unity/jeans-fabric_normal-ogl.png",
+            "Textures/fabric/jeans-fabric-unity/jeans-fabric_metallic.psd",
+            "Textures/fabric/jeans-fabric-unity/jeans-fabric_height.png",
+            "Textures/fabric/jeans-fabric-unity/jeans-fabric_ao.png"
+        );
+
         public static Material TwillFabric { get; } = new(
             "Textures/fabric/twill-fabric/twill-fabric_albedo.png",
             "Textures/fabric/twill-fabric/twill-fabric_Normal.png",
@@ -188,7 +236,6 @@ public sealed partial class Material
             "Textures/fabric/twill-fabric/twill-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rough-fabric'.</summary>
         public static Material RoughFabric { get; } = new(
             "Textures/fabric/rough-fabric/rough-fabric_albedo.png",
             "Textures/fabric/rough-fabric/rough-fabric_Normal.png",
@@ -197,7 +244,6 @@ public sealed partial class Material
             "Textures/fabric/rough-fabric/rough-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'older-padded-leather'.</summary>
         public static Material OlderPaddedLeather { get; } = new(
             "Textures/fabric/older-padded-leather/older-padded-leather_albedo.png",
             "Textures/fabric/older-padded-leather/older-padded-leather_Normal.png",
@@ -206,7 +252,30 @@ public sealed partial class Material
             "Textures/fabric/older-padded-leather/older-padded-leather_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'burlap-stained1'.</summary>
+        public static Material CorrugatedCardboardUnity { get; } = new(
+            "Textures/fabric/corrugated-cardboard-unity/corrugated-cardboard_albedo.png",
+            "Textures/fabric/corrugated-cardboard-unity/corrugated-cardboard_normal-ogl.png",
+            "Textures/fabric/corrugated-cardboard-unity/corrugated-cardboard_metallic.psd",
+            "Textures/fabric/corrugated-cardboard-unity/corrugated-cardboard_height.png",
+            "Textures/fabric/corrugated-cardboard-unity/corrugated-cardboard_ao.png"
+        );
+
+        public static Material CoarseCouchFabricUnity { get; } = new(
+            "Textures/fabric/coarse-couch-fabric-unity/coarse-couch-fabric_albedo.png",
+            "Textures/fabric/coarse-couch-fabric-unity/coarse-couch-fabric_normal-ogl.png",
+            "Textures/fabric/coarse-couch-fabric-unity/coarse-couch-fabric_metallic.psd",
+            "Textures/fabric/coarse-couch-fabric-unity/coarse-couch-fabric_height.png",
+            "Textures/fabric/coarse-couch-fabric-unity/coarse-couch-fabric_ao.png"
+        );
+
+        public static Material DenimUnity { get; } = new(
+            "Textures/fabric/denim-unity/denim1_albedo.png",
+            "Textures/fabric/denim-unity/denim1_normal-ogl.png",
+            "Textures/fabric/denim-unity/denim1_metallic.psd",
+            "Textures/fabric/denim-unity/denim1_roughness.png",
+            "Textures/fabric/denim-unity/denim1_ao.png"
+        );
+
         public static Material BurlapStained1 { get; } = new(
             "Textures/fabric/burlap-stained1/burlap-stained1_albedo.png",
             "Textures/fabric/burlap-stained1/burlap-stained1_Normal.png",
@@ -215,7 +284,6 @@ public sealed partial class Material
             "Textures/fabric/burlap-stained1/burlap-stained1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'vinyl-tablecloth'.</summary>
         public static Material VinylTablecloth { get; } = new(
             "Textures/fabric/vinyl-tablecloth/vinyl-tablecloth_albedo.png",
             "Textures/fabric/vinyl-tablecloth/vinyl-tablecloth_Normal.png",
@@ -224,7 +292,6 @@ public sealed partial class Material
             "Textures/fabric/vinyl-tablecloth/vinyl-tablecloth_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'office-fabric'.</summary>
         public static Material OfficeFabric { get; } = new(
             "Textures/fabric/office-fabric/office-fabric_albedo.png",
             "Textures/fabric/office-fabric/office-fabric_Normal.png",
@@ -233,7 +300,6 @@ public sealed partial class Material
             "Textures/fabric/office-fabric/office-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dirty-office-fabric'.</summary>
         public static Material DirtyOfficeFabric { get; } = new(
             "Textures/fabric/dirty-office-fabric/dirty-office-fabric_albedo.png",
             "Textures/fabric/dirty-office-fabric/dirty-office-fabric_Normal.png",
@@ -242,7 +308,6 @@ public sealed partial class Material
             "Textures/fabric/dirty-office-fabric/dirty-office-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'coarse-loose-fabric'.</summary>
         public static Material CoarseLooseFabric { get; } = new(
             "Textures/fabric/coarse-loose-fabric/coarse-loose-fabric_albedo.png",
             "Textures/fabric/coarse-loose-fabric/coarse-loose-fabric_Normal.png",
@@ -251,7 +316,6 @@ public sealed partial class Material
             "Textures/fabric/coarse-loose-fabric/coarse-loose-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'tight-weave-carpet'.</summary>
         public static Material TightWeaveCarpet { get; } = new(
             "Textures/fabric/tight-weave-carpet/tight-weave-carpet_albedo.png",
             "Textures/fabric/tight-weave-carpet/tight-weave-carpet_Normal.PNG",
@@ -264,7 +328,22 @@ public sealed partial class Material
 
     public static partial class Paths
     {
-        /// <summary>Auto-generated material for 'broken-down-stonework'.</summary>
+        public static Material Cobblestylized3Unity { get; } = new(
+            "Textures/paths/cobblestylized3-unity/cobblestylized3_albedo.png",
+            "Textures/paths/cobblestylized3-unity/cobblestylized3_normal-ogl.png",
+            "Textures/paths/cobblestylized3-unity/cobblestylized3_metallic.psd",
+            "Textures/paths/cobblestylized3-unity/cobblestylized3_height.png",
+            "Textures/paths/cobblestylized3-unity/cobblestylized3_ao.png"
+        );
+
+        public static Material HighwayLanesUnity { get; } = new(
+            "Textures/paths/highway-lanes-unity/highway-lanes_albedo.png",
+            "Textures/paths/highway-lanes-unity/highway-lanes_normal-ogl.png",
+            "Textures/paths/highway-lanes-unity/highway-lanes_metallic.psd",
+            "Textures/paths/highway-lanes-unity/highway-lanes_height.png",
+            "Textures/paths/highway-lanes-unity/highway-lanes_ao.png"
+        );
+
         public static Material BrokenDownStonework { get; } = new(
             "Textures/paths/broken-down-stonework/broken-down-stonework_albedo.png",
             "Textures/paths/broken-down-stonework/broken-down-stonework_Normal.png",
@@ -273,7 +352,6 @@ public sealed partial class Material
             "Textures/paths/broken-down-stonework/broken-down-stonework_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'chiseled-cobble'.</summary>
         public static Material ChiseledCobble { get; } = new(
             "Textures/paths/chiseled-cobble/chiseled-cobble_albedo.png",
             "Textures/paths/chiseled-cobble/chiseled-cobble_Normal.png",
@@ -282,7 +360,6 @@ public sealed partial class Material
             "Textures/paths/chiseled-cobble/chiseled-cobble_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'worn-down-stone-path'.</summary>
         public static Material WornDownStonePath { get; } = new(
             "Textures/paths/worn-down-stone-path/worn-down-stone-path_albedo.png",
             "Textures/paths/worn-down-stone-path/worn-down-stone-path_Normal.png",
@@ -291,7 +368,6 @@ public sealed partial class Material
             "Textures/paths/worn-down-stone-path/worn-down-stone-path_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'angled-blocks-vegetation'.</summary>
         public static Material AngledBlocksVegetation { get; } = new(
             "Textures/paths/angled-blocks-vegetation/angled-blocks-vegetation_albedo.png",
             "Textures/paths/angled-blocks-vegetation/angled-blocks-vegetation_Normal.png",
@@ -300,7 +376,6 @@ public sealed partial class Material
             "Textures/paths/angled-blocks-vegetation/angled-blocks-vegetation_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'worn-wet-old-cobblestone'.</summary>
         public static Material WornWetOldCobblestone { get; } = new(
             "Textures/paths/worn-wet-old-cobblestone/worn-wet-old-cobblestone_albedo.png",
             "Textures/paths/worn-wet-old-cobblestone/worn-wet-old-cobblestone_Normal.png",
@@ -309,7 +384,22 @@ public sealed partial class Material
             "Textures/paths/worn-wet-old-cobblestone/worn-wet-old-cobblestone_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'hexagon-pavers1'.</summary>
+        public static Material HexStones1Unity { get; } = new(
+            "Textures/paths/hex-stones1-unity/hex-stones1-albedo.png",
+            "Textures/paths/hex-stones1-unity/hex-stones1-normal-ogl.png",
+            "Textures/paths/hex-stones1-unity/hex-stones1-metallic.psd",
+            "Textures/paths/hex-stones1-unity/hex-stones1-height.png",
+            "Textures/paths/hex-stones1-unity/hex-stones1-ao.png"
+        );
+
+        public static Material WornSmoothStoneworkUnity { get; } = new(
+            "Textures/paths/worn-smooth-stonework-unity/worn-smooth-stonework_albedo.png",
+            "Textures/paths/worn-smooth-stonework-unity/worn-smooth-stonework_normal-ogl.png",
+            "Textures/paths/worn-smooth-stonework-unity/worn-smooth-stonework_metallic.psd",
+            "Textures/paths/worn-smooth-stonework-unity/worn-smooth-stonework_height.png",
+            "Textures/paths/worn-smooth-stonework-unity/worn-smooth-stonework_ao.png"
+        );
+
         public static Material HexagonPavers1 { get; } = new(
             "Textures/paths/hexagon-pavers1/hexagon-pavers1_albedo.png",
             "Textures/paths/hexagon-pavers1/hexagon-pavers1_Normal.png",
@@ -318,7 +408,38 @@ public sealed partial class Material
             "Textures/paths/hexagon-pavers1/hexagon-pavers1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'square-blocks-vegetation'.</summary>
+        public static Material WedgedCobblestoneUnity { get; } = new(
+            "Textures/paths/wedged-cobblestone-unity/wedged-cobblestone_albedo.png",
+            "Textures/paths/wedged-cobblestone-unity/wedged-cobblestone_normal-ogl.png",
+            "Textures/paths/wedged-cobblestone-unity/wedged-cobblestone_metallic.psd",
+            "Textures/paths/wedged-cobblestone-unity/wedged-cobblestone_height.png",
+            "Textures/paths/wedged-cobblestone-unity/wedged-cobblestone_ao.png"
+        );
+
+        public static Material SharpEdgedStoneworkUnity { get; } = new(
+            "Textures/paths/sharp-edged-stonework-unity/sharp-edged-stonework_albedo.png",
+            "Textures/paths/sharp-edged-stonework-unity/sharp-edged-stonework_normal-ogl.png",
+            "Textures/paths/sharp-edged-stonework-unity/sharp-edged-stonework_metallic.psd",
+            "Textures/paths/sharp-edged-stonework-unity/sharp-edged-stonework_height.png",
+            "Textures/paths/sharp-edged-stonework-unity/sharp-edged-stonework_ao.png"
+        );
+
+        public static Material Cobblestylized1Unity { get; } = new(
+            "Textures/paths/cobblestylized1-unity/cobblestylized_albedo.png",
+            "Textures/paths/cobblestylized1-unity/cobblestylized_normal-ogl.png",
+            "Textures/paths/cobblestylized1-unity/cobblestylized_metallic.psd",
+            "Textures/paths/cobblestylized1-unity/cobblestylized_height.png",
+            "Textures/paths/cobblestylized1-unity/cobblestylized_ao.png"
+        );
+
+        public static Material BeigeStoneworkUnity { get; } = new(
+            "Textures/paths/beige-stonework-unity/beige-stonework_albedo.png",
+            "Textures/paths/beige-stonework-unity/beige-stonework_normal-ogl.png",
+            "Textures/paths/beige-stonework-unity/beige-stonework_metallic.psd",
+            "Textures/paths/beige-stonework-unity/beige-stonework_height.png",
+            "Textures/paths/beige-stonework-unity/beige-stonework_ao.png"
+        );
+
         public static Material SquareBlocksVegetation { get; } = new(
             "Textures/paths/square-blocks-vegetation/square-blocks-vegetation_albedo.png",
             "Textures/paths/square-blocks-vegetation/square-blocks-vegetation_Normal.png",
@@ -327,7 +448,6 @@ public sealed partial class Material
             "Textures/paths/square-blocks-vegetation/square-blocks-vegetation_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'gravel_path'.</summary>
         public static Material GravelPath { get; } = new(
             "Textures/paths/gravel_path/gravel_path_albedo.png",
             "Textures/paths/gravel_path/gravel_path_Normal.png",
@@ -336,7 +456,14 @@ public sealed partial class Material
             "Textures/paths/gravel_path/gravel_path_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'flat-cobble-moss'.</summary>
+        public static Material Steppingstones1Unity { get; } = new(
+            "Textures/paths/steppingstones1_unity/steppingstones1_albedo.png",
+            "Textures/paths/steppingstones1_unity/steppingstones1_normal-ogl.png",
+            "Textures/paths/steppingstones1_unity/steppingstones1_metallic.psd",
+            "Textures/paths/steppingstones1_unity/steppingstones1_height.png",
+            "Textures/paths/steppingstones1_unity/steppingstones1_ao.png"
+        );
+
         public static Material FlatCobbleMoss { get; } = new(
             "Textures/paths/flat-cobble-moss/flat-cobble-moss_albedo.png",
             "Textures/paths/flat-cobble-moss/flat-cobble-moss_Normal.png",
@@ -345,7 +472,6 @@ public sealed partial class Material
             "Textures/paths/flat-cobble-moss/flat-cobble-moss_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sandstone-blocks'.</summary>
         public static Material SandstoneBlocks { get; } = new(
             "Textures/paths/sandstone-blocks/sandstone-blocks_albedo.png",
             "Textures/paths/sandstone-blocks/sandstone-blocks_Normal.png",
@@ -354,7 +480,6 @@ public sealed partial class Material
             "Textures/paths/sandstone-blocks/sandstone-blocks_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cobblestone-curved'.</summary>
         public static Material CobblestoneCurved { get; } = new(
             "Textures/paths/cobblestone-curved/cobblestone-curved_albedo.png",
             "Textures/paths/cobblestone-curved/cobblestone-curved_Normal.png",
@@ -363,7 +488,6 @@ public sealed partial class Material
             "Textures/paths/cobblestone-curved/cobblestone-curved_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rough-wet-cobble'.</summary>
         public static Material RoughWetCobble { get; } = new(
             "Textures/paths/rough-wet-cobble/rough-wet-cobble_albedo.png",
             "Textures/paths/rough-wet-cobble/rough-wet-cobble_Normal.png",
@@ -372,7 +496,6 @@ public sealed partial class Material
             "Textures/paths/rough-wet-cobble/rough-wet-cobble_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'muddy-scattered-brickwork1'.</summary>
         public static Material MuddyScatteredBrickwork1 { get; } = new(
             "Textures/paths/muddy-scattered-brickwork1/muddy-scattered-brickwork1_albedo.png",
             "Textures/paths/muddy-scattered-brickwork1/muddy-scattered-brickwork1_Normal.png",
@@ -381,7 +504,6 @@ public sealed partial class Material
             "Textures/paths/muddy-scattered-brickwork1/muddy-scattered-brickwork1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wetcobble'.</summary>
         public static Material Wetcobble { get; } = new(
             "Textures/paths/wetcobble/wetcobble_albedo.png",
             "Textures/paths/wetcobble/wetcobble_Normal.png",
@@ -390,7 +512,6 @@ public sealed partial class Material
             "Textures/paths/wetcobble/wetcobble_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dusty-cobble'.</summary>
         public static Material DustyCobble { get; } = new(
             "Textures/paths/dusty-cobble/dusty-cobble_albedo.png",
             "Textures/paths/dusty-cobble/dusty-cobble_Normal.png",
@@ -399,7 +520,6 @@ public sealed partial class Material
             "Textures/paths/dusty-cobble/dusty-cobble_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'snowcoveredpath'.</summary>
         public static Material Snowcoveredpath { get; } = new(
             "Textures/paths/snowcoveredpath/snowcoveredpath_albedo.png",
             "Textures/paths/snowcoveredpath/snowcoveredpath_Normal.png",
@@ -408,7 +528,6 @@ public sealed partial class Material
             "Textures/paths/snowcoveredpath/snowcoveredpath_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'variable-blocks-vegetation'.</summary>
         public static Material VariableBlocksVegetation { get; } = new(
             "Textures/paths/variable-blocks-vegetation/variable-blocks-vegetation_albedo.png",
             "Textures/paths/variable-blocks-vegetation/variable-blocks-vegetation_Normal.png",
@@ -417,7 +536,6 @@ public sealed partial class Material
             "Textures/paths/variable-blocks-vegetation/variable-blocks-vegetation_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'concrete2'.</summary>
         public static Material Concrete2 { get; } = new(
             "Textures/paths/concrete2/concrete2_albedo.png",
             "Textures/paths/concrete2/concrete2_Normal.png",
@@ -426,7 +544,6 @@ public sealed partial class Material
             "Textures/paths/concrete2/concrete2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'curved-wet-cobble'.</summary>
         public static Material CurvedWetCobble { get; } = new(
             "Textures/paths/curved-wet-cobble/curved-wet-cobble_albedo.png",
             "Textures/paths/curved-wet-cobble/curved-wet-cobble_Normal.png",
@@ -435,7 +552,6 @@ public sealed partial class Material
             "Textures/paths/curved-wet-cobble/curved-wet-cobble_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sludge-covered-stonework'.</summary>
         public static Material SludgeCoveredStonework { get; } = new(
             "Textures/paths/sludge-covered-stonework/sludge-covered-stonework_albedo.png",
             "Textures/paths/sludge-covered-stonework/sludge-covered-stonework_Normal.png",
@@ -444,11 +560,26 @@ public sealed partial class Material
             "Textures/paths/sludge-covered-stonework/sludge-covered-stonework_ao.png"
         );
 
+        public static Material WetArcCobbleUnity { get; } = new(
+            "Textures/paths/wet-arc-cobble-unity/wet-arc-cobble_albedo.png",
+            "Textures/paths/wet-arc-cobble-unity/wet-arc-cobble_normal-ogl.png",
+            "Textures/paths/wet-arc-cobble-unity/wet-arc-cobble_metallic.psd",
+            "Textures/paths/wet-arc-cobble-unity/wet-arc-cobble_height.png",
+            "Textures/paths/wet-arc-cobble-unity/wet-arc-cobble_ao.png"
+        );
+
     }
 
     public static partial class Trees
     {
-        /// <summary>Auto-generated material for 'mature-oak-tree'.</summary>
+        public static Material BirchBarkUnity { get; } = new(
+            "Textures/trees/birch-bark-unity/birch-bark_albedo.png",
+            "Textures/trees/birch-bark-unity/birch-bark_normal-ogl.png",
+            "Textures/trees/birch-bark-unity/birch-bark_metallic.psd",
+            "Textures/trees/birch-bark-unity/birch-bark_height.png",
+            "Textures/trees/birch-bark-unity/birch-bark_ao.png"
+        );
+
         public static Material MatureOakTree { get; } = new(
             "Textures/trees/mature-oak-tree/mature-oak-tree_albedo.png",
             "Textures/trees/mature-oak-tree/mature-oak-tree_Normal.png",
@@ -457,7 +588,14 @@ public sealed partial class Material
             "Textures/trees/mature-oak-tree/mature-oak-tree_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'light-tree-bark'.</summary>
+        public static Material AshTreeBarkUnity { get; } = new(
+            "Textures/trees/ash-tree-bark-unity/ash-tree-bark_albedo.png",
+            "Textures/trees/ash-tree-bark-unity/ash-tree-bark_normal-ogl.png",
+            "Textures/trees/ash-tree-bark-unity/ash-tree-bark_metallic.psd",
+            "Textures/trees/ash-tree-bark-unity/ash-tree-bark_height.png",
+            "Textures/trees/ash-tree-bark-unity/ash-tree-bark_ao.png"
+        );
+
         public static Material LightTreeBark { get; } = new(
             "Textures/trees/light-tree-bark/light-tree-bark_albedo.png",
             "Textures/trees/light-tree-bark/light-tree-bark_Normal.png",
@@ -466,7 +604,6 @@ public sealed partial class Material
             "Textures/trees/light-tree-bark/light-tree-bark_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'pine-tree-bark'.</summary>
         public static Material PineTreeBark { get; } = new(
             "Textures/trees/pine-tree-bark/pine-tree-bark_albedo.png",
             "Textures/trees/pine-tree-bark/pine-tree-bark_Normal.png",
@@ -475,7 +612,22 @@ public sealed partial class Material
             "Textures/trees/pine-tree-bark/pine-tree-bark_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'white-spruce-tree-bark'.</summary>
+        public static Material TropicalLeafUnity { get; } = new(
+            "Textures/trees/tropical-leaf-unity/tropical-leaf_albedo.png",
+            "Textures/trees/tropical-leaf-unity/tropical-leaf_normal-ogl.png",
+            "Textures/trees/tropical-leaf-unity/tropical-leaf_metallic.psd",
+            "Textures/trees/tropical-leaf-unity/tropical-leaf_height.png",
+            "Textures/trees/tropical-leaf-unity/tropical-leaf_ao.png"
+        );
+
+        public static Material Bark1 { get; } = new(
+            "Textures/trees/bark1/bark1_albedo.png",
+            "Textures/trees/bark1/bark1_Normal.png",
+            "Textures/trees/bark1/bark1_metallic.psd",
+            "Textures/trees/bark1/bark1_height2.png",
+            "Textures/trees/bark1/bark1_ao.png"
+        );
+
         public static Material WhiteSpruceTreeBark { get; } = new(
             "Textures/trees/white-spruce-tree-bark/white-spruce-tree-bark_albedo.png",
             "Textures/trees/white-spruce-tree-bark/white-spruce-tree-bark_Normal.png",
@@ -484,7 +636,6 @@ public sealed partial class Material
             "Textures/trees/white-spruce-tree-bark/white-spruce-tree-bark_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'vines'.</summary>
         public static Material Vines { get; } = new(
             "Textures/trees/vines/vines_albedo.png",
             "Textures/trees/vines/vines_Normal.png",
@@ -493,11 +644,38 @@ public sealed partial class Material
             "Textures/trees/vines/vines_ao.png"
         );
 
+        public static Material LeafFrontBackUnity { get; } = new(
+            "Textures/trees/leaf-front-back-unity/leaf-front-back_albedo.png",
+            "Textures/trees/leaf-front-back-unity/leaf-front-back_normal-ogl.png",
+            "Textures/trees/leaf-front-back-unity/leaf-front-back_metallic.psd",
+            "Textures/trees/leaf-front-back-unity/leaf-front-back_height.png",
+            "Textures/trees/leaf-front-back-unity/leaf-front-back_ao.png"
+        );
+
+    }
+
+    public static partial class Paper
+    {
+        public static Material ChristmasWrappingPaperUnity { get; } = new(
+            "Textures/paper/christmas-wrapping-paper-unity/christmas-wrapping-paper_albedo.png",
+            "Textures/paper/christmas-wrapping-paper-unity/christmas-wrapping-paper_normal-ogl.png",
+            "Textures/paper/christmas-wrapping-paper-unity/christmas-wrapping-paper_metallic.psd",
+            "Textures/paper/christmas-wrapping-paper-unity/christmas-wrapping-paper_height.png",
+            "Textures/paper/christmas-wrapping-paper-unity/christmas-wrapping-paper_ao.png"
+        );
+
+        public static Material WrinkledPlainPaperUnity { get; } = new(
+            "Textures/paper/wrinkled-plain-paper-unity/wrinkled-plain-paper_albedo.png",
+            "Textures/paper/wrinkled-plain-paper-unity/wrinkled-plain-paper_normal-ogl.png",
+            "Textures/paper/wrinkled-plain-paper-unity/wrinkled-plain-paper_metallic.psd",
+            "Textures/paper/wrinkled-plain-paper-unity/wrinkled-plain-paper_height.png",
+            "Textures/paper/wrinkled-plain-paper-unity/wrinkled-plain-paper_ao.png"
+        );
+
     }
 
     public static partial class Wood
     {
-        /// <summary>Auto-generated material for 'knotty-plywood'.</summary>
         public static Material KnottyPlywood { get; } = new(
             "Textures/wood/knotty-plywood/knotty-plywood_albedo.png",
             "Textures/wood/knotty-plywood/knotty-plywood_Normal.png",
@@ -506,7 +684,14 @@ public sealed partial class Material
             "Textures/wood/knotty-plywood/knotty-plywood_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cherry-wood-veneer2'.</summary>
+        public static Material BareWood1Unity { get; } = new(
+            "Textures/wood/bare-wood1-unity/bare-wood1_albedo.png",
+            "Textures/wood/bare-wood1-unity/bare-wood1_normal-ogl.png",
+            "Textures/wood/bare-wood1-unity/bare-wood1_metallic.psd",
+            "Textures/wood/bare-wood1-unity/bare-wood1_height.png",
+            "Textures/wood/bare-wood1-unity/bare-wood1_ao.png"
+        );
+
         public static Material CherryWoodVeneer2 { get; } = new(
             "Textures/wood/cherry-wood-veneer2/cherry-wood-veneer2_albedo.png",
             "Textures/wood/cherry-wood-veneer2/cherry-wood-veneer2_Normal.png",
@@ -515,7 +700,6 @@ public sealed partial class Material
             "Textures/wood/cherry-wood-veneer2/cherry-wood-veneer2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'antique_veneer1'.</summary>
         public static Material AntiqueVeneer1 { get; } = new(
             "Textures/wood/antique_veneer1/antique_veneer1_albedo.png",
             "Textures/wood/antique_veneer1/antique_veneer1_Normal.png",
@@ -524,7 +708,22 @@ public sealed partial class Material
             "Textures/wood/antique_veneer1/antique_veneer1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cheap_plywood1r'.</summary>
+        public static Material DarkWoodStainUnity { get; } = new(
+            "Textures/wood/dark-wood-stain-unity/dark-wood-stain_albedo.png",
+            "Textures/wood/dark-wood-stain-unity/dark-wood-stain_normal-ogl.png",
+            "Textures/wood/dark-wood-stain-unity/dark-wood-stain_metallic.psd",
+            "Textures/wood/dark-wood-stain-unity/dark-wood-stain_height.png",
+            "Textures/wood/dark-wood-stain-unity/dark-wood-stain_ao.png"
+        );
+
+        public static Material OakWoodBareUnity { get; } = new(
+            "Textures/wood/oak-wood-bare-unity/oak-wood-bare_albedo.png",
+            "Textures/wood/oak-wood-bare-unity/oak-wood-bare_normal-ogl.png",
+            "Textures/wood/oak-wood-bare-unity/oak-wood-bare_metallic.psd",
+            "Textures/wood/oak-wood-bare-unity/oak-wood-bare_height.png",
+            "Textures/wood/oak-wood-bare-unity/oak-wood-bare_ao.png"
+        );
+
         public static Material CheapPlywood1r { get; } = new(
             "Textures/wood/cheap_plywood1r/cheap_plywood1r_albedo.png",
             "Textures/wood/cheap_plywood1r/cheap_plywood1r_Normal.png",
@@ -533,7 +732,6 @@ public sealed partial class Material
             "Textures/wood/cheap_plywood1r/cheap_plywood1r_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'streaky-plywood'.</summary>
         public static Material StreakyPlywood { get; } = new(
             "Textures/wood/streaky-plywood/streaky-plywood_albedo.png",
             "Textures/wood/streaky-plywood/streaky-plywood_Normal.png",
@@ -542,7 +740,22 @@ public sealed partial class Material
             "Textures/wood/streaky-plywood/streaky-plywood_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wood-veneer1'.</summary>
+        public static Material SemiGlossWoodUnity { get; } = new(
+            "Textures/wood/semi-gloss-wood-unity/semi-gloss-wood_albedo.png",
+            "Textures/wood/semi-gloss-wood-unity/semi-gloss-wood_normal-ogl.png",
+            "Textures/wood/semi-gloss-wood-unity/semi-gloss-wood_metallic.psd",
+            "Textures/wood/semi-gloss-wood-unity/semi-gloss-wood_height.png",
+            "Textures/wood/semi-gloss-wood-unity/semi-gloss-wood_ao.png"
+        );
+
+        public static Material SubtleGrainedWoodUnity { get; } = new(
+            "Textures/wood/subtle-grained-wood-unity/subtle-grained-wood_albedo.png",
+            "Textures/wood/subtle-grained-wood-unity/subtle-grained-wood_normal-ogl.png",
+            "Textures/wood/subtle-grained-wood-unity/subtle-grained-wood_metallic.psd",
+            "Textures/wood/subtle-grained-wood-unity/subtle-grained-wood_height.png",
+            "Textures/wood/subtle-grained-wood-unity/subtle-grained-wood_ao.png"
+        );
+
         public static Material WoodVeneer1 { get; } = new(
             "Textures/wood/wood-veneer1/wood-veneer1_albedo.png",
             "Textures/wood/wood-veneer1/wood-veneer1_Normal.png",
@@ -555,7 +768,22 @@ public sealed partial class Material
 
     public static partial class Synthetic
     {
-        /// <summary>Auto-generated material for 'ridged-foam1'.</summary>
+        public static Material CrisscrossFoam1Unity { get; } = new(
+            "Textures/synthetic/crisscross-foam1-unity/crisscross-foam_albedo.png",
+            "Textures/synthetic/crisscross-foam1-unity/crisscross-foam_normal-ogl.png",
+            "Textures/synthetic/crisscross-foam1-unity/crisscross-foam_metallic.psd",
+            "Textures/synthetic/crisscross-foam1-unity/crisscross-foam_height.png",
+            "Textures/synthetic/crisscross-foam1-unity/crisscross-foam_ao.png"
+        );
+
+        public static Material HaircellKydexUnity { get; } = new(
+            "Textures/synthetic/haircell-kydex-unity/haircell-kydex_albedo.png",
+            "Textures/synthetic/haircell-kydex-unity/haircell-kydex_normal-ogl.png",
+            "Textures/synthetic/haircell-kydex-unity/haircell-kydex_metallic.psd",
+            "Textures/synthetic/haircell-kydex-unity/haircell-kydex_height.png",
+            "Textures/synthetic/haircell-kydex-unity/haircell-kydex_ao.png"
+        );
+
         public static Material RidgedFoam1 { get; } = new(
             "Textures/synthetic/ridged-foam1/ridged-foam1_albedo.png",
             "Textures/synthetic/ridged-foam1/ridged-foam1_Normal.png",
@@ -564,7 +792,6 @@ public sealed partial class Material
             "Textures/synthetic/ridged-foam1/ridged-foam1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'vehicle-interior1'.</summary>
         public static Material VehicleInterior1 { get; } = new(
             "Textures/synthetic/vehicle-interior1/vehicle-interior1_albedo.png",
             "Textures/synthetic/vehicle-interior1/vehicle-interior1_Normal.png",
@@ -573,7 +800,30 @@ public sealed partial class Material
             "Textures/synthetic/vehicle-interior1/vehicle-interior1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'yoga-mat-wavy-pattern1'.</summary>
+        public static Material CarbonFiberUnity { get; } = new(
+            "Textures/synthetic/carbon-fiber-unity/carbon-fiber_albedo.png",
+            "Textures/synthetic/carbon-fiber-unity/carbon-fiber_normal-ogl.png",
+            "Textures/synthetic/carbon-fiber-unity/carbon-fiber_metallic.psd",
+            "Textures/synthetic/carbon-fiber-unity/carbon-fiber_height.png",
+            "Textures/synthetic/carbon-fiber-unity/carbon-fiber_ao.png"
+        );
+
+        public static Material CarbonFiberSmoothUnity { get; } = new(
+            "Textures/synthetic/carbon-fiber-smooth-unity/carbon-fiber_smooth_albedo.png",
+            "Textures/synthetic/carbon-fiber-smooth-unity/carbon-fiber_smooth_normal-ogl.png",
+            "Textures/synthetic/carbon-fiber-smooth-unity/carbon-fiber_smooth_metallic.psd",
+            "Textures/synthetic/carbon-fiber-smooth-unity/carbon-fiber_smooth_height.png",
+            "Textures/synthetic/carbon-fiber-smooth-unity/carbon-fiber_smooth_ao.png"
+        );
+
+        public static Material Dashboard1Unity { get; } = new(
+            "Textures/synthetic/dashboard-1-unity/dashboard-1_albedo.png",
+            "Textures/synthetic/dashboard-1-unity/dashboard-1_normal-ogl.png",
+            "Textures/synthetic/dashboard-1-unity/dashboard-1_metallic.psd",
+            "Textures/synthetic/dashboard-1-unity/dashboard-1_height.png",
+            "Textures/synthetic/dashboard-1-unity/dashboard-1_ao.png"
+        );
+
         public static Material YogaMatWavyPattern1 { get; } = new(
             "Textures/synthetic/yoga-mat-wavy-pattern1/yoga-mat-wavy-pattern1_albedo.png",
             "Textures/synthetic/yoga-mat-wavy-pattern1/yoga-mat-wavy-pattern1_Normal.png",
@@ -582,7 +832,14 @@ public sealed partial class Material
             "Textures/synthetic/yoga-mat-wavy-pattern1/yoga-mat-wavy-pattern1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'crisscross-foam'.</summary>
+        public static Material StuddedPlasticUnity { get; } = new(
+            "Textures/synthetic/studded-plastic-unity/studded-plastic_albedo.png",
+            "Textures/synthetic/studded-plastic-unity/studded-plastic_normal-ogl.png",
+            "Textures/synthetic/studded-plastic-unity/studded-plastic_metallic.psd",
+            "Textures/synthetic/studded-plastic-unity/studded-plastic_height.png",
+            "Textures/synthetic/studded-plastic-unity/studded-plastic_ao.png"
+        );
+
         public static Material CrisscrossFoam { get; } = new(
             "Textures/synthetic/crisscross-foam/crisscross-foam_albedo.png",
             "Textures/synthetic/crisscross-foam/crisscross-foam_Normal.png",
@@ -591,7 +848,30 @@ public sealed partial class Material
             "Textures/synthetic/crisscross-foam/crisscross-foam_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'foam-grip1'.</summary>
+        public static Material LinedGripFoam1Unity { get; } = new(
+            "Textures/synthetic/lined-grip-foam1-unity/lined-grip-foam1_albedo.png",
+            "Textures/synthetic/lined-grip-foam1-unity/lined-grip-foam1_normal-ogl.png",
+            "Textures/synthetic/lined-grip-foam1-unity/lined-grip-foam1_metallic.psd",
+            "Textures/synthetic/lined-grip-foam1-unity/lined-grip-foam1_height.png",
+            "Textures/synthetic/lined-grip-foam1-unity/lined-grip-foam-ao.png"
+        );
+
+        public static Material OrbedPlasticUnity { get; } = new(
+            "Textures/synthetic/orbed-plastic-unity/orbed-plastic_albedo.png",
+            "Textures/synthetic/orbed-plastic-unity/orbed-plastic_normal-ogl.png",
+            "Textures/synthetic/orbed-plastic-unity/orbed-plastic_metallic.psd",
+            "Textures/synthetic/orbed-plastic-unity/orbed-plastic_height.png",
+            "Textures/synthetic/orbed-plastic-unity/orbed-plastic_ao.png"
+        );
+
+        public static Material StyrofoamUnity { get; } = new(
+            "Textures/synthetic/styrofoam-unity/styrofoam_albedo.png",
+            "Textures/synthetic/styrofoam-unity/styrofoam_normal-ogl.png",
+            "Textures/synthetic/styrofoam-unity/styrofoam_metallic.psd",
+            "Textures/synthetic/styrofoam-unity/styrofoam_height.png",
+            "Textures/synthetic/styrofoam-unity/styrofoam_ao.png"
+        );
+
         public static Material FoamGrip1 { get; } = new(
             "Textures/synthetic/foam-grip1/foam-grip1_albedo.png",
             "Textures/synthetic/foam-grip1/foam-grip1_Normal.png",
@@ -600,7 +880,6 @@ public sealed partial class Material
             "Textures/synthetic/foam-grip1/foam-grip1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'lined-grip-foam1'.</summary>
         public static Material LinedGripFoam1 { get; } = new(
             "Textures/synthetic/lined-grip-foam1/lined-grip-foam1_albedo.png",
             "Textures/synthetic/lined-grip-foam1/lined-grip-foam1_Normal.png",
@@ -609,7 +888,22 @@ public sealed partial class Material
             "Textures/synthetic/lined-grip-foam1/lined-grip-foam1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'studded-plastic'.</summary>
+        public static Material RidgedFoam1Unity { get; } = new(
+            "Textures/synthetic/ridged-foam1-unity/ridged-foam1_albedo.png",
+            "Textures/synthetic/ridged-foam1-unity/ridged-foam1_normal-ogl.png",
+            "Textures/synthetic/ridged-foam1-unity/ridged-foam1_metallic.psd",
+            "Textures/synthetic/ridged-foam1-unity/ridged-foam1_height.png",
+            "Textures/synthetic/ridged-foam1-unity/ridged-foam1_ao.png"
+        );
+
+        public static Material RoughPolystyreneUnity { get; } = new(
+            "Textures/synthetic/rough-polystyrene-unity/rough-polystyrene_albedo.png",
+            "Textures/synthetic/rough-polystyrene-unity/rough-polystyrene_normal-ogl.png",
+            "Textures/synthetic/rough-polystyrene-unity/rough-polystyrene_metallic.psd",
+            "Textures/synthetic/rough-polystyrene-unity/rough-polystyrene_height.png",
+            "Textures/synthetic/rough-polystyrene-unity/rough-polystyrene_ao.png"
+        );
+
         public static Material StuddedPlastic { get; } = new(
             "Textures/synthetic/studded-plastic/studded-plastic_albedo.png",
             "Textures/synthetic/studded-plastic/studded-plastic_Normal.png",
@@ -618,7 +912,22 @@ public sealed partial class Material
             "Textures/synthetic/studded-plastic/studded-plastic_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'orbed-plastic'.</summary>
+        public static Material WaterInflatableUnity { get; } = new(
+            "Textures/synthetic/water-inflatable-unity/water-inflatable_albedo.png",
+            "Textures/synthetic/water-inflatable-unity/water-inflatable_normal-ogl.png",
+            "Textures/synthetic/water-inflatable-unity/water-inflatable_metallic.psd",
+            "Textures/synthetic/water-inflatable-unity/water-inflatable_height.png",
+            "Textures/synthetic/water-inflatable-unity/water-inflatable_ao.png"
+        );
+
+        public static Material FoamGrip1Unity { get; } = new(
+            "Textures/synthetic/foam-grip1-unity/foam-grip1-albedo.png",
+            "Textures/synthetic/foam-grip1-unity/foam-grip1-normal-ogl.png",
+            "Textures/synthetic/foam-grip1-unity/foam-grip1-metallic.psd",
+            "Textures/synthetic/foam-grip1-unity/foam-grip1-height.png",
+            "Textures/synthetic/foam-grip1-unity/foam-grip1-ao.png"
+        );
+
         public static Material OrbedPlastic { get; } = new(
             "Textures/synthetic/orbed-plastic/orbed-plastic_albedo.png",
             "Textures/synthetic/orbed-plastic/orbed-plastic_Normal.png",
@@ -627,7 +936,6 @@ public sealed partial class Material
             "Textures/synthetic/orbed-plastic/orbed-plastic_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dashboard-1'.</summary>
         public static Material Dashboard1 { get; } = new(
             "Textures/synthetic/dashboard-1/dashboard-1_albedo.png",
             "Textures/synthetic/dashboard-1/dashboard-1_Normal.png",
@@ -636,11 +944,26 @@ public sealed partial class Material
             "Textures/synthetic/dashboard-1/dashboard-1_ao.png"
         );
 
+        public static Material VehicleInterior1Unity { get; } = new(
+            "Textures/synthetic/vehicle-interior1-unity/vehicle-interior1-albedo.png",
+            "Textures/synthetic/vehicle-interior1-unity/vehicle-interior1-normal-ogl.png",
+            "Textures/synthetic/vehicle-interior1-unity/vehicle-interior1-metallic.psd",
+            "Textures/synthetic/vehicle-interior1-unity/vehicle-interior1-height.png",
+            "Textures/synthetic/vehicle-interior1-unity/vehicle-interior1-ao.png"
+        );
+
+        public static Material YogaMatWavyPattern1Unity { get; } = new(
+            "Textures/synthetic/yoga-mat-wavy-pattern1-unity/yoga-mat-wavy-pattern1-albedo.png",
+            "Textures/synthetic/yoga-mat-wavy-pattern1-unity/yoga-mat-wavy-pattern1-Normal-ogl.png",
+            "Textures/synthetic/yoga-mat-wavy-pattern1-unity/yoga-mat-wavy-pattern1-Metallic.psd",
+            "Textures/synthetic/yoga-mat-wavy-pattern1-unity/yoga-mat-wavy-pattern1-Height.png",
+            "Textures/synthetic/yoga-mat-wavy-pattern1-unity/yoga-mat-wavy-pattern1-ao.png"
+        );
+
     }
 
     public static partial class Ground
     {
-        /// <summary>Auto-generated material for 'dry-rocky-ground'.</summary>
         public static Material DryRockyGround { get; } = new(
             "Textures/ground/dry-rocky-ground/dry-rocky-ground_albedo.png",
             "Textures/ground/dry-rocky-ground/dry-rocky-ground_Normal.png",
@@ -649,7 +972,6 @@ public sealed partial class Material
             "Textures/ground/dry-rocky-ground/dry-rocky-ground_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'Crusted_snow2'.</summary>
         public static Material CrustedSnow2 { get; } = new(
             "Textures/ground/Crusted_snow2/Crusted_snow2_albedo.png",
             "Textures/ground/Crusted_snow2/Crusted_snow2_Normal.png",
@@ -658,7 +980,6 @@ public sealed partial class Material
             "Textures/ground/Crusted_snow2/Crusted_snow2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'leafy-grass2'.</summary>
         public static Material LeafyGrass2 { get; } = new(
             "Textures/ground/leafy-grass2/leafy-grass2_albedo.png",
             "Textures/ground/leafy-grass2/leafy-grass2_Normal.png",
@@ -667,7 +988,6 @@ public sealed partial class Material
             "Textures/ground/leafy-grass2/leafy-grass2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'lava-and-rock'.</summary>
         public static Material LavaAndRock { get; } = new(
             "Textures/ground/lava-and-rock/lava-and-rock_albedo.png",
             "Textures/ground/lava-and-rock/lava-and-rock_Normal.png",
@@ -676,7 +996,6 @@ public sealed partial class Material
             "Textures/ground/lava-and-rock/lava-and-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'barren-ground-rock'.</summary>
         public static Material BarrenGroundRock { get; } = new(
             "Textures/ground/barren-ground-rock/barren-ground-rock_albedo.png",
             "Textures/ground/barren-ground-rock/barren-ground-rock_Normal.png",
@@ -685,7 +1004,14 @@ public sealed partial class Material
             "Textures/ground/barren-ground-rock/barren-ground-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-grass1'.</summary>
+        public static Material PeaGravelUnity { get; } = new(
+            "Textures/ground/pea-gravel-unity/pea-gravel_albedo.png",
+            "Textures/ground/pea-gravel-unity/pea-gravel_normal-ogl.png",
+            "Textures/ground/pea-gravel-unity/pea-gravel_metallic.psd",
+            "Textures/ground/pea-gravel-unity/pea-gravel_height.png",
+            "Textures/ground/pea-gravel-unity/pea-gravel_ao.png"
+        );
+
         public static Material StylizedGrass1 { get; } = new(
             "Textures/ground/stylized-grass1/stylized-grass1_albedo.png",
             "Textures/ground/stylized-grass1/stylized-grass1_Normal.png",
@@ -694,7 +1020,6 @@ public sealed partial class Material
             "Textures/ground/stylized-grass1/stylized-grass1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'haystack1'.</summary>
         public static Material Haystack1 { get; } = new(
             "Textures/ground/haystack1/haystack1_albedo.png",
             "Textures/ground/haystack1/haystack1_Normal.png",
@@ -703,7 +1028,6 @@ public sealed partial class Material
             "Textures/ground/haystack1/haystack1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'snow-packed12'.</summary>
         public static Material SnowPacked12 { get; } = new(
             "Textures/ground/snow-packed12/snow-packed12_albedo.png",
             "Textures/ground/snow-packed12/snow-packed12_Normal.png",
@@ -712,7 +1036,6 @@ public sealed partial class Material
             "Textures/ground/snow-packed12/snow-packed12_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'bumpy_worn_ground'.</summary>
         public static Material BumpyWornGround { get; } = new(
             "Textures/ground/bumpy_worn_ground/bumpy_worn_ground_albedo.png",
             "Textures/ground/bumpy_worn_ground/bumpy_worn_ground_Normal.png",
@@ -721,7 +1044,6 @@ public sealed partial class Material
             "Textures/ground/bumpy_worn_ground/bumpy_worn_ground_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'desert-rocks1'.</summary>
         public static Material DesertRocks1 { get; } = new(
             "Textures/ground/desert-rocks1/desert-rocks1_albedo.png",
             "Textures/ground/desert-rocks1/desert-rocks1_Normal.png",
@@ -730,16 +1052,14 @@ public sealed partial class Material
             "Textures/ground/desert-rocks1/desert-rocks1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sandyground1'.</summary>
         public static Material Sandyground1 { get; } = new(
             "Textures/ground/sandyground1/sandyground1_albedo.png",
-            "Textures/ground/sandyground1/sandyground1_Normal.png",
+            "Textures/ground/sandyground1/sandyground1_Normal-unity.png",
             "Textures/ground/sandyground1/sandyground1_metallic.psd",
             "Textures/ground/sandyground1/sandyground1_height.png",
             "Textures/ground/sandyground1/sandyground1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wispy-grass-meadow'.</summary>
         public static Material WispyGrassMeadow { get; } = new(
             "Textures/ground/wispy-grass-meadow/wispy-grass-meadow_albedo.png",
             "Textures/ground/wispy-grass-meadow/wispy-grass-meadow_Normal.png",
@@ -748,7 +1068,14 @@ public sealed partial class Material
             "Textures/ground/wispy-grass-meadow/wispy-grass-meadow_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'tidalpool2'.</summary>
+        public static Material GravelUnity { get; } = new(
+            "Textures/ground/gravel-unity/gravel_albedo.png",
+            "Textures/ground/gravel-unity/gravel_normal-ogl.png",
+            "Textures/ground/gravel-unity/gravel_metallic.psd",
+            "Textures/ground/gravel-unity/gravel_height.png",
+            "Textures/ground/gravel-unity/gravel_ao.png"
+        );
+
         public static Material Tidalpool2 { get; } = new(
             "Textures/ground/tidalpool2/tidalpool2_albedo.png",
             "Textures/ground/tidalpool2/tidalpool2_Normal.png",
@@ -757,7 +1084,6 @@ public sealed partial class Material
             "Textures/ground/tidalpool2/tidalpool2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'damp-rocky-ground1'.</summary>
         public static Material DampRockyGround1 { get; } = new(
             "Textures/ground/damp-rocky-ground1/damp-rocky-ground1_albedo.png",
             "Textures/ground/damp-rocky-ground1/damp-rocky-ground1_Normal.png",
@@ -766,7 +1092,6 @@ public sealed partial class Material
             "Textures/ground/damp-rocky-ground1/damp-rocky-ground1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'jagged-rocky-ground'.</summary>
         public static Material JaggedRockyGround { get; } = new(
             "Textures/ground/jagged-rocky-ground/jagged-rocky-ground_albedo.png",
             "Textures/ground/jagged-rocky-ground/jagged-rocky-ground_Normal.png",
@@ -775,7 +1100,6 @@ public sealed partial class Material
             "Textures/ground/jagged-rocky-ground/jagged-rocky-ground_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'patchy-meadow1'.</summary>
         public static Material PatchyMeadow1 { get; } = new(
             "Textures/ground/patchy-meadow1/patchy-meadow1_albedo.png",
             "Textures/ground/patchy-meadow1/patchy-meadow1_Normal.png",
@@ -784,7 +1108,6 @@ public sealed partial class Material
             "Textures/ground/patchy-meadow1/patchy-meadow1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rocky-shoreline1'.</summary>
         public static Material RockyShoreline1 { get; } = new(
             "Textures/ground/rocky-shoreline1/rocky-shoreline1_albedo.png",
             "Textures/ground/rocky-shoreline1/rocky-shoreline1_Normal.png",
@@ -793,7 +1116,6 @@ public sealed partial class Material
             "Textures/ground/rocky-shoreline1/rocky-shoreline1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'mossy_mud1'.</summary>
         public static Material MossyMud1 { get; } = new(
             "Textures/ground/mossy_mud1/mossy_mud1_albedo.png",
             "Textures/ground/mossy_mud1/mossy_mud1_Normal.png",
@@ -802,7 +1124,6 @@ public sealed partial class Material
             "Textures/ground/mossy_mud1/mossy_mud1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'bog'.</summary>
         public static Material Bog { get; } = new(
             "Textures/ground/bog/bog_albedo.png",
             "Textures/ground/bog/bog_Normal.png",
@@ -811,7 +1132,6 @@ public sealed partial class Material
             "Textures/ground/bog/bog_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'windswept-wasteland'.</summary>
         public static Material WindsweptWasteland { get; } = new(
             "Textures/ground/windswept-wasteland/windswept-wasteland_albedo.png",
             "Textures/ground/windswept-wasteland/windswept-wasteland_Normal.png",
@@ -820,7 +1140,6 @@ public sealed partial class Material
             "Textures/ground/windswept-wasteland/windswept-wasteland_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'pine_forest_ground1'.</summary>
         public static Material PineForestGround1 { get; } = new(
             "Textures/ground/pine_forest_ground1/pine_forest_ground1_albedo.png",
             "Textures/ground/pine_forest_ground1/pine_forest_ground1_Normal.png",
@@ -829,7 +1148,6 @@ public sealed partial class Material
             "Textures/ground/pine_forest_ground1/pine_forest_ground1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'winding-desert-rock'.</summary>
         public static Material WindingDesertRock { get; } = new(
             "Textures/ground/winding-desert-rock/winding-desert-rock_albedo.png",
             "Textures/ground/winding-desert-rock/winding-desert-rock_Normal.png",
@@ -838,7 +1156,6 @@ public sealed partial class Material
             "Textures/ground/winding-desert-rock/winding-desert-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'coral1'.</summary>
         public static Material Coral1 { get; } = new(
             "Textures/ground/coral1/coral1_albedo.png",
             "Textures/ground/coral1/coral1_Normal.png",
@@ -847,7 +1164,6 @@ public sealed partial class Material
             "Textures/ground/coral1/coral1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'worn-bumpy-rock'.</summary>
         public static Material WornBumpyRock { get; } = new(
             "Textures/ground/worn-bumpy-rock/worn-bumpy-rock_albedo.png",
             "Textures/ground/worn-bumpy-rock/worn-bumpy-rock_Normal.png",
@@ -856,7 +1172,6 @@ public sealed partial class Material
             "Textures/ground/worn-bumpy-rock/worn-bumpy-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sandy_rocks1'.</summary>
         public static Material SandyRocks1 { get; } = new(
             "Textures/ground/sandy_rocks1/sandy_rocks1_albedo.png",
             "Textures/ground/sandy_rocks1/sandy_rocks1_Normal.png",
@@ -865,7 +1180,6 @@ public sealed partial class Material
             "Textures/ground/sandy_rocks1/sandy_rocks1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'columned-lava-rock'.</summary>
         public static Material ColumnedLavaRock { get; } = new(
             "Textures/ground/columned-lava-rock/columned-lava-rock_albedo.png",
             "Textures/ground/columned-lava-rock/columned-lava-rock_Normal.png",
@@ -874,7 +1188,6 @@ public sealed partial class Material
             "Textures/ground/columned-lava-rock/columned-lava-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'grass1'.</summary>
         public static Material Grass1 { get; } = new(
             "Textures/ground/grass1/grass1_albedo.png",
             "Textures/ground/grass1/grass1_Normal.png",
@@ -883,7 +1196,6 @@ public sealed partial class Material
             "Textures/ground/grass1/grass1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wet-stones-with-sand1'.</summary>
         public static Material WetStonesWithSand1 { get; } = new(
             "Textures/ground/wet-stones-with-sand1/wet-stones-with-sand1_albedo.png",
             "Textures/ground/wet-stones-with-sand1/wet-stones-with-sand1_Normal.png",
@@ -892,7 +1204,14 @@ public sealed partial class Material
             "Textures/ground/wet-stones-with-sand1/wet-stones-with-sand1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rocky_dirt1'.</summary>
+        public static Material DryDirt1 { get; } = new(
+            "Textures/ground/dry-dirt1/dry-dirt1_albedo.png",
+            "Textures/ground/dry-dirt1/dry-dirt1_Normal.png",
+            "Textures/ground/dry-dirt1/dry-dirt1_metallic.psd",
+            "Textures/ground/dry-dirt1/dry-dirt1_height2.png",
+            "Textures/ground/dry-dirt1/dry-dirt1_ao.png"
+        );
+
         public static Material RockyDirt1 { get; } = new(
             "Textures/ground/rocky_dirt1/rocky_dirt1_albedo.png",
             "Textures/ground/rocky_dirt1/rocky_dirt1_Normal.png",
@@ -901,7 +1220,6 @@ public sealed partial class Material
             "Textures/ground/rocky_dirt1/rocky_dirt1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'grassy-meadow1'.</summary>
         public static Material GrassyMeadow1 { get; } = new(
             "Textures/ground/grassy-meadow1/grassy-meadow1_albedo.png",
             "Textures/ground/grassy-meadow1/grassy-meadow1_Normal.png",
@@ -910,7 +1228,14 @@ public sealed partial class Material
             "Textures/ground/grassy-meadow1/grassy-meadow1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'snowdrift1'.</summary>
+        public static Material DryDirt2 { get; } = new(
+            "Textures/ground/dry-dirt2/dry-dirt2_albedo.png",
+            "Textures/ground/dry-dirt2/dry-dirt2_Normal.png",
+            "Textures/ground/dry-dirt2/dry-dirt2_metallic.psd",
+            "Textures/ground/dry-dirt2/dry-dirt2_height2.png",
+            "Textures/ground/dry-dirt2/dry-dirt2_ao.png"
+        );
+
         public static Material Snowdrift1 { get; } = new(
             "Textures/ground/snowdrift1/snowdrift1_albedo.png",
             "Textures/ground/snowdrift1/snowdrift1_Normal.png",
@@ -919,7 +1244,14 @@ public sealed partial class Material
             "Textures/ground/snowdrift1/snowdrift1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'forest_floor'.</summary>
+        public static Material MudUnity { get; } = new(
+            "Textures/ground/mud-unity/mud_albedo.png",
+            "Textures/ground/mud-unity/mud_normal-ogl.png",
+            "Textures/ground/mud-unity/mud_metallic.psd",
+            "Textures/ground/mud-unity/mud_height.png",
+            "Textures/ground/mud-unity/mud_ao.png"
+        );
+
         public static Material ForestFloor { get; } = new(
             "Textures/ground/forest_floor/forest_floor_albedo.png",
             "Textures/ground/forest_floor/forest_floor_Normal.png",
@@ -928,7 +1260,6 @@ public sealed partial class Material
             "Textures/ground/forest_floor/forest_floor_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'mud_with_vegetation'.</summary>
         public static Material MudWithVegetation { get; } = new(
             "Textures/ground/mud_with_vegetation/mud_with_vegetation_albedo.png",
             "Textures/ground/mud_with_vegetation/mud_with_vegetation_Normal.png",
@@ -937,7 +1268,6 @@ public sealed partial class Material
             "Textures/ground/mud_with_vegetation/mud_with_vegetation_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sand-dunes1'.</summary>
         public static Material SandDunes1 { get; } = new(
             "Textures/ground/sand-dunes1/sand-dunes1_albedo.png",
             "Textures/ground/sand-dunes1/sand-dunes1_Normal.png",
@@ -946,7 +1276,6 @@ public sealed partial class Material
             "Textures/ground/sand-dunes1/sand-dunes1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'planet_surface'.</summary>
         public static Material PlanetSurface { get; } = new(
             "Textures/ground/planet_surface/planet_surface_albedo.png",
             "Textures/ground/planet_surface/planet_surface_Normal.png",
@@ -955,7 +1284,6 @@ public sealed partial class Material
             "Textures/ground/planet_surface/planet_surface_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wavy-sand'.</summary>
         public static Material WavySand { get; } = new(
             "Textures/ground/wavy-sand/wavy-sand_albedo.png",
             "Textures/ground/wavy-sand/wavy-sand_Normal.png",
@@ -964,7 +1292,6 @@ public sealed partial class Material
             "Textures/ground/wavy-sand/wavy-sand_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'mixedmoss'.</summary>
         public static Material Mixedmoss { get; } = new(
             "Textures/ground/mixedmoss/mixedmoss_albedo.png",
             "Textures/ground/mixedmoss/mixedmoss_Normal.png",
@@ -973,7 +1300,6 @@ public sealed partial class Material
             "Textures/ground/mixedmoss/mixedmoss_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'badlands-boulders'.</summary>
         public static Material BadlandsBoulders { get; } = new(
             "Textures/ground/badlands-boulders/badlands-boulders_albedo.png",
             "Textures/ground/badlands-boulders/badlands-boulders_Normal.png",
@@ -982,7 +1308,6 @@ public sealed partial class Material
             "Textures/ground/badlands-boulders/badlands-boulders_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'ice_field'.</summary>
         public static Material IceField { get; } = new(
             "Textures/ground/ice_field/ice_field_albedo.png",
             "Textures/ground/ice_field/ice_field_Normal.png",
@@ -991,7 +1316,6 @@ public sealed partial class Material
             "Textures/ground/ice_field/ice_field_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'tidal-pool1'.</summary>
         public static Material TidalPool1 { get; } = new(
             "Textures/ground/tidal-pool1/tidal-pool1_albedo.png",
             "Textures/ground/tidal-pool1/tidal-pool1_Normal.png",
@@ -1000,7 +1324,6 @@ public sealed partial class Material
             "Textures/ground/tidal-pool1/tidal-pool1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'river_rock1'.</summary>
         public static Material RiverRock1 { get; } = new(
             "Textures/ground/river_rock1/river_rock1_albedo.png",
             "Textures/ground/river_rock1/river_rock1_Normal.png",
@@ -1009,7 +1332,6 @@ public sealed partial class Material
             "Textures/ground/river_rock1/river_rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'iced-over-ground7'.</summary>
         public static Material IcedOverGround7 { get; } = new(
             "Textures/ground/iced-over-ground7/iced-over-ground7_albedo.png",
             "Textures/ground/iced-over-ground7/iced-over-ground7_Normal.png",
@@ -1018,7 +1340,14 @@ public sealed partial class Material
             "Textures/ground/iced-over-ground7/iced-over-ground7_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rocky-dunes1'.</summary>
+        public static Material RockyRuggedTerrainUnity { get; } = new(
+            "Textures/ground/rocky-rugged-terrain-unity/rocky-rugged-terrain_1_albedo.png",
+            "Textures/ground/rocky-rugged-terrain-unity/rocky-rugged-terrain_1_normal-ogl.png",
+            "Textures/ground/rocky-rugged-terrain-unity/rocky-rugged-terrain_1_metallic.psd",
+            "Textures/ground/rocky-rugged-terrain-unity/rocky-rugged-terrain_1_height.png",
+            "Textures/ground/rocky-rugged-terrain-unity/rocky-rugged-terrain_1_ao.png"
+        );
+
         public static Material RockyDunes1 { get; } = new(
             "Textures/ground/rocky-dunes1/rocky-dunes1_albedo.png",
             "Textures/ground/rocky-dunes1/rocky-dunes1_Normal.png",
@@ -1027,7 +1356,6 @@ public sealed partial class Material
             "Textures/ground/rocky-dunes1/rocky-dunes1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dusty-ground-gravel1'.</summary>
         public static Material DustyGroundGravel1 { get; } = new(
             "Textures/ground/dusty-ground-gravel1/dusty-ground-gravel1_albedo.png",
             "Textures/ground/dusty-ground-gravel1/dusty-ground-gravel1_Normal.png",
@@ -1040,16 +1368,14 @@ public sealed partial class Material
 
     public static partial class Organic
     {
-        /// <summary>Auto-generated material for 'human-skin1'.</summary>
         public static Material HumanSkin1 { get; } = new(
-            "Textures/organic/human-skin1/human-skin1_albedo.png",
+            "Textures/organic/human-skin1/human-skin1_albedo_2.png",
             "Textures/organic/human-skin1/human-skin1_Normal.png",
             "Textures/organic/human-skin1/human-skin1_metallic.psd",
             "Textures/organic/human-skin1/human-skin1_height.png",
             "Textures/organic/human-skin1/human-skin1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'layered-fungus1'.</summary>
         public static Material LayeredFungus1 { get; } = new(
             "Textures/organic/layered-fungus1/layered-fungus1_albedo.png",
             "Textures/organic/layered-fungus1/layered-fungus1_Normal.png",
@@ -1058,7 +1384,22 @@ public sealed partial class Material
             "Textures/organic/layered-fungus1/layered-fungus1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'human-skin-freckled'.</summary>
+        public static Material ReptilianSkinUnity { get; } = new(
+            "Textures/organic/reptilian-skin-unity/reptilian-skin_albedo.png",
+            "Textures/organic/reptilian-skin-unity/reptilian-skin_normal-ogl.png",
+            "Textures/organic/reptilian-skin-unity/reptilian-skin_metallic.psd",
+            "Textures/organic/reptilian-skin-unity/reptilian-skin_height.png",
+            "Textures/organic/reptilian-skin-unity/reptilian-skin_ao.png"
+        );
+
+        public static Material GutsUnity { get; } = new(
+            "Textures/organic/guts-unity/guts_albedo.png",
+            "Textures/organic/guts-unity/guts_normal-ogl.png",
+            "Textures/organic/guts-unity/guts_metallic.psd",
+            "Textures/organic/guts-unity/guts_height.png",
+            "Textures/organic/guts-unity/guts_ao.png"
+        );
+
         public static Material HumanSkinFreckled { get; } = new(
             "Textures/organic/human-skin-freckled/human-skin-freckled_albedo.png",
             "Textures/organic/human-skin-freckled/human-skin-freckled_Normal.png",
@@ -1067,7 +1408,6 @@ public sealed partial class Material
             "Textures/organic/human-skin-freckled/human-skin-freckled_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-animal-fur'.</summary>
         public static Material StylizedAnimalFur { get; } = new(
             "Textures/organic/stylized-animal-fur/stylized-animal-fur_albedo.png",
             "Textures/organic/stylized-animal-fur/stylized-animal-fur_Normal.png",
@@ -1076,7 +1416,6 @@ public sealed partial class Material
             "Textures/organic/stylized-animal-fur/stylized-animal-fur_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'feathers'.</summary>
         public static Material Feathers { get; } = new(
             "Textures/organic/feathers/feathers_albedo.png",
             "Textures/organic/feathers/feathers_Normal.png",
@@ -1085,7 +1424,6 @@ public sealed partial class Material
             "Textures/organic/feathers/feathers_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'alien-slime1'.</summary>
         public static Material AlienSlime1 { get; } = new(
             "Textures/organic/alien-slime1/alien-slime1_albedo.png",
             "Textures/organic/alien-slime1/alien-slime1_Normal.png",
@@ -1094,7 +1432,6 @@ public sealed partial class Material
             "Textures/organic/alien-slime1/alien-slime1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dragon-scales'.</summary>
         public static Material DragonScales { get; } = new(
             "Textures/organic/dragon-scales/dragon-scales_albedo.png",
             "Textures/organic/dragon-scales/dragon-scales_Normal.png",
@@ -1103,7 +1440,6 @@ public sealed partial class Material
             "Textures/organic/dragon-scales/dragon-scales_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'armored-dragon-scales'.</summary>
         public static Material ArmoredDragonScales { get; } = new(
             "Textures/organic/armored-dragon-scales/armored-dragon-scales_albedo.png",
             "Textures/organic/armored-dragon-scales/armored-dragon-scales_Normal.png",
@@ -1112,7 +1448,6 @@ public sealed partial class Material
             "Textures/organic/armored-dragon-scales/armored-dragon-scales_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'bird-feathers-2'.</summary>
         public static Material BirdFeathers2 { get; } = new(
             "Textures/organic/bird-feathers-2/bird-feathers-2_albedo.png",
             "Textures/organic/bird-feathers-2/bird-feathers-2_Normal.png",
@@ -1121,7 +1456,6 @@ public sealed partial class Material
             "Textures/organic/bird-feathers-2/bird-feathers-2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'alien-carniverous-plant'.</summary>
         public static Material AlienCarniverousPlant { get; } = new(
             "Textures/organic/alien-carniverous-plant/alien-carniverous-plant_albedo.png",
             "Textures/organic/alien-carniverous-plant/alien-carniverous-plant_Normal.png",
@@ -1130,7 +1464,6 @@ public sealed partial class Material
             "Textures/organic/alien-carniverous-plant/alien-carniverous-plant_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-beast-fur'.</summary>
         public static Material StylizedBeastFur { get; } = new(
             "Textures/organic/stylized-beast-fur/stylized-beast-fur_albedo.png",
             "Textures/organic/stylized-beast-fur/stylized-beast-fur_Normal.png",
@@ -1139,11 +1472,18 @@ public sealed partial class Material
             "Textures/organic/stylized-beast-fur/stylized-beast-fur_ao.png"
         );
 
+        public static Material GoblinSkinBumpyUnity { get; } = new(
+            "Textures/organic/goblin-skin-bumpy-unity/goblin-skin-bumpy_albedo.png",
+            "Textures/organic/goblin-skin-bumpy-unity/goblin-skin-bumpy_normal-ogl.png",
+            "Textures/organic/goblin-skin-bumpy-unity/goblin-skin-bumpy_metallic.psd",
+            "Textures/organic/goblin-skin-bumpy-unity/goblin-skin-bumpy_height.png",
+            "Textures/organic/goblin-skin-bumpy-unity/goblin-skin-bumpy_ao.png"
+        );
+
     }
 
     public static partial class Concrete
     {
-        /// <summary>Auto-generated material for 'pebbled_asphalt'.</summary>
         public static Material PebbledAsphalt { get; } = new(
             "Textures/concrete/pebbled_asphalt/pebbled_asphalt_albedo.png",
             "Textures/concrete/pebbled_asphalt/pebbled_asphalt_Normal.png",
@@ -1152,7 +1492,6 @@ public sealed partial class Material
             "Textures/concrete/pebbled_asphalt/pebbled_asphalt_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'painted-worn-asphalt'.</summary>
         public static Material PaintedWornAsphalt { get; } = new(
             "Textures/concrete/painted-worn-asphalt/painted-worn-asphalt_albedo.png",
             "Textures/concrete/painted-worn-asphalt/painted-worn-asphalt_Normal.png",
@@ -1161,7 +1500,6 @@ public sealed partial class Material
             "Textures/concrete/painted-worn-asphalt/painted-worn-asphalt_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'broken_down_concrete2'.</summary>
         public static Material BrokenDownConcrete2 { get; } = new(
             "Textures/concrete/broken_down_concrete2/broken_down_concrete2_albedo.png",
             "Textures/concrete/broken_down_concrete2/broken_down_concrete2_Normal.png",
@@ -1170,7 +1508,6 @@ public sealed partial class Material
             "Textures/concrete/broken_down_concrete2/broken_down_concrete2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'degraded-concrete'.</summary>
         public static Material DegradedConcrete { get; } = new(
             "Textures/concrete/degraded-concrete/degraded-concrete_albedo.png",
             "Textures/concrete/degraded-concrete/degraded-concrete_Normal.png",
@@ -1179,7 +1516,6 @@ public sealed partial class Material
             "Textures/concrete/degraded-concrete/degraded-concrete_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'fine-particles-concrete1'.</summary>
         public static Material FineParticlesConcrete1 { get; } = new(
             "Textures/concrete/fine-particles-concrete1/fine-particles-concrete1_albedo.png",
             "Textures/concrete/fine-particles-concrete1/fine-particles-concrete1_Normal.png",
@@ -1188,7 +1524,14 @@ public sealed partial class Material
             "Textures/concrete/fine-particles-concrete1/fine-particles-concrete1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cement_arcing_pattern1'.</summary>
+        public static Material GrainyConcreteUnity { get; } = new(
+            "Textures/concrete/grainy-concrete-unity/grainy-concrete_albedo.png",
+            "Textures/concrete/grainy-concrete-unity/grainy-concrete_normal-ogl.png",
+            "Textures/concrete/grainy-concrete-unity/grainy-concrete_metallic.psd",
+            "Textures/concrete/grainy-concrete-unity/grainy-concrete_height.png",
+            "Textures/concrete/grainy-concrete-unity/grainy-concrete_ao.png"
+        );
+
         public static Material CementArcingPattern1 { get; } = new(
             "Textures/concrete/cement_arcing_pattern1/cement_arcing_pattern1_albedo.png",
             "Textures/concrete/cement_arcing_pattern1/cement_arcing_pattern1_Normal.png",
@@ -1197,7 +1540,6 @@ public sealed partial class Material
             "Textures/concrete/cement_arcing_pattern1/cement_arcing_pattern1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'concrete3'.</summary>
         public static Material Concrete3 { get; } = new(
             "Textures/concrete/concrete3/concrete3_albedo.png",
             "Textures/concrete/concrete3/concrete3_Normal.png",
@@ -1206,7 +1548,6 @@ public sealed partial class Material
             "Textures/concrete/concrete3/concrete3_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cracking_painted_asphalt'.</summary>
         public static Material CrackingPaintedAsphalt { get; } = new(
             "Textures/concrete/cracking_painted_asphalt/cracking_painted_asphalt_albedo.png",
             "Textures/concrete/cracking_painted_asphalt/cracking_painted_asphalt_Normal.png",
@@ -1215,7 +1556,6 @@ public sealed partial class Material
             "Textures/concrete/cracking_painted_asphalt/cracking_painted_asphalt_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'concrete1'.</summary>
         public static Material Concrete1 { get; } = new(
             "Textures/concrete/concrete1/concrete1_albedo.png",
             "Textures/concrete/concrete1/concrete1_Normal.png",
@@ -1224,7 +1564,6 @@ public sealed partial class Material
             "Textures/concrete/concrete1/concrete1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'Lined-Cement'.</summary>
         public static Material LinedCement { get; } = new(
             "Textures/concrete/Lined-Cement/Lined-Cement_albedo.png",
             "Textures/concrete/Lined-Cement/Lined-Cement_Normal.png",
@@ -1233,7 +1572,14 @@ public sealed partial class Material
             "Textures/concrete/Lined-Cement/Lined-Cement_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'concrete2'.</summary>
+        public static Material CleanConcreteUnity { get; } = new(
+            "Textures/concrete/clean-concrete-unity/clean-concrete_albedo.png",
+            "Textures/concrete/clean-concrete-unity/clean-concrete_normal-ogl.png",
+            "Textures/concrete/clean-concrete-unity/clean-concrete_metallic.psd",
+            "Textures/concrete/clean-concrete-unity/clean-concrete_height.png",
+            "Textures/concrete/clean-concrete-unity/clean-concrete_ao.png"
+        );
+
         public static Material Concrete2 { get; } = new(
             "Textures/concrete/concrete2/concrete2_albedo.png",
             "Textures/concrete/concrete2/concrete2_Normal.png",
@@ -1242,7 +1588,6 @@ public sealed partial class Material
             "Textures/concrete/concrete2/concrete2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'broken_down_concrete1'.</summary>
         public static Material BrokenDownConcrete1 { get; } = new(
             "Textures/concrete/broken_down_concrete1/broken_down_concrete1_albedo.png",
             "Textures/concrete/broken_down_concrete1/broken_down_concrete1_Normal.png",
@@ -1251,7 +1596,6 @@ public sealed partial class Material
             "Textures/concrete/broken_down_concrete1/broken_down_concrete1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rocky_asphalt1'.</summary>
         public static Material RockyAsphalt1 { get; } = new(
             "Textures/concrete/rocky_asphalt1/rocky_asphalt1_albedo.png",
             "Textures/concrete/rocky_asphalt1/rocky_asphalt1_Normal.png",
@@ -1260,7 +1604,6 @@ public sealed partial class Material
             "Textures/concrete/rocky_asphalt1/rocky_asphalt1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'lumpy-wet-concrete'.</summary>
         public static Material LumpyWetConcrete { get; } = new(
             "Textures/concrete/lumpy-wet-concrete/lumpy-wet-concrete_albedo.png",
             "Textures/concrete/lumpy-wet-concrete/lumpy-wet-concrete_Normal.png",
@@ -1273,7 +1616,6 @@ public sealed partial class Material
 
     public static partial class Rocks
     {
-        /// <summary>Auto-generated material for 'bumpy-rockface1'.</summary>
         public static Material BumpyRockface1 { get; } = new(
             "Textures/rocks/bumpy-rockface1/bumpy-rockface1_albedo.png",
             "Textures/rocks/bumpy-rockface1/bumpy-rockface1_Normal.png",
@@ -1282,7 +1624,22 @@ public sealed partial class Material
             "Textures/rocks/bumpy-rockface1/bumpy-rockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sharp-rockface1'.</summary>
+        public static Material StylizedChunkyRockfaceUnity { get; } = new(
+            "Textures/rocks/stylized-chunky-rockface-unity/stylized-chunky-rockface_albedo.png",
+            "Textures/rocks/stylized-chunky-rockface-unity/stylized-chunky-rockface_normal-ogl.png",
+            "Textures/rocks/stylized-chunky-rockface-unity/stylized-chunky-rockface_metallic.psd",
+            "Textures/rocks/stylized-chunky-rockface-unity/stylized-chunky-rockface_height.png",
+            "Textures/rocks/stylized-chunky-rockface-unity/stylized-chunky-rockface_ao.png"
+        );
+
+        public static Material RavineCliffUnity { get; } = new(
+            "Textures/rocks/ravine-cliff-unity/ravine-cliff_albedo.png",
+            "Textures/rocks/ravine-cliff-unity/ravine-cliff_normal-ogl.png",
+            "Textures/rocks/ravine-cliff-unity/ravine-cliff_metallic.psd",
+            "Textures/rocks/ravine-cliff-unity/ravine-cliff_height.png",
+            "Textures/rocks/ravine-cliff-unity/ravine-cliff_ao.png"
+        );
+
         public static Material SharpRockface1 { get; } = new(
             "Textures/rocks/sharp-rockface1/sharp-rockface1_albedo.png",
             "Textures/rocks/sharp-rockface1/sharp-rockface1_Normal.png",
@@ -1291,7 +1648,6 @@ public sealed partial class Material
             "Textures/rocks/sharp-rockface1/sharp-rockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-cliff2'.</summary>
         public static Material StylizedCliff2 { get; } = new(
             "Textures/rocks/stylized-cliff2/stylized-cliff2_albedo.png",
             "Textures/rocks/stylized-cliff2/stylized-cliff2_Normal.png",
@@ -1300,7 +1656,6 @@ public sealed partial class Material
             "Textures/rocks/stylized-cliff2/stylized-cliff2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sharp-volcanic-rock'.</summary>
         public static Material SharpVolcanicRock { get; } = new(
             "Textures/rocks/sharp-volcanic-rock/sharp-volcanic-rock_albedo.png",
             "Textures/rocks/sharp-volcanic-rock/sharp-volcanic-rock_Normal.png",
@@ -1309,7 +1664,14 @@ public sealed partial class Material
             "Textures/rocks/sharp-volcanic-rock/sharp-volcanic-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'waterwornstone1'.</summary>
+        public static Material WetMossyRocksUnity { get; } = new(
+            "Textures/rocks/wet-mossy-rocks-unity/wet-mossy-rocks_albedo.png",
+            "Textures/rocks/wet-mossy-rocks-unity/wet-mossy-rocks_normal-ogl.png",
+            "Textures/rocks/wet-mossy-rocks-unity/wet-mossy-rocks_metallic.psd",
+            "Textures/rocks/wet-mossy-rocks-unity/wet-mossy-rocks_height.png",
+            "Textures/rocks/wet-mossy-rocks-unity/wet-mossy-rocks_ao.png"
+        );
+
         public static Material Waterwornstone1 { get; } = new(
             "Textures/rocks/waterwornstone1/waterwornstone1_albedo.png",
             "Textures/rocks/waterwornstone1/waterwornstone1_Normal.png",
@@ -1318,7 +1680,6 @@ public sealed partial class Material
             "Textures/rocks/waterwornstone1/waterwornstone1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'graniterockface1'.</summary>
         public static Material Graniterockface1 { get; } = new(
             "Textures/rocks/graniterockface1/graniterockface1_albedo.png",
             "Textures/rocks/graniterockface1/graniterockface1_Normal.png",
@@ -1327,7 +1688,6 @@ public sealed partial class Material
             "Textures/rocks/graniterockface1/graniterockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'geyser-rock1'.</summary>
         public static Material GeyserRock1 { get; } = new(
             "Textures/rocks/geyser-rock1/geyser-rock1_albedo.png",
             "Textures/rocks/geyser-rock1/geyser-rock1_Normal.png",
@@ -1336,7 +1696,6 @@ public sealed partial class Material
             "Textures/rocks/geyser-rock1/geyser-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'jagged-rockface1'.</summary>
         public static Material JaggedRockface1 { get; } = new(
             "Textures/rocks/jagged-rockface1/jagged-rockface1_albedo.png",
             "Textures/rocks/jagged-rockface1/jagged-rockface1_Normal.png",
@@ -1345,7 +1704,6 @@ public sealed partial class Material
             "Textures/rocks/jagged-rockface1/jagged-rockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'peacock-ore'.</summary>
         public static Material PeacockOre { get; } = new(
             "Textures/rocks/peacock-ore/peacock-ore_albedo.png",
             "Textures/rocks/peacock-ore/peacock-ore_Normal.png",
@@ -1354,7 +1712,6 @@ public sealed partial class Material
             "Textures/rocks/peacock-ore/peacock-ore_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'layered-cliff'.</summary>
         public static Material LayeredCliff { get; } = new(
             "Textures/rocks/layered-cliff/layered-cliff_albedo.png",
             "Textures/rocks/layered-cliff/layered-cliff_Normal.png",
@@ -1363,7 +1720,6 @@ public sealed partial class Material
             "Textures/rocks/layered-cliff/layered-cliff_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-ice-cave-walls'.</summary>
         public static Material StylizedIceCaveWalls { get; } = new(
             "Textures/rocks/stylized-ice-cave-walls/stylized-ice-cave-walls_albedo.png",
             "Textures/rocks/stylized-ice-cave-walls/stylized-ice-cave-walls_Normal.png",
@@ -1372,7 +1728,6 @@ public sealed partial class Material
             "Textures/rocks/stylized-ice-cave-walls/stylized-ice-cave-walls_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'lava-rock2'.</summary>
         public static Material LavaRock2 { get; } = new(
             "Textures/rocks/lava-rock2/lava-rock2_albedo.png",
             "Textures/rocks/lava-rock2/lava-rock2_Normal.png",
@@ -1381,7 +1736,6 @@ public sealed partial class Material
             "Textures/rocks/lava-rock2/lava-rock2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'layered-rock2'.</summary>
         public static Material LayeredRock2 { get; } = new(
             "Textures/rocks/layered-rock2/layered-rock2_albedo.png",
             "Textures/rocks/layered-rock2/layered-rock2_Normal.png",
@@ -1390,7 +1744,6 @@ public sealed partial class Material
             "Textures/rocks/layered-rock2/layered-rock2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rock_vstreaks'.</summary>
         public static Material RockVstreaks { get; } = new(
             "Textures/rocks/rock_vstreaks/rock_vstreaks_albedo.png",
             "Textures/rocks/rock_vstreaks/rock_vstreaks_Normal.png",
@@ -1399,7 +1752,6 @@ public sealed partial class Material
             "Textures/rocks/rock_vstreaks/rock_vstreaks_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rough-igneous-rock'.</summary>
         public static Material RoughIgneousRock { get; } = new(
             "Textures/rocks/rough-igneous-rock/rough-igneous-rock_albedo.png",
             "Textures/rocks/rough-igneous-rock/rough-igneous-rock_Normal.png",
@@ -1408,7 +1760,6 @@ public sealed partial class Material
             "Textures/rocks/rough-igneous-rock/rough-igneous-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'granite-gray-white'.</summary>
         public static Material GraniteGrayWhite { get; } = new(
             "Textures/rocks/granite-gray-white/granite-gray-white_albedo.png",
             "Textures/rocks/granite-gray-white/granite-gray-white_Normal.png",
@@ -1417,7 +1768,6 @@ public sealed partial class Material
             "Textures/rocks/granite-gray-white/granite-gray-white_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'layered-rock1'.</summary>
         public static Material LayeredRock1 { get; } = new(
             "Textures/rocks/layered-rock1/layered-rock1_albedo.png",
             "Textures/rocks/layered-rock1/layered-rock1_Normal.png",
@@ -1426,7 +1776,6 @@ public sealed partial class Material
             "Textures/rocks/layered-rock1/layered-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'strata-rock-2'.</summary>
         public static Material StrataRock2 { get; } = new(
             "Textures/rocks/strata-rock-2/strata-rock-2_albedo.png",
             "Textures/rocks/strata-rock-2/strata-rock-2_Normal.png",
@@ -1435,7 +1784,6 @@ public sealed partial class Material
             "Textures/rocks/strata-rock-2/strata-rock-2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-cliff1'.</summary>
         public static Material StylizedCliff1 { get; } = new(
             "Textures/rocks/stylized-cliff1/stylized-cliff1_albedo.png",
             "Textures/rocks/stylized-cliff1/stylized-cliff1_Normal.png",
@@ -1444,7 +1792,14 @@ public sealed partial class Material
             "Textures/rocks/stylized-cliff1/stylized-cliff1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cliff-rockface1'.</summary>
+        public static Material Blackrock { get; } = new(
+            "Textures/rocks/blackrock/blackrock_albedo.png",
+            "Textures/rocks/blackrock/blackrock_Normal.png",
+            "Textures/rocks/blackrock/blackrock_metallic.psd",
+            "Textures/rocks/blackrock/blackrock_height3.png",
+            "Textures/rocks/blackrock/blackrock_ao2.png"
+        );
+
         public static Material CliffRockface1 { get; } = new(
             "Textures/rocks/cliff-rockface1/cliff-rockface1_albedo.png",
             "Textures/rocks/cliff-rockface1/cliff-rockface1_Normal.png",
@@ -1453,7 +1808,6 @@ public sealed partial class Material
             "Textures/rocks/cliff-rockface1/cliff-rockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cratered-rock'.</summary>
         public static Material CrateredRock { get; } = new(
             "Textures/rocks/cratered-rock/cratered-rock_albedo.png",
             "Textures/rocks/cratered-rock/cratered-rock_Normal.png",
@@ -1462,7 +1816,6 @@ public sealed partial class Material
             "Textures/rocks/cratered-rock/cratered-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'red-coral2'.</summary>
         public static Material RedCoral2 { get; } = new(
             "Textures/rocks/red-coral2/red-coral2_albedo.png",
             "Textures/rocks/red-coral2/red-coral2_Normal.png",
@@ -1471,7 +1824,6 @@ public sealed partial class Material
             "Textures/rocks/red-coral2/red-coral2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'speckled-granite1'.</summary>
         public static Material SpeckledGranite1 { get; } = new(
             "Textures/rocks/speckled-granite1/speckled-granite1_albedo.png",
             "Textures/rocks/speckled-granite1/speckled-granite1_Normal.png",
@@ -1480,7 +1832,6 @@ public sealed partial class Material
             "Textures/rocks/speckled-granite1/speckled-granite1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stacked-rock-cliff'.</summary>
         public static Material StackedRockCliff { get; } = new(
             "Textures/rocks/stacked-rock-cliff/stacked-rock-cliff_albedo.png",
             "Textures/rocks/stacked-rock-cliff/stacked-rock-cliff_Normal.png",
@@ -1489,7 +1840,6 @@ public sealed partial class Material
             "Textures/rocks/stacked-rock-cliff/stacked-rock-cliff_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'light-bumped-rock1'.</summary>
         public static Material LightBumpedRock1 { get; } = new(
             "Textures/rocks/light-bumped-rock1/light-bumped-rock1_albedo.png",
             "Textures/rocks/light-bumped-rock1/light-bumped-rock1_Normal.png",
@@ -1498,7 +1848,6 @@ public sealed partial class Material
             "Textures/rocks/light-bumped-rock1/light-bumped-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'vertical-streak-cliff'.</summary>
         public static Material VerticalStreakCliff { get; } = new(
             "Textures/rocks/vertical-streak-cliff/vertical-streak-cliff_albedo.png",
             "Textures/rocks/vertical-streak-cliff/vertical-streak-cliff_Normal.png",
@@ -1507,7 +1856,6 @@ public sealed partial class Material
             "Textures/rocks/vertical-streak-cliff/vertical-streak-cliff_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dark_rough_rock1'.</summary>
         public static Material DarkRoughRock1 { get; } = new(
             "Textures/rocks/dark_rough_rock1/dark_rough_rock1_albedo.png",
             "Textures/rocks/dark_rough_rock1/dark_rough_rock1_Normal.png",
@@ -1516,7 +1864,6 @@ public sealed partial class Material
             "Textures/rocks/dark_rough_rock1/dark_rough_rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'limestone3'.</summary>
         public static Material Limestone3 { get; } = new(
             "Textures/rocks/limestone3/limestone3_albedo.png",
             "Textures/rocks/limestone3/limestone3_Normal.png",
@@ -1525,7 +1872,6 @@ public sealed partial class Material
             "Textures/rocks/limestone3/limestone3_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'holey-rock1'.</summary>
         public static Material HoleyRock1 { get; } = new(
             "Textures/rocks/holey-rock1/holey-rock1_albedo.png",
             "Textures/rocks/holey-rock1/holey-rock1_Normal.png",
@@ -1534,7 +1880,6 @@ public sealed partial class Material
             "Textures/rocks/holey-rock1/holey-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-columned-cliff'.</summary>
         public static Material StylizedColumnedCliff { get; } = new(
             "Textures/rocks/stylized-columned-cliff/stylized-columned-cliff_albedo.png",
             "Textures/rocks/stylized-columned-cliff/stylized-columned-cliff_Normal.png",
@@ -1543,7 +1888,6 @@ public sealed partial class Material
             "Textures/rocks/stylized-columned-cliff/stylized-columned-cliff_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'ocean-rock'.</summary>
         public static Material OceanRock { get; } = new(
             "Textures/rocks/ocean-rock/ocean-rock_albedo.png",
             "Textures/rocks/ocean-rock/ocean-rock_Normal.png",
@@ -1552,7 +1896,6 @@ public sealed partial class Material
             "Textures/rocks/ocean-rock/ocean-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'layered-planetary'.</summary>
         public static Material LayeredPlanetary { get; } = new(
             "Textures/rocks/layered-planetary/layered-planetary_albedo.png",
             "Textures/rocks/layered-planetary/layered-planetary_Normal.png",
@@ -1561,7 +1904,6 @@ public sealed partial class Material
             "Textures/rocks/layered-planetary/layered-planetary_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'angled-shale-cliff'.</summary>
         public static Material AngledShaleCliff { get; } = new(
             "Textures/rocks/angled-shale-cliff/angled-shale-cliff_albedo.png",
             "Textures/rocks/angled-shale-cliff/angled-shale-cliff_Normal.png",
@@ -1570,7 +1912,6 @@ public sealed partial class Material
             "Textures/rocks/angled-shale-cliff/angled-shale-cliff_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'limestone-cliffs'.</summary>
         public static Material LimestoneCliffs { get; } = new(
             "Textures/rocks/limestone-cliffs/limestone-cliffs_albedo.png",
             "Textures/rocks/limestone-cliffs/limestone-cliffs_Normal.png",
@@ -1579,7 +1920,6 @@ public sealed partial class Material
             "Textures/rocks/limestone-cliffs/limestone-cliffs_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'slatecliffrock'.</summary>
         public static Material Slatecliffrock { get; } = new(
             "Textures/rocks/slatecliffrock/slatecliffrock_albedo.png",
             "Textures/rocks/slatecliffrock/slatecliffrock_Normal.png",
@@ -1588,7 +1928,14 @@ public sealed partial class Material
             "Textures/rocks/slatecliffrock/slatecliffrock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sharp-rockface2'.</summary>
+        public static Material ObsidianUnity { get; } = new(
+            "Textures/rocks/obsidian-unity/obsidian_albedo.png",
+            "Textures/rocks/obsidian-unity/obsidian_normal-ogl.png",
+            "Textures/rocks/obsidian-unity/obsidian_metallic.psd",
+            "Textures/rocks/obsidian-unity/obsidian_height.png",
+            "Textures/rocks/obsidian-unity/obsidian_ao.png"
+        );
+
         public static Material SharpRockface2 { get; } = new(
             "Textures/rocks/sharp-rockface2/sharp-rockface2_albedo.png",
             "Textures/rocks/sharp-rockface2/sharp-rockface2_Normal.png",
@@ -1597,7 +1944,6 @@ public sealed partial class Material
             "Textures/rocks/sharp-rockface2/sharp-rockface2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'lunar-rock'.</summary>
         public static Material LunarRock { get; } = new(
             "Textures/rocks/lunar-rock/lunar-rock_albedo.png",
             "Textures/rocks/lunar-rock/lunar-rock_Normal.png",
@@ -1606,7 +1952,6 @@ public sealed partial class Material
             "Textures/rocks/lunar-rock/lunar-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'desert-cliff1'.</summary>
         public static Material DesertCliff1 { get; } = new(
             "Textures/rocks/desert-cliff1/desert-cliff1_albedo.png",
             "Textures/rocks/desert-cliff1/desert-cliff1_Normal.png",
@@ -1615,7 +1960,6 @@ public sealed partial class Material
             "Textures/rocks/desert-cliff1/desert-cliff1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'eroded-smoothed-rockface'.</summary>
         public static Material ErodedSmoothedRockface { get; } = new(
             "Textures/rocks/eroded-smoothed-rockface/eroded-smoothed-rockface_albedo.png",
             "Textures/rocks/eroded-smoothed-rockface/eroded-smoothed-rockface_Normal.png",
@@ -1624,7 +1968,6 @@ public sealed partial class Material
             "Textures/rocks/eroded-smoothed-rockface/eroded-smoothed-rockface_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cavern-walls'.</summary>
         public static Material CavernWalls { get; } = new(
             "Textures/rocks/cavern-walls/cavern-walls_albedo.png",
             "Textures/rocks/cavern-walls/cavern-walls_Normal.png",
@@ -1633,7 +1976,6 @@ public sealed partial class Material
             "Textures/rocks/cavern-walls/cavern-walls_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'Rough-rockface1'.</summary>
         public static Material RoughRockface1 { get; } = new(
             "Textures/rocks/Rough-rockface1/Rough-rockface1_albedo.png",
             "Textures/rocks/Rough-rockface1/Rough-rockface1_Normal.png",
@@ -1642,7 +1984,6 @@ public sealed partial class Material
             "Textures/rocks/Rough-rockface1/Rough-rockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cavern-deposits'.</summary>
         public static Material CavernDeposits { get; } = new(
             "Textures/rocks/cavern-deposits/cavern-deposits_albedo.png",
             "Textures/rocks/cavern-deposits/cavern-deposits_Normal.png",
@@ -1651,7 +1992,6 @@ public sealed partial class Material
             "Textures/rocks/cavern-deposits/cavern-deposits_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sulphuric-rock'.</summary>
         public static Material SulphuricRock { get; } = new(
             "Textures/rocks/sulphuric-rock/sulphuric-rock_albedo.png",
             "Textures/rocks/sulphuric-rock/sulphuric-rock_Normal.png",
@@ -1660,7 +2000,6 @@ public sealed partial class Material
             "Textures/rocks/sulphuric-rock/sulphuric-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dungeon-stone1'.</summary>
         public static Material DungeonStone1 { get; } = new(
             "Textures/rocks/dungeon-stone1/dungeon-stone1_albedo.png",
             "Textures/rocks/dungeon-stone1/dungeon-stone1_Normal.png",
@@ -1669,7 +2008,6 @@ public sealed partial class Material
             "Textures/rocks/dungeon-stone1/dungeon-stone1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'limestone6'.</summary>
         public static Material Limestone6 { get; } = new(
             "Textures/rocks/limestone6/limestone6_albedo.png",
             "Textures/rocks/limestone6/limestone6_Normal.png",
@@ -1678,7 +2016,14 @@ public sealed partial class Material
             "Textures/rocks/limestone6/limestone6_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cavefloor1'.</summary>
+        public static Material FlakingLimestone1 { get; } = new(
+            "Textures/rocks/flaking-limestone1/flaking-limestone1_albedo.png",
+            "Textures/rocks/flaking-limestone1/flaking-limestone1_Normal.png",
+            "Textures/rocks/flaking-limestone1/flaking-limestone1_metallic.psd",
+            "Textures/rocks/flaking-limestone1/flaking-limestone1_height2.png",
+            "Textures/rocks/flaking-limestone1/flaking-limestone1_ao.png"
+        );
+
         public static Material Cavefloor1 { get; } = new(
             "Textures/rocks/cavefloor1/cavefloor1_albedo.png",
             "Textures/rocks/cavefloor1/cavefloor1_Normal.png",
@@ -1687,7 +2032,14 @@ public sealed partial class Material
             "Textures/rocks/cavefloor1/cavefloor1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wet-cave-wall1'.</summary>
+        public static Material DampMossyBouldersUnity { get; } = new(
+            "Textures/rocks/damp-mossy-boulders-unity/damp-mossy-boulders_albedo.png",
+            "Textures/rocks/damp-mossy-boulders-unity/damp-mossy-boulders_normal-ogl.png",
+            "Textures/rocks/damp-mossy-boulders-unity/damp-mossy-boulders_metallic.psd",
+            "Textures/rocks/damp-mossy-boulders-unity/damp-mossy-boulders_height.png",
+            "Textures/rocks/damp-mossy-boulders-unity/damp-mossy-boulders_ao.png"
+        );
+
         public static Material WetCaveWall1 { get; } = new(
             "Textures/rocks/wet-cave-wall1/wet-cave-wall1_albedo.png",
             "Textures/rocks/wet-cave-wall1/wet-cave-wall1_Normal.png",
@@ -1696,7 +2048,6 @@ public sealed partial class Material
             "Textures/rocks/wet-cave-wall1/wet-cave-wall1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cave-floor-rock'.</summary>
         public static Material CaveFloorRock { get; } = new(
             "Textures/rocks/cave-floor-rock/cave-floor-rock_albedo.png",
             "Textures/rocks/cave-floor-rock/cave-floor-rock_Normal.png",
@@ -1705,7 +2056,14 @@ public sealed partial class Material
             "Textures/rocks/cave-floor-rock/cave-floor-rock_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'lunar_rock2'.</summary>
+        public static Material BlockyCliffUnity { get; } = new(
+            "Textures/rocks/blocky-cliff-unity/blocky-cliff_albedo.png",
+            "Textures/rocks/blocky-cliff-unity/blocky-cliff_normal-ogl.png",
+            "Textures/rocks/blocky-cliff-unity/blocky-cliff_metallic.psd",
+            "Textures/rocks/blocky-cliff-unity/blocky-cliff_height.png",
+            "Textures/rocks/blocky-cliff-unity/blocky-cliff_ao.png"
+        );
+
         public static Material LunarRock2 { get; } = new(
             "Textures/rocks/lunar_rock2/lunar_rock2_albedo.png",
             "Textures/rocks/lunar_rock2/lunar_rock2_Normal.png",
@@ -1714,7 +2072,6 @@ public sealed partial class Material
             "Textures/rocks/lunar_rock2/lunar_rock2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'Pocked-stone2'.</summary>
         public static Material PockedStone2 { get; } = new(
             "Textures/rocks/Pocked-stone2/Pocked-stone2_albedo.png",
             "Textures/rocks/Pocked-stone2/Pocked-stone2_Normal.png",
@@ -1723,7 +2080,6 @@ public sealed partial class Material
             "Textures/rocks/Pocked-stone2/Pocked-stone2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'limestonemarked2'.</summary>
         public static Material Limestonemarked2 { get; } = new(
             "Textures/rocks/limestonemarked2/limestonemarked2_albedo.png",
             "Textures/rocks/limestonemarked2/limestonemarked2_Normal.png",
@@ -1732,7 +2088,6 @@ public sealed partial class Material
             "Textures/rocks/limestonemarked2/limestonemarked2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'black-streaked-rock1'.</summary>
         public static Material BlackStreakedRock1 { get; } = new(
             "Textures/rocks/black-streaked-rock1/black-streaked-rock1_albedo.png",
             "Textures/rocks/black-streaked-rock1/black-streaked-rock1_Normal.png",
@@ -1741,16 +2096,14 @@ public sealed partial class Material
             "Textures/rocks/black-streaked-rock1/black-streaked-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rock_sliced'.</summary>
         public static Material RockSliced { get; } = new(
             "Textures/rocks/rock_sliced/rock_sliced_albedo.png",
-            "Textures/rocks/rock_sliced/rock_sliced_Normal.png",
+            "Textures/rocks/rock_sliced/rock_sliced_Normal_inverted.png",
             "Textures/rocks/rock_sliced/rock_sliced_metallic.png",
             "Textures/rocks/rock_sliced/rock_sliced_height.png",
             "Textures/rocks/rock_sliced/rock_sliced_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'eroded-layered-rockface'.</summary>
         public static Material ErodedLayeredRockface { get; } = new(
             "Textures/rocks/eroded-layered-rockface/eroded-layered-rockface_albedo.png",
             "Textures/rocks/eroded-layered-rockface/eroded-layered-rockface_Normal.png",
@@ -1759,7 +2112,14 @@ public sealed partial class Material
             "Textures/rocks/eroded-layered-rockface/eroded-layered-rockface_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'limestone5'.</summary>
+        public static Material ErodedStylizedCliff3Unity { get; } = new(
+            "Textures/rocks/eroded-stylized-cliff3-unity/eroded-stylized-cliff3-albedo.png",
+            "Textures/rocks/eroded-stylized-cliff3-unity/eroded-stylized-cliff3-normal-ogl.png",
+            "Textures/rocks/eroded-stylized-cliff3-unity/eroded-stylized-cliff3-metallic.psd",
+            "Textures/rocks/eroded-stylized-cliff3-unity/eroded-stylized-cliff3-height.png",
+            "Textures/rocks/eroded-stylized-cliff3-unity/eroded-stylized-cliff3-ao.png"
+        );
+
         public static Material Limestone5 { get; } = new(
             "Textures/rocks/limestone5/limestone5_albedo.png",
             "Textures/rocks/limestone5/limestone5_Normal.png",
@@ -1768,7 +2128,6 @@ public sealed partial class Material
             "Textures/rocks/limestone5/limestone5_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'granite5'.</summary>
         public static Material Granite5 { get; } = new(
             "Textures/rocks/granite5/granite5_albedo.png",
             "Textures/rocks/granite5/granite5_Normal.png",
@@ -1777,7 +2136,6 @@ public sealed partial class Material
             "Textures/rocks/granite5/granite5_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'jagged-cliff1'.</summary>
         public static Material JaggedCliff1 { get; } = new(
             "Textures/rocks/jagged-cliff1/jagged-cliff1_albedo.png",
             "Textures/rocks/jagged-cliff1/jagged-cliff1_Normal.png",
@@ -1786,7 +2144,6 @@ public sealed partial class Material
             "Textures/rocks/jagged-cliff1/jagged-cliff1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sandstonecliff'.</summary>
         public static Material Sandstonecliff { get; } = new(
             "Textures/rocks/sandstonecliff/sandstonecliff_albedo.png",
             "Textures/rocks/sandstonecliff/sandstonecliff_Normal.png",
@@ -1795,7 +2152,6 @@ public sealed partial class Material
             "Textures/rocks/sandstonecliff/sandstonecliff_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'slimy-slippery-rock1'.</summary>
         public static Material SlimySlipperyRock1 { get; } = new(
             "Textures/rocks/slimy-slippery-rock1/slimy-slippery-rock1_albedo.png",
             "Textures/rocks/slimy-slippery-rock1/slimy-slippery-rock1_Normal.png",
@@ -1804,7 +2160,6 @@ public sealed partial class Material
             "Textures/rocks/slimy-slippery-rock1/slimy-slippery-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'strata-rock1'.</summary>
         public static Material StrataRock1 { get; } = new(
             "Textures/rocks/strata-rock1/strata-rock1_albedo.png",
             "Textures/rocks/strata-rock1/strata-rock1_Normal.png",
@@ -1813,7 +2168,6 @@ public sealed partial class Material
             "Textures/rocks/strata-rock1/strata-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'roughrock1'.</summary>
         public static Material Roughrock1 { get; } = new(
             "Textures/rocks/roughrock1/roughrock1_albedo.png",
             "Textures/rocks/roughrock1/roughrock1_Normal.png",
@@ -1822,7 +2176,6 @@ public sealed partial class Material
             "Textures/rocks/roughrock1/roughrock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'ravine-rock1'.</summary>
         public static Material RavineRock1 { get; } = new(
             "Textures/rocks/ravine-rock1/ravine-rock1_albedo.png",
             "Textures/rocks/ravine-rock1/ravine-rock1_Normal.png",
@@ -1831,7 +2184,6 @@ public sealed partial class Material
             "Textures/rocks/ravine-rock1/ravine-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'volcanic-rock1'.</summary>
         public static Material VolcanicRock1 { get; } = new(
             "Textures/rocks/volcanic-rock1/volcanic-rock1_albedo.png",
             "Textures/rocks/volcanic-rock1/volcanic-rock1_Normal.png",
@@ -1840,7 +2192,6 @@ public sealed partial class Material
             "Textures/rocks/volcanic-rock1/volcanic-rock1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'blocky-rockface1'.</summary>
         public static Material BlockyRockface1 { get; } = new(
             "Textures/rocks/blocky-rockface1/blocky-rockface1_albedo.png",
             "Textures/rocks/blocky-rockface1/blocky-rockface1_Normal.png",
@@ -1849,7 +2200,6 @@ public sealed partial class Material
             "Textures/rocks/blocky-rockface1/blocky-rockface1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stylized-cave-wall1'.</summary>
         public static Material StylizedCaveWall1 { get; } = new(
             "Textures/rocks/stylized-cave-wall1/stylized-cave-wall1_albedo.png",
             "Textures/rocks/stylized-cave-wall1/stylized-cave-wall1_Normal.png",
@@ -1862,7 +2212,6 @@ public sealed partial class Material
 
     public static partial class Floors
     {
-        /// <summary>Auto-generated material for 'matted_old_shaggy_rug1'.</summary>
         public static Material MattedOldShaggyRug1 { get; } = new(
             "Textures/floors/matted_old_shaggy_rug1/matted_old_shaggy_rug1_albedo.png",
             "Textures/floors/matted_old_shaggy_rug1/matted_old_shaggy_rug1_Normal.png",
@@ -1871,7 +2220,6 @@ public sealed partial class Material
             "Textures/floors/matted_old_shaggy_rug1/matted_old_shaggy_rug1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'old-motel-carpet'.</summary>
         public static Material OldMotelCarpet { get; } = new(
             "Textures/floors/old-motel-carpet/old-motel-carpet_albedo.png",
             "Textures/floors/old-motel-carpet/old-motel-carpet_Normal.png",
@@ -1880,7 +2228,6 @@ public sealed partial class Material
             "Textures/floors/old-motel-carpet/old-motel-carpet_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'tavern-wood-planks1'.</summary>
         public static Material TavernWoodPlanks1 { get; } = new(
             "Textures/floors/tavern-wood-planks1/tavern-wood-planks1_albedo.png",
             "Textures/floors/tavern-wood-planks1/tavern-wood-planks1_Normal.png",
@@ -1889,7 +2236,6 @@ public sealed partial class Material
             "Textures/floors/tavern-wood-planks1/tavern-wood-planks1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'base-white-tile'.</summary>
         public static Material BaseWhiteTile { get; } = new(
             "Textures/floors/base-white-tile/base-white-tile_albedo.png",
             "Textures/floors/base-white-tile/base-white-tile_Normal.png",
@@ -1898,7 +2244,14 @@ public sealed partial class Material
             "Textures/floors/base-white-tile/base-white-tile_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'damp-dungeon-floor'.</summary>
+        public static Material ElegantStoneTilesUnity { get; } = new(
+            "Textures/floors/elegant-stone-tiles-unity/elegant-stone-tiles_albedo.png",
+            "Textures/floors/elegant-stone-tiles-unity/elegant-stone-tiles_normal-ogl.png",
+            "Textures/floors/elegant-stone-tiles-unity/elegant-stone-tiles_metallic.psd",
+            "Textures/floors/elegant-stone-tiles-unity/elegant-stone-tiles_height.png",
+            "Textures/floors/elegant-stone-tiles-unity/elegant-stone-tiles_ao.png"
+        );
+
         public static Material DampDungeonFloor { get; } = new(
             "Textures/floors/damp-dungeon-floor/damp-dungeon-floor_albedo.png",
             "Textures/floors/damp-dungeon-floor/damp-dungeon-floor_Normal.png",
@@ -1907,7 +2260,6 @@ public sealed partial class Material
             "Textures/floors/damp-dungeon-floor/damp-dungeon-floor_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'black-tile1'.</summary>
         public static Material BlackTile1 { get; } = new(
             "Textures/floors/black-tile1/black-tile1_albedo.png",
             "Textures/floors/black-tile1/black-tile1_Normal.png",
@@ -1916,7 +2268,14 @@ public sealed partial class Material
             "Textures/floors/black-tile1/black-tile1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'shades-tile'.</summary>
+        public static Material GlossyMarbleTileUnity { get; } = new(
+            "Textures/floors/glossy-marble-tile-unity/glossy-marble-tile_albedo.png",
+            "Textures/floors/glossy-marble-tile-unity/glossy-marble-tile_normal-ogl.png",
+            "Textures/floors/glossy-marble-tile-unity/glossy-marble-tile_metallic.psd",
+            "Textures/floors/glossy-marble-tile-unity/glossy-marble-tile_height.png",
+            "Textures/floors/glossy-marble-tile-unity/glossy-marble-tile_ao.png"
+        );
+
         public static Material ShadesTile { get; } = new(
             "Textures/floors/shades-tile/shades-tile_albedo.png",
             "Textures/floors/shades-tile/shades-tile_Normal.png",
@@ -1925,7 +2284,6 @@ public sealed partial class Material
             "Textures/floors/shades-tile/shades-tile_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'angled-tiled-floor'.</summary>
         public static Material AngledTiledFloor { get; } = new(
             "Textures/floors/angled-tiled-floor/angled-tiled-floor_albedo.png",
             "Textures/floors/angled-tiled-floor/angled-tiled-floor_Normal.png",
@@ -1934,7 +2292,6 @@ public sealed partial class Material
             "Textures/floors/angled-tiled-floor/angled-tiled-floor_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'modern-tile1'.</summary>
         public static Material ModernTile1 { get; } = new(
             "Textures/floors/modern-tile1/modern-tile1_albedo.png",
             "Textures/floors/modern-tile1/modern-tile1_Normal.png",
@@ -1943,7 +2300,6 @@ public sealed partial class Material
             "Textures/floors/modern-tile1/modern-tile1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'carpet1'.</summary>
         public static Material Carpet1 { get; } = new(
             "Textures/floors/carpet1/carpet1_albedo.png",
             "Textures/floors/carpet1/carpet1_Normal.png",
@@ -1952,7 +2308,6 @@ public sealed partial class Material
             "Textures/floors/carpet1/carpet1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'diamond-inlay-tile1'.</summary>
         public static Material DiamondInlayTile1 { get; } = new(
             "Textures/floors/diamond-inlay-tile1/diamond-inlay-tile1_albedo.png",
             "Textures/floors/diamond-inlay-tile1/diamond-inlay-tile1_Normal.png",
@@ -1961,7 +2316,6 @@ public sealed partial class Material
             "Textures/floors/diamond-inlay-tile1/diamond-inlay-tile1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'older-wood-flooring'.</summary>
         public static Material OlderWoodFlooring { get; } = new(
             "Textures/floors/older-wood-flooring/older-wood-flooring_albedo.png",
             "Textures/floors/older-wood-flooring/older-wood-flooring_Normal.png",
@@ -1970,7 +2324,6 @@ public sealed partial class Material
             "Textures/floors/older-wood-flooring/older-wood-flooring_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'beige-carpet-worn1'.</summary>
         public static Material BeigeCarpetWorn1 { get; } = new(
             "Textures/floors/beige-carpet-worn1/beige-carpet-worn1_albedo.png",
             "Textures/floors/beige-carpet-worn1/beige-carpet-worn1_Normal.png",
@@ -1979,7 +2332,6 @@ public sealed partial class Material
             "Textures/floors/beige-carpet-worn1/beige-carpet-worn1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'mini-gross-tiling'.</summary>
         public static Material MiniGrossTiling { get; } = new(
             "Textures/floors/mini-gross-tiling/mini-gross-tiling_albedo.png",
             "Textures/floors/mini-gross-tiling/mini-gross-tiling_Normal.png",
@@ -1988,7 +2340,14 @@ public sealed partial class Material
             "Textures/floors/mini-gross-tiling/mini-gross-tiling_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'office-carpet-fabric'.</summary>
+        public static Material ExquisitePolishedTileUnity { get; } = new(
+            "Textures/floors/exquisite-polished-tile-unity/exquistite-polished-tile_albedo.png",
+            "Textures/floors/exquisite-polished-tile-unity/exquistite-polished-tile_normal-ogl.png",
+            "Textures/floors/exquisite-polished-tile-unity/exquistite-polished-tile_metallic.psd",
+            "Textures/floors/exquisite-polished-tile-unity/exquistite-polished-tile_height.png",
+            "Textures/floors/exquisite-polished-tile-unity/exquistite-polished-tile_ao.png"
+        );
+
         public static Material OfficeCarpetFabric { get; } = new(
             "Textures/floors/office-carpet-fabric/office-carpet-fabric_albedo.png",
             "Textures/floors/office-carpet-fabric/office-carpet-fabric_Normal.png",
@@ -1997,7 +2356,6 @@ public sealed partial class Material
             "Textures/floors/office-carpet-fabric/office-carpet-fabric_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'vintage-tile1'.</summary>
         public static Material VintageTile1 { get; } = new(
             "Textures/floors/vintage-tile1/vintage-tile1_albedo.png",
             "Textures/floors/vintage-tile1/vintage-tile1_Normal.png",
@@ -2006,7 +2364,6 @@ public sealed partial class Material
             "Textures/floors/vintage-tile1/vintage-tile1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'cheap_old_linoleum1'.</summary>
         public static Material CheapOldLinoleum1 { get; } = new(
             "Textures/floors/cheap_old_linoleum1/cheap_old_linoleum1_albedo.png",
             "Textures/floors/cheap_old_linoleum1/cheap_old_linoleum1_Normal.png",
@@ -2015,7 +2372,14 @@ public sealed partial class Material
             "Textures/floors/cheap_old_linoleum1/cheap_old_linoleum1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'black-white-tile'.</summary>
+        public static Material LightPlankFlooringUnity { get; } = new(
+            "Textures/floors/light-plank-flooring-unity/light-plank-flooring_albedo.png",
+            "Textures/floors/light-plank-flooring-unity/light-plank-flooring_normal-ogl.png",
+            "Textures/floors/light-plank-flooring-unity/light-plank-flooring_metallic.psd",
+            "Textures/floors/light-plank-flooring-unity/light-plank-flooring_height.png",
+            "Textures/floors/light-plank-flooring-unity/light-plank-flooring_ao.png"
+        );
+
         public static Material BlackWhiteTile { get; } = new(
             "Textures/floors/black-white-tile/black-white-tile_albedo.png",
             "Textures/floors/black-white-tile/black-white-tile_Normal.png",
@@ -2024,7 +2388,22 @@ public sealed partial class Material
             "Textures/floors/black-white-tile/black-white-tile_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'green-shower-tile1'.</summary>
+        public static Material LuxuryVinylPlankUnity { get; } = new(
+            "Textures/floors/luxury-vinyl-plank-unity/luxury-vinyl-plank_albedo.png",
+            "Textures/floors/luxury-vinyl-plank-unity/luxury-vinyl-plank_normal-ogl.png",
+            "Textures/floors/luxury-vinyl-plank-unity/luxury-vinyl-plank_metallic.psd",
+            "Textures/floors/luxury-vinyl-plank-unity/luxury-vinyl-plank_height.png",
+            "Textures/floors/luxury-vinyl-plank-unity/luxury-vinyl-plank_ao.png"
+        );
+
+        public static Material SubtleBlackGraniteUnity { get; } = new(
+            "Textures/floors/subtle-black-granite-unity/subtle-black-granite_albedo.png",
+            "Textures/floors/subtle-black-granite-unity/subtle-black-granite_normal-ogl.png",
+            "Textures/floors/subtle-black-granite-unity/subtle-black-granite_metallic.png",
+            "Textures/floors/subtle-black-granite-unity/subtle-black-granite_height.png",
+            "Textures/floors/subtle-black-granite-unity/subtle-black-granite_ao.png"
+        );
+
         public static Material GreenShowerTile1 { get; } = new(
             "Textures/floors/green-shower-tile1/green-shower-tile1_albedo.png",
             "Textures/floors/green-shower-tile1/green-shower-tile1_Normal.png",
@@ -2033,7 +2412,6 @@ public sealed partial class Material
             "Textures/floors/green-shower-tile1/green-shower-tile1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rich-brown-tile-variation'.</summary>
         public static Material RichBrownTileVariation { get; } = new(
             "Textures/floors/rich-brown-tile-variation/rich-brown-tile-variation_albedo.png",
             "Textures/floors/rich-brown-tile-variation/rich-brown-tile-variation_Normal.png",
@@ -2042,7 +2420,6 @@ public sealed partial class Material
             "Textures/floors/rich-brown-tile-variation/rich-brown-tile-variation_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'saloon-wood-floor'.</summary>
         public static Material SaloonWoodFloor { get; } = new(
             "Textures/floors/saloon-wood-floor/saloon-wood-floor_albedo.png",
             "Textures/floors/saloon-wood-floor/saloon-wood-floor_Normal.png",
@@ -2051,7 +2428,14 @@ public sealed partial class Material
             "Textures/floors/saloon-wood-floor/saloon-wood-floor_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'gross-dirty-tiles'.</summary>
+        public static Material HerringboneFlooringUnity { get; } = new(
+            "Textures/floors/herringbone-flooring-unity/herringbone-flooring_albedo.png",
+            "Textures/floors/herringbone-flooring-unity/herringbone-flooring_normal-ogl.png",
+            "Textures/floors/herringbone-flooring-unity/herringbone-flooring_metallic.psd",
+            "Textures/floors/herringbone-flooring-unity/herringbone-flooring_height.png",
+            "Textures/floors/herringbone-flooring-unity/herringbone-flooring_ao.png"
+        );
+
         public static Material GrossDirtyTiles { get; } = new(
             "Textures/floors/gross-dirty-tiles/gross-dirty-tiles_albedo.png",
             "Textures/floors/gross-dirty-tiles/gross-dirty-tiles_Normal.png",
@@ -2060,7 +2444,6 @@ public sealed partial class Material
             "Textures/floors/gross-dirty-tiles/gross-dirty-tiles_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rich-brown-tile'.</summary>
         public static Material RichBrownTile { get; } = new(
             "Textures/floors/rich-brown-tile/rich-brown-tile_albedo.png",
             "Textures/floors/rich-brown-tile/rich-brown-tile_Normal.png",
@@ -2069,7 +2452,30 @@ public sealed partial class Material
             "Textures/floors/rich-brown-tile/rich-brown-tile_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'patterned-bw-vinyl'.</summary>
+        public static Material RectanglePolishedTileUnity { get; } = new(
+            "Textures/floors/rectangle-polished-tile-unity/rectangle-polished-tile_albedo.png",
+            "Textures/floors/rectangle-polished-tile-unity/rectangle-polished-tile_normal-ogl.png",
+            "Textures/floors/rectangle-polished-tile-unity/rectangle-polished-tile_metallic.psd",
+            "Textures/floors/rectangle-polished-tile-unity/rectangle-polished-tile_height.png",
+            "Textures/floors/rectangle-polished-tile-unity/rectangle-polished-tile_ao.png"
+        );
+
+        public static Material LaminateFlooringBrownUnity { get; } = new(
+            "Textures/floors/laminate-flooring-brown-unity/laminate-flooring-brown_albedo.png",
+            "Textures/floors/laminate-flooring-brown-unity/laminate-flooring-brown_normal-ogl.png",
+            "Textures/floors/laminate-flooring-brown-unity/laminate-flooring-brown_metallic.psd",
+            "Textures/floors/laminate-flooring-brown-unity/laminate-flooring-brown_height.png",
+            "Textures/floors/laminate-flooring-brown-unity/laminate-flooring-brown_ao.png"
+        );
+
+        public static Material HungarianPointFlooringUnity { get; } = new(
+            "Textures/floors/hungarian-point-flooring-unity/hungarian-point-flooring_albedo.png",
+            "Textures/floors/hungarian-point-flooring-unity/hungarian-point-flooring_normal-ogl.png",
+            "Textures/floors/hungarian-point-flooring-unity/hungarian-point-flooring_metallic.psd",
+            "Textures/floors/hungarian-point-flooring-unity/hungarian-point-flooring_height.png",
+            "Textures/floors/hungarian-point-flooring-unity/hungarian-point-flooring_ao.png"
+        );
+
         public static Material PatternedBwVinyl { get; } = new(
             "Textures/floors/patterned-bw-vinyl/patterned-bw-vinyl_albedo.png",
             "Textures/floors/patterned-bw-vinyl/patterned-bw-vinyl_Normal.png",
@@ -2078,7 +2484,22 @@ public sealed partial class Material
             "Textures/floors/patterned-bw-vinyl/patterned-bw-vinyl_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'industrial-tile1'.</summary>
+        public static Material GraniteTileUnity { get; } = new(
+            "Textures/floors/granite-tile-unity/granite-tile_albedo.png",
+            "Textures/floors/granite-tile-unity/granite-tile_normal-ogl.png",
+            "Textures/floors/granite-tile-unity/granite-tile_metallic.psd",
+            "Textures/floors/granite-tile-unity/granite-tile_height.png",
+            "Textures/floors/granite-tile-unity/granite-tile_ao.png"
+        );
+
+        public static Material HardwoodBrownPlanksUnity { get; } = new(
+            "Textures/floors/hardwood-brown-planks-unity/hardwood-brown-planks-albedo.png",
+            "Textures/floors/hardwood-brown-planks-unity/hardwood-brown-planks-normal-ogl.png",
+            "Textures/floors/hardwood-brown-planks-unity/hardwood-brown-planks-metallic.psd",
+            "Textures/floors/hardwood-brown-planks-unity/hardwood-brown-planks-height.png",
+            "Textures/floors/hardwood-brown-planks-unity/hardwood-brown-planks-ao.png"
+        );
+
         public static Material IndustrialTile1 { get; } = new(
             "Textures/floors/industrial-tile1/industrial-tile1_albedo.png",
             "Textures/floors/industrial-tile1/industrial-tile1_Normal.png",
@@ -2089,8 +2510,7 @@ public sealed partial class Material
 
         public static partial class SpacedTiles1
         {
-            /// <summary>Auto-generated material for 'spaced-tiles1'.</summary>
-            public static Material SpacedTiles11 { get; } = new(
+            public static Material SpacedTiles { get; } = new(
                 "Textures/floors/spaced-tiles1/spaced-tiles1/spaced-tiles1_albedo.png",
                 "Textures/floors/spaced-tiles1/spaced-tiles1/spaced-tiles1_Normal.png",
                 "Textures/floors/spaced-tiles1/spaced-tiles1/spaced-tiles1_metallic.psd",
@@ -2102,9 +2522,280 @@ public sealed partial class Material
 
     }
 
+    public static partial class CountertopsUnity
+    {
+        public static Material WhiteMarbleUnity { get; } = new(
+            "Textures/countertops-unity/white-marble-unity/white-marble_albedo.png",
+            "Textures/countertops-unity/white-marble-unity/white-marble_normal-ogl.png",
+            "Textures/countertops-unity/white-marble-unity/white-marble_metallic.psd",
+            "Textures/countertops-unity/white-marble-unity/white-marble_height.png",
+            "Textures/countertops-unity/white-marble-unity/white-marble_ao.png"
+        );
+
+        public static Material ArmaniMarbleUnity { get; } = new(
+            "Textures/countertops-unity/armani-marble-unity/armani-marble_albedo.png",
+            "Textures/countertops-unity/armani-marble-unity/armani-marble_normal-ogl.png",
+            "Textures/countertops-unity/armani-marble-unity/armani-marble_metallic.psd",
+            "Textures/countertops-unity/armani-marble-unity/armani-marble_height.png",
+            "Textures/countertops-unity/armani-marble-unity/armani-marble_ao.png"
+        );
+
+        public static Material GrayPolishedGraniteUnity { get; } = new(
+            "Textures/countertops-unity/gray-polished-granite-unity/gray-polished-granite_albedo.png",
+            "Textures/countertops-unity/gray-polished-granite-unity/gray-polished-granite_normal-ogl.png",
+            "Textures/countertops-unity/gray-polished-granite-unity/gray-polished-granite_metallic.psd",
+            "Textures/countertops-unity/gray-polished-granite-unity/gray-polished-granite_height.png",
+            "Textures/countertops-unity/gray-polished-granite-unity/gray-polished-granite_ao.png"
+        );
+
+        public static Material AlmondSpeckledGraniteUnity { get; } = new(
+            "Textures/countertops-unity/almond-speckled-granite-unity/almond-speckled-granite_albedo.png",
+            "Textures/countertops-unity/almond-speckled-granite-unity/almond-speckled-granite_normal-ogl.png",
+            "Textures/countertops-unity/almond-speckled-granite-unity/almond-speckled-granite_metallic.psd",
+            "Textures/countertops-unity/almond-speckled-granite-unity/almond-speckled-granite_height.png",
+            "Textures/countertops-unity/almond-speckled-granite-unity/almond-speckled-granite_ao.png"
+        );
+
+    }
+
+    public static partial class Scifi
+    {
+        public static Material StorageContainer2Unity { get; } = new(
+            "Textures/scifi/storage-container2-unity/storage-container2-albedo.png",
+            "Textures/scifi/storage-container2-unity/storage-container2-normal-ogl.png",
+            "Textures/scifi/storage-container2-unity/storage-container2-metallic.psd",
+            "Textures/scifi/storage-container2-unity/storage-container2-height.png",
+            "Textures/scifi/storage-container2-unity/storage-container2-ao.png"
+        );
+
+        public static Material ModernBlockyUnity { get; } = new(
+            "Textures/scifi/modern-blocky-unity/modern-blocky_albedo.png",
+            "Textures/scifi/modern-blocky-unity/modern-blocky_normal-ogl.png",
+            "Textures/scifi/modern-blocky-unity/modern-blocky_metallic.psd",
+            "Textures/scifi/modern-blocky-unity/modern-blocky_height.png",
+            "Textures/scifi/modern-blocky-unity/modern-blocky_ao.png"
+        );
+
+        public static Material SpaceCruiserPanels1Unity { get; } = new(
+            "Textures/scifi/space-cruiser-panels1-unity/space-cruiser-panels_albedo.png",
+            "Textures/scifi/space-cruiser-panels1-unity/space-cruiser-panels_normal-ogl.png",
+            "Textures/scifi/space-cruiser-panels1-unity/space-cruiser-panels_metallic.psd",
+            "Textures/scifi/space-cruiser-panels1-unity/space-cruiser-panels_height.png",
+            "Textures/scifi/space-cruiser-panels1-unity/space-cruiser-panels_ao.png"
+        );
+
+        public static Material SpaceCrate1Unity { get; } = new(
+            "Textures/scifi/space-crate1-unity/space-crate1-albedo.png",
+            "Textures/scifi/space-crate1-unity/space-crate1-normal-ogl.png",
+            "Textures/scifi/space-crate1-unity/space-crate1-metallic.psd",
+            "Textures/scifi/space-crate1-unity/space-crate1-height.png",
+            "Textures/scifi/space-crate1-unity/space-crate1-ao.png"
+        );
+
+        public static Material PaintedMetalReinforcedUnity { get; } = new(
+            "Textures/scifi/painted-metal-reinforced-unity/painted-metal-reinforced_albedo.png",
+            "Textures/scifi/painted-metal-reinforced-unity/painted-metal-reinforced_normal-ogl.png",
+            "Textures/scifi/painted-metal-reinforced-unity/painted-metal-reinforced_metallic.psd",
+            "Textures/scifi/painted-metal-reinforced-unity/painted-metal-reinforced_height.png",
+            "Textures/scifi/painted-metal-reinforced-unity/painted-metal-reinforced_ao.png"
+        );
+
+        public static Material IndustrialWallsUnity { get; } = new(
+            "Textures/scifi/industrial-walls-unity/industrial-walls_albedo.png",
+            "Textures/scifi/industrial-walls-unity/industrial-walls_normal-ogl.png",
+            "Textures/scifi/industrial-walls-unity/industrial-walls_metallic.psd",
+            "Textures/scifi/industrial-walls-unity/industrial-walls_height.png",
+            "Textures/scifi/industrial-walls-unity/industrial-walls_ao.png"
+        );
+
+        public static Material AlienPanelsUnity { get; } = new(
+            "Textures/scifi/alien-panels-unity/alien-panels_albedo.png",
+            "Textures/scifi/alien-panels-unity/alien-panels_normal-ogl.png",
+            "Textures/scifi/alien-panels-unity/alien-panels_metallic.psd",
+            "Textures/scifi/alien-panels-unity/alien-panels_height.png",
+            "Textures/scifi/alien-panels-unity/alien-panels_ao.png"
+        );
+
+        public static Material ArmorPlating1Unity { get; } = new(
+            "Textures/scifi/armor-plating1-unity/armor-plating1_albedo.png",
+            "Textures/scifi/armor-plating1-unity/armor-plating1_normal-ogl.png",
+            "Textures/scifi/armor-plating1-unity/armor-plating1_metallic.psd",
+            "Textures/scifi/armor-plating1-unity/armor-plating1_height.png",
+            "Textures/scifi/armor-plating1-unity/armor-plating1_ao.png"
+        );
+
+        public static Material SpaceshipPanelsUnity { get; } = new(
+            "Textures/scifi/spaceship-panels-unity/spaceship-panels1-albedo.png",
+            "Textures/scifi/spaceship-panels-unity/spaceship-panels1-normal-ogl.png",
+            "Textures/scifi/spaceship-panels-unity/spaceship-panels1-metallic.psd",
+            "Textures/scifi/spaceship-panels-unity/spaceship-panels1-height.png",
+            "Textures/scifi/spaceship-panels-unity/spaceship-panels1-ao.png"
+        );
+
+        public static Material FuturisticPanels1Unity { get; } = new(
+            "Textures/scifi/futuristic-panels1-unity/futuristic-panels1-albedo.png",
+            "Textures/scifi/futuristic-panels1-unity/futuristic-panels1-normal-ogl.png",
+            "Textures/scifi/futuristic-panels1-unity/futuristic-panels1-metallic.psd",
+            "Textures/scifi/futuristic-panels1-unity/futuristic-panels1-height.png",
+            "Textures/scifi/futuristic-panels1-unity/futuristic-panels1-ao.png"
+        );
+
+        public static Material SpaceShipMonitorUnity { get; } = new(
+            "Textures/scifi/space-ship-monitor-unity/space-ship-monitor_albedo.png",
+            "Textures/scifi/space-ship-monitor-unity/space-ship-monitor_normal-ogl.png",
+            "Textures/scifi/space-ship-monitor-unity/space-ship-monitor_metallic.psd",
+            "Textures/scifi/space-ship-monitor-unity/space-ship-monitor_height.png",
+            "Textures/scifi/space-ship-monitor-unity/space-ship-monitor_ao.png"
+        );
+
+        public static Material WornMilitarySiding1Unity { get; } = new(
+            "Textures/scifi/worn-military-siding1-unity/worn-military-siding1_albedo.png",
+            "Textures/scifi/worn-military-siding1-unity/worn-military-siding1_normal-ogl.png",
+            "Textures/scifi/worn-military-siding1-unity/worn-military-siding1_metallic.psd",
+            "Textures/scifi/worn-military-siding1-unity/worn-military-siding1_height.png",
+            "Textures/scifi/worn-military-siding1-unity/worn-military-siding1_ao.png"
+        );
+
+        public static Material RedScifiMetalUnity { get; } = new(
+            "Textures/scifi/red-scifi-metal-unity/red-scifi-metal_albedo.png",
+            "Textures/scifi/red-scifi-metal-unity/red-scifi-metal_normal-ogl.png",
+            "Textures/scifi/red-scifi-metal-unity/red-scifi-metal_metallic.psd",
+            "Textures/scifi/red-scifi-metal-unity/red-scifi-metal_height.png",
+            "Textures/scifi/red-scifi-metal-unity/red-scifi-metal_ao.png"
+        );
+
+        public static Material SpaceCruiserPanels2Unity { get; } = new(
+            "Textures/scifi/space-cruiser-panels2-unity/space-cruiser-panels2_albedo.png",
+            "Textures/scifi/space-cruiser-panels2-unity/space-cruiser-panels2_normal-ogl.png",
+            "Textures/scifi/space-cruiser-panels2-unity/space-cruiser-panels2_metallic.psd",
+            "Textures/scifi/space-cruiser-panels2-unity/space-cruiser-panels2_height.png",
+            "Textures/scifi/space-cruiser-panels2-unity/space-cruiser-panels2_ao.png"
+        );
+
+        public static Material WornModernPanels2Unity { get; } = new(
+            "Textures/scifi/worn-modern-panels2-unity/worn-modern-panels2_albedo.png",
+            "Textures/scifi/worn-modern-panels2-unity/worn-modern-panels2_normal-ogl.png",
+            "Textures/scifi/worn-modern-panels2-unity/worn-modern-panels2_metallic.psd",
+            "Textures/scifi/worn-modern-panels2-unity/worn-modern-panels2_height.png",
+            "Textures/scifi/worn-modern-panels2-unity/worn-modern-panels2_ao.png"
+        );
+
+        public static Material TabbedMetalUnity { get; } = new(
+            "Textures/scifi/tabbed-metal-unity/tabbed-metal_albedo.png",
+            "Textures/scifi/tabbed-metal-unity/tabbed-metal_normal-ogl.png",
+            "Textures/scifi/tabbed-metal-unity/tabbed-metal_metallic.psd",
+            "Textures/scifi/tabbed-metal-unity/tabbed-metal_height.png",
+            "Textures/scifi/tabbed-metal-unity/tabbed-metal_ao.png"
+        );
+
+        public static Material WornFactorySidingUnity { get; } = new(
+            "Textures/scifi/worn-factory-siding-unity/worn-factory-siding_albedo.png",
+            "Textures/scifi/worn-factory-siding-unity/worn-factory-siding_normal-ogl.png",
+            "Textures/scifi/worn-factory-siding-unity/worn-factory-siding_metallic.psd",
+            "Textures/scifi/worn-factory-siding-unity/worn-factory-siding_height.png",
+            "Textures/scifi/worn-factory-siding-unity/worn-factory-siding_ao.png"
+        );
+
+        public static Material FilthySpacePanelsUnity { get; } = new(
+            "Textures/scifi/filthy-space-panels-unity/filthy-space-panels_albedo.png",
+            "Textures/scifi/filthy-space-panels-unity/filthy-space-panels_normal-ogl.png",
+            "Textures/scifi/filthy-space-panels-unity/filthy-space-panels_metallic.psd",
+            "Textures/scifi/filthy-space-panels-unity/filthy-space-panels_height.png",
+            "Textures/scifi/filthy-space-panels-unity/filthy-space-panels_ao.png"
+        );
+
+        public static Material ShipCorridorUnity { get; } = new(
+            "Textures/scifi/ship-corridor-unity/ship-corridor_albedo.png",
+            "Textures/scifi/ship-corridor-unity/ship-corridor_normal-ogl.png",
+            "Textures/scifi/ship-corridor-unity/ship-corridor_metallic.psd",
+            "Textures/scifi/ship-corridor-unity/ship-corridor_height.png",
+            "Textures/scifi/ship-corridor-unity/ship-corridor_ao.png"
+        );
+
+        public static Material FuturisticCubeMetalUnity { get; } = new(
+            "Textures/scifi/futuristic-cube-metal-unity/futuristic-cube-metal_albedo.png",
+            "Textures/scifi/futuristic-cube-metal-unity/futuristic-cube-metal_normal-ogl.png",
+            "Textures/scifi/futuristic-cube-metal-unity/futuristic-cube-metal_metallic.psd",
+            "Textures/scifi/futuristic-cube-metal-unity/futuristic-cube-metal_height.png",
+            "Textures/scifi/futuristic-cube-metal-unity/futuristic-cube-metal_ao.png"
+        );
+
+        public static Material SciFiPanel1Unity { get; } = new(
+            "Textures/scifi/sci-fi-panel1-unity/sci-fi-panel1-albedo.png",
+            "Textures/scifi/sci-fi-panel1-unity/sci-fi-panel1-normal-ogl.png",
+            "Textures/scifi/sci-fi-panel1-unity/sci-fi-panel1-metallic.psd",
+            "Textures/scifi/sci-fi-panel1-unity/sci-fi-panel1-height.png",
+            "Textures/scifi/sci-fi-panel1-unity/sci-fi-panel1-ao.png"
+        );
+
+        public static Material MetalCompartmentsUnity { get; } = new(
+            "Textures/scifi/metal-compartments-unity/metal-compartments_albedo.png",
+            "Textures/scifi/metal-compartments-unity/metal-compartments_normal-ogl.png",
+            "Textures/scifi/metal-compartments-unity/metal-compartments_metallic.psd",
+            "Textures/scifi/metal-compartments-unity/metal-compartments_height.png",
+            "Textures/scifi/metal-compartments-unity/metal-compartments_ao.png"
+        );
+
+        public static Material SciFiDisplayUnity { get; } = new(
+            "Textures/scifi/sci-fi-display-unity/sci-fi-display_albedo.png",
+            "Textures/scifi/sci-fi-display-unity/sci-fi-display_normal-ogl.png",
+            "Textures/scifi/sci-fi-display-unity/sci-fi-display_metallic.psd",
+            "Textures/scifi/sci-fi-display-unity/sci-fi-display_height.png",
+            "Textures/scifi/sci-fi-display-unity/sci-fi-display_ao.png"
+        );
+
+        public static Material ArmyPanelsUnity { get; } = new(
+            "Textures/scifi/army-panels-unity/army-panels_albedo.png",
+            "Textures/scifi/army-panels-unity/army-panels_normal-ogl.png",
+            "Textures/scifi/army-panels-unity/army-panels_metallic.psd",
+            "Textures/scifi/army-panels-unity/army-panels_height.png",
+            "Textures/scifi/army-panels-unity/army-panels_ao.png"
+        );
+
+        public static Material OilyTubeworkUnity { get; } = new(
+            "Textures/scifi/oily-tubework-unity/oily-tubework_albedo.png",
+            "Textures/scifi/oily-tubework-unity/oily-tubework_normal-ogl.png",
+            "Textures/scifi/oily-tubework-unity/oily-tubework_metallic.psd",
+            "Textures/scifi/oily-tubework-unity/oily-tubework_height.png",
+            "Textures/scifi/oily-tubework-unity/oily-tubework_ao.png"
+        );
+
+        public static Material OldConsoleMonitorUnity { get; } = new(
+            "Textures/scifi/old-console-monitor-unity/old-console-monitor_albedo.png",
+            "Textures/scifi/old-console-monitor-unity/old-console-monitor_normal-ogl.png",
+            "Textures/scifi/old-console-monitor-unity/old-console-monitor_metallic.psd",
+            "Textures/scifi/old-console-monitor-unity/old-console-monitor_height.png",
+            "Textures/scifi/old-console-monitor-unity/old-console-monitor_ao.png"
+        );
+
+        public static Material AbstractAlienMetalUnity { get; } = new(
+            "Textures/scifi/abstract-alien-metal-unity/abstract-alien-metal_albedo.png",
+            "Textures/scifi/abstract-alien-metal-unity/abstract-alien-metal_normal-ogl.png",
+            "Textures/scifi/abstract-alien-metal-unity/abstract-alien-metal_metallic.psd",
+            "Textures/scifi/abstract-alien-metal-unity/abstract-alien-metal_height.png",
+            "Textures/scifi/abstract-alien-metal-unity/abstract-alien-metal_ao.png"
+        );
+
+        public static Material WornModernPanels1Unity { get; } = new(
+            "Textures/scifi/worn-modern-panels1-unity/worn-modern-panels_albedo.png",
+            "Textures/scifi/worn-modern-panels1-unity/worn-modern-panels_normal-ogl.png",
+            "Textures/scifi/worn-modern-panels1-unity/worn-modern-panels_metallic.psd",
+            "Textures/scifi/worn-modern-panels1-unity/worn-modern-panels_height.png",
+            "Textures/scifi/worn-modern-panels1-unity/worn-modern-panels_ao.png"
+        );
+
+        public static Material MetalSidingBaseUnity { get; } = new(
+            "Textures/scifi/metal-siding-base-unity/metal-siding-base_albedo.png",
+            "Textures/scifi/metal-siding-base-unity/metal-siding-base_normal-ogl.png",
+            "Textures/scifi/metal-siding-base-unity/metal-siding-base_metallic.psd",
+            "Textures/scifi/metal-siding-base-unity/metal-siding-base_height.png",
+            "Textures/scifi/metal-siding-base-unity/metal-siding-base_ao.png"
+        );
+
+    }
+
     public static partial class Walls
     {
-        /// <summary>Auto-generated material for 'slipperystonework'.</summary>
         public static Material Slipperystonework { get; } = new(
             "Textures/walls/slipperystonework/slipperystonework_albedo.png",
             "Textures/walls/slipperystonework/slipperystonework_Normal.png",
@@ -2113,7 +2804,14 @@ public sealed partial class Material
             "Textures/walls/slipperystonework/slipperystonework_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rough-brick1'.</summary>
+        public static Material AlternatingNarrowBrickUnity { get; } = new(
+            "Textures/walls/alternating-narrow-brick-unity/alternating-narrow-brick_albedo.png",
+            "Textures/walls/alternating-narrow-brick-unity/alternating-narrow-brick_normal-ogl.png",
+            "Textures/walls/alternating-narrow-brick-unity/alternating-narrow-brick_metallic.psd",
+            "Textures/walls/alternating-narrow-brick-unity/alternating-narrow-brick_height.png",
+            "Textures/walls/alternating-narrow-brick-unity/alternating-narrow-brick_ao.png"
+        );
+
         public static Material RoughBrick1 { get; } = new(
             "Textures/walls/rough-brick1/rough-brick1_albedo.png",
             "Textures/walls/rough-brick1/rough-brick1_Normal.png",
@@ -2122,7 +2820,6 @@ public sealed partial class Material
             "Textures/walls/rough-brick1/rough-brick1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'grainy_stucco'.</summary>
         public static Material GrainyStucco { get; } = new(
             "Textures/walls/grainy_stucco/grainy_stucco_albedo.png",
             "Textures/walls/grainy_stucco/grainy_stucco_Normal.png",
@@ -2131,7 +2828,6 @@ public sealed partial class Material
             "Textures/walls/grainy_stucco/grainy_stucco_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rock-slab-wall'.</summary>
         public static Material RockSlabWall { get; } = new(
             "Textures/walls/rock-slab-wall/rock-slab-wall_albedo.png",
             "Textures/walls/rock-slab-wall/rock-slab-wall_Normal.png",
@@ -2140,7 +2836,6 @@ public sealed partial class Material
             "Textures/walls/rock-slab-wall/rock-slab-wall_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'grime-alley-bricks_1'.</summary>
         public static Material GrimeAlleyBricks1 { get; } = new(
             "Textures/walls/grime-alley-bricks_1/grime-alley-bricks_1_albedo.png",
             "Textures/walls/grime-alley-bricks_1/grime-alley-bricks_1_Normal.png",
@@ -2149,7 +2844,30 @@ public sealed partial class Material
             "Textures/walls/grime-alley-bricks_1/grime-alley-bricks_1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'clay-shingles1'.</summary>
+        public static Material FauxStoneSidingUnity { get; } = new(
+            "Textures/walls/faux-stone-siding-unity/faux-stone-siding_albedo.png",
+            "Textures/walls/faux-stone-siding-unity/faux-stone-siding_normal-ogl.png",
+            "Textures/walls/faux-stone-siding-unity/faux-stone-siding_metallic.psd",
+            "Textures/walls/faux-stone-siding-unity/faux-stone-siding_height.png",
+            "Textures/walls/faux-stone-siding-unity/faux-stone-siding_ao.png"
+        );
+
+        public static Material DirtyBrickWallUnity { get; } = new(
+            "Textures/walls/dirty-brick-wall-unity/dirty-brick-wall_albedo.png",
+            "Textures/walls/dirty-brick-wall-unity/dirty-brick-wall_normal-ogl.png",
+            "Textures/walls/dirty-brick-wall-unity/dirty-brick-wall_metallic.psd",
+            "Textures/walls/dirty-brick-wall-unity/dirty-brick-wall_height.png",
+            "Textures/walls/dirty-brick-wall-unity/dirty-brick-wall_ao.png"
+        );
+
+        public static Material TaperedAsphaltShingleUnity { get; } = new(
+            "Textures/walls/tapered-asphalt-shingle-unity/tapered-asphalt-shingle_albedo.png",
+            "Textures/walls/tapered-asphalt-shingle-unity/tapered-asphalt-shingle_normal-ogl.png",
+            "Textures/walls/tapered-asphalt-shingle-unity/tapered-asphalt-shingle_metallic.psd",
+            "Textures/walls/tapered-asphalt-shingle-unity/tapered-asphalt-shingle_height.png",
+            "Textures/walls/tapered-asphalt-shingle-unity/tapered-asphalt-shingle_ao.png"
+        );
+
         public static Material ClayShingles1 { get; } = new(
             "Textures/walls/clay-shingles1/clay-shingles1_albedo.png",
             "Textures/walls/clay-shingles1/clay-shingles1_Normal.png",
@@ -2158,7 +2876,22 @@ public sealed partial class Material
             "Textures/walls/clay-shingles1/clay-shingles1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'flaking-plaster'.</summary>
+        public static Material PaintedMetalShedUnity { get; } = new(
+            "Textures/walls/painted-metal-shed-unity/painted_metal_shed_albedo.png",
+            "Textures/walls/painted-metal-shed-unity/painted_metal_shed_normal-ogl.png",
+            "Textures/walls/painted-metal-shed-unity/painted_metal_shed_metallic.psd",
+            "Textures/walls/painted-metal-shed-unity/painted_metal_shed_height.png",
+            "Textures/walls/painted-metal-shed-unity/painted_metal_shed_ao.png"
+        );
+
+        public static Material StoneHouseSidingUnity { get; } = new(
+            "Textures/walls/stone-house-siding-unity/stone-house-siding_albedo.png",
+            "Textures/walls/stone-house-siding-unity/stone-house-siding_normal-ogl.png",
+            "Textures/walls/stone-house-siding-unity/stone-house-siding_metallic.psd",
+            "Textures/walls/stone-house-siding-unity/stone-house-siding_height.png",
+            "Textures/walls/stone-house-siding-unity/stone-house-siding_ao.png"
+        );
+
         public static Material FlakingPlaster { get; } = new(
             "Textures/walls/flaking-plaster/flaking-plaster_albedo.png",
             "Textures/walls/flaking-plaster/flaking-plaster_Normal.png",
@@ -2167,7 +2900,38 @@ public sealed partial class Material
             "Textures/walls/flaking-plaster/flaking-plaster_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'old-painted-vent'.</summary>
+        public static Material MetalShippingContainerUnity { get; } = new(
+            "Textures/walls/metal-shipping-container-unity/metal-shipping-container_albedo.png",
+            "Textures/walls/metal-shipping-container-unity/metal-shipping-container_normal-ogl.png",
+            "Textures/walls/metal-shipping-container-unity/metal-shipping-container_metallic.psd",
+            "Textures/walls/metal-shipping-container-unity/metal-shipping-container_height.png",
+            "Textures/walls/metal-shipping-container-unity/metal-shipping-container_ao.png"
+        );
+
+        public static Material OldSubwayBrickUnity { get; } = new(
+            "Textures/walls/old-subway-brick-unity/old-subway-brick_albedo.png",
+            "Textures/walls/old-subway-brick-unity/old-subway-brick_normal-ogl.png",
+            "Textures/walls/old-subway-brick-unity/old-subway-brick_metallic.psd",
+            "Textures/walls/old-subway-brick-unity/old-subway-brick_height.png",
+            "Textures/walls/old-subway-brick-unity/old-subway-brick_ao.png"
+        );
+
+        public static Material DirtyFlatStoneworkUnity { get; } = new(
+            "Textures/walls/dirty-flat-stonework-unity/dirty-flat-stonework_albedo.png",
+            "Textures/walls/dirty-flat-stonework-unity/dirty-flat-stonework_normal-ogl.png",
+            "Textures/walls/dirty-flat-stonework-unity/dirty-flat-stonework_metallic.psd",
+            "Textures/walls/dirty-flat-stonework-unity/dirty-flat-stonework_height.png",
+            "Textures/walls/dirty-flat-stonework-unity/dirty-flat-stonework_ao.png"
+        );
+
+        public static Material PatchedBrickworkUnity { get; } = new(
+            "Textures/walls/patched-brickwork-unity/patched-brickwork_albedo.png",
+            "Textures/walls/patched-brickwork-unity/patched-brickwork_normal-ogl.png",
+            "Textures/walls/patched-brickwork-unity/patched-brickwork_metallic.psd",
+            "Textures/walls/patched-brickwork-unity/patched-brickwork_height.png",
+            "Textures/walls/patched-brickwork-unity/patched-brickwork_ao.png"
+        );
+
         public static Material OldPaintedVent { get; } = new(
             "Textures/walls/old-painted-vent/old-painted-vent_albedo.png",
             "Textures/walls/old-painted-vent/old-painted-vent_Normal.png",
@@ -2176,7 +2940,6 @@ public sealed partial class Material
             "Textures/walls/old-painted-vent/old-painted-vent_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stone-block-wall'.</summary>
         public static Material StoneBlockWall { get; } = new(
             "Textures/walls/stone-block-wall/stone-block-wall_albedo.png",
             "Textures/walls/stone-block-wall/stone-block-wall_Normal.png",
@@ -2185,7 +2948,14 @@ public sealed partial class Material
             "Textures/walls/stone-block-wall/stone-block-wall_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'rounded-brick1'.</summary>
+        public static Material WhiteBrickWallUnity { get; } = new(
+            "Textures/walls/white-brick-wall-unity/white-brick-wall_albedo.png",
+            "Textures/walls/white-brick-wall-unity/white-brick-wall_normal-ogl.png",
+            "Textures/walls/white-brick-wall-unity/white-brick-wall_metallic.psd",
+            "Textures/walls/white-brick-wall-unity/white-brick-wall_height.png",
+            "Textures/walls/white-brick-wall-unity/white-brick-wall_ao.png"
+        );
+
         public static Material RoundedBrick1 { get; } = new(
             "Textures/walls/rounded-brick1/rounded-brick1_albedo.png",
             "Textures/walls/rounded-brick1/rounded-brick1_Normal.png",
@@ -2194,7 +2964,22 @@ public sealed partial class Material
             "Textures/walls/rounded-brick1/rounded-brick1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'harshbricks'.</summary>
+        public static Material ThickMortarStoneworkUnity { get; } = new(
+            "Textures/walls/thick-mortar-stonework-unity/thick-mortar-stonework_albedo.png",
+            "Textures/walls/thick-mortar-stonework-unity/thick-mortar-stonework_normal-ogl.png",
+            "Textures/walls/thick-mortar-stonework-unity/thick-mortar-stonework_metallic.psd",
+            "Textures/walls/thick-mortar-stonework-unity/thick-mortar-stonework_height.png",
+            "Textures/walls/thick-mortar-stonework-unity/thick-mortar-stonework_ao.png"
+        );
+
+        public static Material SloppyBrickWallUnity { get; } = new(
+            "Textures/walls/sloppy-brick-wall-unity/sloppy-brick-wall_albedo.png",
+            "Textures/walls/sloppy-brick-wall-unity/sloppy-brick-wall_normal-ogl.png",
+            "Textures/walls/sloppy-brick-wall-unity/sloppy-brick-wall_metallic.psd",
+            "Textures/walls/sloppy-brick-wall-unity/sloppy-brick-wall_height.png",
+            "Textures/walls/sloppy-brick-wall-unity/sloppy-brick-wall_ao.png"
+        );
+
         public static Material Harshbricks { get; } = new(
             "Textures/walls/harshbricks/harshbricks_albedo.png",
             "Textures/walls/harshbricks/harshbricks_Normal.png",
@@ -2203,7 +2988,14 @@ public sealed partial class Material
             "Textures/walls/harshbricks/harshbricks_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'smooth-stucco'.</summary>
+        public static Material BricksMortarUnity { get; } = new(
+            "Textures/walls/bricks-mortar-unity/bricks-mortar-albedo.png",
+            "Textures/walls/bricks-mortar-unity/bricks-mortar-normal-ogl.png",
+            "Textures/walls/bricks-mortar-unity/bricks-mortar-metallic.psd",
+            "Textures/walls/bricks-mortar-unity/bricks-mortar-height.png",
+            "Textures/walls/bricks-mortar-unity/bricks-mortar-ao.png"
+        );
+
         public static Material SmoothStucco { get; } = new(
             "Textures/walls/smooth-stucco/smooth-stucco_albedo.png",
             "Textures/walls/smooth-stucco/smooth-stucco_Normal.png",
@@ -2212,7 +3004,6 @@ public sealed partial class Material
             "Textures/walls/smooth-stucco/smooth-stucco_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'paintedbrick1'.</summary>
         public static Material Paintedbrick1 { get; } = new(
             "Textures/walls/paintedbrick1/paintedbrick1_albedo.png",
             "Textures/walls/paintedbrick1/paintedbrick1_Normal.png",
@@ -2221,7 +3012,6 @@ public sealed partial class Material
             "Textures/walls/paintedbrick1/paintedbrick1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sloppy-mortar-bricks'.</summary>
         public static Material SloppyMortarBricks { get; } = new(
             "Textures/walls/sloppy-mortar-bricks/sloppy-mortar-bricks_albedo.png",
             "Textures/walls/sloppy-mortar-bricks/sloppy-mortar-bricks_Normal.png",
@@ -2230,7 +3020,6 @@ public sealed partial class Material
             "Textures/walls/sloppy-mortar-bricks/sloppy-mortar-bricks_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wornstonework1'.</summary>
         public static Material Wornstonework1 { get; } = new(
             "Textures/walls/wornstonework1/wornstonework1_albedo.png",
             "Textures/walls/wornstonework1/wornstonework1_Normal.png",
@@ -2239,7 +3028,30 @@ public sealed partial class Material
             "Textures/walls/wornstonework1/wornstonework1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stonework-wall'.</summary>
+        public static Material ColoredConcreteWallUnity { get; } = new(
+            "Textures/walls/colored-concrete-wall-unity/colored-concrete-wall_albedo.png",
+            "Textures/walls/colored-concrete-wall-unity/colored-concrete-wall_normal-ogl.png",
+            "Textures/walls/colored-concrete-wall-unity/colored-concrete-wall_metallic.psd",
+            "Textures/walls/colored-concrete-wall-unity/colored-concrete-wall_height.png",
+            "Textures/walls/colored-concrete-wall-unity/colored-concrete-wall_ao.png"
+        );
+
+        public static Material StackedStoneSidingUnity { get; } = new(
+            "Textures/walls/stacked-stone-siding-unity/stacked-stone-siding_albedo.png",
+            "Textures/walls/stacked-stone-siding-unity/stacked-stone-siding_normal-ogl.png",
+            "Textures/walls/stacked-stone-siding-unity/stacked-stone-siding_metallic.psd",
+            "Textures/walls/stacked-stone-siding-unity/stacked-stone-siding_height.png",
+            "Textures/walls/stacked-stone-siding-unity/stacked-stone-siding_ao.png"
+        );
+
+        public static Material GreyAsphaltShinglesUnity { get; } = new(
+            "Textures/walls/grey-asphalt-shingles-unity/grey-asphalt-shingles_albedo.png",
+            "Textures/walls/grey-asphalt-shingles-unity/grey-asphalt-shingles_normal-ogl.png",
+            "Textures/walls/grey-asphalt-shingles-unity/grey-asphalt-shingles_metallic.psd",
+            "Textures/walls/grey-asphalt-shingles-unity/grey-asphalt-shingles_height.png",
+            "Textures/walls/grey-asphalt-shingles-unity/grey-asphalt-shingles_ao.png"
+        );
+
         public static Material StoneworkWall { get; } = new(
             "Textures/walls/stonework-wall/stonework-wall_albedo.png",
             "Textures/walls/stonework-wall/stonework-wall_Normal.png",
@@ -2248,7 +3060,30 @@ public sealed partial class Material
             "Textures/walls/stonework-wall/stonework-wall_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'narrowbrick1'.</summary>
+        public static Material DarkWornStoneUnity { get; } = new(
+            "Textures/walls/dark-worn-stone-unity/dark-worn-stonework_albedo.png",
+            "Textures/walls/dark-worn-stone-unity/dark-worn-stonework_normal-ogl.png",
+            "Textures/walls/dark-worn-stone-unity/dark-worn-stonework_metallic.psd",
+            "Textures/walls/dark-worn-stone-unity/dark-worn-stonework_height.png",
+            "Textures/walls/dark-worn-stone-unity/dark-worn-stonework_ao.png"
+        );
+
+        public static Material MiddleEasternWallDirtyUnity { get; } = new(
+            "Textures/walls/middle-eastern-wall-dirty-unity/middle-eastern-wall-dirty_albedo.png",
+            "Textures/walls/middle-eastern-wall-dirty-unity/middle-eastern-wall-dirty_normal-ogl.png",
+            "Textures/walls/middle-eastern-wall-dirty-unity/middle-eastern-wall-dirty_metallic.psd",
+            "Textures/walls/middle-eastern-wall-dirty-unity/middle-eastern-wall-dirty_height.png",
+            "Textures/walls/middle-eastern-wall-dirty-unity/middle-eastern-wall-dirty_ao.png"
+        );
+
+        public static Material RoundedAlleyBrickUnity { get; } = new(
+            "Textures/walls/rounded-alley-brick-unity/rounded-alley-brick_albedo.png",
+            "Textures/walls/rounded-alley-brick-unity/rounded-alley-brick_normal-ogl.png",
+            "Textures/walls/rounded-alley-brick-unity/rounded-alley-brick_metallic.psd",
+            "Textures/walls/rounded-alley-brick-unity/rounded-alley-brick_height.png",
+            "Textures/walls/rounded-alley-brick-unity/rounded-alley-brick_ao.png"
+        );
+
         public static Material Narrowbrick1 { get; } = new(
             "Textures/walls/narrowbrick1/narrowbrick1_albedo.png",
             "Textures/walls/narrowbrick1/narrowbrick1_Normal.png",
@@ -2257,7 +3092,6 @@ public sealed partial class Material
             "Textures/walls/narrowbrick1/narrowbrick1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stonewall'.</summary>
         public static Material Stonewall { get; } = new(
             "Textures/walls/stonewall/stonewall_albedo.png",
             "Textures/walls/stonewall/stonewall_Normal.png",
@@ -2266,7 +3100,30 @@ public sealed partial class Material
             "Textures/walls/stonewall/stonewall_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'redbricks2b'.</summary>
+        public static Material NarrowRoughBrickUnity { get; } = new(
+            "Textures/walls/narrow-rough-brick-unity/narrow-rough-brick_albedo.png",
+            "Textures/walls/narrow-rough-brick-unity/narrow-rough-brick_normal-ogl.png",
+            "Textures/walls/narrow-rough-brick-unity/narrow-rough-brick_metallic.psd",
+            "Textures/walls/narrow-rough-brick-unity/narrow-rough-brick_height.png",
+            "Textures/walls/narrow-rough-brick-unity/narrow-rough-brick_ao.png"
+        );
+
+        public static Material BrownVariedShingleUnity { get; } = new(
+            "Textures/walls/brown-varied-shingle-unity/brown-varied-shingle_albedo.png",
+            "Textures/walls/brown-varied-shingle-unity/brown-varied-shingle_normal-ogl.png",
+            "Textures/walls/brown-varied-shingle-unity/brown-varied-shingle_metallic.psd",
+            "Textures/walls/brown-varied-shingle-unity/brown-varied-shingle_height.png",
+            "Textures/walls/brown-varied-shingle-unity/brown-varied-shingle_ao.png"
+        );
+
+        public static Material ForestWallpaperUnity { get; } = new(
+            "Textures/walls/forest-wallpaper-unity/forest-wallpaper_albedo.png",
+            "Textures/walls/forest-wallpaper-unity/forest-wallpaper_normal-ogl.png",
+            "Textures/walls/forest-wallpaper-unity/forest-wallpaper_metallic.psd",
+            "Textures/walls/forest-wallpaper-unity/forest-wallpaper_height.png",
+            "Textures/walls/forest-wallpaper-unity/forest-wallpaper_ao.png"
+        );
+
         public static Material Redbricks2b { get; } = new(
             "Textures/walls/redbricks2b/redbricks2b_albedo.png",
             "Textures/walls/redbricks2b/redbricks2b_Normal.png",
@@ -2275,7 +3132,38 @@ public sealed partial class Material
             "Textures/walls/redbricks2b/redbricks2b_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'faux-rock-stucco'.</summary>
+        public static Material PaintedWhiteBricksUnity { get; } = new(
+            "Textures/walls/painted-white-bricks-unity/painted-white-bricks_albedo.png",
+            "Textures/walls/painted-white-bricks-unity/painted-white-bricks_normal-ogl.png",
+            "Textures/walls/painted-white-bricks-unity/painted-white-bricks_metallic.psd",
+            "Textures/walls/painted-white-bricks-unity/painted-white-bricks_height.png",
+            "Textures/walls/painted-white-bricks-unity/painted-white-bricks_ao.png"
+        );
+
+        public static Material ModernShatteredWallpaperUnity { get; } = new(
+            "Textures/walls/modern-shattered-wallpaper-unity/modern-shattered-wallpaper_albedo.png",
+            "Textures/walls/modern-shattered-wallpaper-unity/modern-shattered-wallpaper_normal-ogl.png",
+            "Textures/walls/modern-shattered-wallpaper-unity/modern-shattered-wallpaper_metallic.psd",
+            "Textures/walls/modern-shattered-wallpaper-unity/modern-shattered-wallpaper_height.png",
+            "Textures/walls/modern-shattered-wallpaper-unity/modern-shattered-wallpaper_ao.png"
+        );
+
+        public static Material ClassyArtDecoWallpaperUnity { get; } = new(
+            "Textures/walls/classy-art-deco-wallpaper-unity/classy-art-deco-wallpaper_albedo.png",
+            "Textures/walls/classy-art-deco-wallpaper-unity/classy-art-deco-wallpaper_normal-ogl.png",
+            "Textures/walls/classy-art-deco-wallpaper-unity/classy-art-deco-wallpaper_metallic.psd",
+            "Textures/walls/classy-art-deco-wallpaper-unity/classy-art-deco-wallpaper_height.png",
+            "Textures/walls/classy-art-deco-wallpaper-unity/classy-art-deco-wallpaper_ao.png"
+        );
+
+        public static Material AlleyBrickWallUnity { get; } = new(
+            "Textures/walls/alley-brick-wall-unity/alley-brick-wall_albedo.png",
+            "Textures/walls/alley-brick-wall-unity/alley-brick-wall_normal-ogl.png",
+            "Textures/walls/alley-brick-wall-unity/alley-brick-wall_metallic.psd",
+            "Textures/walls/alley-brick-wall-unity/alley-brick-wall_height.png",
+            "Textures/walls/alley-brick-wall-unity/alley-brick-wall_ao.png"
+        );
+
         public static Material FauxRockStucco { get; } = new(
             "Textures/walls/faux-rock-stucco/faux-rock-stucco_albedo.png",
             "Textures/walls/faux-rock-stucco/faux-rock-stucco_Normal.png",
@@ -2284,7 +3172,6 @@ public sealed partial class Material
             "Textures/walls/faux-rock-stucco/faux-rock-stucco_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'grime-alley-bricks_2'.</summary>
         public static Material GrimeAlleyBricks2 { get; } = new(
             "Textures/walls/grime-alley-bricks_2/grime-alley-bricks_2_albedo.png",
             "Textures/walls/grime-alley-bricks_2/grime-alley-bricks_2_Normal.png",
@@ -2293,7 +3180,14 @@ public sealed partial class Material
             "Textures/walls/grime-alley-bricks_2/grime-alley-bricks_2_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dungeon-stone1'.</summary>
+        public static Material ArtDecoScalesWallpaperUnity { get; } = new(
+            "Textures/walls/art-deco-scales-wallpaper-unity/art-deco-scales-wallpaper_albedo.png",
+            "Textures/walls/art-deco-scales-wallpaper-unity/art-deco-scales-wallpaper_normal-ogl.png",
+            "Textures/walls/art-deco-scales-wallpaper-unity/art-deco-scales-wallpaper_metallic.psd",
+            "Textures/walls/art-deco-scales-wallpaper-unity/art-deco-scales-wallpaper_height.png",
+            "Textures/walls/art-deco-scales-wallpaper-unity/art-deco-scales-wallpaper_ao.png"
+        );
+
         public static Material DungeonStone1 { get; } = new(
             "Textures/walls/dungeon-stone1/dungeon-stone1_albedo.png",
             "Textures/walls/dungeon-stone1/dungeon-stone1_Normal.png",
@@ -2302,7 +3196,6 @@ public sealed partial class Material
             "Textures/walls/dungeon-stone1/dungeon-stone1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dirty-red-bricks'.</summary>
         public static Material DirtyRedBricks { get; } = new(
             "Textures/walls/dirty-red-bricks/dirty-red-bricks_albedo.png",
             "Textures/walls/dirty-red-bricks/dirty-red-bricks_Normal.png",
@@ -2311,7 +3204,6 @@ public sealed partial class Material
             "Textures/walls/dirty-red-bricks/dirty-red-bricks_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'glossy-stylized-blocks'.</summary>
         public static Material GlossyStylizedBlocks { get; } = new(
             "Textures/walls/glossy-stylized-blocks/glossy-stylized-blocks_albedo.png",
             "Textures/walls/glossy-stylized-blocks/glossy-stylized-blocks_Normal.png",
@@ -2320,7 +3212,6 @@ public sealed partial class Material
             "Textures/walls/glossy-stylized-blocks/glossy-stylized-blocks_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'sprayed-wall-texture1'.</summary>
         public static Material SprayedWallTexture1 { get; } = new(
             "Textures/walls/sprayed-wall-texture1/sprayed-wall-texture1_albedo.png",
             "Textures/walls/sprayed-wall-texture1/sprayed-wall-texture1_Normal.png",
@@ -2329,7 +3220,22 @@ public sealed partial class Material
             "Textures/walls/sprayed-wall-texture1/sprayed-wall-texture1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'painted_metal_shed'.</summary>
+        public static Material EgyptianStoneworkUnity { get; } = new(
+            "Textures/walls/egyptian-stonework-unity/egyptian-stonework_albedo.png",
+            "Textures/walls/egyptian-stonework-unity/egyptian-stonework_normal-ogl.png",
+            "Textures/walls/egyptian-stonework-unity/egyptian-stonework_metallic.psd",
+            "Textures/walls/egyptian-stonework-unity/egyptian-stonework_height.png",
+            "Textures/walls/egyptian-stonework-unity/egyptian-stonework_ao.png"
+        );
+
+        public static Material SmoothTempleBlocksUnity { get; } = new(
+            "Textures/walls/smooth-temple-blocks-unity/smooth-temple-blocks_albedo.png",
+            "Textures/walls/smooth-temple-blocks-unity/smooth-temple-blocks_normal-ogl.png",
+            "Textures/walls/smooth-temple-blocks-unity/smooth-temple-blocks_metallic.psd",
+            "Textures/walls/smooth-temple-blocks-unity/smooth-temple-blocks_height.png",
+            "Textures/walls/smooth-temple-blocks-unity/smooth-temple-blocks_ao.png"
+        );
+
         public static Material PaintedMetalShed { get; } = new(
             "Textures/walls/painted_metal_shed/painted_metal_shed_albedo.png",
             "Textures/walls/painted_metal_shed/painted_metal_shed_Normal.png",
@@ -2338,7 +3244,22 @@ public sealed partial class Material
             "Textures/walls/painted_metal_shed/painted_metal_shed_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'fiber-textured-wall1'.</summary>
+        public static Material ClapboardVinylSidingUnity { get; } = new(
+            "Textures/walls/clapboard-vinyl-siding-unity/clapboard-vinyl-siding_albedo.png",
+            "Textures/walls/clapboard-vinyl-siding-unity/clapboard-vinyl-siding_normal-ogl.png",
+            "Textures/walls/clapboard-vinyl-siding-unity/clapboard-vinyl-siding_metallic.psd",
+            "Textures/walls/clapboard-vinyl-siding-unity/clapboard-vinyl-siding_height.png",
+            "Textures/walls/clapboard-vinyl-siding-unity/clapboard-vinyl-siding_ao.png"
+        );
+
+        public static Material ModernFracturedWallpaperUnity { get; } = new(
+            "Textures/walls/modern-fractured-wallpaper-unity/modern-fractured-wallpaper_albedo.png",
+            "Textures/walls/modern-fractured-wallpaper-unity/modern-fractured-wallpaper_normal-ogl.png",
+            "Textures/walls/modern-fractured-wallpaper-unity/modern-fractured-wallpaper_metallic.psd",
+            "Textures/walls/modern-fractured-wallpaper-unity/modern-fractured-wallpaper_height.png",
+            "Textures/walls/modern-fractured-wallpaper-unity/modern-fractured-wallpaper_ao.png"
+        );
+
         public static Material FiberTexturedWall1 { get; } = new(
             "Textures/walls/fiber-textured-wall1/fiber-textured-wall1_albedo.png",
             "Textures/walls/fiber-textured-wall1/fiber-textured-wall1_Normal.png",
@@ -2347,7 +3268,6 @@ public sealed partial class Material
             "Textures/walls/fiber-textured-wall1/fiber-textured-wall1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'stucco1'.</summary>
         public static Material Stucco1 { get; } = new(
             "Textures/walls/stucco1/stucco1_albedo.png",
             "Textures/walls/stucco1/stucco1_Normal.png",
@@ -2356,7 +3276,14 @@ public sealed partial class Material
             "Textures/walls/stucco1/stucco1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'modern-metal-wall'.</summary>
+        public static Material DarkGreyTilesUnity { get; } = new(
+            "Textures/walls/dark-grey-tiles-unity/dark-grey-tiles_albedo.png",
+            "Textures/walls/dark-grey-tiles-unity/dark-grey-tiles_normal-ogl.png",
+            "Textures/walls/dark-grey-tiles-unity/dark-grey-tiles_metallic.psd",
+            "Textures/walls/dark-grey-tiles-unity/dark-grey-tiles_height.png",
+            "Textures/walls/dark-grey-tiles-unity/dark-grey-tiles_ao.png"
+        );
+
         public static Material ModernMetalWall { get; } = new(
             "Textures/walls/modern-metal-wall/modern-metal-wall_albedo.png",
             "Textures/walls/modern-metal-wall/modern-metal-wall_Normal.png",
@@ -2365,7 +3292,6 @@ public sealed partial class Material
             "Textures/walls/modern-metal-wall/modern-metal-wall_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'industrial-narrow-brick'.</summary>
         public static Material IndustrialNarrowBrick { get; } = new(
             "Textures/walls/industrial-narrow-brick/industrial-narrow-brick_albedo.png",
             "Textures/walls/industrial-narrow-brick/industrial-narrow-brick_Normal.png",
@@ -2374,7 +3300,6 @@ public sealed partial class Material
             "Textures/walls/industrial-narrow-brick/industrial-narrow-brick_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'red-clay-wall'.</summary>
         public static Material RedClayWall { get; } = new(
             "Textures/walls/red-clay-wall/red-clay-wall_albedo.png",
             "Textures/walls/red-clay-wall/red-clay-wall_Normal.png",
@@ -2383,7 +3308,38 @@ public sealed partial class Material
             "Textures/walls/red-clay-wall/red-clay-wall_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'gray-bricks1'.</summary>
+        public static Material AncientSewerStoneworkUnity { get; } = new(
+            "Textures/walls/ancient-sewer-stonework-unity/ancient-sewer-stonework_albedo.png",
+            "Textures/walls/ancient-sewer-stonework-unity/ancient-sewer-stonework_normal-ogl.png",
+            "Textures/walls/ancient-sewer-stonework-unity/ancient-sewer-stonework_metallic.psd",
+            "Textures/walls/ancient-sewer-stonework-unity/ancient-sewer-stonework_height.png",
+            "Textures/walls/ancient-sewer-stonework-unity/ancient-sewer-stonework_ao.png"
+        );
+
+        public static Material BrickWallUnity { get; } = new(
+            "Textures/walls/brick-wall-unity/brick-wall_albedo.png",
+            "Textures/walls/brick-wall-unity/brick-wall_normal-ogl.png",
+            "Textures/walls/brick-wall-unity/brick-wall_metallic.psd",
+            "Textures/walls/brick-wall-unity/brick-wall_height.png",
+            "Textures/walls/brick-wall-unity/brick-wall_ao.png"
+        );
+
+        public static Material PreschoolTileUnity { get; } = new(
+            "Textures/walls/preschool-tile-unity/preschool-tile_albedo.png",
+            "Textures/walls/preschool-tile-unity/preschool-tile_normal-ogl.png",
+            "Textures/walls/preschool-tile-unity/preschool-tile_metallic.psd",
+            "Textures/walls/preschool-tile-unity/preschool-tile_height.png",
+            "Textures/walls/preschool-tile-unity/preschool-tile_ao.png"
+        );
+
+        public static Material MiddleEasternWallUnity { get; } = new(
+            "Textures/walls/middle-eastern-wall-unity/middle-eastern-wall_albedo.png",
+            "Textures/walls/middle-eastern-wall-unity/middle-eastern-wall_normal-ogl.png",
+            "Textures/walls/middle-eastern-wall-unity/middle-eastern-wall_metallic.psd",
+            "Textures/walls/middle-eastern-wall-unity/middle-eastern-wall_height.png",
+            "Textures/walls/middle-eastern-wall-unity/middle-eastern-wall_ao.png"
+        );
+
         public static Material GrayBricks1 { get; } = new(
             "Textures/walls/gray-bricks1/gray-bricks1_albedo.png",
             "Textures/walls/gray-bricks1/gray-bricks1_Normal.png",
@@ -2392,7 +3348,6 @@ public sealed partial class Material
             "Textures/walls/gray-bricks1/gray-bricks1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'wall-stonework-sheen'.</summary>
         public static Material WallStoneworkSheen { get; } = new(
             "Textures/walls/wall-stonework-sheen/wall-stonework-sheen_albedo.png",
             "Textures/walls/wall-stonework-sheen/wall-stonework-sheen_Normal.png",
@@ -2401,7 +3356,14 @@ public sealed partial class Material
             "Textures/walls/wall-stonework-sheen/wall-stonework-sheen_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'fiberous_plaster'.</summary>
+        public static Material AngledStoneworkUnity { get; } = new(
+            "Textures/walls/angled-stonework-unity/angled-stonework_albedo.png",
+            "Textures/walls/angled-stonework-unity/angled-stonework_normal-ogl.png",
+            "Textures/walls/angled-stonework-unity/angled-stonework_metallic.psd",
+            "Textures/walls/angled-stonework-unity/angled-stonework_height.png",
+            "Textures/walls/angled-stonework-unity/angled-stonework_ao.png"
+        );
+
         public static Material FiberousPlaster { get; } = new(
             "Textures/walls/fiberous_plaster/fiberous_plaster_albedo.png",
             "Textures/walls/fiberous_plaster/fiberous_plaster_Normal.png",
@@ -2410,7 +3372,22 @@ public sealed partial class Material
             "Textures/walls/fiberous_plaster/fiberous_plaster_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'chipped-stonework'.</summary>
+        public static Material VinylSidingUnity { get; } = new(
+            "Textures/walls/vinyl-siding-unity/vinyl-siding_albedo.png",
+            "Textures/walls/vinyl-siding-unity/vinyl-siding_normal-ogl.png",
+            "Textures/walls/vinyl-siding-unity/vinyl-siding_metallic.psd",
+            "Textures/walls/vinyl-siding-unity/vinyl-siding_height.png",
+            "Textures/walls/vinyl-siding-unity/vinyl-siding_ao.png"
+        );
+
+        public static Material ShippingCrateUnity { get; } = new(
+            "Textures/walls/shipping-crate-unity/shipping-crate_albedo.png",
+            "Textures/walls/shipping-crate-unity/shipping-crate_normal-ogl.png",
+            "Textures/walls/shipping-crate-unity/shipping-crate_metallic.psd",
+            "Textures/walls/shipping-crate-unity/shipping-crate_height.png",
+            "Textures/walls/shipping-crate-unity/shipping-crate_ao.png"
+        );
+
         public static Material ChippedStonework { get; } = new(
             "Textures/walls/chipped-stonework/chipped-stonework_albedo.png",
             "Textures/walls/chipped-stonework/chipped-stonework_Normal.png",
@@ -2419,7 +3396,6 @@ public sealed partial class Material
             "Textures/walls/chipped-stonework/chipped-stonework_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'dirty-tile'.</summary>
         public static Material DirtyTile { get; } = new(
             "Textures/walls/dirty-tile/dirty-tile_albedo.png",
             "Textures/walls/dirty-tile/dirty-tile_Normal.png",
@@ -2428,7 +3404,30 @@ public sealed partial class Material
             "Textures/walls/dirty-tile/dirty-tile_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'modern-brick1'.</summary>
+        public static Material FlatTempleStoneworkUnity { get; } = new(
+            "Textures/walls/flat-temple-stonework-unity/flat-temple-stonework_albedo.png",
+            "Textures/walls/flat-temple-stonework-unity/flat-temple-stonework_normal-ogl.png",
+            "Textures/walls/flat-temple-stonework-unity/flat-temple-stonework_metallic.psd",
+            "Textures/walls/flat-temple-stonework-unity/flat-temple-stonework_height.png",
+            "Textures/walls/flat-temple-stonework-unity/flat-temple-stonework_ao.png"
+        );
+
+        public static Material BeatenDownBrickUnity { get; } = new(
+            "Textures/walls/beaten-down-brick-unity/beaten-down-brick_albedo.png",
+            "Textures/walls/beaten-down-brick-unity/beaten-down-brick_normal-ogl.png",
+            "Textures/walls/beaten-down-brick-unity/beaten-down-brick_metallic.psd",
+            "Textures/walls/beaten-down-brick-unity/beaten-down-brick_height.png",
+            "Textures/walls/beaten-down-brick-unity/beaten-down-brick_ao.png"
+        );
+
+        public static Material OldMiddleEasternWallUnity { get; } = new(
+            "Textures/walls/old-middle-eastern-wall-unity/old-middle-eastern-wall_albedo.png",
+            "Textures/walls/old-middle-eastern-wall-unity/old-middle-eastern-wall_normal-ogl.png",
+            "Textures/walls/old-middle-eastern-wall-unity/old-middle-eastern-wall_metallic.psd",
+            "Textures/walls/old-middle-eastern-wall-unity/old-middle-eastern-wall_height.png",
+            "Textures/walls/old-middle-eastern-wall-unity/old-middle-eastern-wall_ao.png"
+        );
+
         public static Material ModernBrick1 { get; } = new(
             "Textures/walls/modern-brick1/modern-brick1_albedo.png",
             "Textures/walls/modern-brick1/modern-brick1_Normal.png",
@@ -2437,13 +3436,536 @@ public sealed partial class Material
             "Textures/walls/modern-brick1/modern-brick1_ao.png"
         );
 
-        /// <summary>Auto-generated material for 'chipping-painted-wall'.</summary>
         public static Material ChippingPaintedWall { get; } = new(
             "Textures/walls/chipping-painted-wall/chipping-painted-wall_albedo.png",
             "Textures/walls/chipping-painted-wall/chipping-painted-wall_Normal.png",
             "Textures/walls/chipping-painted-wall/chipping-painted-wall_metallic.psd",
             "Textures/walls/chipping-painted-wall/chipping-painted-wall_height.png",
             "Textures/walls/chipping-painted-wall/chipping-painted-wall_ao.png"
+        );
+
+    }
+
+    public static partial class Metals
+    {
+        public static Material WornWalkwayMetalUnity { get; } = new(
+            "Textures/metals/worn-walkway-metal-unity/worn-walkway-metal_albedo.png",
+            "Textures/metals/worn-walkway-metal-unity/worn-walkway-metal_normal-ogl.png",
+            "Textures/metals/worn-walkway-metal-unity/worn-walkway-metal_metallic.psd",
+            "Textures/metals/worn-walkway-metal-unity/worn-walkway-metal_height.png",
+            "Textures/metals/worn-walkway-metal-unity/worn-walkway-metal_ao.png"
+        );
+
+        public static Material Ornatebrass2Unity { get; } = new(
+            "Textures/metals/ornatebrass2-unity/ornate-brass2_albedo.png",
+            "Textures/metals/ornatebrass2-unity/ornate-brass2_normal-ogl.png",
+            "Textures/metals/ornatebrass2-unity/ornate-brass2_metallic.psd",
+            "Textures/metals/ornatebrass2-unity/ornate-brass2_height.png",
+            "Textures/metals/ornatebrass2-unity/ornate-brass2_ao.png"
+        );
+
+        public static Material SpottedRustUnity { get; } = new(
+            "Textures/metals/spotted-rust-unity/spotted-rust_albedo.png",
+            "Textures/metals/spotted-rust-unity/spotted-rust_normal-ogl.png",
+            "Textures/metals/spotted-rust-unity/spotted-rust_metallic.psd",
+            "Textures/metals/spotted-rust-unity/spotted-rust_height.png",
+            "Textures/metals/spotted-rust-unity/spotted-rust_ao.png"
+        );
+
+        public static Material GoldNuggetUnity { get; } = new(
+            "Textures/metals/gold-nugget-unity/gold-nugget1_albedo.png",
+            "Textures/metals/gold-nugget-unity/gold-nugget1_normal-ogl.png",
+            "Textures/metals/gold-nugget-unity/gold-nugget1_metallic.psd",
+            "Textures/metals/gold-nugget-unity/gold-nugget1_height.png",
+            "Textures/metals/gold-nugget-unity/gold-nugget1_ao.png"
+        );
+
+        public static Material RibbedChippedMetalUnity { get; } = new(
+            "Textures/metals/ribbed-chipped-metal-unity/ribbed-chipped-metal_albedo.png",
+            "Textures/metals/ribbed-chipped-metal-unity/ribbed-chipped-metal_normal-ogl.png",
+            "Textures/metals/ribbed-chipped-metal-unity/ribbed-chipped-metal_metallic.psd",
+            "Textures/metals/ribbed-chipped-metal-unity/ribbed-chipped-metal_height.png",
+            "Textures/metals/ribbed-chipped-metal-unity/ribbed-chipped-metal_ao.png"
+        );
+
+        public static Material PittedMetalUnity { get; } = new(
+            "Textures/metals/pitted-metal-unity/pitted-metal_albedo.png",
+            "Textures/metals/pitted-metal-unity/pitted-metal_normal-ogl.png",
+            "Textures/metals/pitted-metal-unity/pitted-metal_metallic.psd",
+            "Textures/metals/pitted-metal-unity/pitted-metal_height.png",
+            "Textures/metals/pitted-metal-unity/pitted-metal_ao.png"
+        );
+
+        public static Material RidgedMetalSidingUnity { get; } = new(
+            "Textures/metals/ridged-metal-siding-unity/ridged-metal-siding_albedo.png",
+            "Textures/metals/ridged-metal-siding-unity/ridged-metal-siding_normal-ogl.png",
+            "Textures/metals/ridged-metal-siding-unity/ridged-metal-siding_metallic.psd",
+            "Textures/metals/ridged-metal-siding-unity/ridged-metal-siding_height.png",
+            "Textures/metals/ridged-metal-siding-unity/ridged-metal-siding_ao.png"
+        );
+
+        public static Material RoundedMetalCubesUnity { get; } = new(
+            "Textures/metals/rounded-metal-cubes-unity/rounded-metal-cubes_albedo.png",
+            "Textures/metals/rounded-metal-cubes-unity/rounded-metal-cubes_normal-ogl.png",
+            "Textures/metals/rounded-metal-cubes-unity/rounded-metal-cubes_metallic.psd",
+            "Textures/metals/rounded-metal-cubes-unity/rounded-metal-cubes_height.png",
+            "Textures/metals/rounded-metal-cubes-unity/rounded-metal-cubes_ao.png"
+        );
+
+        public static Material FramedSquareMetalPattern1Unity { get; } = new(
+            "Textures/metals/framed-square-metal-pattern1-unity/framed-square-metal-pattern1-albedo.png",
+            "Textures/metals/framed-square-metal-pattern1-unity/framed-square-metal-pattern1-normal-ogl.png",
+            "Textures/metals/framed-square-metal-pattern1-unity/framed-square-metal-pattern1-metallic.psd",
+            "Textures/metals/framed-square-metal-pattern1-unity/framed-square-metal-pattern1-height.png",
+            "Textures/metals/framed-square-metal-pattern1-unity/framed-square-metal-pattern1-ao.png"
+        );
+
+        public static Material FlakingPaintedMetalUnity { get; } = new(
+            "Textures/metals/flaking-painted-metal-unity/flaking-painted-metal_albedo.png",
+            "Textures/metals/flaking-painted-metal-unity/flaking-painted-metal_normal-ogl.png",
+            "Textures/metals/flaking-painted-metal-unity/flaking-painted-metal_metallic.psd",
+            "Textures/metals/flaking-painted-metal-unity/flaking-painted-metal_height.png",
+            "Textures/metals/flaking-painted-metal-unity/flaking-painted-metal_ao.png"
+        );
+
+        public static Material OldSheetMetalUnity { get; } = new(
+            "Textures/metals/old-sheet-metal-unity/old-sheet-metal-albedo.png",
+            "Textures/metals/old-sheet-metal-unity/old-sheet-metal-Normal-ogl.png",
+            "Textures/metals/old-sheet-metal-unity/old-sheet-metal-Metallic.psd",
+            "Textures/metals/old-sheet-metal-unity/old-sheet-metal-Height.png",
+            "Textures/metals/old-sheet-metal-unity/old-sheet-metal-ao.png"
+        );
+
+        public static Material Ornatebrass1Unity { get; } = new(
+            "Textures/metals/ornatebrass1-unity/ornate-brass_albedo.png",
+            "Textures/metals/ornatebrass1-unity/ornate-brass_normal-ogl.png",
+            "Textures/metals/ornatebrass1-unity/ornate-brass_metallic.psd",
+            "Textures/metals/ornatebrass1-unity/ornate-brass_height.png",
+            "Textures/metals/ornatebrass1-unity/ornate-brass_ao.png"
+        );
+
+        public static Material PeelingPaintedMetalUnity { get; } = new(
+            "Textures/metals/peeling-painted-metal-unity/peeling-painted-metal_albedo.png",
+            "Textures/metals/peeling-painted-metal-unity/peeling-painted-metal_normal-ogl.png",
+            "Textures/metals/peeling-painted-metal-unity/peeling-painted-metal_metallic.psd",
+            "Textures/metals/peeling-painted-metal-unity/peeling-painted-metal_height.png",
+            "Textures/metals/peeling-painted-metal-unity/peeling-painted-metal_ao.png"
+        );
+
+        public static Material WornPaintedMetalUnity { get; } = new(
+            "Textures/metals/worn-painted-metal-unity/worn-painted-metal_albedo.png",
+            "Textures/metals/worn-painted-metal-unity/worn-painted-metal_normal-ogl.png",
+            "Textures/metals/worn-painted-metal-unity/worn-painted-metal_metallic.psd",
+            "Textures/metals/worn-painted-metal-unity/worn-painted-metal_height.png",
+            "Textures/metals/worn-painted-metal-unity/worn-painted-metal_ao.png"
+        );
+
+        public static Material HeavilyRustedMetalUnity { get; } = new(
+            "Textures/metals/heavily-rusted-metal-unity/heavily-rusted-metal_albedo.png",
+            "Textures/metals/heavily-rusted-metal-unity/heavily-rusted-metal_normal-ogl.png",
+            "Textures/metals/heavily-rusted-metal-unity/heavily-rusted-metal_metallic.psd",
+            "Textures/metals/heavily-rusted-metal-unity/heavily-rusted-metal_height.png",
+            "Textures/metals/heavily-rusted-metal-unity/heavily-rusted-metal_ao.png"
+        );
+
+        public static Material VerticalLinedMetalUnity { get; } = new(
+            "Textures/metals/vertical-lined-metal-unity/vertical-lined-metal_albedo.png",
+            "Textures/metals/vertical-lined-metal-unity/vertical-lined-metal_normal-ogl.png",
+            "Textures/metals/vertical-lined-metal-unity/vertical-lined-metal_metallic.psd",
+            "Textures/metals/vertical-lined-metal-unity/vertical-lined-metal_height.png",
+            "Textures/metals/vertical-lined-metal-unity/vertical-lined-metal_ao.png"
+        );
+
+        public static Material UsedStainlessSteelUnity { get; } = new(
+            "Textures/metals/used-stainless-steel-unity/used-stainless-steel_albedo.png",
+            "Textures/metals/used-stainless-steel-unity/used-stainless-steel_normal-ogl.png",
+            "Textures/metals/used-stainless-steel-unity/used-stainless-steel_metallic.psd",
+            "Textures/metals/used-stainless-steel-unity/used-stainless-steel_height.png",
+            "Textures/metals/used-stainless-steel-unity/used-stainless-steel_ao.png"
+        );
+
+        public static Material AntiqueGrate1 { get; } = new(
+            "Textures/metals/antique-grate1/antique-grate1-albedo.png",
+            "Textures/metals/antique-grate1/antique-grate1-normal-ogl.png",
+            "Textures/metals/antique-grate1/antique-grate1-metallic.psd",
+            "Textures/metals/antique-grate1/antique-grate1-height.png",
+            "Textures/metals/antique-grate1/antique-grate1-ao.png"
+        );
+
+        public static Material RimmedMetalUnity { get; } = new(
+            "Textures/metals/rimmed-metal-unity/rimmed-metal_albedo.png",
+            "Textures/metals/rimmed-metal-unity/rimmed-metal_normal-ogl.png",
+            "Textures/metals/rimmed-metal-unity/rimmed-metal_metallic.psd",
+            "Textures/metals/rimmed-metal-unity/rimmed-metal_height.png",
+            "Textures/metals/rimmed-metal-unity/rimmed-metal_ao.png"
+        );
+
+        public static Material MeshCoveredMetal1Unity { get; } = new(
+            "Textures/metals/mesh-covered-metal1-unity/mesh-covered-metal1-albedo.png",
+            "Textures/metals/mesh-covered-metal1-unity/mesh-covered-metal1-normal-ogl.png",
+            "Textures/metals/mesh-covered-metal1-unity/mesh-covered-metal1-metallic.psd",
+            "Textures/metals/mesh-covered-metal1-unity/mesh-covered-metal1-height.png",
+            "Textures/metals/mesh-covered-metal1-unity/mesh-covered-metal1-ao.png"
+        );
+
+        public static Material TexturedAluminumUnity { get; } = new(
+            "Textures/metals/textured-aluminum-unity/textured-aluminum_albedo.png",
+            "Textures/metals/textured-aluminum-unity/textured-aluminum_normal-ogl.png",
+            "Textures/metals/textured-aluminum-unity/textured-aluminum_metallic.psd",
+            "Textures/metals/textured-aluminum-unity/textured-aluminum_height.png",
+            "Textures/metals/textured-aluminum-unity/textured-aluminum_ao.png"
+        );
+
+        public static Material WornMetalStudsUnity { get; } = new(
+            "Textures/metals/worn-metal-studs-unity/worn-metal-studs_albedo.png",
+            "Textures/metals/worn-metal-studs-unity/worn-metal-studs_normal-ogl.png",
+            "Textures/metals/worn-metal-studs-unity/worn-metal-studs_metallic.psd",
+            "Textures/metals/worn-metal-studs-unity/worn-metal-studs_height.png",
+            "Textures/metals/worn-metal-studs-unity/worn-metal-studs_ao.png"
+        );
+
+        public static Material OrnateCelticGoldUnity { get; } = new(
+            "Textures/metals/ornate-celtic-gold-unity/ornate-celtic-gold-albedo.png",
+            "Textures/metals/ornate-celtic-gold-unity/ornate-celtic-gold-normal-ogl.png",
+            "Textures/metals/ornate-celtic-gold-unity/ornate-celtic-gold-metallic.psd",
+            "Textures/metals/ornate-celtic-gold-unity/ornate-celtic-gold-height.png",
+            "Textures/metals/ornate-celtic-gold-unity/ornate-celtic-gold-ao.png"
+        );
+
+        public static Material CogPatterned { get; } = new(
+            "Textures/metals/cog-patterned/cog-patterned-metal_albedo.png",
+            "Textures/metals/cog-patterned/cog-patterned-metal_normal-ogl.png",
+            "Textures/metals/cog-patterned/cog-patterned-metal_metallic.psd",
+            "Textures/metals/cog-patterned/cog-patterned-metal_height.png",
+            "Textures/metals/cog-patterned/cog-patterned-metal_ao.png"
+        );
+
+        public static Material WaffledChippedMetalUnity { get; } = new(
+            "Textures/metals/waffled-chipped-metal-unity/waffled-chipped-metal_albedo.png",
+            "Textures/metals/waffled-chipped-metal-unity/waffled-chipped-metal_normal-ogl.png",
+            "Textures/metals/waffled-chipped-metal-unity/waffled-chipped-metal_metallic.psd",
+            "Textures/metals/waffled-chipped-metal-unity/waffled-chipped-metal_height.png",
+            "Textures/metals/waffled-chipped-metal-unity/waffled-chipped-metal_ao.png"
+        );
+
+        public static Material DiamondMetalSiding { get; } = new(
+            "Textures/metals/diamond-metal-siding/diamond-metal-siding_albedo.png",
+            "Textures/metals/diamond-metal-siding/diamond-metal-siding_normal-ogl.png",
+            "Textures/metals/diamond-metal-siding/diamond-metal-siding_metallic.psd",
+            "Textures/metals/diamond-metal-siding/diamond-metal-siding_height.png",
+            "Textures/metals/diamond-metal-siding/diamond-metal-siding_ao.png"
+        );
+
+        public static Material OldMetalSlats1Unity { get; } = new(
+            "Textures/metals/old-metal-slats1-unity/old-metal-slats1_albedo.png",
+            "Textures/metals/old-metal-slats1-unity/old-metal-slats1_normal-ogl.png",
+            "Textures/metals/old-metal-slats1-unity/old-metal-slats1_metallic.psd",
+            "Textures/metals/old-metal-slats1-unity/old-metal-slats1_height.png",
+            "Textures/metals/old-metal-slats1-unity/old-metal-slats1_ao.png"
+        );
+
+        public static Material WornMetal4Unity { get; } = new(
+            "Textures/metals/worn-metal4-unity/worn_metal4_albedo.png",
+            "Textures/metals/worn-metal4-unity/worn_metal4_Normal-ogl.png",
+            "Textures/metals/worn-metal4-unity/worn_metal4_Metallic.psd",
+            "Textures/metals/worn-metal4-unity/worn_metal4_Height.png",
+            "Textures/metals/worn-metal4-unity/worn_metal4_ao.png"
+        );
+
+        public static Material RibbedMetal1Unity { get; } = new(
+            "Textures/metals/ribbed-metal1-unity/ribbed-metal1_albedo.png",
+            "Textures/metals/ribbed-metal1-unity/ribbed-metal1_normal-ogl.png",
+            "Textures/metals/ribbed-metal1-unity/ribbed-metal1_metallic.psd",
+            "Textures/metals/ribbed-metal1-unity/ribbed-metal1_height.png",
+            "Textures/metals/ribbed-metal1-unity/ribbed-metal1_ao.png"
+        );
+
+        public static Material RustingLinedMetal1Unity { get; } = new(
+            "Textures/metals/rusting-lined-metal1-unity/rusting-lined-metal_albedo.png",
+            "Textures/metals/rusting-lined-metal1-unity/rusting-lined-metal_normal-ogl.png",
+            "Textures/metals/rusting-lined-metal1-unity/rusting-lined-metal_metallic.psd",
+            "Textures/metals/rusting-lined-metal1-unity/rusting-lined-metal_height.png",
+            "Textures/metals/rusting-lined-metal1-unity/rusting-lined-metal_ao.png"
+        );
+
+        public static Material WornShinyMetalUnity { get; } = new(
+            "Textures/metals/worn-shiny-metal-unity/worn-shiny-metal-albedo.png",
+            "Textures/metals/worn-shiny-metal-unity/worn-shiny-metal-Normal-ogl.png",
+            "Textures/metals/worn-shiny-metal-unity/worn-shiny-metal-Metallic.psd",
+            "Textures/metals/worn-shiny-metal-unity/worn-shiny-metal-Height.png",
+            "Textures/metals/worn-shiny-metal-unity/worn-shiny-metal-ao.png"
+        );
+
+        public static Material RustingTexturedUnity { get; } = new(
+            "Textures/metals/rusting-textured-unity/rusting-textured-metal_albedo.png",
+            "Textures/metals/rusting-textured-unity/rusting-textured-metal_normal-ogl.png",
+            "Textures/metals/rusting-textured-unity/rusting-textured-metal_metallic.psd",
+            "Textures/metals/rusting-textured-unity/rusting-textured-metal_height.png",
+            "Textures/metals/rusting-textured-unity/rusting-textured-metal_ao.png"
+        );
+
+        public static Material SmoothedSquareTexturedMetalUnity { get; } = new(
+            "Textures/metals/smoothed-square-textured-metal-unity/smoothed-square-textured-metal_albedo.png",
+            "Textures/metals/smoothed-square-textured-metal-unity/smoothed-square-textured-metal_normal-ogl.png",
+            "Textures/metals/smoothed-square-textured-metal-unity/smoothed-square-textured-metal_metallic.psd",
+            "Textures/metals/smoothed-square-textured-metal-unity/smoothed-square-textured-metal_height.png",
+            "Textures/metals/smoothed-square-textured-metal-unity/smoothed-square-textured-metal_ao.png"
+        );
+
+        public static Material StuddedMetalWornUnity { get; } = new(
+            "Textures/metals/studded-metal-worn-unity/studded-metal-worn_albedo.png",
+            "Textures/metals/studded-metal-worn-unity/studded-metal-worn_normal-ogl.png",
+            "Textures/metals/studded-metal-worn-unity/studded-metal-worn_metallic.psd",
+            "Textures/metals/studded-metal-worn-unity/studded-metal-worn_height.png",
+            "Textures/metals/studded-metal-worn-unity/studded-metal-worn_ao.png"
+        );
+
+        public static Material AluminumSquares { get; } = new(
+            "Textures/metals/aluminum-squares/aluminum-squares_albedo.png",
+            "Textures/metals/aluminum-squares/aluminum-squares_normal-ogl.png",
+            "Textures/metals/aluminum-squares/aluminum-squares_metallic.psd",
+            "Textures/metals/aluminum-squares/aluminum-squares_height.png",
+            "Textures/metals/aluminum-squares/aluminum-squares_ao.png"
+        );
+
+        public static Material RustyMetalUnity { get; } = new(
+            "Textures/metals/rusty-metal-unity/rusty-metal_albedo.png",
+            "Textures/metals/rusty-metal-unity/rusty-metal_normal-ogl.png",
+            "Textures/metals/rusty-metal-unity/rusty-metal_metallic.psd",
+            "Textures/metals/rusty-metal-unity/rusty-metal_height.png",
+            "Textures/metals/rusty-metal-unity/rusty-metal_ao.png"
+        );
+
+        public static Material DentedMetal { get; } = new(
+            "Textures/metals/dented-metal/dented-metal_albedo.png",
+            "Textures/metals/dented-metal/dented-metal_normal-ogl.png",
+            "Textures/metals/dented-metal/dented-metal_metallic.psd",
+            "Textures/metals/dented-metal/dented-metal_height.png",
+            "Textures/metals/dented-metal/dented-metal_ao.png"
+        );
+
+        public static Material VentedMetalPanel1Unity { get; } = new(
+            "Textures/metals/vented-metal-panel1-unity/vented-metal-panel1_albedo.png",
+            "Textures/metals/vented-metal-panel1-unity/vented-metal-panel1_normal-ogl.png",
+            "Textures/metals/vented-metal-panel1-unity/vented-metal-panel1_metallic.psd",
+            "Textures/metals/vented-metal-panel1-unity/vented-metal-panel1_height.png",
+            "Textures/metals/vented-metal-panel1-unity/vented-metal-panel1_ao.png"
+        );
+
+        public static Material ReinforcedMetalUnity { get; } = new(
+            "Textures/metals/reinforced-metal-unity/reinforced-metal_albedo.png",
+            "Textures/metals/reinforced-metal-unity/reinforced-metal_normal-ogl.png",
+            "Textures/metals/reinforced-metal-unity/reinforced-metal_metallic.psd",
+            "Textures/metals/reinforced-metal-unity/reinforced-metal_height.png",
+            "Textures/metals/reinforced-metal-unity/reinforced-metal_ao.png"
+        );
+
+        public static Material FancyDiamondMetalUnity { get; } = new(
+            "Textures/metals/fancy-diamond-metal-unity/fancy-diamond-metal_albedo.png",
+            "Textures/metals/fancy-diamond-metal-unity/fancy-diamond-metal_normal-ogl.png",
+            "Textures/metals/fancy-diamond-metal-unity/fancy-diamond-metal_metallic.psd",
+            "Textures/metals/fancy-diamond-metal-unity/fancy-diamond-metal_height.png",
+            "Textures/metals/fancy-diamond-metal-unity/fancy-diamond-metal_ao.png"
+        );
+
+        public static Material MetalStudsUnity { get; } = new(
+            "Textures/metals/metal-studs-unity/metal-studs_albedo.png",
+            "Textures/metals/metal-studs-unity/metal-studs_normal-ogl.png",
+            "Textures/metals/metal-studs-unity/metal-studs_metallic.psd",
+            "Textures/metals/metal-studs-unity/metal-studs_height.png",
+            "Textures/metals/metal-studs-unity/metal-studs_ao.png"
+        );
+
+        public static Material UsedStainlessSteel2Unity { get; } = new(
+            "Textures/metals/used-stainless-steel2-unity/used-stainless-steel2_albedo.png",
+            "Textures/metals/used-stainless-steel2-unity/used-stainless-steel2_normal-ogl.png",
+            "Textures/metals/used-stainless-steel2-unity/used-stainless-steel2_metallic.psd",
+            "Textures/metals/used-stainless-steel2-unity/used-stainless-steel2_height.png",
+            "Textures/metals/used-stainless-steel2-unity/used-stainless-steel2_ao.png"
+        );
+
+        public static Material RustingLinedMetal2Unity { get; } = new(
+            "Textures/metals/rusting-lined-metal2-unity/rusting-lined-metal2_albedo.png",
+            "Textures/metals/rusting-lined-metal2-unity/rusting-lined-metal2_normal-ogl.png",
+            "Textures/metals/rusting-lined-metal2-unity/rusting-lined-metal2_metallic.psd",
+            "Textures/metals/rusting-lined-metal2-unity/rusting-lined-metal2_height.png",
+            "Textures/metals/rusting-lined-metal2-unity/rusting-lined-metal2_ao.png"
+        );
+
+        public static Material FancyBrassPattern1 { get; } = new(
+            "Textures/metals/fancy-brass-pattern1/fancy-brass-pattern1_albedo.png",
+            "Textures/metals/fancy-brass-pattern1/fancy-brass-pattern1_normal-ogl.png",
+            "Textures/metals/fancy-brass-pattern1/fancy-brass-pattern1_metallic.psd",
+            "Textures/metals/fancy-brass-pattern1/fancy-brass-pattern1_height.png",
+            "Textures/metals/fancy-brass-pattern1/fancy-brass-pattern1_ao.png"
+        );
+
+        public static Material FancyMetal1Unity { get; } = new(
+            "Textures/metals/fancy-metal1-unity/fancy-metal1_albedo.png",
+            "Textures/metals/fancy-metal1-unity/fancy-metal1_normal-ogl.png",
+            "Textures/metals/fancy-metal1-unity/fancy-metal1_metallic.psd",
+            "Textures/metals/fancy-metal1-unity/fancy-metal1_height.png",
+            "Textures/metals/fancy-metal1-unity/fancy-metal1_ao.png"
+        );
+
+        public static Material MetalVentilation1Unity { get; } = new(
+            "Textures/metals/metal-ventilation1-unity/metal-ventilation1-albedo.png",
+            "Textures/metals/metal-ventilation1-unity/metal-ventilation1-normal-ogl.png",
+            "Textures/metals/metal-ventilation1-unity/metal-ventilation1-metallic.psd",
+            "Textures/metals/metal-ventilation1-unity/metal-ventilation1-height.png",
+            "Textures/metals/metal-ventilation1-unity/metal-ventilation1-ao.png"
+        );
+
+        public static Material FuturismMetalUnity { get; } = new(
+            "Textures/metals/futurism-metal-unity/futurism-metal_albedo.png",
+            "Textures/metals/futurism-metal-unity/futurism-metal_normal-ogl.png",
+            "Textures/metals/futurism-metal-unity/futurism-metal_metallic.psd",
+            "Textures/metals/futurism-metal-unity/futurism-metal_height.png",
+            "Textures/metals/futurism-metal-unity/futurism-metal_ao.png"
+        );
+
+        public static Material GripRustedSteelUnity { get; } = new(
+            "Textures/metals/grip-rusted-steel-unity/grip-rusted-steel_albedo.png",
+            "Textures/metals/grip-rusted-steel-unity/grip-rusted-steel_normal-ogl.png",
+            "Textures/metals/grip-rusted-steel-unity/grip-rusted-steel_metallic.psd",
+            "Textures/metals/grip-rusted-steel-unity/grip-rusted-steel_height.png",
+            "Textures/metals/grip-rusted-steel-unity/grip-rusted-steel_ao.png"
+        );
+
+        public static Material Ornatebrass3Unity { get; } = new(
+            "Textures/metals/ornatebrass3-unity/ornate-brass3_albedo.png",
+            "Textures/metals/ornatebrass3-unity/ornate-brass3_normal-ogl.png",
+            "Textures/metals/ornatebrass3-unity/ornate-brass3_metallic.psd",
+            "Textures/metals/ornatebrass3-unity/ornate-brass3_height.png",
+            "Textures/metals/ornatebrass3-unity/ornate-brass3_ao.png"
+        );
+
+        public static Material SpeckledRustUnity { get; } = new(
+            "Textures/metals/speckled-rust-unity/speckled-rust_albedo.png",
+            "Textures/metals/speckled-rust-unity/speckled-rust_normal-ogl.png",
+            "Textures/metals/speckled-rust-unity/speckled-rust_metallic.psd",
+            "Textures/metals/speckled-rust-unity/speckled-rust_roughness.png",
+            "Textures/metals/speckled-rust-unity/speckled-rust_ao.png"
+        );
+
+        public static Material Steelplate1Unity { get; } = new(
+            "Textures/metals/steelplate1-unity/steelplate1_albedo.png",
+            "Textures/metals/steelplate1-unity/steelplate1_normal-ogl.png",
+            "Textures/metals/steelplate1-unity/steelplate1_metallic.psd",
+            "Textures/metals/steelplate1-unity/steelplate1_height.png",
+            "Textures/metals/steelplate1-unity/steelplate1_ao.png"
+        );
+
+        public static Material CircleTexturedMetal1 { get; } = new(
+            "Textures/metals/circle-textured-metal1/circle-textured-metal1_albedo.png",
+            "Textures/metals/circle-textured-metal1/circle-textured-metal1_normal-ogl.png",
+            "Textures/metals/circle-textured-metal1/circle-textured-metal1_metallic.psd",
+            "Textures/metals/circle-textured-metal1/circle-textured-metal1_height.png",
+            "Textures/metals/circle-textured-metal1/circle-textured-metal1_ao.png"
+        );
+
+        public static Material WarpedSheetMetalUnity { get; } = new(
+            "Textures/metals/warped-sheet-metal-unity/warped-sheet-metal_albedo.png",
+            "Textures/metals/warped-sheet-metal-unity/warped-sheet-metal_normal-ogl.png",
+            "Textures/metals/warped-sheet-metal-unity/warped-sheet-metal_metallic.psd",
+            "Textures/metals/warped-sheet-metal-unity/warped-sheet-metal_height.png",
+            "Textures/metals/warped-sheet-metal-unity/warped-sheet-metal_ao.png"
+        );
+
+        public static Material PirateGoldUnity { get; } = new(
+            "Textures/metals/pirate-gold-unity/pirate-gold_albedo.png",
+            "Textures/metals/pirate-gold-unity/pirate-gold_normal-ogl.png",
+            "Textures/metals/pirate-gold-unity/pirate-gold_metallic.psd",
+            "Textures/metals/pirate-gold-unity/pirate-gold_height.png",
+            "Textures/metals/pirate-gold-unity/pirate-gold_ao.png"
+        );
+
+        public static Material DashLinedMetal1 { get; } = new(
+            "Textures/metals/dash-lined-metal1/dash-lined-metal_albedo.png",
+            "Textures/metals/dash-lined-metal1/dash-lined-metal_normal-ogl.png",
+            "Textures/metals/dash-lined-metal1/dash-lined-metal_metallic.psd",
+            "Textures/metals/dash-lined-metal1/dash-lined-metal_height.png",
+            "Textures/metals/dash-lined-metal1/dash-lined-metal_ao.png"
+        );
+
+        public static Material MetalGrate1Unity { get; } = new(
+            "Textures/metals/metal-grate1-unity/metal-grate1_albedo.png",
+            "Textures/metals/metal-grate1-unity/metal-grate1_normal-ogl.png",
+            "Textures/metals/metal-grate1-unity/metal-grate1_metallic.psd",
+            "Textures/metals/metal-grate1-unity/metal-grate1_height.png",
+            "Textures/metals/metal-grate1-unity/metal-grate1_ao.png"
+        );
+
+        public static Material BeatenUpMetal1 { get; } = new(
+            "Textures/metals/beaten-up-metal1/beaten-up-metal1-albedo.png",
+            "Textures/metals/beaten-up-metal1/beaten-up-metal1-Normal-ogl.png",
+            "Textures/metals/beaten-up-metal1/beaten-up-metal1-Metallic.psd",
+            "Textures/metals/beaten-up-metal1/beaten-up-metal1-Height.png",
+            "Textures/metals/beaten-up-metal1/beaten-up-metal1-ao.png"
+        );
+
+        public static Material RustedRibbedMetalUnity { get; } = new(
+            "Textures/metals/rusted-ribbed-metal-unity/rusty-ribbed-metal_albedo.png",
+            "Textures/metals/rusted-ribbed-metal-unity/rusty-ribbed-metal_normal-ogl.png",
+            "Textures/metals/rusted-ribbed-metal-unity/rusty-ribbed-metal_metallic.psd",
+            "Textures/metals/rusted-ribbed-metal-unity/rusty-ribbed-metal_height.png",
+            "Textures/metals/rusted-ribbed-metal-unity/rusty-ribbed-metal_ao.png"
+        );
+
+        public static Material RustedGrateUnity { get; } = new(
+            "Textures/metals/rusted-grate-unity/rusted-grate_albedo.png",
+            "Textures/metals/rusted-grate-unity/rusted-grate_normal-ogl.png",
+            "Textures/metals/rusted-grate-unity/rusted-grate_metallic.psd",
+            "Textures/metals/rusted-grate-unity/rusted-grate_height.png",
+            "Textures/metals/rusted-grate-unity/rusted-grate_ao.png"
+        );
+
+        public static Material RustedPanelsUnity { get; } = new(
+            "Textures/metals/rusted-panels-unity/rusted-panels_albedo.png",
+            "Textures/metals/rusted-panels-unity/rusted-panels_normal-ogl.png",
+            "Textures/metals/rusted-panels-unity/rusted-panels_metallic.psd",
+            "Textures/metals/rusted-panels-unity/rusted-panels_height.png",
+            "Textures/metals/rusted-panels-unity/rusted-panels_ao.png"
+        );
+
+        public static Material AlienMetal1 { get; } = new(
+            "Textures/metals/alien-metal1/alien-metal_albedo.png",
+            "Textures/metals/alien-metal1/alien-metal_normal-ogl.png",
+            "Textures/metals/alien-metal1/alien-metal_metallic.psd",
+            "Textures/metals/alien-metal1/alien-metal_height.png",
+            "Textures/metals/alien-metal1/alien-metal_ao.png"
+        );
+
+        public static Material ScuffedMetal1Unity { get; } = new(
+            "Textures/metals/scuffed-metal1-unity/scuffed-metal1_albedo.png",
+            "Textures/metals/scuffed-metal1-unity/scuffed-metal1_normal-ogl.png",
+            "Textures/metals/scuffed-metal1-unity/scuffed-metal1_metallic.psd",
+            "Textures/metals/scuffed-metal1-unity/scuffed-metal1_height.png",
+            "Textures/metals/scuffed-metal1-unity/scuffed-metal1_ao.png"
+        );
+
+        public static Material RustedSteelUnity { get; } = new(
+            "Textures/metals/rusted-steel-unity/rusted-steel_albedo.png",
+            "Textures/metals/rusted-steel-unity/rusted-steel_normal-ogl.png",
+            "Textures/metals/rusted-steel-unity/rusted-steel_metallic.psd",
+            "Textures/metals/rusted-steel-unity/rusted-steel_height.png",
+            "Textures/metals/rusted-steel-unity/rusted-steel_ao.png"
+        );
+
+        public static Material MetalWithLeaksUnity { get; } = new(
+            "Textures/metals/metal-with-leaks-unity/metal-with-leaks_albedo.png",
+            "Textures/metals/metal-with-leaks-unity/metal-with-leaks_normal-ogl.png",
+            "Textures/metals/metal-with-leaks-unity/metal-with-leaks_metallic.psd",
+            "Textures/metals/metal-with-leaks-unity/metal-with-leaks_height.png",
+            "Textures/metals/metal-with-leaks-unity/metal-with-leaks_ao.png"
+        );
+
+        public static Material BandedMetal { get; } = new(
+            "Textures/metals/banded-metal/banded-metal_albedo.png",
+            "Textures/metals/banded-metal/banded-metal_normal-ogl.png",
+            "Textures/metals/banded-metal/banded-metal_metallic.psd",
+            "Textures/metals/banded-metal/banded-metal_height.png",
+            "Textures/metals/banded-metal/banded-metal_ao.png"
         );
 
     }
