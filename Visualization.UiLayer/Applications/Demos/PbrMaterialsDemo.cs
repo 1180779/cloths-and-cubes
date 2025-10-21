@@ -1,17 +1,14 @@
 using System.Reflection;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.GameObjects;
-using Plane = Visualisation.Core.GameObjects.Plane;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class PbrMaterialsDemo : RigidBodyApplication
+public class PbrMaterialsDemo : BoxesDemo
 {
-    private Box[] boxes = null!;
-    private Plane plane = null!;
     private const int NrOfRows = 5;
     private const int NFirstMaterials = 8 * NrOfRows;
-    private readonly Type materialsSource = typeof(Material.Floors);
+    private readonly Type materialsSource = typeof(Material.Metals);
 
     protected override void InitializeScene()
     {
@@ -58,18 +55,22 @@ public class PbrMaterialsDemo : RigidBodyApplication
         Reset();
     }
 
-    protected override void GenerateContacts()
-    {
-        /* nothing to do. This demo does not involve any physics. */
-    }
-
-    protected override void UpdateObjects(float duration)
-    {
-        /* nothing to do. This demo does not involve any physics. */
-    }
-
     protected override void Reset()
     {
-        /* nothing to do. This demo does not involve any physics. */
+        for (var i = 0; i < boxes.Length; i++)
+        {
+            var box = boxes[i];
+            var row = i / NrOfRows;
+            var col = i % NrOfRows;
+            box.EngineBox.SetState(
+                position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
+                orientation: new Engine.Quaternion(),
+                extents: new Engine.Vector3(1.0f, 1.0f, 1.0f),
+                velocity: new Engine.Vector3()
+            );
+        }
+
+        // Reset the contacts
+        CollisionData.ContactCount = 0;
     }
 }

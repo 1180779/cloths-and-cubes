@@ -5,31 +5,10 @@ using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class BoxesFallingDemo : RigidBodyApplication
+public class BoxesDemo : RigidBodyApplication
 {
-    /* The number of boxes in the simulation. */
-    private const uint Boxes = 20;
-
-    private Box[] boxes = new Box[Boxes];
-    private Plane plane = null!;
-
-    protected override void InitializeScene()
-    {
-        /* add the cubes to the scene to be rendered */
-        for (var i = 0; i < Boxes; i++)
-        {
-            boxes[i] = new Box();
-            var box = boxes[i];
-            Scene.AddGameObject(box);
-        }
-
-        /* add ground plane to the scene */
-        plane = new();
-        Scene.AddGameObject(plane);
-
-        /* set everything up */
-        Reset();
-    }
+    protected Box[] boxes = [];
+    protected Plane plane = new();
 
     /// <summary>
     /// Processes the contact generation code.
@@ -47,7 +26,7 @@ public class BoxesFallingDemo : RigidBodyApplication
         CollisionData.Tolerance = (Real)0.1;
 
         // Perform exhaustive collision detection
-        for (var i = 0; i < Boxes; i++)
+        for (var i = 0; i < boxes.Length; i++)
         {
             var box = boxes[i];
             // Check for collisions with the ground plane
@@ -55,7 +34,7 @@ public class BoxesFallingDemo : RigidBodyApplication
             CollisionDetector.BoxAndHalfSpace(box.EngineBox, plane.EnginePlane, CollisionData);
 
             // Check for collisions with each other box
-            for (var j = i + 1; j < Boxes; j++)
+            for (var j = i + 1; j < boxes.Length; j++)
             {
                 var other = boxes[j];
                 if (!CollisionData.HasMoreContacts()) return;
@@ -75,7 +54,7 @@ public class BoxesFallingDemo : RigidBodyApplication
     protected override void UpdateObjects(float duration)
     {
         // Update the physics of each box in turn
-        for (var i = 0; i < Boxes; i++)
+        for (var i = 0; i < boxes.Length; i++)
         {
             var box = boxes[i];
 
@@ -98,7 +77,7 @@ public class BoxesFallingDemo : RigidBodyApplication
             velocity: new Engine.Vector3(0, 0, 0)
         );
 
-        if (Boxes > 1)
+        if (boxes.Length > 1)
         {
             boxes[1].EngineBox.SetState(
                 position: new Engine.Vector3(0, 4.75f, 2),
@@ -110,7 +89,7 @@ public class BoxesFallingDemo : RigidBodyApplication
 
         // Create the random objects
         Random random = new();
-        for (var i = 2; i < Boxes; i++)
+        for (var i = 2; i < boxes.Length; i++)
         {
             boxes[i].EngineBox.Random(random);
         }
