@@ -184,6 +184,8 @@ public class Application : GameWindow
         GL.BindVertexArray(0);
         GL.UseProgram(0);
 
+        TexturesManager.AbortAllLoads();
+
         imGuiController.UnhookFromWindow(this);
         SceneRenderWindowFrb.Dispose();
 #if DEBUG

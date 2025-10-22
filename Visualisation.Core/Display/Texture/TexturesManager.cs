@@ -18,7 +18,7 @@ public static class TexturesManager
     {
         /// <summary>
         /// Unique identifier for the texture used in OpenGL operations. Volatile.
-        /// Can hold id of temporary texture if the texture from the path is not ready yet. 
+        /// Can hold id of temporary texture if the texture from the path is not ready yet.
         /// </summary>
         public int TextureId
         {
@@ -39,9 +39,10 @@ public static class TexturesManager
     /// </summary>
     private class Entry
     {
-        public Task? LoadingTask { get; set; }
-        public required TextureData PublicTextureData { get; init; }
         public int UsagesCount;
+        public Task? LoadingTask;
+        public CancellationTokenSource? LoadingCts;
+        public required TextureData PublicTextureData { get; init; }
         public InitTextureCallback? InitCallback { get; set; }
 
         public bool IsLoaded
@@ -74,39 +75,32 @@ public static class TexturesManager
     public delegate void InitTextureCallback();
 
     /// <summary>
-    /// Call on the GL (render) thread each frame to finalize background loads.
+    /// Call on the G thread each frame to finalize background loads.
     /// </summary>
     public static void ProcessPendingUploads()
     {
         while (PendingUploads.TryDequeue(out var result))
         {
-            // fast check: entry must still be registered
             if (!TextureDataDict.TryGetValue(result.Path, out var entry))
             {
-                // The texture was freed while loading — drop the pixels.
                 continue;
             }
 
-            // synchronize with 'FreeTexture', which also locks the same entry.
             lock (entry)
             {
-                // ensure the dictionary still maps this path to the same entry instance
                 if (!TextureDataDict.TryGetValue(result.Path, out var current) || !ReferenceEquals(current, entry))
                 {
-                    // entry was removed or replaced while we were dequeued — drop pixels
                     continue;
                 }
 
                 if (entry.IsLoaded) continue;
 
-                // Create GL texture on GL thread
                 GL.CreateTextures(TextureTarget.Texture2D, 1, out int textureId);
                 GL.BindTexture(TextureTarget.Texture2D, textureId);
-
                 GL.TexImage2D(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width, result.Height, 0,
                     result.Format, PixelType.UnsignedByte, result.PixelData);
-
                 entry.InitCallback?.Invoke();
+
                 entry.PublicTextureData.TextureId = textureId;
                 entry.IsLoaded = true;
             }
@@ -119,8 +113,6 @@ public static class TexturesManager
     {
         if (PlaceholderTextureId.HasValue) return;
 
-        // Must be called on GL thread.
-        // Create a small pink-checker placeholder (2x2)
         GL.CreateTextures(TextureTarget.Texture2D, 1, out int texId);
         GL.BindTexture(TextureTarget.Texture2D, texId);
 
@@ -150,47 +142,72 @@ public static class TexturesManager
     /// <param name="entry">The internal entry object that holds texture-related data and state.</param>
     private static void EnqueueLoad(string texturePath, Entry entry)
     {
+        entry.LoadingCts = new CancellationTokenSource();
+        var token = entry.LoadingCts.Token;
+
         entry.LoadingTask = Task.Run(() =>
         {
-            var pathToLoad = texturePath;
-
-            if (Path.GetExtension(texturePath).Equals(".psd", StringComparison.InvariantCultureIgnoreCase))
+            try
             {
-                var pngPath = Path.ChangeExtension(texturePath, ".png");
-                if (!File.Exists(pngPath))
+                token.ThrowIfCancellationRequested();
+
+                var pathToLoad = texturePath;
+
+                if (Path.GetExtension(texturePath).Equals(".psd", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Debug.WriteLine($"Converting PSD to PNG ({texturePath})");
-                    using var magickImage = new MagickImage(texturePath);
-                    magickImage.Format = MagickFormat.Png;
-                    magickImage.Write(pngPath);
-                }
-                else
-                {
-                    Debug.WriteLine($"Loading previously converted PNG ({pngPath})");
+                    var pngPath = Path.ChangeExtension(texturePath, ".png");
+                    if (!File.Exists(pngPath))
+                    {
+                        Debug.WriteLine($"Converting PSD to PNG ({texturePath})");
+                        using var magickImage = new MagickImage(texturePath);
+                        magickImage.Format = MagickFormat.Png;
+                        magickImage.Write(pngPath);
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Loading previously converted PNG ({pngPath})");
+                    }
+
+                    pathToLoad = pngPath;
                 }
 
-                pathToLoad = pngPath;
+                token.ThrowIfCancellationRequested();
+
+                using var image = Image.Load<Rgba32>(pathToLoad);
+                image.Mutate(x => x.Flip(FlipMode.Vertical));
+
+                token.ThrowIfCancellationRequested();
+
+                var pixelData = new byte[image.Width * image.Height * 4];
+                image.CopyPixelDataTo(pixelData);
+
+                var result = new PendingLoadResult
+                {
+                    Path = texturePath,
+                    PixelData = pixelData,
+                    Width = image.Width,
+                    Height = image.Height,
+                    InternalFormat = PixelInternalFormat.Rgba8,
+                    Format = PixelFormat.Rgba
+                };
+
+                token.ThrowIfCancellationRequested();
+                PendingUploads.Enqueue(result);
             }
-
-            using var image = Image.Load<Rgba32>(pathToLoad);
-            image.Mutate(x => x.Flip(FlipMode.Vertical));
-
-            var pixelData = new byte[image.Width * image.Height * 4];
-            image.CopyPixelDataTo(pixelData);
-
-            var result = new PendingLoadResult
+            catch (OperationCanceledException)
             {
-                Path = texturePath,
-                PixelData = pixelData,
-                Width = image.Width,
-                Height = image.Height,
-                InternalFormat = PixelInternalFormat.Rgba8,
-                Format = PixelFormat.Rgba
-            };
-
-            // enqueue for GL-thread upload
-            PendingUploads.Enqueue(result);
-        });
+                // cancelled
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to load texture '{texturePath}': {ex}");
+            }
+            finally
+            {
+                entry.LoadingCts?.Dispose();
+                entry.LoadingCts = null;
+            }
+        }, token);
     }
 
     /// <summary>
@@ -221,7 +238,6 @@ public static class TexturesManager
             return e;
         });
 
-        entry.InitCallback ??= initCallback;
         Interlocked.Increment(ref entry.UsagesCount);
 
         return entry.PublicTextureData;
@@ -250,12 +266,44 @@ public static class TexturesManager
             if (entry.UsagesCount != 0) return;
 
             TextureDataDict.TryRemove(textureName, out _);
-            if (entry.IsLoaded && entry.PublicTextureData.TextureId != PlaceholderTextureId)
+
+            entry.LoadingCts?.Cancel();
+
+            if (entry.IsLoaded)
             {
-                GL.DeleteTexture(entry.PublicTextureData.TextureId);
+                // exchange to zero atomically if you want to avoid double-delete elsewhere:
+                var idToDelete = entry.PublicTextureData.TextureId;
+                if (idToDelete != PlaceholderTextureId)
+                {
+                    GL.DeleteTexture(idToDelete);
+                }
             }
 
             GlHelper.CheckGlError("TexturesManager::FreeTexture");
+        }
+    }
+
+    /// <summary>
+    /// Abort all background loading tasks. 
+    /// Cancels per-entry loading token sources and drains the pending upload queue.
+    /// Does not delete GPU textures - GL deletions should still run on the GL thread if needed.
+    /// This can leave some texture in zombie like state, where they will not be loaded until all of its instances are manually freed. 
+    /// </summary>
+    public static void AbortAllLoads()
+    {
+        // Cancel all running loading tasks
+        foreach (var kv in TextureDataDict)
+        {
+            var entry = kv.Value;
+            lock (entry)
+            {
+                entry.LoadingCts?.Cancel();
+            }
+        }
+
+        // Drain pending uploads to release memory and prevent further GL uploads
+        while (PendingUploads.TryDequeue(out _))
+        {
         }
     }
 }
