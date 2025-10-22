@@ -5,6 +5,7 @@ using OpenTK.Windowing.Desktop;
 using Visualisation.Core;
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Mesh;
+using Visualisation.Core.Display.Texture;
 using Visualisation.Core.FrameCapsule;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
@@ -165,6 +166,9 @@ public class Application : GameWindow
         imGuiController.Render();
 
         SwapBuffers();
+
+        // upload any finished texture loads to the openGL
+        TexturesManager.ProcessPendingUploads();
     }
 
     protected override void OnFramebufferResize(FramebufferResizeEventArgs e)

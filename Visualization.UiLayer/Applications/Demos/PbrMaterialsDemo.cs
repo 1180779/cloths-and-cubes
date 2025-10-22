@@ -7,7 +7,7 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class PbrMaterialsDemo : BoxesDemo
 {
     private const int NrOfRows = 5;
-    private const int NFirstMaterials = 8 * NrOfRows;
+    private const int NFirstMaterials = 20 * NrOfRows;
     private readonly Type materialsSource = typeof(Material.Metals);
 
     protected override void InitializeScene()
