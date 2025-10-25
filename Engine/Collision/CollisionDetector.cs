@@ -492,47 +492,43 @@ public static class CollisionDetector
     {
         if (collisionData.ContactsLeft <= 0) return false;
 
+        // Transform the sphere's center into the box's local space.
         Vector3 center = engineBall.GetAxis(3);
         Vector3 relCenter = engineBox.Transform.TransformInverse(center);
 
-        if (Math.Abs(relCenter.X) - engineBox.HalfSize.X > engineBall.Radius ||
-            Math.Abs(relCenter.Y) - engineBox.HalfSize.Y > engineBall.Radius ||
-            Math.Abs(relCenter.Z) - engineBox.HalfSize.Z > engineBall.Radius)
+        // Early-out check to see if we can exclude the contact.
+        // This is an AABB check in the box's local space.
+        if (Math.Abs(relCenter.X) - engineBall.Radius > engineBox.HalfSize.X ||
+            Math.Abs(relCenter.Y) - engineBall.Radius > engineBox.HalfSize.Y ||
+            Math.Abs(relCenter.Z) - engineBall.Radius > engineBox.HalfSize.Z)
         {
             return false;
         }
 
-        Vector3 closestPt = new Vector3();
-        Real dist = relCenter.X;
-        if (dist > engineBox.HalfSize.X) dist = engineBox.HalfSize.X;
-        if (dist < -engineBox.HalfSize.X) dist = -engineBox.HalfSize.X;
-        closestPt.X = dist;
+        // Clamp each coordinate to the box's extents to find the closest point on the box.
+        Vector3 closestPt = new Vector3(
+            Math.Clamp(relCenter.X, -engineBox.HalfSize.X, engineBox.HalfSize.X),
+            Math.Clamp(relCenter.Y, -engineBox.HalfSize.Y, engineBox.HalfSize.Y),
+            Math.Clamp(relCenter.Z, -engineBox.HalfSize.Z, engineBox.HalfSize.Z)
+        );
 
-        dist = relCenter.Y;
-        if (dist > engineBox.HalfSize.Y) dist = engineBox.HalfSize.Y;
-        if (dist < -engineBox.HalfSize.Y) dist = -engineBox.HalfSize.Y;
-        closestPt.Y = dist;
+        // Check if we're in contact. The distance between the sphere center and the closest
+        // point on the box must be less than the sphere's radius.
+        // We use squared distance to avoid a square root.
+        Real distSq = (closestPt - relCenter).SquareMagnitude();
+        if (distSq > engineBall.Radius * engineBall.Radius) return false;
 
-        dist = relCenter.Z;
-        if (dist > engineBox.HalfSize.Z) dist = engineBox.HalfSize.Z;
-        if (dist < -engineBox.HalfSize.Z) dist = -engineBox.HalfSize.Z;
-        closestPt.Z = dist;
-
-        dist = (closestPt - relCenter).SquareMagnitude();
-        if (dist > engineBall.Radius * engineBall.Radius) return false;
-
+        // Compile the contact.
         Vector3 closestPtWorld = engineBox.Transform.Transform(closestPt);
-
         Contact contact = collisionData.ContactList[collisionData.NextContactIndex];
-        contact.ContactNormal = center - closestPtWorld;
+
+        // The normal is the vector from the sphere center to the closest point on the box.
+        // Note the direction: (closestPtWorld - center).
+        contact.ContactNormal = closestPtWorld - center;
         contact.ContactNormal.Normalise();
+        contact.ContactPoint = closestPtWorld;
+        contact.Penetration = engineBall.Radius - (Real)Math.Sqrt(distSq);
 
-        // Contact point should be halfway between the box surface and sphere surface
-        // The point on sphere surface along the normal
-        Vector3 sphereSurfacePoint = center - contact.ContactNormal * engineBall.Radius;
-        contact.ContactPoint = (closestPtWorld + sphereSurfacePoint) * 0.5f;
-
-        contact.Penetration = engineBall.Radius - (Real)Math.Sqrt(dist);
         contact.SetBodyData(engineBox.Body, engineBall.Body, collisionData.Friction, collisionData.Restitution);
         collisionData.AddContacts(1);
         collisionData.NextContactIndex++;

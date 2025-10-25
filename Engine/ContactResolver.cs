@@ -43,8 +43,8 @@ public class ContactResolver
         if (numContacts == 0) return;
         if (!IsValid) return;
         PrepareContacts(contacts, numContacts, duration);
-        AdjustVelocities(contacts, numContacts, duration);
         AdjustPositions(contacts, numContacts, duration);
+        AdjustVelocities(contacts, numContacts, duration);
     }
 
     protected void PrepareContacts(Contact[] contacts, uint numContacts, Real duration)
@@ -77,6 +77,7 @@ public class ContactResolver
                     index = i;
                 }
             }
+
             if (index == numContacts) break;
 
             // Match the awake state at the contact
@@ -91,28 +92,30 @@ public class ContactResolver
             for (uint i = 0; i < numContacts; i++)
             {
                 // Check each body in the contact
-                for (uint b = 0; b < 2; b++) if (contacts[i].Body[b] != null)
-                {
-                    // Check for a match with each body in the newly
-                    // resolved contact
-                    for (uint d = 0; d < 2; d++)
+                for (uint b = 0; b < 2; b++)
+                    if (contacts[i].Body[b] != null)
                     {
-                        if (contacts[i].Body[b] == contacts[index].Body[d])
+                        // Check for a match with each body in the newly
+                        // resolved contact
+                        for (uint d = 0; d < 2; d++)
                         {
-                            Vector3 deltaVel = velocityChange[d] +
-                                rotationChange[d].VectorProduct(
-                                    contacts[i].RelativeContactPosition[b]);
+                            if (contacts[i].Body[b] == contacts[index].Body[d])
+                            {
+                                Vector3 deltaVel = velocityChange[d] +
+                                    rotationChange[d].VectorProduct(
+                                        contacts[i].RelativeContactPosition[b]);
 
-                            // The sign of the change is negative if we're dealing
-                            // with the second body in a contact.
-                            contacts[i].ContactVelocity +=
-                                contacts[i].ContactToWorld.TransformTranspose(deltaVel)
-                                * (b != 0 ? -1 : 1);
-                            contacts[i].CalculateDesiredDeltaVelocity(duration);
+                                // The sign of the change is negative if we're dealing
+                                // with the second body in a contact.
+                                contacts[i].ContactVelocity +=
+                                    contacts[i].ContactToWorld.TransformTranspose(deltaVel)
+                                    * (b != 0 ? -1 : 1);
+                                contacts[i].CalculateDesiredDeltaVelocity(duration);
+                            }
                         }
                     }
-                }
             }
+
             VelocityIterationsUsed++;
         }
     }
@@ -141,6 +144,7 @@ public class ContactResolver
                     index = i;
                 }
             }
+
             if (index == numContacts) break;
 
             // Match the awake state at the contact
@@ -157,29 +161,31 @@ public class ContactResolver
             for (i = 0; i < numContacts; i++)
             {
                 // Check each body in the contact
-                for (uint b = 0; b < 2; b++) if (contacts[i].Body[b] != null)
-                {
-                    // Check for a match with each body in the newly
-                    // resolved contact
-                    for (uint d = 0; d < 2; d++)
+                for (uint b = 0; b < 2; b++)
+                    if (contacts[i].Body[b] != null)
                     {
-                        if (contacts[i].Body[b] == contacts[index].Body[d])
+                        // Check for a match with each body in the newly
+                        // resolved contact
+                        for (uint d = 0; d < 2; d++)
                         {
-                            deltaPosition = linearChange[d] +
-                                angularChange[d].VectorProduct(
-                                    contacts[i].RelativeContactPosition[b]);
+                            if (contacts[i].Body[b] == contacts[index].Body[d])
+                            {
+                                deltaPosition = linearChange[d] +
+                                    angularChange[d].VectorProduct(
+                                        contacts[i].RelativeContactPosition[b]);
 
-                            // The sign of the change is positive if we're
-                            // dealing with the second body in a contact
-                            // and negative otherwise (because we're
-                            // subtracting the resolution)..
-                            contacts[i].Penetration +=
-                                deltaPosition.ScalarProduct(contacts[i].ContactNormal)
-                                * (b != 0 ? 1 : -1);
+                                // The sign of the change is positive if we're
+                                // dealing with the second body in a contact
+                                // and negative otherwise (because we're
+                                // subtracting the resolution)..
+                                contacts[i].Penetration +=
+                                    deltaPosition.ScalarProduct(contacts[i].ContactNormal)
+                                    * (b != 0 ? 1 : -1);
+                            }
                         }
                     }
-                }
             }
+
             PositionIterationsUsed++;
         }
     }

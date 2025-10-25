@@ -4,7 +4,7 @@ namespace Engine.RigidBodies;
 
 public class Box : CollisionBox
 {
-    public bool IsOverlapping { get; set; } = false; // previously used for some rendering (???)
+    public bool IsOverlapping { get; set; } = false;
 
 
     static readonly Vector3 MinPos = new(-15, 5, -15);
