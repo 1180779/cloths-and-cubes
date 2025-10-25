@@ -546,9 +546,16 @@ public static class CollisionDetector
         if (data.ContactsLeft <= 0) return false;
 
         Vector3 midline = one.GetAxis(3) - two.GetAxis(3);
-        Real size = midline.Magnitude;
+        Real sizeSq = midline.SquareMagnitude();
+        Real radiiSum = one.Radius + two.Radius;
 
-        if (size <= 0.0f || size >= one.Radius + two.Radius) return false;
+        // Use squared distances for a faster check to avoid the square root.
+        if (sizeSq >= radiiSum * radiiSum) return false;
+
+        Real size = (Real)Math.Sqrt(sizeSq);
+
+        // Handle the case where spheres are at the same position to avoid division by zero.
+        if (size <= 0.0f) return false;
 
         Vector3 normal = midline * (1.0f / size);
 

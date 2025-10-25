@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Visualisation.Core.Display.Mesh.VisualObjects;
+﻿using Visualisation.Core.Display.Mesh.VisualObjects;
+using Sphere = Engine.RigidBodies.Sphere;
 
 namespace Visualisation.Core.GameObjects
 {
     public class Ball : IVisualObject
     {
-        public Engine.RigidBodies.Sphere EngineBall { get; private set; } = new();
-        public Sphere VisualBall { get; private set; } = new();
+        public Sphere EngineBall { get; private set; } = new();
+        public Display.Mesh.VisualObjects.Sphere VisualBall { get; private set; } = new();
 
         public AbstractVisualObject AbstractVisualObject => VisualBall;
 
@@ -30,9 +26,11 @@ namespace Visualisation.Core.GameObjects
 
         public void Render()
         {
-            VisualBall.Position = new Vector3(EngineBall.Body.Position.X, EngineBall.Body.Position.Y, EngineBall.Body.Position.Z);
-            VisualBall.Scale = new Vector3(EngineBall.Radius, EngineBall.Radius, EngineBall.Radius) * 2f;
-            var q = new Quaternion(EngineBall.Body.Orientation.I, EngineBall.Body.Orientation.J, EngineBall.Body.Orientation.K, EngineBall.Body.Orientation.R);
+            VisualBall.Position = new Vector3(EngineBall.Body.Position.X, EngineBall.Body.Position.Y,
+                EngineBall.Body.Position.Z);
+            VisualBall.Scale = new Vector3(EngineBall.Radius, EngineBall.Radius, EngineBall.Radius);
+            var q = new Quaternion(EngineBall.Body.Orientation.I, EngineBall.Body.Orientation.J,
+                EngineBall.Body.Orientation.K, EngineBall.Body.Orientation.R);
             // Normalize to guard against drift
             if (MathF.Abs(1f - q.Length) > 1e-3f)
                 q = Quaternion.Normalize(q);

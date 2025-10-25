@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects
 {
@@ -14,7 +9,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
 
         private static Real[] Vertices = null!;
         private static uint[] Indices = null!;
-        private static readonly int Precision = 15; // number of segments per half circle
+        private static readonly int Precision = 40; // number of segments per half circle
 
         private void GenerateSurface()
         {
@@ -34,16 +29,16 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                     double x = cosLon * cosLat;
                     double y = sinLat;
                     double z = sinLon * cosLat;
+
                     // Position
                     vertices.Add((Real)x);
                     vertices.Add((Real)y);
                     vertices.Add((Real)z);
+
                     // Normal
                     vertices.Add((Real)x);
                     vertices.Add((Real)y);
                     vertices.Add((Real)z);
-
-                    //Console.WriteLine($"({x}, {y}, {z})");
                 }
             }
 
@@ -67,6 +62,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             Vertices = [.. vertices.ToArray()];
             Indices = [.. indices.ToArray()];
         }
+
         public override void Dispose()
         {
             MeshManager.FreeMesh(MeshName, (data) =>
@@ -93,15 +89,15 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
 
                 int ebo = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-                GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices, BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices,
+                    BufferUsageHint.StaticDraw);
 
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
                 GL.EnableVertexAttribArray(0);
 
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float),
+                    3 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
-
-
 
                 return new MeshManager.MeshData
                 {
@@ -117,11 +113,8 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         {
             if (_meshData is null)
                 throw new MeshDataEmptyException();
-            //GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
             GL.BindVertexArray(_meshData.Vao);
             GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.UnsignedInt, 0);
-            //GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
-
         }
     }
 }
