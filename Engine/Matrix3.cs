@@ -253,6 +253,12 @@ public class Matrix3 : ICloneable
             0.3f * mass * (squares.X + squares.Y));
     }
 
+    public void SetSphereInertiaTensor(Real radius, Real mass)
+    {
+        Real coeff = 0.4f * mass * radius * radius;
+        SetInertiaTensorCoefficients(coeff, coeff, coeff);
+    }
+
     public object Clone()
     {
         return new Matrix3((Real[])Data.Clone());   

@@ -2,8 +2,19 @@ using System.Diagnostics;
 
 namespace Engine.Collision;
 
-public class CollisionDetector
+/// <summary>
+/// A static utility class that provides a suite of narrow-phase collision detection
+/// algorithms for various primitive shapes. It is responsible for determining if
+/// two primitives are overlapping and, if so, generating detailed contact
+/// information (contact point, normal, and penetration depth).
+/// </summary>
+public static class CollisionDetector
 {
+    /// <summary>
+    /// A small epsilon value to handle floating-point comparisons and avoid divisions by zero.
+    /// </summary>
+    private const Real Epsilon = (Real)1e-5;
+
     public static Real TransformToAxis(CollisionBox box, Vector3 axis)
     {
         return
@@ -12,7 +23,15 @@ public class CollisionDetector
             box.HalfSize.Z * Math.Abs(axis * box.GetAxis(2));
     }
 
-    public bool overlapOnAxis(
+    /// <summary>
+    /// Checks if two oriented bounding boxes overlap along a single given axis.
+    /// This is a core part of the Separating Axis Theorem (SAT).
+    /// </summary>
+    /// <param name="one">The first collision box.</param>
+    /// <param name="two">The second collision box.</param>
+    /// <param name="axis">The axis to test for overlap. It does not need to be normalized.</param>
+    /// <returns>True if the boxes overlap on the given axis, false otherwise.</returns>
+    public static bool OverlapOnAxis(
         CollisionBox one,
         CollisionBox two,
         Vector3 axis
@@ -38,6 +57,14 @@ public class CollisionDetector
         return (distance < oneProject + twoProject);
     }
 
+    /// <summary>
+    /// Detects and resolves collisions between an oriented bounding box and a half-space plane.
+    /// It checks each vertex of the box against the plane and generates a contact for each vertex that has penetrated.
+    /// </summary>
+    /// <param name="box">The collision box.</param>
+    /// <param name="plane">The collision plane defining the half-space.</param>
+    /// <param name="data">The collision data object to store generated contacts.</param>
+    /// <returns>The number of contacts generated (from 0 to 8).</returns>
     public static uint BoxAndHalfSpace(CollisionBox box, CollisionPlane plane, CollisionData data)
     {
         // Make sure we have contacts
@@ -124,6 +151,19 @@ public class CollisionDetector
         return oneProject + twoProject - distance;
     }
 
+    /// <summary>
+    /// A helper for the box-box SAT collision detector. It tests a single potential separating axis.
+    /// If the axis separates the boxes, it returns false. Otherwise, it calculates the penetration
+    /// and updates the smallest penetration found so far if this one is smaller.
+    /// </summary>
+    /// <param name="one">The first collision box.</param>
+    /// <param name="two">The second collision box.</param>
+    /// <param name="axis">The potential separating axis to test.</param>
+    /// <param name="toCentre">The vector from the center of box one to the center of box two.</param>
+    /// <param name="index">The index of the axis being tested (0-14).</param>
+    /// <param name="smallestPenetration">A reference to the smallest penetration found so far.</param>
+    /// <param name="smallestCase">A reference to the index of the axis with the smallest penetration.</param>
+    /// <returns>False if a separating axis is found, true otherwise.</returns>
     public static bool TryAxis(
         CollisionBox one,
         CollisionBox two,
@@ -135,7 +175,7 @@ public class CollisionDetector
     {
         var axisCopy = new Vector3(axis);
         // Make sure we have a normalized axis and don't check almost parallel axes
-        if (axisCopy.SquareMagnitude() < 0.0001) return true;
+        if (axisCopy.SquareMagnitude() < Epsilon) return true;
         axisCopy.Normalise();
 
         Real penetration = penetrationOnAxis(one, two, axisCopy, toCentre);
@@ -150,7 +190,15 @@ public class CollisionDetector
         return true;
     }
 
-
+    /// <summary>
+    /// Detects collisions between two oriented bounding boxes using the Separating Axis Theorem (SAT).
+    /// It tests 15 potential separating axes. If no separating axis is found, a collision is confirmed.
+    /// It then generates a single contact corresponding to the axis of minimum penetration.
+    /// </summary>
+    /// <param name="one">The first collision box.</param>
+    /// <param name="two">The second collision box.</param>
+    /// <param name="data">The collision data object to store the generated contact.</param>
+    /// <returns>1 if a contact was generated, 0 otherwise.</returns>
     public static uint BoxAndBox(CollisionBox one, CollisionBox two, CollisionData data)
     {
         // Check for the initial intersection
@@ -199,10 +247,11 @@ public class CollisionDetector
         {
             // We've got a vertex of box two on the face of box one.
             FillPointFaceBoxBox(one, two, toCentre, data, best, pen);
-            data.NextContactIndex++;
             data.AddContacts(1);
+            data.NextContactIndex++;
             return 1;
         }
+
         if (best < 6)
         {
             // We've got a vertex of box one on the face of box two.
@@ -210,8 +259,8 @@ public class CollisionDetector
             // one and two (and therefore also the vector between their
             // centres).
             FillPointFaceBoxBox(two, one, toCentre * -1.0f, data, best - 3, pen);
-            data.NextContactIndex++;
             data.AddContacts(1);
+            data.NextContactIndex++;
             return 1;
         }
 
@@ -265,11 +314,18 @@ public class CollisionDetector
         contact.ContactNormal = axis;
         contact.ContactPoint = vertex;
         contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
-        data.NextContactIndex++;
         data.AddContacts(1);
+        data.NextContactIndex++;
         return 1;
     }
 
+    /// <summary>
+    /// Detects a collision between an oriented bounding box and a single point.
+    /// </summary>
+    /// <param name="box">The collision box.</param>
+    /// <param name="point">The point in world coordinates.</param>
+    /// <param name="data">The collision data object to store the generated contact.</param>
+    /// <returns>1 if a contact was generated, 0 otherwise.</returns>
     public static uint BoxAndPoint(CollisionBox box, Vector3 point, CollisionData data)
     {
         // Transform the point into box coordinates
@@ -309,11 +365,21 @@ public class CollisionDetector
         contact.SetBodyData(box.Body, null,
             data.Friction, data.Restitution);
 
-        data.NextContactIndex++;
         data.AddContacts(1);
+        data.NextContactIndex++;
         return 1;
     }
 
+    /// <summary>
+    /// A helper method for box-box collisions that generates contact data for a vertex-face collision.
+    /// It identifies the colliding vertex on one box and the face on the other and fills the contact details.
+    /// </summary>
+    /// <param name="one">The box whose face is being collided with.</param>
+    /// <param name="two">The box whose vertex is colliding.</param>
+    /// <param name="toCentre">The vector from the center of box one to the center of box two.</param>
+    /// <param name="data">The collision data object to store the contact.</param>
+    /// <param name="best">The index of the axis of collision (a face normal of box one).</param>
+    /// <param name="pen">The penetration depth.</param>
     public static void FillPointFaceBoxBox(
         CollisionBox one,
         CollisionBox two,
@@ -353,6 +419,17 @@ public class CollisionDetector
         contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
     }
 
+    /// <summary>
+    /// Calculates the closest point between two line segments in 3D space. This is used for edge-edge collisions.
+    /// </summary>
+    /// <param name="pOne">A point on the first edge.</param>
+    /// <param name="dOne">The direction vector of the first edge.</param>
+    /// <param name="oneSize">The half-length of the first edge.</param>
+    /// <param name="pTwo">A point on the second edge.</param>
+    /// <param name="dTwo">The direction vector of the second edge.</param>
+    /// <param name="twoSize">The half-length of the second edge.</param>
+    /// <param name="useOne">In the case of a non-crossing (edge-face) contact, this determines which edge's point to return.</param>
+    /// <returns>The point of closest approach between the two segments.</returns>
     public static Vector3 ContactPoint(
         Vector3 pOne,
         Vector3 dOne,
@@ -379,7 +456,7 @@ public class CollisionDetector
         // Zero denominator indicates parallel lines
         if ((Real)Math.Abs(denom) < (Real)0.0001)
         {
-            return useOne ? new Vector3(pOne.X, pOne.Y, pOne.Z) : new Vector3(pTwo.X, pTwo.Y, pTwo.Z);
+            return useOne ? (Vector3)pOne.Clone() : (Vector3)pTwo.Clone();
         }
 
         mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
@@ -394,12 +471,132 @@ public class CollisionDetector
             mub > twoSize ||
             mub < -twoSize)
         {
-            return useOne ? new Vector3(pOne.X, pOne.Y, pOne.Z) : new Vector3(pTwo.X, pTwo.Y, pTwo.Z);
+            return useOne ? (Vector3)pOne.Clone() : (Vector3)pTwo.Clone();
         }
 
         cOne = pOne + dOne * mua;
         cTwo = pTwo + dTwo * mub;
 
         return cOne * 0.5f + cTwo * 0.5f;
+    }
+
+    /// <summary>
+    /// Detects collisions between an oriented bounding box and a sphere.
+    /// It works by finding the point on the box closest to the sphere's center and checking the distance.
+    /// </summary>
+    /// <param name="engineBox">The collision box.</param>
+    /// <param name="engineBall">The collision sphere.</param>
+    /// <param name="collisionData">The collision data object to store the generated contact.</param>
+    /// <returns>True if a contact was generated, false otherwise.</returns>
+    public static bool BoxAndSphere(CollisionBox engineBox, CollisionSphere engineBall, CollisionData collisionData)
+    {
+        Vector3 center = engineBall.GetAxis(3);
+        Vector3 relCenter = engineBox.Transform.TransformInverse(center);
+
+        if (Math.Abs(relCenter.X) - engineBox.HalfSize.X > engineBall.Radius ||
+            Math.Abs(relCenter.Y) - engineBox.HalfSize.Y > engineBall.Radius ||
+            Math.Abs(relCenter.Z) - engineBox.HalfSize.Z > engineBall.Radius)
+        {
+            return false;
+        }
+
+        Vector3 closestPt = new Vector3();
+        Real dist = relCenter.X;
+        if (dist > engineBox.HalfSize.X) dist = engineBox.HalfSize.X;
+        if (dist < -engineBox.HalfSize.X) dist = -engineBox.HalfSize.X;
+        closestPt.X = dist;
+
+        dist = relCenter.Y;
+        if (dist > engineBox.HalfSize.Y) dist = engineBox.HalfSize.Y;
+        if (dist < -engineBox.HalfSize.Y) dist = -engineBox.HalfSize.Y;
+        closestPt.Y = dist;
+
+        dist = relCenter.Z;
+        if (dist > engineBox.HalfSize.Z) dist = engineBox.HalfSize.Z;
+        if (dist < -engineBox.HalfSize.Z) dist = -engineBox.HalfSize.Z;
+        closestPt.Z = dist;
+
+        dist = (closestPt - relCenter).SquareMagnitude();
+        if (dist > engineBall.Radius * engineBall.Radius) return false;
+
+        Vector3 closestPtWorld = engineBox.Transform.Transform(closestPt);
+
+        Contact contact = collisionData.ContactList[collisionData.NextContactIndex];
+        contact.ContactNormal = closestPtWorld - center;
+        contact.ContactNormal.Normalise();
+        contact.ContactPoint = closestPtWorld;
+        contact.Penetration = engineBall.Radius - (Real)Math.Sqrt(dist);
+        contact.SetBodyData(engineBox.Body, engineBall.Body, collisionData.Friction, collisionData.Restitution);
+        collisionData.AddContacts(1);
+        collisionData.NextContactIndex++;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Detects collisions between two spheres. A collision occurs if the distance
+    /// between their centers is less than the sum of their radii.
+    /// </summary>
+    /// <param name="one">The first collision sphere.</param>
+    /// <param name="two">The second collision sphere.</param>
+    /// <param name="data">The collision data object to store the generated contact.</param>
+    /// <returns>True if a contact was generated, false otherwise.</returns>
+    public static bool SphereAndSphere(CollisionSphere one, CollisionSphere two, CollisionData data)
+    {
+        if (data.ContactsLeft <= 0) return false;
+
+        Vector3 midline = one.GetAxis(3) - two.GetAxis(3);
+        Real sizeSq = midline.SquareMagnitude();
+        Real radiiSum = one.Radius + two.Radius;
+
+        // Use squared distances for a faster check to avoid the square root.
+        if (sizeSq >= radiiSum * radiiSum) return false;
+
+        Real size = (Real)Math.Sqrt(sizeSq);
+
+        // Handle the case where spheres are at the same position to avoid division by zero.
+        if (size <= 0.0f) return false;
+
+        Vector3 normal = midline * (1.0f / size);
+
+        Contact contact = data.ContactList[data.NextContactIndex];
+        contact.ContactNormal = normal;
+        contact.ContactPoint = one.GetAxis(3) + midline * 0.5f;
+        contact.Penetration = (one.Radius + two.Radius - size);
+        contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
+        data.AddContacts(1);
+        data.NextContactIndex++;
+        return true;
+    }
+
+    /// <summary>
+    /// Detects collisions between a sphere and a half-space plane. A collision occurs if the
+    /// sphere's surface penetrates the plane.
+    /// </summary>
+    /// <param name="sphere">The collision sphere.</param>
+    /// <param name="plane">The collision plane defining the half-space.</param>
+    /// <param name="data">The collision data object to store the generated contact.</param>
+    /// <returns>True if a contact was generated, false otherwise.</returns>
+    public static bool SphereAndHalfSpace(CollisionSphere sphere, CollisionPlane plane, CollisionData data)
+    {
+        if (data.ContactsLeft <= 0) return false;
+
+        var position = sphere.GetAxis(3);
+        // Find the distance from the sphere's center to the plane
+        Real ballDistance = plane.Direction * position - plane.Offset - sphere.Radius;
+
+        if (ballDistance >= 0.0f) return false;
+        // Check if we're within radius
+        // Create the contact - it has a normal in the plane direction
+        // and a contact point in the sphere's center, shifted by
+        // the radius in the plane direction.
+        Contact contact = data.ContactList[data.NextContactIndex];
+        contact.ContactNormal = plane.Direction;
+        contact.Penetration = -ballDistance;
+        contact.ContactPoint = position - plane.Direction * (ballDistance + sphere.Radius);
+        contact.SetBodyData(sphere.Body, null, data.Friction, data.Restitution);
+        data.AddContacts(1);
+        data.NextContactIndex++;
+        return true;
     }
 }

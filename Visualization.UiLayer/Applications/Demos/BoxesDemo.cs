@@ -8,6 +8,7 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class BoxesDemo : RigidBodyApplication
 {
     protected Box[] boxes = [];
+    protected Ball[] balls = [];
     protected Plane plane = new();
 
     /// <summary>
@@ -45,6 +46,37 @@ public class BoxesDemo : RigidBodyApplication
                     box.EngineBox.IsOverlapping = other.EngineBox.IsOverlapping = true;
                 }
             }
+
+            // Check for collisions with each ball
+            for (var j = 0; j < balls.Length; j++)
+            {
+                var other = balls[j];
+                if (!CollisionData.HasMoreContacts()) return;
+                CollisionDetector.BoxAndSphere(box.EngineBox, other.EngineBall, CollisionData);
+                //if (IntersectionTests.BoxAndSphere(box.EngineBox, other.EngineBall))
+                //{
+                //    box.EngineBox.IsOverlapping = true;
+                //    other.EngineBall.IsOverlapping = true;
+                //}
+            }
+        }
+
+        for (var j = 0; j < balls.Length; ++j) 
+        {
+            var ball = balls[j];
+            if(!CollisionData.HasMoreContacts()) return;
+            CollisionDetector.SphereAndHalfSpace(ball.EngineBall, plane.EnginePlane, CollisionData);
+
+            for (var k = j + 1; k < balls.Length; ++k)
+            {
+                var other = balls[k];
+                if (!CollisionData.HasMoreContacts()) return;
+                CollisionDetector.SphereAndSphere(ball.EngineBall, other.EngineBall, CollisionData);
+                if (IntersectionTests.SphereAndSphere(ball.EngineBall, other.EngineBall))
+                {
+                    ball.EngineBall.IsOverlapping = other.EngineBall.IsOverlapping = true;
+                }
+            }
         }
     }
 
@@ -63,6 +95,14 @@ public class BoxesDemo : RigidBodyApplication
             box.EngineBox.CalculateInternals();
             box.EngineBox.IsOverlapping = false;
         }
+        for (var i = 0; i < balls.Length; i++)
+        {
+            var ball = balls[i];
+            // Run the physics
+            ball.EngineBall.Body.Integrate(duration);
+            ball.EngineBall.CalculateInternals();
+            ball.EngineBall.IsOverlapping = false;
+        }
     }
 
     /// <summary>
@@ -77,6 +117,15 @@ public class BoxesDemo : RigidBodyApplication
             velocity: new Engine.Vector3(0, 0, 0)
         );
 
+        if (balls.Length > 0)
+        {
+            balls[0].EngineBall.SetState(
+                position: new Engine.Vector3(0, 10, 0),
+                orientation: new Engine.Quaternion(),
+                radius: 1.0f,
+                velocity: new Engine.Vector3(0, 0, 0));
+        }
+
         if (boxes.Length > 1)
         {
             boxes[1].EngineBox.SetState(
@@ -87,11 +136,25 @@ public class BoxesDemo : RigidBodyApplication
             );
         }
 
+        if (balls.Length > 1)
+        {
+            balls[1].EngineBall.SetState(
+                position: new Engine.Vector3(3, 4.75f, 2),
+                orientation: new Engine.Quaternion(),
+                radius: 1.0f,
+                velocity: new Engine.Vector3(0, 0, 0));
+        }
+
         // Create the random objects
         Random random = new();
         for (var i = 2; i < boxes.Length; i++)
         {
             boxes[i].EngineBox.Random(random);
+        }
+
+        for (var i = 2; i < balls.Length; i++)
+        {
+            balls[i].EngineBall.Random(random);
         }
 
         // Reset the contacts
