@@ -7,7 +7,6 @@ public sealed class Cube : AbstractVisualObject
 {
     public Cube()
     {
-        Material = Material.Fabric.BrownLeather;
     }
 
     private static readonly string MeshName = nameof(Cube);

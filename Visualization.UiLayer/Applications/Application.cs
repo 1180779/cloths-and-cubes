@@ -6,7 +6,6 @@ using Visualisation.Core;
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Texture;
-using Visualisation.Core.FrameCapsule;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
 using Visualization.UiLayer.Inputs;
@@ -26,7 +25,9 @@ public class Application : GameWindow
     protected readonly QuadMesh QuadMesh;
     protected readonly Shader QuadShader;
     protected readonly WindowFrameBuffer DepthMapWindowFrb;
-    protected readonly FrameSaver FrameSaver = new(1000);
+#if FRAMESAVER
+    protected readonly FrameSaver FrameSaver = new(0);
+#endif
     private readonly ShadowSettingsWindow shadowSettingsWindow;
 #endif
 

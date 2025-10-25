@@ -5,8 +5,8 @@ namespace AssetPathGenerator;
 
 public static class Program
 {
-    private const string Namespace = "Visualisation.Core.Display.Mesh.VisualObjects";
-    private const string RootClassName = "Material";
+    private const string Namespace = "Visualisation.Core.Display.Materials";
+    private const string RootClassName = "MaterialTextured";
     private const string AssetRootFolder = "Textures";
 
     /// <summary>

@@ -43,6 +43,7 @@ layout (location = 4) in vec3 aBitangent;
 out vec3 FragPosition;
 out vec3 TangentFragPosition;
 out vec3 Normal;
+out vec3 TangentNormal;
 out vec2 TexCoords;
 
 out vec3 TangentViewPos;
@@ -69,6 +70,7 @@ void main()
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     FragPosition = vec3(model * vec4(aPos, 1.0));
     Normal = (transpose(inverse(mat3(model))) * aNormal).xyz;
+    Normal = normalize(Normal);
     TexCoords = aTexCoords;
 
     /* get the TBN matrix */
@@ -86,6 +88,7 @@ void main()
         this is necessary for normals to work properly */
     mat3 worldToTangent = transpose(TBN);
 
+    TangentNormal = normalize(worldToTangent * N);
     TangentFragPosition = worldToTangent * FragPosition;
     TangentViewPos = worldToTangent * viewPos;
 

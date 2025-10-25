@@ -294,6 +294,13 @@ namespace Visualisation.Core
             GlHelper.CheckGlError("Shader SetMatrix4N");
         }
 
+        public void ReserveTexture(string name, TextureUnit unit)
+        {
+            GL.UseProgram(handle);
+            GL.Uniform1(uniformLocations[name], (int)unit - (int)TextureUnit.Texture0);
+            GlHelper.CheckGlError("Shader ReserveTexture");
+        }
+
         public void SetTexture(string name, TextureTarget textureTarget, TextureUnit unit, int textureHandle)
         {
             GL.UseProgram(handle);

@@ -7,7 +7,6 @@ public sealed class Plane : AbstractVisualObject
 {
     public Plane()
     {
-        Material = Material.Floors.RichBrownTile;
         Scale = new(1000.0f, 1000.0f, 1000.0f);
     }
 

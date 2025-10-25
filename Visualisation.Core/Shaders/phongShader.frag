@@ -43,12 +43,19 @@ struct LightPointOut {
     vec3 tangentPos;
 };
 
-/* PBR parameters */
+/* PBR parameters*/
+uniform bool useMaps; /* whether to use texture maps or uniform values */
+
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
 uniform sampler2D roughnessMap;
 uniform sampler2D aoMap;
+
+uniform vec3 albedoValue;
+uniform float metallicValue;
+uniform float roughnessValue;
+uniform float aoValue;
 
 /* biad parameters */
 uniform float BIAS_MAX;
@@ -65,6 +72,7 @@ uniform float farPlane;
 
 /* inputs from vertex shader */
 in vec3 Normal;
+in vec3 TangentNormal;
 in vec3 TangentFragPosition;
 in vec3 FragPosition;
 in vec2 TexCoords;
@@ -172,8 +180,7 @@ float ShadowCalculation()
         return 0.0;
     }
     // calculate bias (based on depth map resolution and slope)
-    vec3 normal = normalize(Normal);
-    float bias = max(BIAS_MAX * (1.0 - dot(normal, lightD.direction)), BIAS_MIN);
+    float bias = max(BIAS_MAX * (1.0 - dot(Normal, lightD.direction)), BIAS_MIN);
     if (layer == cascadeCount)
     {
         bias *= 1 / (farPlane * BIAS_MODIFIER);
@@ -186,9 +193,9 @@ float ShadowCalculation()
     // PCF
     float shadow = 0.0;
     vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
-    for(int x = -1; x <= 1; ++x)
+    for (int x = -1; x <= 1; ++x)
     {
-        for(int y = -1; y <= 1; ++y)
+        for (int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
             shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
@@ -319,17 +326,33 @@ vec3 spotlightCalculate(LightSpotlightOut light, vec3 N, vec3 V, vec3 F0, PbrMat
 
 void main()
 {
-    vec3 albedoRgb = texture(albedoMap, TexCoords).rgb;
-    vec3 albedo     = pow(albedoRgb, vec3(2.2));
-    vec3 normal     = texture(normalMap, TexCoords).rgb;
-    float metallic  = texture(metallicMap, TexCoords).r;
-    float roughness = texture(roughnessMap, TexCoords).r;
-    float ao        = texture(aoMap, TexCoords).r;
+    vec3 albedo;
+    vec3 normal;
+    float metallic;
+    float roughness;
+    float ao;
 
-    //    vec3 N = normalize(Normal);
-    vec3 N = normalize(normal * 2.0 - 1.0);// this normal is in tangent space, so is the light direction
+    vec3 N;
     vec3 V = normalize(TangentViewPos - TangentFragPosition);
-    
+    if (useMaps) {
+        vec3 albedoRgb = texture(albedoMap, TexCoords).rgb;
+        albedo    = pow(albedoRgb, vec3(2.2));
+        normal    = texture(normalMap, TexCoords).rgb;
+        metallic  = texture(metallicMap, TexCoords).r;
+        roughness = texture(roughnessMap, TexCoords).r;
+        ao        = texture(aoMap, TexCoords).r;
+
+        N = normalize(normal * 2.0 - 1.0);// this normal is in tangent space, so is the light direction
+    } else {
+        albedo     = albedoValue;
+        normal     = TangentNormal;
+        metallic   = metallicValue;
+        roughness  = roughnessValue;
+        ao         = aoValue;
+
+        N = normal;
+    }
+
     PbrMaterial material = PbrMaterial(
     albedo,
     normal,

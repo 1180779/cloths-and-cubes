@@ -40,7 +40,9 @@ public abstract class RigidBodyApplication : Application
             deltaTime
         );
 #if DEBUG
+#if FRAMESAVER
         FrameSaver.SaveFrame(Scene);
+#endif
 #endif
     }
 
@@ -88,6 +90,7 @@ public abstract class RigidBodyApplication : Application
         }
 
 #if DEBUG
+#if FRAMESAVER
         // frame saver
         if (InputProvider.IsKeyDown(InputKey.Right))
         {
@@ -100,6 +103,7 @@ public abstract class RigidBodyApplication : Application
             FrameSaver.GoBackNFrames(1);
             FrameSaver.CurrentFrame?.Restore(Scene);
         }
+#endif
 #endif
 
         // reset

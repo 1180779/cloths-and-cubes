@@ -2,16 +2,10 @@ using System.Diagnostics;
 using OpenTK.Graphics.OpenGL4;
 using Visualisation.Core.Display.Texture;
 
-namespace Visualisation.Core.Display.Mesh.VisualObjects;
+namespace Visualisation.Core.Display.Materials;
 
-public sealed partial class Material : IDisposable
+public sealed partial class MaterialTextured : IMaterial
 {
-    private static readonly string AlbedoMapShaderName = "albedoMap";
-    private static readonly string NormalMapShaderName = "normalMap";
-    private static readonly string MetallicMapShaderName = "metallicMap";
-    private static readonly string RoughnessMapShaderName = "roughnessMap";
-    private static readonly string AoMapShaderName = "aoMap";
-
     public override string ToString()
     {
         return $"{{Material: " +
@@ -29,12 +23,17 @@ public sealed partial class Material : IDisposable
             AlbedoMap != null && NormalMap != null && MetallicMap != null && RoughnessMap != null && AoMap != null,
             "Material not loaded"
         );
+        sh.SetBool(IMaterial.UseMaps, true);
 
-        sh.SetTexture(AlbedoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture4, AlbedoMap.TextureId);
-        sh.SetTexture(NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5, NormalMap.TextureId);
-        sh.SetTexture(MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6, MetallicMap.TextureId);
-        sh.SetTexture(RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7, RoughnessMap.TextureId);
-        sh.SetTexture(AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8, AoMap.TextureId);
+        sh.SetTexture(IMaterial.AlbedoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture4,
+            AlbedoMap.TextureId);
+        sh.SetTexture(IMaterial.NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5,
+            NormalMap.TextureId);
+        sh.SetTexture(IMaterial.MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
+            MetallicMap.TextureId);
+        sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
+            RoughnessMap.TextureId);
+        sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8, AoMap.TextureId);
     }
 
     private bool loaded = false;
@@ -50,7 +49,7 @@ public sealed partial class Material : IDisposable
     private TexturesManager.TextureData? RoughnessMap { get; set; }
     private TexturesManager.TextureData? AoMap { get; set; }
 
-    public Material(string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
+    public MaterialTextured(string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
     {
         this.albedoMap = albedoMap;
         this.normalMap = normalMap;

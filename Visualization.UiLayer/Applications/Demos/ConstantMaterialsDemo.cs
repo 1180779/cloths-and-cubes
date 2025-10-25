@@ -2,13 +2,13 @@ using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class PbrMaterialsDemo : MaterialsDemo
+public class ConstantMaterialsDemo : MaterialsDemo
 {
     private const int NFirstMaterials = 20 * NrOfRows;
 
-    // private readonly Type materialsSource = typeof(MaterialTextured.Metals);
+    // private readonly Type materialsSource = typeof(MaterialConstant);
     protected override IMaterial[] GetMaterials()
     {
-        return MaterialsHelper.GetTexturedMaterials(NFirstMaterials);
+        return MaterialsHelper.GetConstMaterials(NFirstMaterials);
     }
 }
