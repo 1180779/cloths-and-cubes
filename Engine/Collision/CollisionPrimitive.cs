@@ -12,7 +12,6 @@ public class CollisionPrimitive
     /// calculated by combining the offset of the primitive
     /// with the transform of the rigid body.
     /// </summary>
-
     public Matrix4 Transform { get; private set; } = new();
 
     public void CalculateInternals()

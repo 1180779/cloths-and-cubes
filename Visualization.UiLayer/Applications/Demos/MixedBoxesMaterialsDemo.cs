@@ -2,7 +2,7 @@ using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class MixedMaterialsDemo : MaterialsDemo
+public class MixedBoxesMaterialsDemo : SpheresMaterialsDemo
 {
     private const int NFirstMaterials = 1 * NrOfRows;
 

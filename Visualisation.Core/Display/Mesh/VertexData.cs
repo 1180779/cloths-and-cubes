@@ -94,11 +94,11 @@ public struct VertexData
         };
         bitangent = Vector3.Normalize(bitangent);
 
-        a.Tangent = tangent;
-        b.Tangent = tangent;
-        c.Tangent = tangent;
-        a.Bitangent = bitangent;
-        b.Bitangent = bitangent;
-        c.Bitangent = bitangent;
+        a.Tangent += tangent;
+        b.Tangent += tangent;
+        c.Tangent += tangent;
+        a.Bitangent += bitangent;
+        b.Bitangent += bitangent;
+        c.Bitangent += bitangent;
     }
 }

@@ -4,11 +4,13 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesRandomConfigurationDemo : BoxesDemo
 {
-    private const int Boxes = 20;
+    private const int Boxes = 0;
+    private const int Balls = 100;
 
     protected override void InitializeScene()
     {
         boxes = new Box[Boxes];
+        balls = new Ball[Balls];
 
         /* add the cubes to the scene to be rendered */
         for (var i = 0; i < Boxes; i++)
@@ -16,6 +18,14 @@ public class BoxesRandomConfigurationDemo : BoxesDemo
             this.boxes[i] = new Box();
             var box = boxes[i];
             Scene.AddGameObject(box);
+        }
+
+        /* add the spheres to the scene to be rendered */
+        for (var i = 0; i < Balls; ++i)
+        {
+            this.balls[i] = new Ball();
+            var ball = balls[i];
+            Scene.AddGameObject(ball);
         }
 
         /* add ground plane to the scene */

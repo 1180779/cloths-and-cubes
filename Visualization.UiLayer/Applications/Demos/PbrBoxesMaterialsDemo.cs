@@ -2,7 +2,7 @@ using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class PbrMaterialsDemo : MaterialsDemo
+public class PbrBoxesMaterialsDemo : SpheresMaterialsDemo
 {
     private const int NFirstMaterials = 20 * NrOfRows;
 

@@ -522,9 +522,14 @@ public static class CollisionDetector
         Vector3 closestPtWorld = engineBox.Transform.Transform(closestPt);
 
         Contact contact = collisionData.ContactList[collisionData.NextContactIndex];
-        contact.ContactNormal = closestPtWorld - center;
+        contact.ContactNormal = center - closestPtWorld;
         contact.ContactNormal.Normalise();
-        contact.ContactPoint = closestPtWorld;
+
+        // Contact point should be halfway between the box surface and sphere surface
+        // The point on sphere surface along the normal
+        Vector3 sphereSurfacePoint = center - contact.ContactNormal * engineBall.Radius;
+        contact.ContactPoint = (closestPtWorld + sphereSurfacePoint) * 0.5f;
+
         contact.Penetration = engineBall.Radius - (Real)Math.Sqrt(dist);
         contact.SetBodyData(engineBox.Body, engineBall.Body, collisionData.Friction, collisionData.Restitution);
         collisionData.AddContacts(1);

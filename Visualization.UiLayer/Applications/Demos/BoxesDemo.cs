@@ -61,10 +61,10 @@ public class BoxesDemo : RigidBodyApplication
             }
         }
 
-        for (var j = 0; j < balls.Length; ++j) 
+        for (var j = 0; j < balls.Length; ++j)
         {
             var ball = balls[j];
-            if(!CollisionData.HasMoreContacts()) return;
+            if (!CollisionData.HasMoreContacts()) return;
             CollisionDetector.SphereAndHalfSpace(ball.EngineBall, plane.EnginePlane, CollisionData);
 
             for (var k = j + 1; k < balls.Length; ++k)
@@ -95,6 +95,7 @@ public class BoxesDemo : RigidBodyApplication
             box.EngineBox.CalculateInternals();
             box.EngineBox.IsOverlapping = false;
         }
+
         for (var i = 0; i < balls.Length; i++)
         {
             var ball = balls[i];
@@ -110,20 +111,15 @@ public class BoxesDemo : RigidBodyApplication
     /// </summary>
     protected override void Reset()
     {
-        boxes[0].EngineBox.SetState(
-            position: new Engine.Vector3(0, 3, 0),
-            orientation: new Engine.Quaternion(),
-            extents: new Engine.Vector3(4, 1, 1),
-            velocity: new Engine.Vector3(0, 0, 0)
-        );
-
-        if (balls.Length > 0)
+        /* reset boxes; some in preconfigured positions */
+        if (boxes.Length > 0)
         {
-            balls[0].EngineBall.SetState(
-                position: new Engine.Vector3(0, 10, 0),
+            boxes[0].EngineBox.SetState(
+                position: new Engine.Vector3(0, 3, 0),
                 orientation: new Engine.Quaternion(),
-                radius: 1.0f,
-                velocity: new Engine.Vector3(0, 0, 0));
+                extents: new Engine.Vector3(4, 1, 1),
+                velocity: new Engine.Vector3(0, 0, 0)
+            );
         }
 
         if (boxes.Length > 1)
@@ -136,6 +132,22 @@ public class BoxesDemo : RigidBodyApplication
             );
         }
 
+        Random random = new();
+        for (var i = 2; i < boxes.Length; i++)
+        {
+            boxes[i].EngineBox.Random(random);
+        }
+
+        /* reset spheres; some in preconfigured positions */
+        if (balls.Length > 0)
+        {
+            balls[0].EngineBall.SetState(
+                position: new Engine.Vector3(0, 10, 0),
+                orientation: new Engine.Quaternion(),
+                radius: 1.0f,
+                velocity: new Engine.Vector3(0, 0, 0));
+        }
+
         if (balls.Length > 1)
         {
             balls[1].EngineBall.SetState(
@@ -143,13 +155,6 @@ public class BoxesDemo : RigidBodyApplication
                 orientation: new Engine.Quaternion(),
                 radius: 1.0f,
                 velocity: new Engine.Vector3(0, 0, 0));
-        }
-
-        // Create the random objects
-        Random random = new();
-        for (var i = 2; i < boxes.Length; i++)
-        {
-            boxes[i].EngineBox.Random(random);
         }
 
         for (var i = 2; i < balls.Length; i++)

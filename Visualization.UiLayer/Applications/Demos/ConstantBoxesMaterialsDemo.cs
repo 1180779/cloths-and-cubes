@@ -2,7 +2,7 @@ using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class ConstantMaterialsDemo : MaterialsDemo
+public class ConstantBoxesMaterialsDemo : BoxesMaterialsDemo
 {
     private const int NFirstMaterials = 20 * NrOfRows;
 

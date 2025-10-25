@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Engine.Collision;
+﻿using Engine.Collision;
 
 namespace Engine.RigidBodies
 {
@@ -13,9 +8,9 @@ namespace Engine.RigidBodies
 
 
         static readonly Vector3 MinPos = new(-15, 5, -15);
-        static readonly Vector3 MaxPos = new(15, 10, 15);
+        static readonly Vector3 MaxPos = new(15, 20, 15);
         static readonly Real MinRadius = 0.5f;
-        static readonly Real MaxRadius = 3.0f;
+        static readonly Real MaxRadius = 2.5f;
 
         /// <summary>
         /// Positions the box at a random location.

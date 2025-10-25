@@ -7,16 +7,16 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         private static readonly string MeshName = nameof(Sphere);
         private static MeshManager.MeshData? _meshData;
 
-        private static Real[] Vertices = null!;
+        private static VertexData[] Vertices = null!;
         private static uint[] Indices = null!;
         private static readonly int Precision = 40; // number of segments per half circle
 
         private void GenerateSurface()
         {
-            List<Real> vertices = new List<Real>();
+            List<VertexData> vertices = new List<VertexData>();
             List<uint> indices = new List<uint>();
 
-            for (int i = 0; i <= Precision; i++)
+            for (var i = 0; i <= Precision; i++)
             {
                 double lat = Math.PI * (-0.5 + (double)i / Precision); // latitude
                 double sinLat = Math.Sin(lat);
@@ -30,21 +30,20 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                     double y = sinLat;
                     double z = sinLon * cosLat;
 
-                    // Position
-                    vertices.Add((Real)x);
-                    vertices.Add((Real)y);
-                    vertices.Add((Real)z);
+                    var u = (float)j / Precision;
+                    var v = (float)i / Precision;
 
-                    // Normal
-                    vertices.Add((Real)x);
-                    vertices.Add((Real)y);
-                    vertices.Add((Real)z);
+                    vertices.Add(new VertexData(
+                        (float)x, (float)y, (float)z, // Position
+                        (float)x, (float)y, (float)z, // Normal
+                        u, v // TexCoords
+                    ));
                 }
             }
 
-            for (int i = 0; i < Precision; i++)
+            for (uint i = 0; i < Precision; i++)
             {
-                for (int j = 0; j < Precision; j++)
+                for (uint j = 0; j < Precision; j++)
                 {
                     uint first = (uint)((i * (Precision + 1)) + j);
                     uint second = (uint)(first + Precision + 1);
@@ -63,6 +62,21 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             Indices = [.. indices.ToArray()];
         }
 
+        private void CalculateTangentsAndBitangents()
+        {
+            for (int i = 0; i < Indices.Length; i += 3)
+            {
+                // Get the vertices of the triangle
+                ref var v0 = ref Vertices[Indices[i]];
+                ref var v1 = ref Vertices[Indices[i + 1]];
+                ref var v2 = ref Vertices[Indices[i + 2]];
+
+                // Calculate tangent and bitangent
+                // This method adds the results to the existing values
+                VertexData.CalculateTangentBitangent(ref v0, ref v1, ref v2);
+            }
+        }
+
         public override void Dispose()
         {
             MeshManager.FreeMesh(MeshName, (data) =>
@@ -76,12 +90,13 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         public override void Init()
         {
             GenerateSurface();
+            CalculateTangentsAndBitangents();
 
             _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
             {
                 int vbo = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * sizeof(float), Vertices,
+                GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * 14 * sizeof(float), Vertices,
                     BufferUsageHint.StaticDraw);
 
                 int vao = GL.GenVertexArray();
@@ -92,12 +107,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices,
                     BufferUsageHint.StaticDraw);
 
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-                GL.EnableVertexAttribArray(0);
-
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float),
-                    3 * sizeof(float));
-                GL.EnableVertexAttribArray(1);
+                VertexData.VertexAttribPositionNormalTexCoordsTangentBitangent();
 
                 return new MeshManager.MeshData
                 {

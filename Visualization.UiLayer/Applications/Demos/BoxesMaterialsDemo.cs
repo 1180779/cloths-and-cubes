@@ -3,7 +3,7 @@ using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public abstract class MaterialsDemo : BoxesDemo
+public abstract class BoxesMaterialsDemo : BoxesDemo
 {
     protected const int NrOfRows = 5;
 
