@@ -4,8 +4,8 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesRandomConfigurationDemo : BoxesDemo
 {
-    private const int Boxes = 0;
-    private const int Balls = 100;
+    private const int Boxes = 30;
+    private const int Balls = 20;
 
     protected override void InitializeScene()
     {

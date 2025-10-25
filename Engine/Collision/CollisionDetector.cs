@@ -490,6 +490,8 @@ public static class CollisionDetector
     /// <returns>True if a contact was generated, false otherwise.</returns>
     public static bool BoxAndSphere(CollisionBox engineBox, CollisionSphere engineBall, CollisionData collisionData)
     {
+        if (collisionData.ContactsLeft <= 0) return false;
+
         Vector3 center = engineBall.GetAxis(3);
         Vector3 relCenter = engineBox.Transform.TransformInverse(center);
 

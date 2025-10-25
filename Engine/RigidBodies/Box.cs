@@ -8,7 +8,7 @@ public class Box : CollisionBox
 
 
     static readonly Vector3 MinPos = new(-15, 5, -15);
-    static readonly Vector3 MaxPos = new(15, 10, 15);
+    static readonly Vector3 MaxPos = new(15, 20, 15);
     static readonly Vector3 MinSize = new(0.5f, 0.5f, 0.5f);
     static readonly Vector3 MaxSize = new(4.5f, 1.5f, 1.5f);
 
