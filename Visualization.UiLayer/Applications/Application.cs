@@ -152,6 +152,8 @@ public class Application : GameWindow
 
         // draw windows here
         HelpWindow.Draw();
+
+
 #if DEBUG
         RenderObjectInspectorWindow();
         ShadowCascadingMapsWindow();

@@ -1,5 +1,5 @@
 ﻿using Visualization.UiLayer.Applications;
-using Visualization.UiLayer.Applications.Demos;
+using Visualization.UiLayer.Applications.Demos.Materials;
 
 namespace Visualization.UiLayer
 {
@@ -7,7 +7,7 @@ namespace Visualization.UiLayer
     {
         private static void Main(string[] args)
         {
-            using Application application = new BoxesRandomConfigurationDemo();
+            using Application application = new MaterialsDemo();
             application.Run();
             application.Focus();
         }

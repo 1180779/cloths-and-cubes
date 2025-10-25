@@ -1,8 +1,8 @@
 using Visualisation.Core.Display.Materials;
 
-namespace Visualization.UiLayer.Applications.Demos;
+namespace Visualization.UiLayer.Applications.Demos.Materials;
 
-public class ConstantBoxesMaterialsDemo : BoxesMaterialsDemo
+public class ConstantMaterialsDemo : BoxesMaterialsDemo
 {
     private const int NFirstMaterials = 20 * NrOfRows;
 

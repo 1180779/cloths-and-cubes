@@ -1,11 +1,11 @@
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.GameObjects;
 
-namespace Visualization.UiLayer.Applications.Demos;
+namespace Visualization.UiLayer.Applications.Demos.Materials;
 
 public abstract class SpheresMaterialsDemo : BoxesDemo
 {
-    protected const int NrOfRows = 5;
+    protected int NrOfRows = 5;
 
     protected abstract IMaterial[] GetMaterials();
 

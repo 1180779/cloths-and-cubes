@@ -1,7 +1,7 @@
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.GameObjects;
 
-namespace Visualization.UiLayer.Applications.Demos;
+namespace Visualization.UiLayer.Applications.Demos.Materials;
 
 public abstract class BoxesMaterialsDemo : BoxesDemo
 {
