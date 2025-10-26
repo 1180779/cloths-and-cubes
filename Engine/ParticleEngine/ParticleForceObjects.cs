@@ -1,4 +1,4 @@
-﻿namespace Engine
+﻿namespace Engine.ParticleEngine
 {
     public interface IParticleForceGenerator
     {
@@ -128,7 +128,7 @@
         private Real _waterHeight;
         private Real _liquidDensity;
 
-        public ParticleBuoyancy(Real maxDepth, Real volume, Real waterHeight, Real liquidDensity = (Real)1000)
+        public ParticleBuoyancy(Real maxDepth, Real volume, Real waterHeight, Real liquidDensity = 1000)
         {
             _maxDepth = maxDepth;
             _volume = volume;

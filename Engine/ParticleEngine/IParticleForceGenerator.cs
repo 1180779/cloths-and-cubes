@@ -1,4 +1,4 @@
-namespace Engine.Force;
+namespace Engine.ParticleEngine;
 
 public interface IParticleForceGenerator
 {

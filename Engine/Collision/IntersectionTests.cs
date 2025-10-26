@@ -96,4 +96,24 @@ public static class IntersectionTests
         // Check for the intersection
         return boxDistance <= plane.Offset;
     }
+    public static bool BoxAndPoint(CollisionBox box, CollisionParticle particle)
+    {
+  
+        Vector3 toPoint = particle.Body.Position - box.GetAxis(3);
+
+        bool TestOverlap(Vector3 axis, Real halfSize)
+        {
+ 
+            Real distance = Math.Abs(Vector3.ScalarProduct(toPoint, axis));
+
+            return distance <= halfSize;
+        }
+
+        return (
+            TestOverlap(box.GetAxis(0), box.HalfSize.X) &&
+            TestOverlap(box.GetAxis(1), box.HalfSize.Y) &&
+            TestOverlap(box.GetAxis(2), box.HalfSize.Z)
+        );
+    }
+
 };

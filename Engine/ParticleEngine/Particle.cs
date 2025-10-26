@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Engine;
+namespace Engine.ParticleEngine;
 
 public class Particle
 {
@@ -81,12 +81,12 @@ public class Particle
 
     public void ClearAccumulator()
     {
-        forceAccum.X = forceAccum.Y = forceAccum.Z = (Real)0;
+        forceAccum.X = forceAccum.Y = forceAccum.Z = 0;
     }
 
     public void AddForce(Vector3 force)
     {
         forceAccum += force;
-        if (Core.Debug) Console.WriteLine($"[DEBUG]: Adding force {force} to particle at {this.position}");
+        if (Core.Debug) Console.WriteLine($"[DEBUG]: Adding force {force} to particle at {position}");
     }
 }

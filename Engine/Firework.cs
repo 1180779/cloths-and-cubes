@@ -1,4 +1,6 @@
-﻿namespace Engine;
+﻿using Engine.ParticleEngine;
+
+namespace Engine;
 
 public class Firework : Particle
 {

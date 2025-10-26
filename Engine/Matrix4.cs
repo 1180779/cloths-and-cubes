@@ -9,8 +9,8 @@ public class Matrix4 : ICloneable
 
     public Matrix4()
     {
-        this.Data = new Real[12];
-        this.Data[0] = this.Data[5] = this.Data[10] = 1;
+        Data = new Real[12];
+        Data[0] = Data[5] = Data[10] = 1;
     }
 
     [Conditional("DEBUG")]
@@ -40,7 +40,7 @@ public class Matrix4 : ICloneable
     /// <param name="data">Real array containing the matrix data. The array reference is directly assigned without copying.</param>
     public Matrix4(Real[] data)
     {
-        this.Data = data;
+        Data = data;
     }
 
     public Matrix4(Real a, Real b, Real c, Real d, Real e, Real f, Real g, Real h, Real i, Real j, Real k, Real l)
@@ -74,30 +74,30 @@ public class Matrix4 : ICloneable
     public static Matrix4 operator *(Matrix4 left, Matrix4 o)
     {
         Matrix4 result = new Matrix4();
-        result.Data[0] = (o.Data[0] * left.Data[0]) + (o.Data[4] * left.Data[1]) +
-            (o.Data[8] * left.Data[2]);
-        result.Data[4] = (o.Data[0] * left.Data[4]) + (o.Data[4] * left.Data[5]) +
-            (o.Data[8] * left.Data[6]);
-        result.Data[8] = (o.Data[0] * left.Data[8]) + (o.Data[4] * left.Data[9]) +
-            (o.Data[8] * left.Data[10]);
-        result.Data[1] = (o.Data[1] * left.Data[0]) + (o.Data[5] * left.Data[1]) +
-            (o.Data[9] * left.Data[2]);
-        result.Data[5] = (o.Data[1] * left.Data[4]) + (o.Data[5] * left.Data[5]) +
-            (o.Data[9] * left.Data[6]);
-        result.Data[9] = (o.Data[1] * left.Data[8]) + (o.Data[5] * left.Data[9]) +
-            (o.Data[9] * left.Data[10]);
-        result.Data[2] = (o.Data[2] * left.Data[0]) + (o.Data[6] * left.Data[1]) +
-            (o.Data[10] * left.Data[2]);
-        result.Data[6] = (o.Data[2] * left.Data[4]) + (o.Data[6] * left.Data[5]) +
-            (o.Data[10] * left.Data[6]);
-        result.Data[10] = (o.Data[2] * left.Data[8]) + (o.Data[6] * left.Data[9]) +
-            (o.Data[10] * left.Data[10]);
-        result.Data[3] = (o.Data[3] * left.Data[0]) + (o.Data[7] * left.Data[1]) +
-            (o.Data[11] * left.Data[2]) + left.Data[3];
-        result.Data[7] = (o.Data[3] * left.Data[4]) + (o.Data[7] * left.Data[5]) +
-            (o.Data[11] * left.Data[6]) + left.Data[7];
-        result.Data[11] = (o.Data[3] * left.Data[8]) + (o.Data[7] * left.Data[9]) +
-            (o.Data[11] * left.Data[10]) + left.Data[11];
+        result.Data[0] = o.Data[0] * left.Data[0] + o.Data[4] * left.Data[1] +
+            o.Data[8] * left.Data[2];
+        result.Data[4] = o.Data[0] * left.Data[4] + o.Data[4] * left.Data[5] +
+            o.Data[8] * left.Data[6];
+        result.Data[8] = o.Data[0] * left.Data[8] + o.Data[4] * left.Data[9] +
+            o.Data[8] * left.Data[10];
+        result.Data[1] = o.Data[1] * left.Data[0] + o.Data[5] * left.Data[1] +
+            o.Data[9] * left.Data[2];
+        result.Data[5] = o.Data[1] * left.Data[4] + o.Data[5] * left.Data[5] +
+            o.Data[9] * left.Data[6];
+        result.Data[9] = o.Data[1] * left.Data[8] + o.Data[5] * left.Data[9] +
+            o.Data[9] * left.Data[10];
+        result.Data[2] = o.Data[2] * left.Data[0] + o.Data[6] * left.Data[1] +
+            o.Data[10] * left.Data[2];
+        result.Data[6] = o.Data[2] * left.Data[4] + o.Data[6] * left.Data[5] +
+            o.Data[10] * left.Data[6];
+        result.Data[10] = o.Data[2] * left.Data[8] + o.Data[6] * left.Data[9] +
+            o.Data[10] * left.Data[10];
+        result.Data[3] = o.Data[3] * left.Data[0] + o.Data[7] * left.Data[1] +
+            o.Data[11] * left.Data[2] + left.Data[3];
+        result.Data[7] = o.Data[3] * left.Data[4] + o.Data[7] * left.Data[5] +
+            o.Data[11] * left.Data[6] + left.Data[7];
+        result.Data[11] = o.Data[3] * left.Data[8] + o.Data[7] * left.Data[9] +
+            o.Data[11] * left.Data[10] + left.Data[11];
         return result;
     }
 
@@ -106,7 +106,7 @@ public class Matrix4 : ICloneable
         // Make sure the determinant is non-zero.
         Real det = Determinant;
         if (det == 0) return;
-        det = ((float)1.0) / det;
+        det = (float)1.0 / det;
         Data[0] = (-m.Data[9] * m.Data[6] + m.Data[5] * m.Data[10]) * det;
         Data[4] = (m.Data[8] * m.Data[6] - m.Data[4] * m.Data[10]) * det;
         Data[8] = (-m.Data[8] * m.Data[5] + m.Data[4] * m.Data[9] * m.Data[15]) * det;
