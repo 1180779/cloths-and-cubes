@@ -2,9 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using ImageMagick;
 using OpenTK.Graphics.OpenGL4;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using StbImageSharp;
 
 namespace Visualisation.Core.Display.Texture;
 
@@ -54,10 +52,67 @@ public static class TexturesManager
         private bool isLoaded;
     }
 
+    private interface IPixelData
+    {
+        public void UploadToGpu(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalformat,
+            int width,
+            int height,
+            int border,
+            PixelFormat format);
+    }
+
+    private class PixelDataByte : IPixelData
+    {
+        private readonly byte[] data;
+
+        public PixelDataByte(byte[] data)
+        {
+            this.data = data;
+        }
+
+        public void UploadToGpu(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalformat,
+            int width,
+            int height,
+            int border,
+            PixelFormat format)
+        {
+            GL.TexImage2D(target, level, internalformat, width, height, border, format, PixelType.UnsignedByte,
+                data);
+        }
+    }
+
+    private class PixelDataFloat : IPixelData
+    {
+        private readonly float[] data;
+
+        public PixelDataFloat(float[] data)
+        {
+            this.data = data;
+        }
+
+        public void UploadToGpu(
+            TextureTarget target,
+            int level,
+            PixelInternalFormat internalformat,
+            int width,
+            int height,
+            int border,
+            PixelFormat format)
+        {
+            GL.TexImage2D(target, level, internalformat, width, height, border, format, PixelType.Float, data);
+        }
+    }
+
     private class PendingLoadResult
     {
         public string Path = null!;
-        public byte[] PixelData = null!;
+        public IPixelData PixelData = null!;
         public int Width;
         public int Height;
         public PixelInternalFormat InternalFormat;
@@ -97,8 +152,8 @@ public static class TexturesManager
 
                 GL.CreateTextures(TextureTarget.Texture2D, 1, out int textureId);
                 GL.BindTexture(TextureTarget.Texture2D, textureId);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width, result.Height, 0,
-                    result.Format, PixelType.UnsignedByte, result.PixelData);
+                result.PixelData.UploadToGpu(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width,
+                    result.Height, 0, result.Format);
                 entry.InitCallback?.Invoke();
 
                 entry.PublicTextureData.TextureId = textureId;
@@ -156,21 +211,36 @@ public static class TexturesManager
             pathToLoad = pngPath;
         }
 
-        using var image = Image.Load<Rgba32>(pathToLoad);
-        image.Mutate(x => x.Flip(FlipMode.Vertical));
-
-        var pixelData = new byte[image.Width * image.Height * 4];
-        image.CopyPixelDataTo(pixelData);
-
-        return new PendingLoadResult
+        if (Path.GetExtension(pathToLoad).Equals(".hdr", StringComparison.InvariantCultureIgnoreCase))
         {
-            Path = texturePath,
-            PixelData = pixelData,
-            Width = image.Width,
-            Height = image.Height,
-            InternalFormat = PixelInternalFormat.Rgba8,
-            Format = PixelFormat.Rgba
-        };
+            using var stream = File.OpenRead(pathToLoad);
+            var image = ImageResultFloat.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+            return new PendingLoadResult
+            {
+                Path = texturePath,
+                PixelData = new PixelDataFloat(image.Data),
+                Width = image.Width,
+                Height = image.Height,
+                InternalFormat = PixelInternalFormat.Rgba32f,
+                Format = PixelFormat.Rgba
+            };
+        }
+
+        using (var stream = File.OpenRead(pathToLoad))
+        {
+            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+            return new PendingLoadResult
+            {
+                Path = texturePath,
+                PixelData = new PixelDataByte(image.Data),
+                Width = image.Width,
+                Height = image.Height,
+                InternalFormat = PixelInternalFormat.Rgba8,
+                Format = PixelFormat.Rgba
+            };
+        }
     }
 
     private static void PerformImmediateLoad(Entry entry, string path, InitTextureCallback initCallback)
@@ -181,8 +251,9 @@ public static class TexturesManager
 
             GL.CreateTextures(TextureTarget.Texture2D, 1, out int textureId);
             GL.BindTexture(TextureTarget.Texture2D, textureId);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width, result.Height, 0,
-                result.Format, PixelType.UnsignedByte, result.PixelData);
+            result.PixelData.UploadToGpu(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width, result.Height,
+                0,
+                result.Format);
 
             initCallback.Invoke();
 
