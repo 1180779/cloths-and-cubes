@@ -67,6 +67,21 @@ public static class IntersectionTests
             TestOverlap(one.GetAxis(2) % two.GetAxis(2))
         );
     }
+
+    // Needs some unit tests, wrote it without too much thought
+    public static bool AABBOverlap(Engine.Collision.Bounding_Volume_Hierarchy.BoundingBox a, Engine.Collision.Bounding_Volume_Hierarchy.BoundingBox b)
+    {
+        if(a == null || b == null) return false;
+
+        var distX = Math.Abs(a.center.X - b.center.X);
+        var distY = Math.Abs(a.center.Y - b.center.Y);
+        var distZ = Math.Abs(a.center.Z - b.center.Z);
+
+        return (
+            distX < a.halfSize.X + b.halfSize.X ||
+            distY < a.halfSize.Y + b.halfSize.Y ||
+            distZ < a.halfSize.Z + b.halfSize.Z);
+    }
     
     /// <summary>
     /// Does an intersection test on an arbitrarily aligned box and a

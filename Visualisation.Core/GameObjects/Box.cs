@@ -1,8 +1,9 @@
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public class Box : IVisualObject
+public class Box : IVisualObject, IBoxable
 {
     public Engine.RigidBodies.Box EngineBox { get; private set; } = new();
     public Cube VisualBox { get; private set; } = new();
@@ -58,5 +59,19 @@ public class Box : IVisualObject
         VisualBox.Dispose();
     }
 
-    public Guid Id => VisualBox.Id;
+    public Guid Id
+    {
+        get
+        {
+            return VisualBox.Id;
+        }
+    }
+
+    public BoundingBox GetBoundingBox()
+    {
+        float max = Math.Max(EngineBox.HalfSize.X, Math.Max(EngineBox.HalfSize.Y, EngineBox.HalfSize.Z));
+        return new Engine.Collision.Bounding_Volume_Hierarchy.BoundingBox(
+            center: this.EngineBox.Body.Position,
+            halfSize: new Engine.Vector3(max, max, max));
+    }
 }
