@@ -153,6 +153,10 @@ public class Application : GameWindow
         // draw windows here
         HelpWindow.Draw();
 
+        ImGui.Begin("Performance");
+        ImGui.Text(
+            $"Application average {1000.0f / ImGui.GetIO().Framerate:F3} ms/frame ({ImGui.GetIO().Framerate:F1} FPS)");
+        ImGui.End();
 
 #if DEBUG
         RenderObjectInspectorWindow();
