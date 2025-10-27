@@ -10,7 +10,7 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class BoxesFallingDemo : RigidBodyApplication
 {
     /* The number of boxes in the simulation. */
-    private const uint Boxes = 20;
+    private const uint Boxes = 40;
 
     private Box[] boxes = new Box[Boxes];
     private Plane plane = null!;
@@ -48,27 +48,54 @@ public class BoxesFallingDemo : RigidBodyApplication
         CollisionData.Restitution = (Real)0.6;
         CollisionData.Tolerance = (Real)0.1;
 
-        // Perform exhaustive collision detection
-        for (var i = 0; i < Boxes; i++)
+        Dictionary<int, IBoxable> boxDict = new();
+        for(int i = 0; i<boxes.Length; i++)
+        {
+            boxDict[i] = (IBoxable)boxes[i];
+        }
+        BVH bvh = BVH.Build(boxDict);
+
+        for(int i = 0; i<boxes.Length; i++)
         {
             var box = boxes[i];
-            // Check for collisions with the ground plane
             if (!CollisionData.HasMoreContacts()) return;
             CollisionDetector.BoxAndHalfSpace(box.EngineBox, plane.EnginePlane, CollisionData);
 
-            // Check for collisions with each other box
-            for (var j = i + 1; j < Boxes; j++)
+            List<(int, int)> potentialCollisions = new();
+            BVH.TraverseRecursive(ref potentialCollisions, ref bvh, box.GetBoundingBox(), i, bvh.root);
+            foreach (var other in potentialCollisions)
             {
-                var other = boxes[j];
+                if (box == boxes[other.Item1]) continue;
                 if (!CollisionData.HasMoreContacts()) return;
-                CollisionDetector.BoxAndBox(box.EngineBox, other.EngineBox, CollisionData);
-
-                if (IntersectionTests.BoxAndBox(box.EngineBox, other.EngineBox))
+                CollisionDetector.BoxAndBox(box.EngineBox, boxes[other.Item1].EngineBox, CollisionData);
+                if (IntersectionTests.BoxAndBox(box.EngineBox, boxes[other.Item1].EngineBox))
                 {
-                    box.EngineBox.IsOverlapping = other.EngineBox.IsOverlapping = true;
+                    box.EngineBox.IsOverlapping = boxes[other.Item1].EngineBox.IsOverlapping = true;
                 }
             }
         }
+
+        //// Perform exhaustive collision detection
+        //for (var i = 0; i < Boxes; i++)
+        //{
+        //    var box = boxes[i];
+        //    // Check for collisions with the ground plane
+        //    if (!CollisionData.HasMoreContacts()) return;
+        //    CollisionDetector.BoxAndHalfSpace(box.EngineBox, plane.EnginePlane, CollisionData);
+
+        //    // Check for collisions with each other box
+        //    for (var j = i + 1; j < Boxes; j++)
+        //    {
+        //        var other = boxes[j];
+        //        if (!CollisionData.HasMoreContacts()) return;
+        //        CollisionDetector.BoxAndBox(box.EngineBox, other.EngineBox, CollisionData);
+
+        //        if (IntersectionTests.BoxAndBox(box.EngineBox, other.EngineBox))
+        //        {
+        //            box.EngineBox.IsOverlapping = other.EngineBox.IsOverlapping = true;
+        //        }
+        //    }
+        //}
     }
 
     /// <summary>

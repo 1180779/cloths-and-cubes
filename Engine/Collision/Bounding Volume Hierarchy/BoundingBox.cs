@@ -29,6 +29,14 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             );
         }
 
+        public static BoundingBox CreateFastAABBFromParticle(Particle particle)
+        {
+            return new BoundingBox(
+                center: particle.position,
+                halfSize: new Vector3(0.1f, 0.1f, 0.1f) // small AABB for particle
+            );
+        }
+
         public static BoundingBox JoinAABBs(BoundingBox a, BoundingBox b)
         {
             var min = new Vector3(
@@ -63,5 +71,10 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             }
             return box;
         }
+    }
+
+    public interface IBoxable
+    {
+        public BoundingBox GetBoundingBox();
     }
 }
