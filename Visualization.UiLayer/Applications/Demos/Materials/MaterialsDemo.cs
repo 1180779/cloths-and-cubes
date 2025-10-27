@@ -6,7 +6,7 @@ public class MaterialsDemo : SpheresMaterialsDemo
 {
     protected override IMaterial[] GetMaterials()
     {
-        NrOfRows = 25;
+        NrOfRows = 10;
         var nrOfColumns = NrOfRows;
 
         var materials = new List<IMaterial>(NrOfRows * nrOfColumns);

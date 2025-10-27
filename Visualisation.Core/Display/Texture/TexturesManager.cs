@@ -134,6 +134,69 @@ public static class TexturesManager
         GlHelper.CheckGlError("TexturesManager::EnsurePlaceholderCreated");
     }
 
+    private static PendingLoadResult LoadPixelData(string texturePath)
+    {
+        var pathToLoad = texturePath;
+
+        if (Path.GetExtension(texturePath).Equals(".psd", StringComparison.InvariantCultureIgnoreCase))
+        {
+            var pngPath = Path.ChangeExtension(texturePath, ".png");
+            if (!File.Exists(pngPath))
+            {
+                Debug.WriteLine($"Converting PSD to PNG ({texturePath})");
+                using var magickImage = new MagickImage(texturePath);
+                magickImage.Format = MagickFormat.Png;
+                magickImage.Write(pngPath);
+            }
+            else
+            {
+                Debug.WriteLine($"Loading previously converted PNG ({pngPath})");
+            }
+
+            pathToLoad = pngPath;
+        }
+
+        using var image = Image.Load<Rgba32>(pathToLoad);
+        image.Mutate(x => x.Flip(FlipMode.Vertical));
+
+        var pixelData = new byte[image.Width * image.Height * 4];
+        image.CopyPixelDataTo(pixelData);
+
+        return new PendingLoadResult
+        {
+            Path = texturePath,
+            PixelData = pixelData,
+            Width = image.Width,
+            Height = image.Height,
+            InternalFormat = PixelInternalFormat.Rgba8,
+            Format = PixelFormat.Rgba
+        };
+    }
+
+    private static void PerformImmediateLoad(Entry entry, string path, InitTextureCallback initCallback)
+    {
+        try
+        {
+            var result = LoadPixelData(path);
+
+            GL.CreateTextures(TextureTarget.Texture2D, 1, out int textureId);
+            GL.BindTexture(TextureTarget.Texture2D, textureId);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width, result.Height, 0,
+                result.Format, PixelType.UnsignedByte, result.PixelData);
+
+            initCallback.Invoke();
+
+            entry.PublicTextureData.TextureId = textureId;
+            entry.IsLoaded = true;
+
+            GlHelper.CheckGlError("TexturesManager::PerformImmediateLoad");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to load texture '{path}' immediately: {ex}");
+        }
+    }
+
     /// <summary>
     /// Starts the asynchronous loading process for a texture.
     /// Converts PSD files to PNG if necessary and prepares pixel data for rendering.
@@ -149,54 +212,12 @@ public static class TexturesManager
         {
             try
             {
-                token.ThrowIfCancellationRequested();
-
-                var pathToLoad = texturePath;
-
-                if (Path.GetExtension(texturePath).Equals(".psd", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    var pngPath = Path.ChangeExtension(texturePath, ".png");
-                    if (!File.Exists(pngPath))
-                    {
-                        Debug.WriteLine($"Converting PSD to PNG ({texturePath})");
-                        using var magickImage = new MagickImage(texturePath);
-                        magickImage.Format = MagickFormat.Png;
-                        magickImage.Write(pngPath);
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"Loading previously converted PNG ({pngPath})");
-                    }
-
-                    pathToLoad = pngPath;
-                }
-
-                token.ThrowIfCancellationRequested();
-
-                using var image = Image.Load<Rgba32>(pathToLoad);
-                image.Mutate(x => x.Flip(FlipMode.Vertical));
-
-                token.ThrowIfCancellationRequested();
-
-                var pixelData = new byte[image.Width * image.Height * 4];
-                image.CopyPixelDataTo(pixelData);
-
-                var result = new PendingLoadResult
-                {
-                    Path = texturePath,
-                    PixelData = pixelData,
-                    Width = image.Width,
-                    Height = image.Height,
-                    InternalFormat = PixelInternalFormat.Rgba8,
-                    Format = PixelFormat.Rgba
-                };
-
-                token.ThrowIfCancellationRequested();
+                if (token.IsCancellationRequested)
+                    return;
+                var result = LoadPixelData(texturePath);
+                if (token.IsCancellationRequested)
+                    return;
                 PendingUploads.Enqueue(result);
-            }
-            catch (OperationCanceledException)
-            {
-                // cancelled
             }
             catch (Exception ex)
             {
@@ -237,6 +258,84 @@ public static class TexturesManager
             EnqueueLoad(path, e);
             return e;
         });
+
+        Interlocked.Increment(ref entry.UsagesCount);
+
+        return entry.PublicTextureData;
+    }
+
+    /// <summary>
+    /// Get the Texture. If already loaded returns the real texture. If not ready, loads the texture on the current thread.
+    /// This function must be called from the GL thread.
+    /// If an async load is in progress for the same texture, it will wait for it to complete and then process the upload.
+    /// </summary>
+    public static TextureData LoadTextureImmediately(string texturePath, InitTextureCallback initCallback)
+    {
+        EnsurePlaceholderCreated();
+
+        var entry = TextureDataDict.GetOrAdd(texturePath, path =>
+        {
+            var td = new TextureData
+            {
+                TextureId = PlaceholderTextureId!.Value,
+                TexturePath = path
+            };
+
+            var e = new Entry
+            {
+                PublicTextureData = td,
+                UsagesCount = 0,
+                InitCallback = initCallback,
+                IsLoaded = false
+            };
+
+            PerformImmediateLoad(e, path, initCallback);
+
+            return e;
+        });
+
+        /* if not loaded then it was being processed in the background */
+        if (!entry.IsLoaded)
+        {
+            Task? loadingTask;
+            lock (entry)
+            {
+                if (entry.IsLoaded)
+                {
+                    Interlocked.Increment(ref entry.UsagesCount);
+                    return entry.PublicTextureData;
+                }
+
+                loadingTask = entry.LoadingTask;
+            }
+
+            if (loadingTask != null)
+            {
+                try
+                {
+                    loadingTask.Wait();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Waiting on texture load task failed for '{texturePath}': {ex}");
+                }
+
+                ProcessPendingUploads();
+            }
+
+            /* TODO: check if this check is not excessive (it might be impossible to stumble into this state) */
+            if (!entry.IsLoaded)
+            {
+                lock (entry)
+                {
+                    if (!entry.IsLoaded)
+                    {
+                        entry.InitCallback = initCallback;
+                        PerformImmediateLoad(entry, texturePath, initCallback);
+                    }
+                }
+            }
+        }
 
         Interlocked.Increment(ref entry.UsagesCount);
 
