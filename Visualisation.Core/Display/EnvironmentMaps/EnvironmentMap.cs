@@ -6,11 +6,13 @@ namespace Visualisation.Core.Display.EnvironmentMaps;
 
 public class EnvironmentMap : IDisposable
 {
+    public bool IrradianceMapInsteadOfSkybox;
+
     private Cube cube = new();
-    private readonly int envCubemap;
+    private readonly int envCubemap, irradianceMap;
     private TexturesManager.TextureData hdr;
 
-    public EnvironmentMap(string path, Shader equirectangularToCubemapShader)
+    public EnvironmentMap(string path, Shader equirectangularToCubemapShader, Shader irradianceConvolutionShader)
     {
         cube.Init();
         LoadImmediately(path);
@@ -77,13 +79,60 @@ public class EnvironmentMap : IDisposable
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
+
+        /* now get the irradianceMap map */
+        irradianceMap = GL.GenTexture();
+        GL.BindTexture(TextureTarget.TextureCubeMap, irradianceMap);
+        for (var i = 0; i < 6; ++i)
+        {
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                TextureTarget.TextureCubeMapPositiveX + i, envCubemap, 0);
+            GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 0, PixelInternalFormat.Rgb16f, 32, 32, 0,
+                PixelFormat.Rgb, PixelType.Float, 0);
+        }
+
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS,
+            (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT,
+            (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR,
+            (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter,
+            (int)TextureMagFilter.Linear);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter,
+            (int)TextureMagFilter.Linear);
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, captureFbo);
+        GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, captureRbo);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, 32, 32);
+
+        irradianceConvolutionShader.Use();
+        irradianceConvolutionShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
+            envCubemap);
+        irradianceConvolutionShader.SetMatrix4("projection", captureProjection);
+
+        GL.Viewport(0, 0, 32, 32); // don't forget to configure the viewport to the capture dimensions.
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, captureFbo);
+        for (var i = 0; i < 6; ++i)
+        {
+            irradianceConvolutionShader.SetMatrix4("view", captureViews[i]);
+            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                TextureTarget.TextureCubeMapPositiveX + i, irradianceMap, 0);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            cube.Render();
+        }
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+        /* free the framebuffer and renderbuffer */
         GL.DeleteFramebuffer(captureFbo);
         GL.DeleteRenderbuffer(captureRbo);
     }
 
     public void SetForShader(Shader sh)
     {
-        sh.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1, envCubemap);
+        sh.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
+            IrradianceMapInsteadOfSkybox ? irradianceMap : envCubemap);
     }
 
 

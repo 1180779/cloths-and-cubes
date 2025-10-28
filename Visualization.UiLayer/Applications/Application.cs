@@ -151,6 +151,11 @@ public class Application : GameWindow
         ImGui.DockSpace(dockspaceId, new System.Numerics.Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
 
         // draw windows here
+        // Irradiance map instead of skybox
+        ImGui.Begin("Irradiance instead of skybox");
+        ImGui.Checkbox("Use Irradiance Map", ref Scene.EnvironmentMap.IrradianceMapInsteadOfSkybox);
+        ImGui.End();
+
         HelpWindow.Draw();
 
         ImGui.Begin("Performance");

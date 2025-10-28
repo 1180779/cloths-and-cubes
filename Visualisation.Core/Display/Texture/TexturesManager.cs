@@ -8,6 +8,11 @@ namespace Visualisation.Core.Display.Texture;
 
 public static class TexturesManager
 {
+    static TexturesManager()
+    {
+        StbImage.stbi_set_flip_vertically_on_load(1);
+    }
+
     /// <summary>
     /// Encapsulates texture-related metadata and state information, including
     /// unique texture identification and file path.
@@ -211,7 +216,26 @@ public static class TexturesManager
             pathToLoad = pngPath;
         }
 
-        if (Path.GetExtension(pathToLoad).Equals(".hdr", StringComparison.InvariantCultureIgnoreCase))
+        if (Path.GetExtension(pathToLoad).Equals(".exr", StringComparison.InvariantCultureIgnoreCase))
+        {
+            var hdrPath = Path.ChangeExtension(pathToLoad, ".hdr");
+            if (!File.Exists(hdrPath))
+            {
+                Debug.WriteLine($"Converting EXR to HDR ({pathToLoad})");
+                using var magickImage = new MagickImage(pathToLoad);
+                magickImage.Format = MagickFormat.Hdr;
+                magickImage.Write(hdrPath);
+            }
+            else
+            {
+                Debug.WriteLine($"Loading previously converted HDR ({hdrPath})");
+            }
+
+            pathToLoad = hdrPath;
+        }
+
+        var extension = Path.GetExtension(pathToLoad);
+        if (extension.Equals(".hdr", StringComparison.InvariantCultureIgnoreCase))
         {
             using var stream = File.OpenRead(pathToLoad);
             var image = ImageResultFloat.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
@@ -242,6 +266,7 @@ public static class TexturesManager
             };
         }
     }
+
 
     private static void PerformImmediateLoad(Entry entry, string path, InitTextureCallback initCallback)
     {

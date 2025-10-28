@@ -7,7 +7,7 @@ namespace Visualization.UiLayer
     {
         private static void Main(string[] args)
         {
-            using Application application = new ConstantMaterialsDemo();
+            using Application application = new MaterialsDemo();
             application.Run();
             application.Focus();
         }

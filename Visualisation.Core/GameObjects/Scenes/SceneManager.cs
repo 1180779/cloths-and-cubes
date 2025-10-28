@@ -11,7 +11,7 @@ public abstract class SceneManager : IDisposable
 {
     public SceneManager(float aspectRatio)
     {
-        EnvironmentMap = new(Hdr, EquirectangularToCubemapShader);
+        EnvironmentMap = new(Hdr, EquirectangularToCubemapShader, IrradianceConvolutionShader);
 
         CamerasManager = new();
         LightsManager = new(CamerasManager);
@@ -30,17 +30,20 @@ public abstract class SceneManager : IDisposable
     private const string FragmentShader = "phongShader.frag";
     public readonly Shader Shader = new(VertexShader, FragmentShader);
 
-    private const string EquirectangularToCubemapVertexShader = "equirectangularToCubemapShader.vert";
+    private const string CubemapVertexShader = "cubemap.vert";
     private const string EquirectangularToCubemapFragmentShader = "equirectangularToCubemapShader.frag";
+    private const string IrradianceConvolutionFragmentShader = "irradianceConvolutionShader.frag";
 
     public readonly Shader EquirectangularToCubemapShader =
-        new(EquirectangularToCubemapVertexShader, EquirectangularToCubemapFragmentShader);
+        new(CubemapVertexShader, EquirectangularToCubemapFragmentShader);
+
+    public readonly Shader IrradianceConvolutionShader = new(CubemapVertexShader, IrradianceConvolutionFragmentShader);
 
     private const string SkyboxVertexShader = "skyboxShader.vert";
     private const string SkyboxFragmentShader = "skyboxShader.frag";
     public readonly Shader SkyboxShader = new(SkyboxVertexShader, SkyboxFragmentShader);
 
-    private const string Hdr = "HDR_blue_nebulae-1.hdr";
+    private const string Hdr = "Hdr/196_hdrmaps_com_free_10K.exr";
     public EnvironmentMap EnvironmentMap { get; set; }
     private Cube cube = new();
 
