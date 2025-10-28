@@ -1,13 +1,14 @@
-#version 330 core
+#version 430 core
 out vec4 FragColor;
 
-in vec3 localPos;
+in vec3 WorldPos;
 
+uniform float lookup;
 uniform samplerCube environmentMap;
 
 void main()
 {
-    vec3 envColor = texture(environmentMap, localPos).rgb;
+    vec3 envColor = textureLod(environmentMap, WorldPos, lookup).rgb;
 
     envColor = envColor / (envColor + vec3(1.0));
     envColor = pow(envColor, vec3(1.0/2.2));

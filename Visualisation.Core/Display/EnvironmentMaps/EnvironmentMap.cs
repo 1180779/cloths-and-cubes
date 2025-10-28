@@ -6,13 +6,27 @@ namespace Visualisation.Core.Display.EnvironmentMaps;
 
 public class EnvironmentMap : IDisposable
 {
+    public enum DisplayType
+    {
+        EnvironmentCubemap,
+        IrradianceMap,
+        PrefilterMap
+    }
+
+    public DisplayType displayType = DisplayType.EnvironmentCubemap;
+    public float PrefilterMapValue = 1.0f;
+
     public bool IrradianceMapInsteadOfSkybox;
 
     private Cube cube = new();
-    private readonly int envCubemap, irradianceMap;
+    private readonly int envCubemap, irradianceMap, prefilterMap;
     private TexturesManager.TextureData hdr;
 
-    public EnvironmentMap(string path, Shader equirectangularToCubemapShader, Shader irradianceConvolutionShader)
+    public EnvironmentMap(
+        string path,
+        Shader equirectangularToCubemapShader,
+        Shader irradianceConvolutionShader,
+        Shader prefilterShader)
     {
         cube.Init();
         LoadImmediately(path);
@@ -58,27 +72,27 @@ public class EnvironmentMap : IDisposable
         ];
 
         // convert HDR equirectangular environment map to cubemap equivalent
-        equirectangularToCubemapShader.Use(); // Assuming this is a Shader object
-        equirectangularToCubemapShader.SetInt("equirectangularMap", 0); // Assuming this is a Shader object
-        equirectangularToCubemapShader.SetMatrix4("projection", captureProjection); // Assuming this is a Shader object
-        GL.ActiveTexture(TextureUnit.Texture0);
-        GL.BindTexture(TextureTarget.Texture2D, hdr.TextureId);
+        equirectangularToCubemapShader.Use();
+        equirectangularToCubemapShader.SetTexture("equirectangularMap", TextureTarget.Texture2D, TextureUnit.Texture0,
+            hdr.TextureId);
+        equirectangularToCubemapShader.SetMatrix4("projection", captureProjection);
 
-        GL.Viewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+        GL.Viewport(0, 0, 512, 512);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, captureFbo);
         for (int i = 0; i < 6; ++i)
         {
-            equirectangularToCubemapShader.SetMatrix4("view", captureViews[i]); // Assuming this is a Shader object
+            equirectangularToCubemapShader.SetMatrix4("view", captureViews[i]);
             GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                 TextureTarget.TextureCubeMapPositiveX + i, envCubemap, 0);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             cube.Render();
-            // renderCube(); // renders a 1x1 cube
         }
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
+        // TODO: Bright dots in the pre-filter convolution
+        // GL.BindTexture(TextureTarget.TextureCubeMap, envCubemap);
+        // GL.GenerateMipmap(GenerateMipmapTarget.TextureCubeMap);
+        GlHelper.CheckGlError("EnvironmentMap - envCubemap");
 
         /* now get the irradianceMap map */
         irradianceMap = GL.GenTexture();
@@ -122,6 +136,60 @@ public class EnvironmentMap : IDisposable
             cube.Render();
         }
 
+        GlHelper.CheckGlError("EnvironmentMap - irradianceMap");
+
+        /* prefilter convolution map based on the env cubemap */
+        prefilterMap = GL.GenTexture();
+        GL.BindTexture(TextureTarget.TextureCubeMap, prefilterMap);
+
+        for (var i = 0; i < 6; ++i)
+        {
+            GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 0, PixelInternalFormat.Rgb16f, 128, 128, 0,
+                PixelFormat.Rgb, PixelType.Float, 0);
+        }
+
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS,
+            (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT,
+            (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR,
+            (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter,
+            (int)TextureMinFilter.LinearMipmapLinear); // Enable mipmap filtering
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter,
+            (int)TextureMagFilter.Linear);
+        GL.GenerateMipmap(GenerateMipmapTarget.TextureCubeMap); // Generate mipmaps
+
+        prefilterShader.Use();
+        prefilterShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1, envCubemap);
+        prefilterShader.SetMatrix4("projection", captureProjection);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, captureFbo);
+
+        int maxMipLevels = 5;
+        for (var mip = 0; mip < maxMipLevels; ++mip)
+        {
+            // resize framebuffer according to mip-level size.
+            var mipWidth = (int)(128 * Math.Pow(0.5, mip));
+            var mipHeight = (int)(128 * Math.Pow(0.5, mip));
+            GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, captureRbo);
+            GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, mipWidth,
+                mipHeight);
+            GL.Viewport(0, 0, mipWidth, mipHeight);
+
+            float roughness = (float)mip / (float)(maxMipLevels - 1);
+            prefilterShader.SetFloat("roughness", roughness);
+            for (var i = 0; i < 6; ++i)
+            {
+                prefilterShader.SetMatrix4("view", captureViews[i]);
+                GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                    TextureTarget.TextureCubeMapPositiveX + i, prefilterMap, mip);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                cube.Render();
+            }
+        }
+
+        GlHelper.CheckGlError("EnvironmentMap - prefilterMap");
+
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
         /* free the framebuffer and renderbuffer */
@@ -131,8 +199,24 @@ public class EnvironmentMap : IDisposable
 
     public void SetForSkyBoxShader(Shader skyboxShader)
     {
-        skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
-            IrradianceMapInsteadOfSkybox ? irradianceMap : envCubemap);
+        switch (displayType)
+        {
+            case DisplayType.EnvironmentCubemap:
+                skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
+                    envCubemap);
+                skyboxShader.SetFloat("lookup", 1.0f);
+                break;
+            case DisplayType.IrradianceMap:
+                skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
+                    irradianceMap);
+                skyboxShader.SetFloat("lookup", 1.0f);
+                break;
+            case DisplayType.PrefilterMap:
+                skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
+                    prefilterMap);
+                skyboxShader.SetFloat("lookup", PrefilterMapValue);
+                break;
+        }
     }
 
     public void SetForPbrShader(Shader pbrShader)

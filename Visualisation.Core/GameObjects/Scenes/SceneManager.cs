@@ -11,7 +11,7 @@ public abstract class SceneManager : IDisposable
 {
     public SceneManager(float aspectRatio)
     {
-        EnvironmentMap = new(Hdr, EquirectangularToCubemapShader, IrradianceConvolutionShader);
+        EnvironmentMap = new(Hdr, EquirectangularToCubemapShader, IrradianceConvolutionShader, PrefilterShader);
 
         CamerasManager = new();
         LightsManager = new(CamerasManager);
@@ -32,12 +32,14 @@ public abstract class SceneManager : IDisposable
 
     private const string CubemapVertexShader = "cubemap.vert";
     private const string EquirectangularToCubemapFragmentShader = "equirectangularToCubemapShader.frag";
+    private const string PrefilterFragmentShader = "prefilterShader.frag";
     private const string IrradianceConvolutionFragmentShader = "irradianceConvolutionShader.frag";
 
     public readonly Shader EquirectangularToCubemapShader =
         new(CubemapVertexShader, EquirectangularToCubemapFragmentShader);
 
     public readonly Shader IrradianceConvolutionShader = new(CubemapVertexShader, IrradianceConvolutionFragmentShader);
+    public readonly Shader PrefilterShader = new(CubemapVertexShader, PrefilterFragmentShader);
 
     private const string SkyboxVertexShader = "skyboxShader.vert";
     private const string SkyboxFragmentShader = "skyboxShader.frag";

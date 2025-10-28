@@ -4,6 +4,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Visualisation.Core;
 using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Texture;
 using Visualisation.Core.GameObjects.Scenes;
@@ -60,6 +61,7 @@ public class Application : GameWindow
         // GL
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
         GL.Enable(EnableCap.DepthTest);
+        GL.Enable(EnableCap.TextureCubeMapSeamless); /* for low mip levels of pre-filter convolution map */
     }
 
     protected bool StepsLimit { get; set; }
@@ -152,8 +154,25 @@ public class Application : GameWindow
 
         // draw windows here
         // Irradiance map instead of skybox
-        ImGui.Begin("Irradiance instead of skybox");
-        ImGui.Checkbox("Use Irradiance Map", ref Scene.EnvironmentMap.IrradianceMapInsteadOfSkybox);
+        ImGui.Begin("Environment Map Settings");
+        int currentDisplayType = (int)Scene.EnvironmentMap.displayType;
+        ImGui.Text("Display Type:");
+        ImGui.RadioButton("Skybox", ref currentDisplayType, (int)EnvironmentMap.DisplayType.EnvironmentCubemap);
+        ImGui.SameLine();
+        ImGui.RadioButton("Irradiance Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.IrradianceMap);
+        ImGui.SameLine();
+        ImGui.RadioButton("Prefiltered Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.PrefilterMap);
+        Scene.EnvironmentMap.displayType = (EnvironmentMap.DisplayType)currentDisplayType;
+
+        if (Scene.EnvironmentMap.displayType == EnvironmentMap.DisplayType.PrefilterMap)
+        {
+            float roughness = Scene.EnvironmentMap.PrefilterMapValue;
+            if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
+            {
+                Scene.EnvironmentMap.PrefilterMapValue = roughness;
+            }
+        }
+
         ImGui.End();
 
         HelpWindow.Draw();

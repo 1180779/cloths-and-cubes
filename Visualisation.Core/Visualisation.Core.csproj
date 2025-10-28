@@ -61,6 +61,9 @@
         <None Update="Shaders\irradianceConvolutionShader.frag">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <None Update="Shaders\prefilterShader.frag">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>
