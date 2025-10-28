@@ -9,6 +9,33 @@ complete toolkit with scene management and modern graphics.
 
 ---
 
+## Getting Started
+
+Prerequisites:
+
+- .NET SDK 9.0 or newer
+- A GPU/driver supporting modern OpenGL (if using the default renderer)
+
+Build and run:
+
+1. Clone the repository
+2. Download files from links below
+    - textures: optional, but useful for better demonstration of pbr
+      [Textures.zip](https://drive.google.com/file/d/14D9zDoMZPjnYEwdqEP6SLOKJi2nxBn1U/view?usp=sharing) (this one
+      should be extacted into the folder of the same name: _Textures_)
+    - .ext/.hdr maps: environment cube; kind of necessary to get a good visual result
+      [Hdr](https://drive.google.com/drive/folders/1VPNXxa2OMOoKXYhZLsZPBg508YBBYo04?usp=sharing)
+
+For them to work properly place the downloaded folders into the output directory (
+_../Visualization.UiLayer/bin/../../.net9.0/_)
+
+Notes:
+
+- Shaders may compile at startup.
+- If you encounter issues with the graphics context on Linux, ensure required OpenGL packages/drivers are installed.
+
+---
+
 ## Highlights
 
 - Rigid body dynamics for simple primitives (spheres, boxes)
@@ -35,28 +62,6 @@ Planned:
 - Windowing/Input/GL: OpenTK (planned/assumed)
 - Rendering: OpenGL (current), with planned PBR pipeline
 - Serialization: JSON (planned; subject to change)
-
----
-
-## Getting Started
-
-Prerequisites:
-
-- .NET SDK 9.0 or newer
-- A GPU/driver supporting modern OpenGL (if using the default renderer)
-
-Build and run:
-
-1. Clone the repository
-2. From the repository root, run:
-    - Debug: `dotnet run --project <PathToYourAppProject>`
-    - Release: `dotnet run -c Release --project <PathToYourAppProject>`
-3. If multiple sample apps exist, choose the one you want to start by specifying its project path.
-
-Notes:
-
-- On first run, shaders may compile at startup.
-- If you encounter issues with the graphics context on Linux, ensure required OpenGL packages/drivers are installed.
 
 ---
 
