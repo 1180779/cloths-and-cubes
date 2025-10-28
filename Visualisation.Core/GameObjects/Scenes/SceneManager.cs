@@ -11,6 +11,8 @@ public abstract class SceneManager : IDisposable
 {
     public SceneManager(float aspectRatio)
     {
+        EnvironmentMap = new(Hdr, EquirectangularToCubemapShader);
+
         CamerasManager = new();
         LightsManager = new(CamerasManager);
 
@@ -34,8 +36,12 @@ public abstract class SceneManager : IDisposable
     public readonly Shader EquirectangularToCubemapShader =
         new(EquirectangularToCubemapVertexShader, EquirectangularToCubemapFragmentShader);
 
+    private const string SkyboxVertexShader = "skyboxShader.vert";
+    private const string SkyboxFragmentShader = "skyboxShader.frag";
+    public readonly Shader SkyboxShader = new(SkyboxVertexShader, SkyboxFragmentShader);
+
     private const string Hdr = "HDR_blue_nebulae-1.hdr";
-    public EnvironmentMap EnvironmentMap { get; set; } = new(Hdr);
+    public EnvironmentMap EnvironmentMap { get; set; }
     private Cube cube = new();
 
     public LightsManager LightsManager { get; private set; }
@@ -74,10 +80,11 @@ public abstract class SceneManager : IDisposable
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         /* render environment first */
-        EquirectangularToCubemapShader.Use();
-        EquirectangularToCubemapShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
-        EquirectangularToCubemapShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
-        EnvironmentMap.SetForShader(EquirectangularToCubemapShader);
+        GL.DepthFunc(DepthFunction.Lequal);
+        SkyboxShader.Use();
+        SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
+        SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
+        EnvironmentMap.SetForShader(SkyboxShader);
         cube.Render();
 
         /* render every other object */
@@ -107,6 +114,7 @@ public abstract class SceneManager : IDisposable
     {
         cube.Dispose();
         Shader.Dispose();
+        SkyboxShader.Dispose();
         EquirectangularToCubemapShader.Dispose();
 
         LightsManager.Dispose();
