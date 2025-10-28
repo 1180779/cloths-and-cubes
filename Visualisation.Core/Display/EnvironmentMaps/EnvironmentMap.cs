@@ -129,12 +129,16 @@ public class EnvironmentMap : IDisposable
         GL.DeleteRenderbuffer(captureRbo);
     }
 
-    public void SetForShader(Shader sh)
+    public void SetForSkyBoxShader(Shader skyboxShader)
     {
-        sh.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
+        skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
             IrradianceMapInsteadOfSkybox ? irradianceMap : envCubemap);
     }
 
+    public void SetForPbrShader(Shader pbrShader)
+    {
+        pbrShader.SetTexture("irradianceMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1, irradianceMap);
+    }
 
     public void LoadImmediately(string path)
     {

@@ -26,9 +26,9 @@ public abstract class SceneManager : IDisposable
         CamerasManager.AddCamera(camera);
     }
 
-    private const string VertexShader = "phongShader.vert";
-    private const string FragmentShader = "phongShader.frag";
-    public readonly Shader Shader = new(VertexShader, FragmentShader);
+    private const string PbrVertexShader = "phongShader.vert";
+    private const string PbrFragmentShader = "phongShader.frag";
+    public readonly Shader PbrShader = new(PbrVertexShader, PbrFragmentShader);
 
     private const string CubemapVertexShader = "cubemap.vert";
     private const string EquirectangularToCubemapFragmentShader = "equirectangularToCubemapShader.frag";
@@ -87,16 +87,17 @@ public abstract class SceneManager : IDisposable
         SkyboxShader.Use();
         SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
         SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
-        EnvironmentMap.SetForShader(SkyboxShader);
+        EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
         cube.Render();
 
         /* render every other object */
-        Shader.Use();
-        CamerasManager.CurrentCamera.SetForShader(Shader);
-        LightsManager.SetForShader(Shader);
+        PbrShader.Use();
+        EnvironmentMap.SetForPbrShader(PbrShader);
+        CamerasManager.CurrentCamera.SetForShader(PbrShader);
+        LightsManager.SetForShader(PbrShader);
         foreach (var gameObject in gameObjects)
         {
-            gameObject.SetForShader(Shader);
+            gameObject.SetForShader(PbrShader);
             gameObject.Render();
         }
     }
@@ -116,7 +117,7 @@ public abstract class SceneManager : IDisposable
     public void Dispose()
     {
         cube.Dispose();
-        Shader.Dispose();
+        PbrShader.Dispose();
         SkyboxShader.Dispose();
         EquirectangularToCubemapShader.Dispose();
 

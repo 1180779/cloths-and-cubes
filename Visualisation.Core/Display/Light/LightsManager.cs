@@ -71,9 +71,6 @@ public class LightsManager
 
     public LightSpotlight? Flashlight { get; private set; }
 
-    public bool Fog = false;
-    public float FogDensity = 0.10f;
-    public Vector3 FogColor = new(0.5f, 0.5f, 0.5f);
     public bool FlashlightOn = false;
     public bool Day = true;
 
@@ -103,14 +100,9 @@ public class LightsManager
         DirectionalShadowDepthShader.Dispose();
     }
 
-    public static Vector3 GlobalAmbient = new(0.2f, 0.2f, 0.2f);
 
     public void SetForShader(Shader sh)
     {
-        sh.SetVector3("globalAmbient", GlobalAmbient);
-        sh.SetFloat("fogDensity", Fog ? FogDensity : 0.0f);
-        sh.SetVector3("fogColor", FogColor);
-
         if (Day)
         {
             if (DirectionalLight is not null)

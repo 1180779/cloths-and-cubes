@@ -44,6 +44,8 @@ struct LightPointOut {
 };
 
 /* PBR parameters*/
+uniform samplerCube irradianceMap;
+
 uniform bool useMaps; /* whether to use texture maps or uniform values */
 
 uniform sampler2D albedoMap;
@@ -91,10 +93,6 @@ uniform int lightPCount;
 
 in vec3 TangentViewPos;
 
-/* for parameters */
-uniform vec3 fogColor;
-uniform float fogDensity;
-
 out vec4 FragColor;
 
 /* ------------------------------------------ /
@@ -102,6 +100,12 @@ out vec4 FragColor;
 /------------------------------------------- */
 
 /* PBR helper functions */
+
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
 
 float DistributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -382,20 +386,17 @@ void main()
         Lo += pointlightCalculate(tangentLightP[i], N, V, F0, material);
     }
 
-    // ambient lighting (note that the next IBL tutorial will replace 
-    // this ambient lighting with environment lighting).
-    vec3 ambient = globalAmbient * material.albedo * material.ao;
+    // ambient lighting (IBL as the ambient term)
+    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kD = 1.0 - kS;
+    vec3 irradiance = texture(irradianceMap, N).rgb;
+    vec3 diffuse    = irradiance * material.albedo;
+    vec3 ambient    = (kD * diffuse) * material.ao;
     vec3 color = ambient + Lo;
 
-    // calculate fog
-    float fogFactor = 1.0f - exp(-fogDensity * length(TangentViewPos - TangentFragPosition));
-    fogFactor = clamp(fogFactor, 0.0, 1.0);
-
     // TODO: move HDR tonemapping and gamma correct to post-processing shader
-    // HDR tonemapping
-    color = color / (color + vec3(1.0));
-    // gamma correct
-    color = pow(color, vec3(1.0/2.2));
+    color = color / (color + vec3(1.0));// HDR tonemapping
+    color = pow(color, vec3(1.0/2.2));// gamma correct
 
-    FragColor = vec4(mix(color, fogColor, fogFactor), 1.0);
+    FragColor = vec4(color, 1.0);
 }
