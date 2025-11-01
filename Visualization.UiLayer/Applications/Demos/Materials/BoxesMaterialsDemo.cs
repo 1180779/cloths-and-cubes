@@ -5,7 +5,7 @@ namespace Visualization.UiLayer.Applications.Demos.Materials;
 
 public abstract class BoxesMaterialsDemo : BoxesDemo
 {
-    protected const int NrOfRows = 5;
+    protected int NrOfRows = 5;
 
     protected abstract IMaterial[] GetMaterials();
 

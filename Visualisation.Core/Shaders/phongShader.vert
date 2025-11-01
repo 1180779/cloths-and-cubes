@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 struct LightDirectional {
     vec3 direction;
@@ -47,6 +47,8 @@ out vec3 TangentNormal;
 out vec2 TexCoords;
 
 out vec3 TangentViewPos;
+out vec3 WorldViewPos;
+out mat3 TBN;
 
 uniform mat4 lightSpaceMatrix;
 uniform int dirLightCount;
@@ -82,7 +84,7 @@ void main()
     T = normalize(T - N * dot(N, T));
     B = normalize(cross(N, T));
 
-    mat3 TBN = mat3(T, B, N);
+    TBN = mat3(T, B, N);
 
     /* change ligthning calculations to be in tangent space 
         this is necessary for normals to work properly */
@@ -91,6 +93,7 @@ void main()
     TangentNormal = normalize(worldToTangent * N);
     TangentFragPosition = worldToTangent * FragPosition;
     TangentViewPos = worldToTangent * viewPos;
+    WorldViewPos = viewPos;
 
     if (lightDCount > 0) {
         tangentLightD.direction = normalize(worldToTangent * lightD.direction);

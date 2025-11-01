@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
+using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Display.Texture;
 
@@ -10,7 +11,7 @@ public class EnvironmentMap : IDisposable
     {
         EnvironmentCubemap,
         IrradianceMap,
-        PrefilterMap
+        PrefilterMap,
     }
 
     public DisplayType displayType = DisplayType.EnvironmentCubemap;
@@ -18,15 +19,18 @@ public class EnvironmentMap : IDisposable
 
     public bool IrradianceMapInsteadOfSkybox;
 
+    private QuadMesh quad = new();
     private Cube cube = new();
-    private readonly int envCubemap, irradianceMap, prefilterMap;
+    private readonly int envCubemap, irradianceMap, prefilterMap, brdfLUTTexture;
     private TexturesManager.TextureData hdr;
 
     public EnvironmentMap(
         string path,
         Shader equirectangularToCubemapShader,
         Shader irradianceConvolutionShader,
-        Shader prefilterShader)
+        Shader prefilterShader,
+        Shader brdfShader
+    )
     {
         cube.Init();
         LoadImmediately(path);
@@ -190,6 +194,27 @@ public class EnvironmentMap : IDisposable
 
         GlHelper.CheckGlError("EnvironmentMap - prefilterMap");
 
+        /* brdfLUTTexture */
+        brdfLUTTexture = GL.GenTexture();
+        GL.BindTexture(TextureTarget.Texture2D, brdfLUTTexture);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rg16f, 512, 512, 0, PixelFormat.Rg,
+            PixelType.Float, 0);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMagFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, captureFbo);
+        GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, captureRbo);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, 512, 512);
+        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+            TextureTarget.Texture2D, brdfLUTTexture, 0);
+
+        GL.Viewport(0, 0, 512, 512);
+
+        brdfShader.Use();
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        quad.Render();
+
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
         /* free the framebuffer and renderbuffer */
@@ -219,9 +244,16 @@ public class EnvironmentMap : IDisposable
         }
     }
 
+    public void SetForQuadTextureShader(Shader textureShader)
+    {
+        textureShader.SetTexture("inTexture", TextureTarget.Texture2D, TextureUnit.Texture0, brdfLUTTexture);
+    }
+
     public void SetForPbrShader(Shader pbrShader)
     {
         pbrShader.SetTexture("irradianceMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1, irradianceMap);
+        pbrShader.SetTexture("prefilterMap", TextureTarget.TextureCubeMap, TextureUnit.Texture2, prefilterMap);
+        pbrShader.SetTexture("brdfLUT", TextureTarget.Texture2D, TextureUnit.Texture3, brdfLUTTexture);
     }
 
     public void LoadImmediately(string path)
@@ -247,6 +279,10 @@ public class EnvironmentMap : IDisposable
     public void Dispose()
     {
         GL.DeleteTexture(envCubemap);
+        GL.DeleteTexture(this.irradianceMap);
+        GL.DeleteTexture(this.prefilterMap);
+        GL.DeleteTexture(brdfLUTTexture);
         cube.Dispose();
+        quad.Dispose();
     }
 }

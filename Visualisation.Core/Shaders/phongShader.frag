@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 /* constants */
 const float PI = 3.14159265359;
@@ -48,6 +48,9 @@ uniform samplerCube irradianceMap;
 
 uniform bool useMaps; /* whether to use texture maps or uniform values */
 
+uniform samplerCube prefilterMap;
+uniform sampler2D   brdfLUT;
+
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
 uniform sampler2D metallicMap;
@@ -78,6 +81,8 @@ in vec3 TangentNormal;
 in vec3 TangentFragPosition;
 in vec3 FragPosition;
 in vec2 TexCoords;
+in vec3 WorldViewPos;
+in mat3 TBN;
 
 /* lights data */
 uniform vec3 globalAmbient;
@@ -387,11 +392,33 @@ void main()
     }
 
     // ambient lighting (IBL as the ambient term)
-    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    // Convert normal from tangent space to world space for cubemap sampling
+    vec3 worldN;
+    if (useMaps) {
+        worldN = normalize(TBN * N);
+    } else {
+        worldN = normalize(Normal);
+    }
+
+    // Calculate world space view direction for reflection
+    vec3 worldV = normalize(WorldViewPos - FragPosition);
+    vec3 R = reflect(-worldV, worldN);
+    
+    vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+
+    vec3 kS = F;
     vec3 kD = 1.0 - kS;
-    vec3 irradiance = texture(irradianceMap, N).rgb;
-    vec3 diffuse    = irradiance * material.albedo;
-    vec3 ambient    = (kD * diffuse) * material.ao;
+    kD *= 1.0 - metallic;
+
+    vec3 irradiance = texture(irradianceMap, worldN).rgb;
+    vec3 diffuse    = irradiance * albedo;
+
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 envBRDF  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 specular = prefilteredColor * (F * envBRDF.x + envBRDF.y);
+
+    vec3 ambient = (kD * diffuse + specular) * ao;
     vec3 color = ambient + Lo;
 
     // TODO: move HDR tonemapping and gamma correct to post-processing shader

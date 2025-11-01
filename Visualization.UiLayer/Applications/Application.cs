@@ -24,8 +24,10 @@ public class Application : GameWindow
 
 #if DEBUG
     protected readonly QuadMesh QuadMesh;
-    protected readonly Shader QuadShader;
+    protected readonly Shader QuadCsmShader;
+    protected readonly Shader TextureQuadShader;
     protected readonly WindowFrameBuffer DepthMapWindowFrb;
+    protected readonly WindowFrameBuffer IBLreflectanceWindow;
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
 #endif
@@ -51,7 +53,9 @@ public class Application : GameWindow
 #if DEBUG
         QuadMesh = new();
         DepthMapWindowFrb = new(width, height);
-        QuadShader = new("depthMapShader.vert", "depthMapShader.frag");
+        IBLreflectanceWindow = new(width, height);
+        QuadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
+        TextureQuadShader = new("depthMapShader.vert", "textureShader.frag");
         // windows
         shadowSettingsWindow = new ShadowSettingsWindow(() => this.Scene.LightsManager.DirectionalLight);
 #endif
@@ -183,6 +187,7 @@ public class Application : GameWindow
         ImGui.End();
 
 #if DEBUG
+        IBLreflectanceTextureWindow();
         RenderObjectInspectorWindow();
         ShadowCascadingMapsWindow();
         shadowSettingsWindow.Render();
@@ -220,8 +225,12 @@ public class Application : GameWindow
         imGuiController.UnhookFromWindow(this);
         SceneRenderWindowFrb.Dispose();
 #if DEBUG
+        QuadCsmShader.Dispose();
+        TextureQuadShader.Dispose();
+
         QuadMesh.Dispose();
         DepthMapWindowFrb.Dispose();
+        IBLreflectanceWindow.Dispose();
 #endif
         Scene.Dispose();
 
@@ -306,6 +315,29 @@ public class Application : GameWindow
         }
     }
 
+    private void IBLreflectanceTextureWindow()
+    {
+        ImGui.Begin("IBL Reflectance");
+
+        System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
+        var fbScale = imGuiController.ScaleFactor;
+        int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
+        int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
+        IBLreflectanceWindow.Resize(fbWidth, fbHeight);
+
+        IBLreflectanceWindow.Bind();
+
+        TextureQuadShader.Use();
+        Scene.EnvironmentMap.SetForQuadTextureShader(TextureQuadShader);
+        QuadMesh.Render();
+
+        IBLreflectanceWindow.Unbind();
+
+        ImGui.Image(IBLreflectanceWindow.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
+            new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
+        ImGui.End();
+    }
+
     private void ShadowCascadingMapsWindow()
     {
         ImGui.Begin("Cascading Depth Maps");
@@ -319,13 +351,12 @@ public class Application : GameWindow
         DepthMapWindowFrb.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        QuadShader.Use();
-        Scene.LightsManager.DirectionalLight?.SetForDepthTextureShader(QuadShader, DirectionalLightLayer);
+        QuadCsmShader.Use();
+        Scene.LightsManager.DirectionalLight?.SetForDepthTextureShader(QuadCsmShader, DirectionalLightLayer);
         QuadMesh.Render();
 
         DepthMapWindowFrb.Unbind();
 
-        GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
         ImGui.Image(DepthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
         ImGui.End();

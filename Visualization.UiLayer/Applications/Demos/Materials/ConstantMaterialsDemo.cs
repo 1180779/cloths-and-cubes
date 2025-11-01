@@ -4,11 +4,10 @@ namespace Visualization.UiLayer.Applications.Demos.Materials;
 
 public class ConstantMaterialsDemo : BoxesMaterialsDemo
 {
-    private const int NFirstMaterials = 20 * NrOfRows;
-
     // private readonly Type materialsSource = typeof(MaterialConstant);
     protected override IMaterial[] GetMaterials()
     {
-        return MaterialsHelper.GetConstMaterials(NFirstMaterials);
+        int nFirstMaterials = 20 * NrOfRows;
+        return MaterialsHelper.GetConstMaterials(nFirstMaterials);
     }
 }

@@ -2,7 +2,7 @@ using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.Applications.Demos.Materials;
 
-public class MaterialsDemo : SpheresMaterialsDemo
+public class MaterialsDemo : BoxesMaterialsDemo
 {
     protected override IMaterial[] GetMaterials()
     {
