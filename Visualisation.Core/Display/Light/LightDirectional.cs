@@ -13,21 +13,20 @@ namespace Visualisation.Core.Display.Light;
 
 public class LightDirectional : LightPoint
 {
-    public LightDirectional()
+    public LightDirectional(Func<CameraBase> getCurrentCamera)
     {
+        GetCurrentCamera = getCurrentCamera;
         Direction = new(2, 2, 2);
+        Init();
     }
 
-    public Func<CameraBase>? GetCurrentCamera { get; set; }
+    public Func<CameraBase> GetCurrentCamera { get; set; }
 
     // TODO: change the shader associated with the shadow to allow for specification of number of cascades before compilation
     public float[] ShadowCascadeLevels
     {
         get
         {
-            if (GetCurrentCamera is null)
-                return [];
-
             var camera = GetCurrentCamera();
             return
             [
@@ -85,9 +84,6 @@ public class LightDirectional : LightPoint
 
     public Matrix4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
-        if (GetCurrentCamera is null)
-            throw new InvalidOperationException("No camera set");
-
         var camera = GetCurrentCamera();
         var corners = ProjectionHelper.GetFrustumCornersWorldSpace(
             Matrix4.CreatePerspectiveFieldOfView(
@@ -172,8 +168,6 @@ public class LightDirectional : LightPoint
 
     public Matrix4[] GetLightSpaceMatrices()
     {
-        if (GetCurrentCamera is null)
-            return [];
         var camera = GetCurrentCamera();
 
         List<Matrix4> ret = new();
@@ -201,9 +195,6 @@ public class LightDirectional : LightPoint
 
     public void SetForDepthTextureShader(Shader sh, int layer)
     {
-        if (GetCurrentCamera is null)
-            return;
-
         var camera = GetCurrentCamera();
         GL.ActiveTexture(TextureUnit.Texture0);
         sh.SetInt("depthMap", 0);
@@ -227,7 +218,7 @@ public class LightDirectional : LightPoint
         }
     }
 
-    public void Init()
+    private void Init()
     {
         GL.GenFramebuffers(1, out depthMapFbo);
         GL.GenTextures(1, out int depthMap);
@@ -274,7 +265,7 @@ public class LightDirectional : LightPoint
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    public void RenderToDepthMap(Shader sh, ICollection<IVisualObject> objects)
+    public void RenderToDepthMap(Shader sh, ICollection<GameObject> objects)
     {
         GL.Viewport(0, 0, ShadowWidth, ShadowHeight);
         sh.Use();
@@ -287,7 +278,7 @@ public class LightDirectional : LightPoint
 
         foreach (var o in objects)
         {
-            sh.SetMatrix4("model", o.AbstractVisualObject.Model);
+            sh.SetMatrix4("model", o.Model);
             o.Render();
         }
 
@@ -323,8 +314,6 @@ public class LightDirectional : LightPoint
 
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
-
-        var planeDistances = ShadowCascadeLevels;
         sh.SetFloatN("cascadePlaneDistances[0]", ShadowCascadeLevels.Length, ShadowCascadeLevels);
 
         // set shadow bias if it has changed

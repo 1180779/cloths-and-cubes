@@ -9,7 +9,12 @@ public class BoxesDemo : RigidBodyApplication
 {
     protected Box[] boxes = [];
     protected Ball[] balls = [];
-    protected Plane plane = new();
+    protected Plane plane;
+
+    public BoxesDemo()
+    {
+        plane = new();
+    }
 
     /// <summary>
     /// Processes the contact generation code.

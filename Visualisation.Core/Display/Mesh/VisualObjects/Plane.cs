@@ -3,14 +3,14 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
-public sealed class Plane : AbstractVisualObject
+public sealed class PlaneMesh : IMesh
 {
-    public Plane()
+    public PlaneMesh()
     {
-        Scale = new(1000.0f, 1000.0f, 1000.0f);
+        Init();
     }
 
-    private static readonly string MeshName = nameof(Plane);
+    private static readonly string MeshName = nameof(PlaneMesh);
     private static MeshManager.MeshData? _meshData;
 
     // Two triangles forming a unit square on the XZ plane, centered at origin (Y = 0)
@@ -28,7 +28,7 @@ public sealed class Plane : AbstractVisualObject
         new(-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f)
     ];
 
-    public override void Init()
+    private void Init()
     {
         _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
@@ -52,7 +52,7 @@ public sealed class Plane : AbstractVisualObject
         });
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
         MeshManager.FreeMesh(MeshName, data =>
         {
@@ -62,7 +62,7 @@ public sealed class Plane : AbstractVisualObject
         });
     }
 
-    public override void Render()
+    public void Render()
     {
         if (_meshData is null)
             throw new MeshDataEmptyException();

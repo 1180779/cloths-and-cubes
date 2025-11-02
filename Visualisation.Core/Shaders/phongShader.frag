@@ -403,7 +403,7 @@ void main()
     // Calculate world space view direction for reflection
     vec3 worldV = normalize(WorldViewPos - FragPosition);
     vec3 R = reflect(-worldV, worldN);
-    
+
     vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
 
     vec3 kS = F;

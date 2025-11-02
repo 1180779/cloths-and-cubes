@@ -4,7 +4,7 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.Display.Light;
 
-public class LightsManager
+public class LightsManager : IDisposable
 {
     public LightsManager(CamerasManager camerasManager)
     {
@@ -13,8 +13,8 @@ public class LightsManager
 
     private readonly CamerasManager camerasManager;
 
-    public Shader DirectionalShadowDepthShader { get; } =
-        new Shader("shadowDepthMapShader.vert", "shadowDepthMapShader.frag", "shadowDepthMapShader.geom");
+    private Shader DirectionalShadowDepthShader { get; } =
+        new("shadowDepthMapShader.vert", "shadowDepthMapShader.frag", "shadowDepthMapShader.geom");
 
     public const int MaxSpotlights = 4;
     public const int MaxPointlights = 4;
@@ -23,6 +23,8 @@ public class LightsManager
     private List<LightSpotlight> spotlights = new(MaxSpotlights);
 
     private LightDirectional? directionalLight;
+
+    public Func<CameraBase> GetCurrentCameraFunc => () => camerasManager.CurrentCamera;
 
     public LightDirectional? DirectionalLight
     {
@@ -74,20 +76,12 @@ public class LightsManager
     public bool FlashlightOn = false;
     public bool Day = true;
 
-    public void RenderShadowsToMaps(ICollection<IVisualObject> objects)
+    public void RenderShadowsToMaps(ICollection<GameObject> objects)
     {
         if (DirectionalLight is null) return;
         GL.CullFace(TriangleFace.Front);
         DirectionalLight.RenderToDepthMap(DirectionalShadowDepthShader, objects);
         GL.CullFace(TriangleFace.Back);
-    }
-
-    public void Init()
-    {
-        if (DirectionalLight is not null)
-        {
-            DirectionalLight.Init();
-        }
     }
 
     public void Dispose()

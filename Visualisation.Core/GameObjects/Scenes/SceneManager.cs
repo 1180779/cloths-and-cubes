@@ -9,12 +9,16 @@ namespace Visualisation.Core.GameObjects.Scenes;
 
 public abstract class SceneManager : IDisposable
 {
-    public SceneManager(float aspectRatio)
+    public SceneManager(float aspectRatio, IInputProvider inputProvider)
     {
-        EnvironmentMap = new(Hdr, EquirectangularToCubemapShader, IrradianceConvolutionShader, PrefilterShader,
-            brdfLUTShader);
+        EnvironmentMap = new(
+            Hdr,
+            EquirectangularToCubemapShader,
+            IrradianceConvolutionShader,
+            PrefilterShader,
+            BrdfLutShader);
 
-        CamerasManager = new();
+        CamerasManager = new(inputProvider);
         LightsManager = new(CamerasManager);
 
         // TODO: remove magic numbers
@@ -46,24 +50,24 @@ public abstract class SceneManager : IDisposable
     private const string SkyboxFragmentShader = "skyboxShader.frag";
     public readonly Shader SkyboxShader = new(SkyboxVertexShader, SkyboxFragmentShader);
 
-    private const string BrdfLUTVertexShader = "depthMapShader.vert";
-    private const string BrdfLUTFragmentShader = "brdfLUTShader.frag";
-    public readonly Shader brdfLUTShader = new(BrdfLUTVertexShader, BrdfLUTFragmentShader);
-    private const string Hdr = "Hdr/196_hdrmaps_com_free_10K.exr";
+    private const string BrdfLutVertexShader = "depthMapShader.vert";
+    private const string BrdfLutFragmentShader = "brdfLUTShader.frag";
+    public readonly Shader BrdfLutShader = new(BrdfLutVertexShader, BrdfLutFragmentShader);
+    private const string Hdr = "Hdr/symmetrical_garden_02_4k.exr";
     public EnvironmentMap EnvironmentMap { get; set; }
-    private Cube cube = new();
+    private SphereMesh cube = new();
 
     public LightsManager LightsManager { get; private set; }
     public CamerasManager CamerasManager { get; private set; }
-    protected List<IVisualObject> gameObjects = [];
-    public ICollection<IVisualObject> GameObjects => gameObjects;
+    protected List<GameObject> gameObjects = [];
+    public ICollection<GameObject> GameObjects => gameObjects;
 
-    public void AddGameObject(IVisualObject gameObject)
+    public void AddGameObject(GameObject gameObject)
     {
         gameObjects.Add(gameObject);
     }
 
-    public void RemoveGameObject(IVisualObject gameObject)
+    public void RemoveGameObject(GameObject gameObject)
     {
         gameObjects.Remove(gameObject);
     }
@@ -80,7 +84,7 @@ public abstract class SceneManager : IDisposable
         CamerasManager.ProcessInput(input, dt);
     }
 
-    public virtual void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)
+    public void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)
     {
         LightsManager.RenderShadowsToMaps(gameObjects);
 
@@ -105,18 +109,6 @@ public abstract class SceneManager : IDisposable
         {
             gameObject.SetForShader(PbrShader);
             gameObject.Render();
-        }
-    }
-
-    public void Init(IInputProvider input)
-    {
-        cube.Init();
-        LightsManager.Init();
-        CamerasManager.Init(input);
-
-        foreach (var gameObject in gameObjects)
-        {
-            gameObject.Init();
         }
     }
 

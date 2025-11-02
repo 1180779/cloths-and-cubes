@@ -4,6 +4,14 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class CamerasManager
 {
+    public CamerasManager(IInputProvider inputProvider)
+    {
+        if (CameraMode)
+        {
+            inputProvider.SetCursorState(CursorState.Grabbed);
+        }
+    }
+
     private readonly List<CameraBase> cameras = [];
 
     private int currentCameraIndex = 0;
@@ -67,13 +75,5 @@ public class CamerasManager
         }
 
         CurrentCamera.ProcessInput(input, dt);
-    }
-
-    public void Init(IInputProvider input)
-    {
-        if (CameraMode)
-        {
-            input.SetCursorState(CursorState.Grabbed);
-        }
     }
 }

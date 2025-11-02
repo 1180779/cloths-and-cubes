@@ -239,7 +239,6 @@ public static class TexturesManager
         {
             using var stream = File.OpenRead(pathToLoad);
             var image = ImageResultFloat.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-
             return new PendingLoadResult
             {
                 Path = texturePath,
@@ -436,6 +435,11 @@ public static class TexturesManager
         Interlocked.Increment(ref entry.UsagesCount);
 
         return entry.PublicTextureData;
+    }
+
+    public static void FreeTexture(TextureData textureData)
+    {
+        FreeTexture(textureData.TexturePath);
     }
 
     public static void FreeTexture(string textureName)

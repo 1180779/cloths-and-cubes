@@ -11,21 +11,21 @@ namespace Visualisation.Core.FrameCapsule;
 /// </summary>
 public struct FrameSnapshot
 {
-    public FrameSnapshot(IVisualObject[] gameObjects)
+    public FrameSnapshot(GameObject[] gameObjects)
     {
         GameObjects = gameObjects;
     }
 
-    public IVisualObject[] GameObjects { get; set; }
+    public GameObject[] GameObjects { get; set; }
 
     public void Restore(SceneManager scene)
     {
-        Dictionary<Guid, IVisualObject> liveObjectsMap =
+        Dictionary<Guid, GameObject> liveObjectsMap =
             scene.GameObjects.ToDictionary(go => go.Id, go => go);
 
-        foreach (IVisualObject snapshotObject in GameObjects)
+        foreach (GameObject snapshotObject in GameObjects)
         {
-            if (liveObjectsMap.TryGetValue(snapshotObject.Id, out IVisualObject liveObject))
+            if (liveObjectsMap.TryGetValue(snapshotObject.Id, out GameObject liveObject))
             {
                 ObjectStateRestorer.RestoreStateFrom(liveObject, snapshotObject);
             }

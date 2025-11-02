@@ -89,6 +89,7 @@ public static class MeshManager
             if (meshData.UsagesCount == 0)
             {
                 freeCallback?.Invoke(meshData.PublicMeshData);
+                MeshDataDict.Remove(meshName);
             }
         }
     }

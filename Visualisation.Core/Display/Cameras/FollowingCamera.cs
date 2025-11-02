@@ -5,10 +5,10 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class FollowingCamera : CameraBase
 {
-    private AbstractVisualObject[] targetObjects = [];
+    private GameObject[] targetObjects = [];
     private int currentTargetIndex;
 
-    public AbstractVisualObject? TargetObject => targetObjects.Length != 0 ? targetObjects[currentTargetIndex] : null;
+    public GameObject? TargetObject => targetObjects.Length != 0 ? targetObjects[currentTargetIndex] : null;
 
     public int CurrentTargetIndex
     {
@@ -33,13 +33,13 @@ public class FollowingCamera : CameraBase
     {
     }
 
-    public void AttachTo(AbstractVisualObject target)
+    public void AttachTo(GameObject target)
     {
         targetObjects = [target];
         UpdatePositionFromTarget();
     }
 
-    public void AttachTo(AbstractVisualObject[] targets)
+    public void AttachTo(GameObject[] targets)
     {
         targetObjects = targets;
     }

@@ -27,7 +27,7 @@ public class Application : GameWindow
     protected readonly Shader QuadCsmShader;
     protected readonly Shader TextureQuadShader;
     protected readonly WindowFrameBuffer DepthMapWindowFrb;
-    protected readonly WindowFrameBuffer IBLreflectanceWindow;
+    protected readonly WindowFrameBuffer IbLreflectanceWindow;
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
 #endif
@@ -53,14 +53,14 @@ public class Application : GameWindow
 #if DEBUG
         QuadMesh = new();
         DepthMapWindowFrb = new(width, height);
-        IBLreflectanceWindow = new(width, height);
+        IbLreflectanceWindow = new(width, height);
         QuadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
         TextureQuadShader = new("depthMapShader.vert", "textureShader.frag");
         // windows
         shadowSettingsWindow = new ShadowSettingsWindow(() => this.Scene.LightsManager.DirectionalLight);
 #endif
 
-        Scene = new SceneLightningOnly(Size.X / (float)Size.Y);
+        Scene = new SceneLightningOnly(Size.X / (float)Size.Y, InputProvider);
 
         // GL
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
@@ -128,7 +128,6 @@ public class Application : GameWindow
         // this way some objects are already in the scene and can be accessed
         // during the scene setup (e.g. attach camera to an object from demo)
         Scene.SetUp();
-        Scene.Init(InputProvider);
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
@@ -187,7 +186,6 @@ public class Application : GameWindow
         ImGui.End();
 
 #if DEBUG
-        IBLreflectanceTextureWindow();
         RenderObjectInspectorWindow();
         ShadowCascadingMapsWindow();
         shadowSettingsWindow.Render();
@@ -230,7 +228,7 @@ public class Application : GameWindow
 
         QuadMesh.Dispose();
         DepthMapWindowFrb.Dispose();
-        IBLreflectanceWindow.Dispose();
+        IbLreflectanceWindow.Dispose();
 #endif
         Scene.Dispose();
 
@@ -306,36 +304,13 @@ public class Application : GameWindow
     {
         if (Scene.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
         {
-            var o = Scene.GameObjects.First(g => g.AbstractVisualObject == followingCamera.TargetObject);
+            var o = Scene.GameObjects.First(g => g == followingCamera.TargetObject);
             ObjectInspectorWindow.Draw([o.PhysicsObject]);
         }
         else
         {
             ObjectInspectorWindow.Draw(Scene.GameObjects.Select(g => g.PhysicsObject).ToArray());
         }
-    }
-
-    private void IBLreflectanceTextureWindow()
-    {
-        ImGui.Begin("IBL Reflectance");
-
-        System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        var fbScale = imGuiController.ScaleFactor;
-        int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
-        int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        IBLreflectanceWindow.Resize(fbWidth, fbHeight);
-
-        IBLreflectanceWindow.Bind();
-
-        TextureQuadShader.Use();
-        Scene.EnvironmentMap.SetForQuadTextureShader(TextureQuadShader);
-        QuadMesh.Render();
-
-        IBLreflectanceWindow.Unbind();
-
-        ImGui.Image(IBLreflectanceWindow.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
-            new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
-        ImGui.End();
     }
 
     private void ShadowCascadingMapsWindow()

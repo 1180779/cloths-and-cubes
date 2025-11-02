@@ -25,7 +25,7 @@ public abstract class BoxesMaterialsDemo : BoxesDemo
                 extents: new Engine.Vector3(1.0f, 1.0f, 1.0f),
                 velocity: new Engine.Vector3()
             );
-            box.VisualBox.Material = material;
+            box.Material = material;
             boxes[i] = box;
             Scene.AddGameObject(box);
         }

@@ -1,15 +1,14 @@
 using OpenTK.Graphics.OpenGL4;
-using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.Display.Mesh;
 
-public sealed class QuadMesh: IMesh
+public sealed class QuadMesh : IMesh
 {
     public QuadMesh()
     {
         Init();
     }
-    
+
     private static readonly float[] QuadVertices =
     [
         // positions        // texture Coords
@@ -18,10 +17,10 @@ public sealed class QuadMesh: IMesh
         1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
         1.0f, -1.0f, 0.0f, 1.0f, 0.0f
     ];
-    
+
     private static readonly string MeshName = nameof(QuadMesh);
     private static MeshManager.MeshData? _meshData;
-    
+
     public void Dispose()
     {
         MeshManager.FreeMesh(MeshName, (data) =>
@@ -32,7 +31,7 @@ public sealed class QuadMesh: IMesh
         });
     }
 
-    public void Init()
+    private void Init()
     {
         _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {

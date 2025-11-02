@@ -1,11 +1,12 @@
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Light;
+using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects.Scenes;
 
 public class SceneLightningOnly : SceneManager
 {
-    public SceneLightningOnly(float aspectRatio) : base(aspectRatio)
+    public SceneLightningOnly(float aspectRatio, IInputProvider inputProvider) : base(aspectRatio, inputProvider)
     {
     }
 
@@ -18,7 +19,7 @@ public class SceneLightningOnly : SceneManager
         // };
         // LightsManager.Spotlights.Add(spotlight);
 
-        LightDirectional lightDirectional2 = new()
+        LightDirectional lightDirectional2 = new(LightsManager.GetCurrentCameraFunc)
         {
             Direction = new Vector3(0.0f, -1.0f, -1.0f),
         };
@@ -31,7 +32,7 @@ public class SceneLightningOnly : SceneManager
         // LightsManager.PointLights.Add(pointLight);
 
         FollowingCamera followingCamera = new(CamerasManager.CurrentCamera.AspectRatio);
-        followingCamera.AttachTo(GameObjects.Select(g => g.AbstractVisualObject).ToArray());
+        followingCamera.AttachTo(GameObjects.ToArray());
         CamerasManager.AddCamera(followingCamera);
     }
 }

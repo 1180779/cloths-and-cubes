@@ -25,7 +25,7 @@ public abstract class SpheresMaterialsDemo : BoxesDemo
                 radius: 1.0f,
                 velocity: new Engine.Vector3()
             );
-            ball.VisualBall.Material = material;
+            ball.Material = material;
             balls[i] = ball;
             Scene.AddGameObject(ball);
         }
