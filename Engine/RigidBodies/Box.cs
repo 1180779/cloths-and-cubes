@@ -1,14 +1,13 @@
 using Engine.Collision;
+using Engine.Collision.Bounding_Volume_Hierarchy;
 
 namespace Engine.RigidBodies;
 
-public class Box : CollisionBox
+public class Box : CollisionBox, IBoxable
 {
-    public bool IsOverlapping { get; set; } = false;
-
-
+    public bool IsOverlapping { get; set; } = false; // previously used for some rendering (???)
     static readonly Vector3 MinPos = new(-15, 5, -15);
-    static readonly Vector3 MaxPos = new(15, 20, 15);
+    static readonly Vector3 MaxPos = new(15, 10, 15);
     static readonly Vector3 MinSize = new(0.5f, 0.5f, 0.5f);
     static readonly Vector3 MaxSize = new(4.5f, 1.5f, 1.5f);
 
@@ -57,5 +56,13 @@ public class Box : CollisionBox
         Body.SetAwake();
 
         Body.CalculateDerivedData();
+    }
+
+    public Collision.Bounding_Volume_Hierarchy.BoundingBox GetBoundingBox()
+    {
+        float max = Math.Max(HalfSize.X, Math.Max(HalfSize.Y, HalfSize.Z));
+        return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+            center: this.Body.Position,
+            halfSize: new Vector3(max, max, max));
     }
 }

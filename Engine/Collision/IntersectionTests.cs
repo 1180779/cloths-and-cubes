@@ -70,8 +70,25 @@ public static class IntersectionTests
 
         bool TestOverlap(Vector3 axis)
         {
+            if (axis.SquareMagnitude() < (Real)0.0001) return true;
             return OverlapOnAxis(one, two, axis, toCentre);
         }
+    }
+
+
+    // Needs some unit tests, wrote it without too much thought
+    public static bool AABBOverlap(Bounding_Volume_Hierarchy.BoundingBox a, Bounding_Volume_Hierarchy.BoundingBox b)
+    {
+        if (a == null || b == null) return false;
+
+        var distX = Math.Abs(a.center.X - b.center.X);
+        var distY = Math.Abs(a.center.Y - b.center.Y);
+        var distZ = Math.Abs(a.center.Z - b.center.Z);
+
+        return (
+            distX < a.halfSize.X + b.halfSize.X ||
+            distY < a.halfSize.Y + b.halfSize.Y ||
+            distZ < a.halfSize.Z + b.halfSize.Z);
     }
 
     /// <summary>
