@@ -22,7 +22,7 @@ class Spring : IForceGenerator
     /** Holds the rest length of the spring. */
     float restLength;
 
-    Spring(
+    public Spring(
         Vector3 localConnectionPt,
         RigidBody othe,
         Vector3 otherConnectionPt,
