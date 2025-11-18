@@ -1,4 +1,5 @@
 using Engine.Collision;
+using Engine.Force;
 using Visualisation.Core.GameObjects;
 using IntersectionTests = Engine.Collision.IntersectionTests;
 using Random = Engine.Random;
@@ -9,7 +10,7 @@ public class BoxesFallingDemo : RigidBodyApplication
 {
     /* The number of boxes in the simulation. */
     private const uint Boxes = 20;
-
+    private ForceRegistry ForceRegistry=new ForceRegistry();
     private Box[] boxes = new Box[Boxes];
     private Plane plane = null!;
 
@@ -74,6 +75,7 @@ public class BoxesFallingDemo : RigidBodyApplication
     /// </summary>
     protected override void UpdateObjects(float duration)
     {
+        ForceRegistry.updateForces(duration);
         // Update the physics of each box in turn
         for (var i = 0; i < Boxes; i++)
         {
