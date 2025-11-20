@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
+
 namespace Visualisation.Core.Display.Mesh.VisualObjects
 {
     public class SpringMesh : AbstractVisualObject
     {
         private readonly Vector3[,] _points;
-        private static MeshManager.MeshData? _meshData;
+        private MeshManager.MeshData? _meshData;
         private readonly string _meshName;
 
         private float[]? _vertices;
@@ -19,6 +15,42 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         {
             _points = points ?? throw new ArgumentNullException(nameof(points));
             _meshName = meshName ?? Guid.NewGuid().ToString();
+        }
+
+        public void UpdatePoints(Vector3[,] newPoints)
+        {
+            // Update local points reference
+            int width = newPoints.GetLength(0);
+            int height = newPoints.GetLength(1);
+
+            // Rebuild vertices array
+            List<float> vertexData = new();
+
+            for (int y = 0; y < height - 1; y++)
+            {
+                for (int x = 0; x < width - 1; x++)
+                {
+                    Vector3 p00 = newPoints[x, y];
+                    Vector3 p10 = newPoints[x + 1, y];
+                    Vector3 p01 = newPoints[x, y + 1];
+                    Vector3 p11 = newPoints[x + 1, y + 1];
+
+                    AddTriangle(vertexData, p00, p10, p01);
+                    AddTriangle(vertexData, p10, p11, p01);
+                }
+            }
+
+            _vertices = vertexData.ToArray();
+            _triangleCount = _vertices.Length / 6;
+
+            if (_meshData != null)
+            {
+                // Update GPU buffer
+                GL.BindBuffer(BufferTarget.ArrayBuffer, _meshData.Vbo);
+                // Use BufferSubData for updates if size is same, or BufferData to re-allocate
+                GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices,
+                    BufferUsageHint.StreamDraw);
+            }
         }
 
         private void BuildMesh()
@@ -89,7 +121,8 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 GL.EnableVertexAttribArray(0);
 
                 // Normal
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
+                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float),
+                    3 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
 
                 return new MeshManager.MeshData

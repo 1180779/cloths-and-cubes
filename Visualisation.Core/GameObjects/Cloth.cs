@@ -26,20 +26,11 @@ namespace Visualisation.Core.GameObjects
 
         public void Render()
         {
-            Vector3[,] pts;
             if (EngineCloth == null) // no engine cloth! use placeholder instead
-            {
-                pts = new Vector3[2, 2];
-                pts[0, 0] = new(0, 10, 0);
-                pts[1, 0] = new(1, 10, 0);
-                pts[0, 1] = new(0, 10, 1);
-                pts[1, 1] = new(1, 9, 1);
-            }
-            else
-            {
-                // use the engine cloth
-                pts = ConvertToOpenTk(EngineCloth.Points());
-            }
+                return;
+
+            // use the engine cloth
+            var pts = ConvertToOpenTk(EngineCloth.Points());
 
             if (VisualCloth == null)
             {
@@ -48,10 +39,7 @@ namespace Visualisation.Core.GameObjects
             }
             else
             {
-                //TODO add update mesh here
-                VisualCloth.Dispose();
-                VisualCloth = new SpringMesh(pts);
-                VisualCloth.Init();
+                VisualCloth.UpdatePoints(pts);
             }
 
             VisualCloth.Render();
