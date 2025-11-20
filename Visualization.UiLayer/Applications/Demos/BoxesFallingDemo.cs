@@ -1,4 +1,3 @@
-using Engine;
 using Engine.Collision;
 using Engine.Force;
 using Visualisation.Core.GameObjects;
@@ -10,15 +9,15 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class BoxesFallingDemo : RigidBodyApplication
 {
     /* The number of boxes in the simulation. */
-    private const uint Boxes = 20;
-    private ForceRegistry ForceRegistry=new ForceRegistry();
-    private Visualisation.Core.GameObjects.Cloth Cloth;
+    private const uint Boxes = 0;
+    private ForceRegistry ForceRegistry = new ForceRegistry();
+    private Cloth Cloth;
     private Box[] boxes = new Box[Boxes];
     private Plane plane = null!;
 
     protected override void InitializeScene()
     {
-        Cloth = new Visualisation.Core.GameObjects.Cloth(ForceRegistry);
+        Cloth = new Cloth(ForceRegistry);
         /* add the cubes to the scene to be rendered */
         for (var i = 0; i < Boxes; i++)
         {
@@ -26,6 +25,7 @@ public class BoxesFallingDemo : RigidBodyApplication
             var box = boxes[i];
             Scene.AddGameObject(box);
         }
+
         Scene.AddGameObject(Cloth);
         /* add ground plane to the scene */
         plane = new();
@@ -96,12 +96,15 @@ public class BoxesFallingDemo : RigidBodyApplication
     /// </summary>
     protected override void Reset()
     {
-        boxes[0].EngineBox.SetState(
-            position: new Engine.Vector3(0, 3, 0),
-            orientation: new Engine.Quaternion(),
-            extents: new Engine.Vector3(4, 1, 1),
-            velocity: new Engine.Vector3(0, 0, 0)
-        );
+        if (Boxes > 0)
+        {
+            boxes[0].EngineBox.SetState(
+                position: new Engine.Vector3(0, 3, 0),
+                orientation: new Engine.Quaternion(),
+                extents: new Engine.Vector3(4, 1, 1),
+                velocity: new Engine.Vector3(0, 0, 0)
+            );
+        }
 
         if (Boxes > 1)
         {

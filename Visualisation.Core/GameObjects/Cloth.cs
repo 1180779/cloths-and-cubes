@@ -1,35 +1,45 @@
 ﻿using Engine.Force;
-using OpenTK.Graphics.OpenGL;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects
 {
-    public class Cloth:IVisualObject
+    public class Cloth : IVisualObject
     {
         public Engine.Cloth EngineCloth { get; set; }
         public SpringMesh VisualCloth { get; set; }
         public ForceRegistry ForceRegistry { get; set; }
-        public Cloth(ForceRegistry registry) { ForceRegistry = registry; }
+
+        public Cloth(ForceRegistry registry)
+        {
+            ForceRegistry = registry;
+        }
+
         public void Init()
         {
-            EngineCloth=new Engine.Cloth(ForceRegistry);
+            EngineCloth = new Engine.Cloth(ForceRegistry);
 
             Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
             VisualCloth?.Dispose();
             VisualCloth = new SpringMesh(pts);
             VisualCloth.Init();
         }
+
         public void Render()
         {
-            if (EngineCloth == null)
-                return;
-
-            var pts = ConvertToOpenTk(EngineCloth.Points());
+            Vector3[,] pts;
+            if (EngineCloth == null) // no engine cloth! use placeholder instead
+            {
+                pts = new Vector3[2, 2];
+                pts[0, 0] = new(0, 10, 0);
+                pts[1, 0] = new(1, 10, 0);
+                pts[0, 1] = new(0, 10, 1);
+                pts[1, 1] = new(1, 9, 1);
+            }
+            else
+            {
+                // use the engine cloth
+                pts = ConvertToOpenTk(EngineCloth.Points());
+            }
 
             if (VisualCloth == null)
             {
@@ -46,11 +56,12 @@ namespace Visualisation.Core.GameObjects
 
             VisualCloth.Render();
         }
+
         public void Dispose()
         {
             VisualCloth.Dispose();
-            
         }
+
         public void SetForShader(Shader sh)
         {
             VisualCloth?.SetForShader(sh);
@@ -60,6 +71,7 @@ namespace Visualisation.Core.GameObjects
         public Guid Id => VisualCloth.Id;
         public AbstractVisualObject AbstractVisualObject => VisualCloth;
         public object PhysicsObject => EngineCloth;
+
         private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
         {
             if (enginePoints == null) return null!;

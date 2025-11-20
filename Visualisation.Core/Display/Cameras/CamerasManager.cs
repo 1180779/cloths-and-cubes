@@ -48,7 +48,7 @@ public class CamerasManager
         {
             if (input.IsMouseButtonPressed(MouseButton.Left))
             {
-                input.SetCursorState(CursorState.Grabbed);
+                input.SetCursorState(CursorState.Grabbed); //
                 CameraMode = true;
             }
 

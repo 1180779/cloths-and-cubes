@@ -1,5 +1,6 @@
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Light;
+using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects.Scenes;
 
@@ -31,7 +32,8 @@ public class SceneLightningOnly : SceneManager
         // LightsManager.PointLights.Add(pointLight);
 
         FollowingCamera followingCamera = new(CamerasManager.CurrentCamera.AspectRatio);
-        followingCamera.AttachTo(GameObjects.Select(g => g.AbstractVisualObject).ToArray());
+        followingCamera.AttachTo(GameObjects
+            .Select<IVisualObject, Func<AbstractVisualObject>>(g => () => g.AbstractVisualObject).ToArray());
         CamerasManager.AddCamera(followingCamera);
     }
 }

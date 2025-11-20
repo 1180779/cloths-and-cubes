@@ -5,10 +5,11 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class FollowingCamera : CameraBase
 {
-    private AbstractVisualObject[] targetObjects = [];
+    private Func<AbstractVisualObject>[] targetObjects = [];
     private int currentTargetIndex;
 
-    public AbstractVisualObject? TargetObject => targetObjects.Length != 0 ? targetObjects[currentTargetIndex] : null;
+    public AbstractVisualObject? TargetObject =>
+        targetObjects.Length != 0 ? targetObjects[currentTargetIndex].Invoke() : null;
 
     public int CurrentTargetIndex
     {
@@ -33,18 +34,19 @@ public class FollowingCamera : CameraBase
     {
     }
 
-    public void AttachTo(AbstractVisualObject target)
+    public void AttachTo(Func<AbstractVisualObject> target)
     {
         targetObjects = [target];
         UpdatePositionFromTarget();
     }
 
-    public void AttachTo(AbstractVisualObject[] targets)
+    public void AttachTo(Func<AbstractVisualObject>[] targets)
     {
         targetObjects = targets;
     }
 
-    private Vector3 CurrentTarget => targetObjects.Length != 0 ? targetObjects[CurrentTargetIndex].Position : Target;
+    private Vector3 CurrentTarget =>
+        targetObjects.Length != 0 ? targetObjects[CurrentTargetIndex].Invoke().Position : Target;
 
     private void UpdatePositionFromTarget()
     {
