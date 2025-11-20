@@ -46,7 +46,7 @@ public abstract class RigidBodyApplication : Application
             deltaTime
         );
 
-        FrameSaver.SaveFrame(Scene);
+        // FrameSaver.SaveFrame(Scene);
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
@@ -93,17 +93,17 @@ public abstract class RigidBodyApplication : Application
         }
 
         // frame saver
-        if (InputProvider.IsKeyDown(InputKey.Right))
-        {
-            FrameSaver.GoForwardNFrames(1);
-            FrameSaver.CurrentFrame?.Restore(Scene);
-        }
-
-        if (InputProvider.IsKeyDown(InputKey.Left))
-        {
-            FrameSaver.GoBackNFrames(1);
-            FrameSaver.CurrentFrame?.Restore(Scene);
-        }
+        // if (InputProvider.IsKeyDown(InputKey.Right))
+        // {
+        //     FrameSaver.GoForwardNFrames(1);
+        //     FrameSaver.CurrentFrame?.Restore(Scene);
+        // }
+        //
+        // if (InputProvider.IsKeyDown(InputKey.Left))
+        // {
+        //     FrameSaver.GoBackNFrames(1);
+        //     FrameSaver.CurrentFrame?.Restore(Scene);
+        // }
 
         // reset
         if (InputProvider.IsKeyPressed(InputKey.R))

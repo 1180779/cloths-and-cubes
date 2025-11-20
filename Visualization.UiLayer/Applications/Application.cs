@@ -5,7 +5,6 @@ using OpenTK.Windowing.Desktop;
 using Visualisation.Core;
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Mesh;
-using Visualisation.Core.FrameCapsule;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
 using Visualization.UiLayer.Inputs;
@@ -26,7 +25,7 @@ public class Application : GameWindow
 
     protected readonly SceneManager Scene;
     protected readonly Shader QuadShader;
-    protected readonly FrameSaver FrameSaver = new(1000);
+    // protected readonly FrameSaver FrameSaver = new(1000);
 
     protected const int DefaultWidth = 800;
     protected const int DefaultHeight = 600;
