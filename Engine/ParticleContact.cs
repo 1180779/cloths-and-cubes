@@ -1,4 +1,4 @@
-﻿namespace Engine.ParticleEngine;
+﻿namespace Engine;
 
 class ParticleContact
 {

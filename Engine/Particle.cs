@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Engine.ParticleEngine;
+namespace Engine;
 
 public class Particle
 {

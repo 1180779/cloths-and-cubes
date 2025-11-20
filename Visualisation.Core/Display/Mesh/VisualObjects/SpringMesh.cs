@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
 namespace Visualisation.Core.Display.Mesh.VisualObjects
 {
-    internal class SpringMesh : AbstractVisualObject
+    public class SpringMesh : AbstractVisualObject
     {
         private readonly Vector3[,] _points;
         private static MeshManager.MeshData? _meshData;

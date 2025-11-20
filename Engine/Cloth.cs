@@ -1,5 +1,5 @@
 ﻿using Engine.Force;
-using Engine.ParticleEngine;
+using Engine;
 using Engine.RigidBodies;
 using System;
 using System.Collections.Generic;
@@ -60,6 +60,18 @@ namespace Engine
             }
         }
     }
+    public Vector3[,] Points()
+    {
+            Vector3[,] points = new Vector3[sizeX, sizeY];
+            for (int i = 0; i < sizeX; i++)
+            {
+                for (int j = 0; j < sizeY; j++)
+                {
+                    points[i, j] = particles[i, j].Body.Position;
+                }
+            }
+            return points;
+        }
     public void Pin(uint x, uint y, Vector3 pos)
     {
         if (x >= sizeX | y >= sizeY)

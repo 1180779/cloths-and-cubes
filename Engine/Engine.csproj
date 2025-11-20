@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <Folder Include="Maths\" />
+      <Folder Include="ParticleEngine\" />
     </ItemGroup>
 
 </Project>
