@@ -1,5 +1,5 @@
 ﻿using Engine.Force;
-using Engine.RigidBodies;
+  using Engine.RigidBodies;
 
 namespace Engine
 {
@@ -25,7 +25,7 @@ namespace Engine
         {
             if (particle0pos == null)
             {
-                particle0pos = new Vector3(0f, 0f, 10f);
+                particle0pos = new Vector3(0f, 10f, 0f);
             }
 
             registry = _registry;
@@ -41,11 +41,11 @@ namespace Engine
                 for (int j = 0; j < sizeY; j++)
                 {
                     particles[i, j] = new RigidParticle();
-                    particles[i, j].SetState(particle0pos + new Vector3(springLength * i, springLength * j, 0), 0,
+                    particles[i, j].SetState(particle0pos + new Vector3(springLength * i, 0, springLength * j), 0,
                         new Vector3());
                 }
             }
-
+            Rotate(new Vector3(1, 1, 0));
             for (int i = 0; i < sizeX; i++)
             {
                 for (int j = 0; j < sizeY; j++)
@@ -96,7 +96,22 @@ namespace Engine
             }
             //TODO
         }
+        public void Update(float duration)
+        {
+            for (int i = 0; i < sizeX; i++)
+            {
+                for (int j = 0; j < sizeY; j++)
+                {
+                    var box = particles[i, j];
 
+                    // Run the physics
+                    box.Body.Integrate(duration);
+                    box.CalculateInternals();
+
+                }
+            }
+
+        }
         public void Move(Vector3 move)
         {
             //TODO
@@ -104,7 +119,48 @@ namespace Engine
 
         public void Rotate(Vector3 rot)
         {
-            //TODO
+            var pivot = particle0pos ?? new Vector3();
+
+            // Precompute sines and cosines (rot components are in radians).
+            double cx = Math.Cos(rot.X);
+            double sx = Math.Sin(rot.X);
+            double cy = Math.Cos(rot.Y);
+            double sy = Math.Sin(rot.Y);
+            double cz = Math.Cos(rot.Z);
+            double sz = Math.Sin(rot.Z);
+
+
+            Real r00 = (Real)(cz * cy);
+            Real r01 = (Real)(cz * sy * sx - sz * cx);
+            Real r02 = (Real)(cz * sy * cx + sz * sx);
+
+            Real r10 = (Real)(sz * cy);
+            Real r11 = (Real)(sz * sy * sx + cz * cx);
+            Real r12 = (Real)(sz * sy * cx - cz * sx);
+
+            Real r20 = (Real)(-sy);
+            Real r21 = (Real)(cy * sx);
+            Real r22 = (Real)(cy * cx);
+            Matrix3 rotMat = new Matrix3(r00, r01, r02,r10, r11, r12,r20, r21, r22);
+
+            for (int i = 0; i < sizeX; i++)
+            {
+                for (int j = 0; j < sizeY; j++)
+                {
+                    var body = particles[i, j].Body;
+                    // relative vector to pivot
+                    Vector3 rel = body.Position - pivot;
+
+                    Vector3 rotated = rotMat.Transform(rel);
+
+                    body.Position = rotated + pivot;
+
+                    // ensure derived data and wake body
+                    body.CalculateDerivedData();
+                    body.SetAwake();
+                }
+            }
         }
     }
+    
 }

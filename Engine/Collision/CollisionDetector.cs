@@ -357,6 +357,37 @@ public class CollisionDetector
         data.AddContacts(1);
         return 1;
     }
+    public static uint ParticleAndHalfSpace(CollisionParticle particle, CollisionPlane plane, CollisionData data)
+    {
+
+        if (data.ContactsLeft <= 0) return 0;
+
+
+        Vector3 point = particle.Body.Position;
+
+
+        Real particleDistance = point * plane.Direction;
+
+
+        if (particleDistance <= plane.Offset)
+        {
+            Contact contact = data.ContactList[data.NextContactIndex];
+
+            contact.ContactPoint = plane.Direction;
+            contact.ContactPoint *= (particleDistance - plane.Offset);
+            contact.ContactPoint += point;
+            contact.ContactNormal = plane.Direction;
+            contact.Penetration = plane.Offset - particleDistance;
+
+            contact.SetBodyData(particle.Body, null, data.Friction, data.Restitution);
+
+            data.NextContactIndex++;
+            data.AddContacts(1);
+            return 1;
+        }
+
+        return 0;
+    }
 
     public static void FillPointFaceBoxBox(
         CollisionBox one,

@@ -18,6 +18,7 @@ public class BoxesFallingDemo : RigidBodyApplication
     protected override void InitializeScene()
     {
         Cloth = new Cloth(ForceRegistry);
+
         /* add the cubes to the scene to be rendered */
         for (var i = 0; i < Boxes; i++)
         {
@@ -27,6 +28,7 @@ public class BoxesFallingDemo : RigidBodyApplication
         }
 
         Scene.AddGameObject(Cloth);
+
         /* add ground plane to the scene */
         plane = new();
         Scene.AddGameObject(plane);
@@ -71,6 +73,33 @@ public class BoxesFallingDemo : RigidBodyApplication
                 }
             }
         }
+        var engCloth = Cloth.EngineCloth;
+
+        for (int x = 0; x < engCloth.sizeX; x++)
+        {
+            for (int y = 0; y < engCloth.sizeY; y++)
+            {
+                if (!CollisionData.HasMoreContacts()) return;
+
+                var rigidParticle = engCloth.particles[x, y];
+                if (rigidParticle == null || rigidParticle.Body == null) continue;
+
+                var collParticle = new CollisionParticle();
+                collParticle.Body = rigidParticle.Body;
+                collParticle.CalculateInternals();
+
+
+                if (!CollisionData.HasMoreContacts()) return;
+                CollisionDetector.ParticleAndHalfSpace(collParticle, plane.EnginePlane, CollisionData);
+
+
+                for (var b = 0; b < Boxes; b++)
+                {
+                    if (!CollisionData.HasMoreContacts()) return;
+                    CollisionDetector.BoxAndParticle(boxes[b].EngineBox, collParticle, CollisionData);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -79,6 +108,7 @@ public class BoxesFallingDemo : RigidBodyApplication
     protected override void UpdateObjects(float duration)
     {
         ForceRegistry.updateForces(duration);
+        Cloth.EngineCloth.Update(duration);
         // Update the physics of each box in turn
         for (var i = 0; i < Boxes; i++)
         {
