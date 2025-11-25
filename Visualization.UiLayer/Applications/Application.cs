@@ -161,42 +161,7 @@ public class Application : GameWindow
 		uint dockspaceId = ImGui.GetID("MyDockSpace");
 		ImGui.DockSpace(dockspaceId, new System.Numerics.Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
 
-		// draw windows here
-		// Irradiance map instead of skybox
-		ImGui.Begin("Environment Map Settings");
-		int currentDisplayType = (int)Scene.EnvironmentMap.displayType;
-		ImGui.Text("Display Type:");
-		ImGui.RadioButton("Skybox", ref currentDisplayType, (int)EnvironmentMap.DisplayType.EnvironmentCubemap);
-		ImGui.SameLine();
-		ImGui.RadioButton("Irradiance Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.IrradianceMap);
-		ImGui.SameLine();
-		ImGui.RadioButton("Prefiltered Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.PrefilterMap);
-		Scene.EnvironmentMap.displayType = (EnvironmentMap.DisplayType)currentDisplayType;
-
-		if (Scene.EnvironmentMap.displayType == EnvironmentMap.DisplayType.PrefilterMap)
-		{
-			float roughness = Scene.EnvironmentMap.PrefilterMapValue;
-			if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
-			{
-				Scene.EnvironmentMap.PrefilterMapValue = roughness;
-			}
-		}
-
-		ImGui.End();
-
-		HelpWindow.Draw();
-
-		ImGui.Begin("Performance");
-		ImGui.Text(
-			$"Application average {1000.0f / ImGui.GetIO().Framerate:F3} ms/frame ({ImGui.GetIO().Framerate:F1} FPS)");
-		ImGui.End();
-
-#if DEBUG
-		RenderObjectInspectorWindow();
-		ShadowCascadingMapsWindow();
-		shadowSettingsWindow.Render();
-#endif
-		RenderSceneWindow((float)args.Time);
+		RenderWindows(args.Time);
 
 		// end dockspace
 		ImGui.End();
@@ -275,6 +240,51 @@ public class Application : GameWindow
 				directionalLightLayer += (Scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
 			}
 		}
+	}
+
+	protected virtual void RenderWindows(double dt)
+	{
+		RenderEnvironmentMapWindow();
+		HelpWindow.Draw();
+		RenderPerformanceWindow();
+#if DEBUG
+		RenderObjectInspectorWindow();
+		ShadowCascadingMapsWindow();
+		shadowSettingsWindow.Render();
+#endif
+		RenderSceneWindow((float)dt);
+	}
+
+	private void RenderPerformanceWindow()
+	{
+		ImGui.Begin("Performance");
+		ImGui.Text(
+			$"Application average {1000.0f / ImGui.GetIO().Framerate:F3} ms/frame ({ImGui.GetIO().Framerate:F1} FPS)");
+		ImGui.End();
+	}
+
+	private void RenderEnvironmentMapWindow()
+	{
+		ImGui.Begin("Environment Map Settings");
+		int currentDisplayType = (int)Scene.EnvironmentMap.displayType;
+		ImGui.Text("Display Type:");
+		ImGui.RadioButton("Skybox", ref currentDisplayType, (int)EnvironmentMap.DisplayType.EnvironmentCubemap);
+		ImGui.SameLine();
+		ImGui.RadioButton("Irradiance Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.IrradianceMap);
+		ImGui.SameLine();
+		ImGui.RadioButton("Prefiltered Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.PrefilterMap);
+		Scene.EnvironmentMap.displayType = (EnvironmentMap.DisplayType)currentDisplayType;
+
+		if (Scene.EnvironmentMap.displayType == EnvironmentMap.DisplayType.PrefilterMap)
+		{
+			float roughness = Scene.EnvironmentMap.PrefilterMapValue;
+			if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
+			{
+				Scene.EnvironmentMap.PrefilterMapValue = roughness;
+			}
+		}
+
+		ImGui.End();
 	}
 
 	protected virtual void DebugRenderInScene(Shader sh)

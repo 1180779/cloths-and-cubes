@@ -1,5 +1,6 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using ImGuiNET;
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
 using IntersectionTests = Engine.Collision.IntersectionTests;
@@ -13,9 +14,38 @@ public class BoxesDemo : RigidBodyApplication
 	protected Ball[] balls = [];
 	protected Plane plane;
 
+	private bool[] bvhLevelsToRender = Enumerable.Repeat(true, 10).ToArray();
+
+	private readonly Vector3[] levelColors =
+	{
+		new(1.0f, 0.0f, 0.0f), // Red
+		new(0.0f, 1.0f, 0.0f), // Green
+		new(0.0f, 0.0f, 1.0f), // Blue
+		new(1.0f, 1.0f, 0.0f), // Yellow
+		new(0.0f, 1.0f, 1.0f), // Cyan
+		new(1.0f, 0.0f, 1.0f) // Magenta
+	};
+
 	public BoxesDemo()
 	{
 		plane = new();
+	}
+
+	protected override void RenderWindows(double dt)
+	{
+		base.RenderWindows(dt);
+		ImGui.Begin("Bvh Nodes to render");
+
+		for (var i = 0; i < bvhLevelsToRender.Length; i++)
+		{
+			var color = levelColors[i % levelColors.Length];
+			ImGui.PushStyleColor(ImGuiCol.Text,
+				new System.Numerics.Vector4(new System.Numerics.Vector3(color.X, color.Y, color.Z), 1.0f));
+			ImGui.Checkbox($"Level {i}", ref bvhLevelsToRender[i]);
+			ImGui.PopStyleColor();
+		}
+
+		ImGui.End();
 	}
 
 	protected override void DebugRenderInScene(Shader sh)
@@ -30,6 +60,12 @@ public class BoxesDemo : RigidBodyApplication
 		BVH bvh = BVH.Build(boxDict);
 
 		BvhWireframe bvhWireframe = new(bvh);
+		bvhWireframe.LevelColors = levelColors;
+		bvhWireframe.LevelsToRender = bvhLevelsToRender
+			.Select((enabled, index) => new { enabled, index })
+			.Where(x => x.enabled)
+			.Select(x => x.index)
+			.ToArray();
 		bvhWireframe.Render(sh);
 		Console.WriteLine("Rendering BvhWireframe");
 	}
