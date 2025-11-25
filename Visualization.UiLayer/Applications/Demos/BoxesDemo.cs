@@ -36,6 +36,17 @@ public class BoxesDemo : RigidBodyApplication
 		base.RenderWindows(dt);
 		ImGui.Begin("Bvh Nodes to render");
 
+		if (ImGui.Button("Select All"))
+		{
+			bvhLevelsToRender = Enumerable.Repeat(true, bvhLevelsToRender.Length).ToArray();
+		}
+
+		ImGui.SameLine();
+		if (ImGui.Button("Deselect All"))
+		{
+			bvhLevelsToRender = Enumerable.Repeat(false, bvhLevelsToRender.Length).ToArray();
+		}
+
 		for (var i = 0; i < bvhLevelsToRender.Length; i++)
 		{
 			var color = levelColors[i % levelColors.Length];
@@ -69,7 +80,6 @@ public class BoxesDemo : RigidBodyApplication
 				.ToArray()
 		};
 		bvhWireframe.Render(sh);
-		Console.WriteLine("Rendering BvhWireframe");
 	}
 
 	/// <summary>
