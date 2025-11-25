@@ -65,9 +65,9 @@ public class BoxesDemo : RigidBodyApplication
     {
         base.DebugRenderInScene(sh);
         Dictionary<int, IBoxable> boxDict = new();
-        for (int i = 0; i < Boxes.Length; i++)
+        for (int i = 0; i < Boxes.Length + Balls.Length; i++)
         {
-            boxDict[i] = (IBoxable)Boxes[i];
+            boxDict[i] = i < Boxes.Length ? Boxes[i] : Balls[i - Boxes.Length];
         }
 
         BVH bvh = BVH.Build(boxDict);
@@ -96,19 +96,25 @@ public class BoxesDemo : RigidBodyApplication
         CollisionData.Tolerance = (Real)0.1;
 
         Dictionary<int, IBoxable> boxDict = new();
-        for (int i = 0; i < Boxes.Length; i++)
+        for (int i = 0; i < Boxes.Length + Balls.Length; i++)
         {
-            boxDict[i] = (IBoxable)Boxes[i];
+            boxDict[i] = i < Boxes.Length ? Boxes[i] : Balls[i - Boxes.Length];
         }
 
         BVH bvh = BVH.Build(boxDict);
 
         // Process box-plane collisions
-        for (int i = 0; i < Boxes.Length; i++)
+        foreach (var box in Boxes)
         {
-            var box = Boxes[i];
             if (!CollisionData.HasMoreContacts()) return;
             CollisionDetector.BoxAndHalfSpace(box.EngineBox, Plane.EnginePlane, CollisionData);
+        }
+
+        // Process sphere-plane collisions
+        foreach (var ball in Balls)
+        {
+            if (!CollisionData.HasMoreContacts()) return;
+            CollisionDetector.SphereAndHalfSpace(ball.EngineBall, Plane.EnginePlane, CollisionData);
         }
 
         List<(int, int)> potentialCollisions = new();
@@ -116,19 +122,60 @@ public class BoxesDemo : RigidBodyApplication
 
         foreach (var pair in potentialCollisions)
         {
-            var box1 = Boxes[pair.Item1];
-            var box2 = Boxes[pair.Item2];
-
             if (!CollisionData.HasMoreContacts()) return;
 
-            var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, CollisionData);
-            if (contacts > 0)
+            // TODO: refactor this check
+            if (pair.Item1 < Boxes.Length)
             {
-                box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
+                if (pair.Item2 < Boxes.Length)
+                {
+                    var box1 = Boxes[pair.Item1];
+                    var box2 = Boxes[pair.Item2];
+
+                    var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, CollisionData);
+                    if (contacts > 0)
+                    {
+                        box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
+                    }
+                }
+                else
+                {
+                    var box1 = Boxes[pair.Item1];
+                    var ball2 = Balls[pair.Item2 - Boxes.Length];
+
+                    var contacts = CollisionDetector.BoxAndSphere(box1.EngineBox, ball2.EngineBall, CollisionData);
+                    if (contacts)
+                    {
+                        box1.EngineBox.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
+                    }
+                }
+            }
+            else
+            {
+                if (pair.Item2 < Boxes.Length)
+                {
+                    var ball1 = Balls[pair.Item1 - Boxes.Length];
+                    var box2 = Boxes[pair.Item2];
+
+                    var contacts = CollisionDetector.BoxAndSphere(box2.EngineBox, ball1.EngineBall, CollisionData);
+                    if (contacts)
+                    {
+                        box2.EngineBox.IsOverlapping = ball1.EngineBall.IsOverlapping = true;
+                    }
+                }
+                else
+                {
+                    var ball1 = Balls[pair.Item1 - Boxes.Length];
+                    var ball2 = Balls[pair.Item2 - Boxes.Length];
+
+                    var contacts = CollisionDetector.SphereAndSphere(ball1.EngineBall, ball2.EngineBall, CollisionData);
+                    if (contacts)
+                    {
+                        ball1.EngineBall.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
+                    }
+                }
             }
         }
-
-        // TODO: add bounding box to sphere as well
     }
 
     /// <summary>

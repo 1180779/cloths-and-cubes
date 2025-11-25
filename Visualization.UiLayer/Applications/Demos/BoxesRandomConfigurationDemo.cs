@@ -4,16 +4,16 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesRandomConfigurationDemo : BoxesDemo
 {
-    private const int BoxesCount = 30;
+    private const int BoxesCount = 0;
     private const int BallsCount = 20;
 
     protected override void InitializeScene()
     {
-        Boxes = new Box[30];
-        Balls = new Ball[20];
+        Boxes = new Box[BoxesCount];
+        Balls = new Ball[BallsCount];
 
         /* add the cubes to the scene to be rendered */
-        for (var i = 0; i < BoxesCount; i++)
+        for (var i = 0; i < Boxes.Length; i++)
         {
             this.Boxes[i] = new Box();
             var box = Boxes[i];
@@ -21,7 +21,7 @@ public class BoxesRandomConfigurationDemo : BoxesDemo
         }
 
         /* add the spheres to the scene to be rendered */
-        for (var i = 0; i < BallsCount; ++i)
+        for (var i = 0; i < Balls.Length; ++i)
         {
             this.Balls[i] = new Ball();
             var ball = Balls[i];

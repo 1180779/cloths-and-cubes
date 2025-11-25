@@ -1,11 +1,11 @@
 ﻿using Engine.Collision;
+using Engine.Collision.Bounding_Volume_Hierarchy;
 
 namespace Engine.RigidBodies;
 
-public class Sphere : CollisionSphere
+public class Sphere : CollisionSphere, IBoxable
 {
     public bool IsOverlapping { get; set; } = false; // previously used for some rendering (???)
-
 
     static readonly Vector3 MinPos = new(-15, 5, -15);
     static readonly Vector3 MaxPos = new(15, 20, 15);
@@ -57,5 +57,12 @@ public class Sphere : CollisionSphere
         Body.SetAwake();
 
         Body.CalculateDerivedData();
+    }
+
+    public Collision.Bounding_Volume_Hierarchy.BoundingBox GetBoundingBox()
+    {
+        return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+            center: this.Body.Position,
+            halfSize: new Vector3(Radius, Radius, Radius));
     }
 }

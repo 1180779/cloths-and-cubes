@@ -1,4 +1,5 @@
-﻿using Engine.RigidBodies;
+﻿using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
@@ -7,7 +8,7 @@ using Sphere = Engine.RigidBodies.Sphere;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Ball : GameObject
+public sealed class Ball : GameObject, IBoxable
 {
     public Sphere EngineBall { get; private set; } = new();
     public override RigidBody PhysicsObject => EngineBall.Body;
@@ -33,5 +34,10 @@ public sealed class Ball : GameObject
 
             return GenerateModelMatrix(position, scale, q);
         }
+    }
+
+    public BoundingBox GetBoundingBox()
+    {
+        return EngineBall.GetBoundingBox();
     }
 }
