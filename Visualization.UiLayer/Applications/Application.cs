@@ -23,8 +23,8 @@ public class Application : GameWindow
 	protected readonly SceneManager Scene;
 
 
-#if DEBUG
 	protected readonly Shader DebugBasicShader;
+#if DEBUG
 	protected readonly QuadMesh QuadMesh;
 	protected readonly Shader QuadCsmShader;
 	protected readonly Shader TextureQuadShader;
@@ -55,13 +55,14 @@ public class Application : GameWindow
 		InputProvider = new ImGuiInputProvider(this, imGuiController);
 
 		SceneRenderWindowFrb = new(width, height);
+
+		DebugBasicShader = new("debugBasicShader.vert", "debugBasicShader.frag");
 #if DEBUG
 		QuadMesh = new();
 		DepthMapWindowFrb = new(width, height);
 		IbLreflectanceWindow = new(width, height);
 		QuadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
 		TextureQuadShader = new("depthMapShader.vert", "textureShader.frag");
-		DebugBasicShader = new("debugBasicShader.vert", "debugBasicShader.frag");
 		// windows
 		shadowSettingsWindow = new ShadowSettingsWindow(() => this.Scene.LightsManager.DirectionalLight);
 #endif
@@ -193,10 +194,11 @@ public class Application : GameWindow
 
 		imGuiController.UnhookFromWindow(this);
 		SceneRenderWindowFrb.Dispose();
+
+		DebugBasicShader.Dispose();
 #if DEBUG
 		QuadCsmShader.Dispose();
 		TextureQuadShader.Dispose();
-		DebugBasicShader.Dispose();
 
 		QuadMesh.Dispose();
 		DepthMapWindowFrb.Dispose();

@@ -3,7 +3,6 @@ using Engine.Collision.Bounding_Volume_Hierarchy;
 using ImGuiNET;
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
-using IntersectionTests = Engine.Collision.IntersectionTests;
 using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
@@ -14,7 +13,7 @@ public class BoxesDemo : RigidBodyApplication
 	protected Ball[] Balls = [];
 	protected Plane Plane;
 
-	private bool[] bvhLevelsToRender = Enumerable.Repeat(true, 10).ToArray();
+	private bool[] bvhLevelsToRender = Enumerable.Repeat(false, 10).ToArray();
 
 	private readonly Vector3[] levelColors =
 	[
@@ -101,88 +100,32 @@ public class BoxesDemo : RigidBodyApplication
 
 		BVH bvh = BVH.Build(boxDict);
 
+		// Process box-plane collisions
 		for (int i = 0; i < Boxes.Length; i++)
 		{
 			var box = Boxes[i];
 			if (!CollisionData.HasMoreContacts()) return;
 			CollisionDetector.BoxAndHalfSpace(box.EngineBox, Plane.EnginePlane, CollisionData);
+		}
 
-			List<(int, int)> potentialCollisions = new();
-			BVH.TraverseRecursive(ref potentialCollisions, ref bvh, box.GetBoundingBox(), i, bvh.root);
+		List<(int, int)> potentialCollisions = new();
+		BVH.GetPotentialContacts(ref potentialCollisions, bvh.root);
 
-			HashSet<(int, int)> processedPairs = new();
-			foreach (var other in potentialCollisions)
+		foreach (var pair in potentialCollisions)
+		{
+			var box1 = Boxes[pair.Item1];
+			var box2 = Boxes[pair.Item2];
+
+			if (!CollisionData.HasMoreContacts()) return;
+
+			var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, CollisionData);
+			if (contacts > 0)
 			{
-				// Skip self-collision
-				if (i == other.Item1) continue;
-
-				// Create an ordered pair to avoid duplicates (smaller index first)
-				var pair = i < other.Item1 ? (i, other.Item1) : (other.Item1, i);
-				if (!processedPairs.Add(pair)) continue; // Skip if already processed
-
-				if (box == Boxes[other.Item1]) continue;
-				if (!CollisionData.HasMoreContacts()) return;
-				if (IntersectionTests.BoxAndBox(box.EngineBox, Boxes[other.Item1].EngineBox))
-				{
-					CollisionDetector.BoxAndBox(box.EngineBox, Boxes[other.Item1].EngineBox, CollisionData);
-					box.EngineBox.IsOverlapping = Boxes[other.Item1].EngineBox.IsOverlapping = true;
-				}
+				box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
 			}
 		}
 
-		// TODO: add spheres here as well
-		// Perform exhaustive collision detection
-		// for (var i = 0; i < boxes.Length; i++)
-		// {
-		//     // var box = boxes[i];
-		//     // // Check for collisions with the ground plane
-		//     // if (!CollisionData.HasMoreContacts()) return;
-		//     // CollisionDetector.BoxAndHalfSpace(box.EngineBox, plane.EnginePlane, CollisionData);
-		//     //
-		//     // // Check for collisions with each other box
-		//     // for (var j = i + 1; j < boxes.Length; j++)
-		//     // {
-		//     //     var other = boxes[j];
-		//     //     if (!CollisionData.HasMoreContacts()) return;
-		//     //     CollisionDetector.BoxAndBox(box.EngineBox, other.EngineBox, CollisionData);
-		//     //
-		//     //     if (IntersectionTests.BoxAndBox(box.EngineBox, other.EngineBox))
-		//     //     {
-		//     //         box.EngineBox.IsOverlapping = other.EngineBox.IsOverlapping = true;
-		//     //     }
-		//     // }
-		//
-		//     // Check for collisions with each ball
-		//     for (var j = 0; j < balls.Length; j++)
-		//     {
-		//         var other = balls[j];
-		//         if (!CollisionData.HasMoreContacts()) return;
-		//         CollisionDetector.BoxAndSphere(box.EngineBox, other.EngineBall, CollisionData);
-		//         //if (IntersectionTests.BoxAndSphere(box.EngineBox, other.EngineBall))
-		//         //{
-		//         //    box.EngineBox.IsOverlapping = true;
-		//         //    other.EngineBall.IsOverlapping = true;
-		//         //}
-		//     }
-		// }
-
-		// for (var j = 0; j < balls.Length; ++j)
-		// {
-		//     var ball = balls[j];
-		//     if (!CollisionData.HasMoreContacts()) return;
-		//     CollisionDetector.SphereAndHalfSpace(ball.EngineBall, plane.EnginePlane, CollisionData);
-		//
-		//     for (var k = j + 1; k < balls.Length; ++k)
-		//     {
-		//         var other = balls[k];
-		//         if (!CollisionData.HasMoreContacts()) return;
-		//         CollisionDetector.SphereAndSphere(ball.EngineBall, other.EngineBall, CollisionData);
-		//         if (IntersectionTests.SphereAndSphere(ball.EngineBall, other.EngineBall))
-		//         {
-		//             ball.EngineBall.IsOverlapping = other.EngineBall.IsOverlapping = true;
-		//         }
-		//     }
-		// }
+		// TODO: add bounding box to sphere as well
 	}
 
 	/// <summary>

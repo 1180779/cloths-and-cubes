@@ -7,7 +7,7 @@ namespace Visualization.UiLayer.Applications;
 
 public abstract class RigidBodyApplication : Application
 {
-	protected static uint MaxContacts => 512;
+	protected static uint MaxContacts => 1024;
 	protected CollisionData CollisionData = new();
 
 	protected ContactResolver ContactResolver = new(MaxContacts * 8);
