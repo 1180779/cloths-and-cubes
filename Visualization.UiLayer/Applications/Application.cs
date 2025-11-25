@@ -40,7 +40,7 @@ public class Application : GameWindow
 	protected const int DefaultHeight = 600;
 	protected const string DefaultTitle = "Display";
 
-	public Application(int width = DefaultWidth, int height = DefaultHeight, string title = DefaultTitle) : base(
+	protected Application(int width = DefaultWidth, int height = DefaultHeight, string title = DefaultTitle) : base(
 		GameWindowSettings.Default,
 		new NativeWindowSettings()
 		{

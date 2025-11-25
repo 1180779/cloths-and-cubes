@@ -10,25 +10,25 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesDemo : RigidBodyApplication
 {
-	protected Box[] boxes = [];
-	protected Ball[] balls = [];
-	protected Plane plane;
+	protected Box[] Boxes = [];
+	protected Ball[] Balls = [];
+	protected Plane Plane;
 
 	private bool[] bvhLevelsToRender = Enumerable.Repeat(true, 10).ToArray();
 
 	private readonly Vector3[] levelColors =
-	{
+	[
 		new(1.0f, 0.0f, 0.0f), // Red
 		new(0.0f, 1.0f, 0.0f), // Green
 		new(0.0f, 0.0f, 1.0f), // Blue
 		new(1.0f, 1.0f, 0.0f), // Yellow
 		new(0.0f, 1.0f, 1.0f), // Cyan
 		new(1.0f, 0.0f, 1.0f) // Magenta
-	};
+	];
 
-	public BoxesDemo()
+	protected BoxesDemo()
 	{
-		plane = new();
+		Plane = new();
 	}
 
 	protected override void RenderWindows(double dt)
@@ -52,20 +52,22 @@ public class BoxesDemo : RigidBodyApplication
 	{
 		base.DebugRenderInScene(sh);
 		Dictionary<int, IBoxable> boxDict = new();
-		for (int i = 0; i < boxes.Length; i++)
+		for (int i = 0; i < Boxes.Length; i++)
 		{
-			boxDict[i] = (IBoxable)boxes[i];
+			boxDict[i] = (IBoxable)Boxes[i];
 		}
 
 		BVH bvh = BVH.Build(boxDict);
 
-		BvhWireframe bvhWireframe = new(bvh);
-		bvhWireframe.LevelColors = levelColors;
-		bvhWireframe.LevelsToRender = bvhLevelsToRender
-			.Select((enabled, index) => new { enabled, index })
-			.Where(x => x.enabled)
-			.Select(x => x.index)
-			.ToArray();
+		BvhWireframe bvhWireframe = new(bvh)
+		{
+			LevelColors = levelColors,
+			LevelsToRender = bvhLevelsToRender
+				.Select((enabled, index) => new { enabled, index })
+				.Where(x => x.enabled)
+				.Select(x => x.index)
+				.ToArray()
+		};
 		bvhWireframe.Render(sh);
 		Console.WriteLine("Rendering BvhWireframe");
 	}
@@ -75,10 +77,6 @@ public class BoxesDemo : RigidBodyApplication
 	/// </summary>
 	protected override void GenerateContacts()
 	{
-		// Note that this method makes a lot of uses of early returns to avoid
-		// processing lots of potential contacts that it hasn't got room to
-		// store.
-
 		// Set up the collision data structure
 		CollisionData.Reset(MaxContacts);
 		CollisionData.Friction = (Real)0.9;
@@ -86,29 +84,29 @@ public class BoxesDemo : RigidBodyApplication
 		CollisionData.Tolerance = (Real)0.1;
 
 		Dictionary<int, IBoxable> boxDict = new();
-		for (int i = 0; i < boxes.Length; i++)
+		for (int i = 0; i < Boxes.Length; i++)
 		{
-			boxDict[i] = (IBoxable)boxes[i];
+			boxDict[i] = (IBoxable)Boxes[i];
 		}
 
 		BVH bvh = BVH.Build(boxDict);
 
-		for (int i = 0; i < boxes.Length; i++)
+		for (int i = 0; i < Boxes.Length; i++)
 		{
-			var box = boxes[i];
+			var box = Boxes[i];
 			if (!CollisionData.HasMoreContacts()) return;
-			CollisionDetector.BoxAndHalfSpace(box.EngineBox, plane.EnginePlane, CollisionData);
+			CollisionDetector.BoxAndHalfSpace(box.EngineBox, Plane.EnginePlane, CollisionData);
 
 			List<(int, int)> potentialCollisions = new();
 			BVH.TraverseRecursive(ref potentialCollisions, ref bvh, box.GetBoundingBox(), i, bvh.root);
 			foreach (var other in potentialCollisions)
 			{
-				if (box == boxes[other.Item1]) continue;
+				if (box == Boxes[other.Item1]) continue;
 				if (!CollisionData.HasMoreContacts()) return;
-				if (IntersectionTests.BoxAndBox(box.EngineBox, boxes[other.Item1].EngineBox))
+				if (IntersectionTests.BoxAndBox(box.EngineBox, Boxes[other.Item1].EngineBox))
 				{
-					CollisionDetector.BoxAndBox(box.EngineBox, boxes[other.Item1].EngineBox, CollisionData);
-					box.EngineBox.IsOverlapping = boxes[other.Item1].EngineBox.IsOverlapping = true;
+					CollisionDetector.BoxAndBox(box.EngineBox, Boxes[other.Item1].EngineBox, CollisionData);
+					box.EngineBox.IsOverlapping = Boxes[other.Item1].EngineBox.IsOverlapping = true;
 				}
 			}
 		}
@@ -174,20 +172,15 @@ public class BoxesDemo : RigidBodyApplication
 	protected override void UpdateObjects(float duration)
 	{
 		// Update the physics of each box in turn
-		for (var i = 0; i < boxes.Length; i++)
+		foreach (var box in Boxes)
 		{
-			var box = boxes[i];
-
-			// Run the physics
 			box.EngineBox.Body.Integrate(duration);
 			box.EngineBox.CalculateInternals();
 			box.EngineBox.IsOverlapping = false;
 		}
 
-		for (var i = 0; i < balls.Length; i++)
+		foreach (var ball in Balls)
 		{
-			var ball = balls[i];
-			// Run the physics
 			ball.EngineBall.Body.Integrate(duration);
 			ball.EngineBall.CalculateInternals();
 			ball.EngineBall.IsOverlapping = false;
@@ -199,10 +192,10 @@ public class BoxesDemo : RigidBodyApplication
 	/// </summary>
 	protected override void Reset()
 	{
-		/* reset boxes; some in preconfigured positions */
-		if (boxes.Length > 0)
+		// reset boxes; some in preconfigured positions
+		if (Boxes.Length > 0)
 		{
-			boxes[0].EngineBox.SetState(
+			Boxes[0].EngineBox.SetState(
 				position: new Engine.Vector3(0, 3, 0),
 				orientation: new Engine.Quaternion(),
 				extents: new Engine.Vector3(4, 1, 1),
@@ -210,9 +203,9 @@ public class BoxesDemo : RigidBodyApplication
 			);
 		}
 
-		if (boxes.Length > 1)
+		if (Boxes.Length > 1)
 		{
-			boxes[1].EngineBox.SetState(
+			Boxes[1].EngineBox.SetState(
 				position: new Engine.Vector3(0, 4.75f, 2),
 				orientation: new Engine.Quaternion(1.0f, 0.1f, 0.05f, 0.01f),
 				extents: new Engine.Vector3(1, 1, 4),
@@ -221,33 +214,33 @@ public class BoxesDemo : RigidBodyApplication
 		}
 
 		Random random = new();
-		for (var i = 2; i < boxes.Length; i++)
+		for (var i = 2; i < Boxes.Length; i++)
 		{
-			boxes[i].EngineBox.Random(random);
+			Boxes[i].EngineBox.Random(random);
 		}
 
-		/* reset spheres; some in preconfigured positions */
-		if (balls.Length > 0)
+		// reset spheres; some in preconfigured positions
+		if (Balls.Length > 0)
 		{
-			balls[0].EngineBall.SetState(
+			Balls[0].EngineBall.SetState(
 				position: new Engine.Vector3(0, 10, 0),
 				orientation: new Engine.Quaternion(),
 				radius: 1.0f,
 				velocity: new Engine.Vector3(0, 0, 0));
 		}
 
-		if (balls.Length > 1)
+		if (Balls.Length > 1)
 		{
-			balls[1].EngineBall.SetState(
+			Balls[1].EngineBall.SetState(
 				position: new Engine.Vector3(3, 4.75f, 2),
 				orientation: new Engine.Quaternion(),
 				radius: 1.0f,
 				velocity: new Engine.Vector3(0, 0, 0));
 		}
 
-		for (var i = 2; i < balls.Length; i++)
+		for (var i = 2; i < Balls.Length; i++)
 		{
-			balls[i].EngineBall.Random(random);
+			Balls[i].EngineBall.Random(random);
 		}
 
 		// Reset the contacts
