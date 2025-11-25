@@ -109,7 +109,7 @@
 			if (firstCode == lastCode)
 				return (int)((first + last) / 2); // All Morton codes are the same, split in the middle
 
-			int commonPrefix = countZeros((uint)(firstCode ^ lastCode));
+			int commonPrefix = CountZeros((uint)(firstCode ^ lastCode));
 			int split = (int)first; // initial guess
 			int step = (int)(last - first);
 			do
@@ -119,7 +119,7 @@
 				if (newSplit < last)
 				{
 					ulong splitCode = sortedMortonCodes[newSplit];
-					int splitPrefix = countZeros((uint)(firstCode ^ splitCode));
+					int splitPrefix = CountZeros((uint)(firstCode ^ splitCode));
 					if (splitPrefix > commonPrefix)
 						split = newSplit; // accept proposal
 				}
@@ -128,10 +128,10 @@
 			return split;
 		}
 
-		static int countZeros(uint x)
+		private static int CountZeros(uint x)
 		{
 			// Keep shifting x by one until
-			// leftmost bit does not become 1.
+			// the leftmost bit does not become 1.
 			int total_bits = sizeof(uint) * 8;
 			int res = 0;
 			while ((x & (1 << (total_bits - 1))) == 0)
@@ -150,15 +150,44 @@
 				return;
 			}
 
-			var internalNode = (BVHInternal)node;
+			Stack<BVHNode> nodeStack = new Stack<BVHNode>();
+			Stack<(BVHNode, BVHNode)> overlapStack = new Stack<(BVHNode, BVHNode)>();
 
-			GetPotentialContacts(ref potentialContacts, internalNode.left);
-			GetPotentialContacts(ref potentialContacts, internalNode.right);
+			nodeStack.Push(node);
 
-			TestOverlap(ref potentialContacts, internalNode.left, internalNode.right);
+			// First pass: traverse tree and collect overlap pairs
+			while (nodeStack.Count > 0)
+			{
+				var current = nodeStack.Pop();
+
+				if (current.isLeaf)
+				{
+					continue;
+				}
+
+				var internalNode = (BVHInternal)current;
+
+				// Push children for further processing
+				nodeStack.Push(internalNode.left);
+				nodeStack.Push(internalNode.right);
+
+				// Push this pair for overlap testing
+				overlapStack.Push((internalNode.left, internalNode.right));
+			}
+
+			// Second pass: process all overlap tests
+			while (overlapStack.Count > 0)
+			{
+				var (node1, node2) = overlapStack.Pop();
+				TestOverlap(ref potentialContacts, ref overlapStack, node1, node2);
+			}
 		}
 
-		private static void TestOverlap(ref List<(int, int)> potentialContacts, BVHNode? node1, BVHNode? node2)
+		private static void TestOverlap(
+			ref List<(int, int)> potentialContacts,
+			ref Stack<(BVHNode, BVHNode)> overlapStack,
+			BVHNode? node1,
+			BVHNode? node2)
 		{
 			if (node1 == null || node2 == null) return;
 
@@ -167,6 +196,7 @@
 				return;
 			}
 
+			// Both are leaf nodes, potential contact
 			if (node1.isLeaf && node2.isLeaf)
 			{
 				var leaf1 = (BVHLeaf)node1;
@@ -182,26 +212,29 @@
 				return;
 			}
 
-			if (node1.isLeaf) // and node2 is not
+			// node1 is a leaf, and node2 is not, check node1 with children of node2
+			if (node1.isLeaf)
 			{
 				var internalNode2 = (BVHInternal)node2;
-				TestOverlap(ref potentialContacts, node1, internalNode2.left);
-				TestOverlap(ref potentialContacts, node1, internalNode2.right);
+				overlapStack.Push((node1, internalNode2.left));
+				overlapStack.Push((node1, internalNode2.right));
 			}
-			else if (node2.isLeaf) // and node1 is not
+			// node1 is not a leaf, and node1 is a left, check children of node1 with node2
+			else if (node2.isLeaf)
 			{
 				var internalNode1 = (BVHInternal)node1;
-				TestOverlap(ref potentialContacts, internalNode1.left, node2);
-				TestOverlap(ref potentialContacts, internalNode1.right, node2);
+				overlapStack.Push((internalNode1.left, node2));
+				overlapStack.Push((internalNode1.right, node2));
 			}
-			else // both are internal
+			// both nodes are internal, check 4 pairs of children
+			else
 			{
 				var internal1 = (BVHInternal)node1;
 				var internal2 = (BVHInternal)node2;
-				TestOverlap(ref potentialContacts, internal1.left, internal2.left);
-				TestOverlap(ref potentialContacts, internal1.left, internal2.right);
-				TestOverlap(ref potentialContacts, internal1.right, internal2.left);
-				TestOverlap(ref potentialContacts, internal1.right, internal2.right);
+				overlapStack.Push((internal1.left, internal2.left));
+				overlapStack.Push((internal1.left, internal2.right));
+				overlapStack.Push((internal1.right, internal2.left));
+				overlapStack.Push((internal1.right, internal2.right));
 			}
 		}
 	}
