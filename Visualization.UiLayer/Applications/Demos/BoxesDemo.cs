@@ -1,5 +1,6 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Visualisation.Core;
 using Visualisation.Core.GameObjects;
 using IntersectionTests = Engine.Collision.IntersectionTests;
 using Random = Engine.Random;
@@ -15,6 +16,22 @@ public class BoxesDemo : RigidBodyApplication
 	public BoxesDemo()
 	{
 		plane = new();
+	}
+
+	protected override void DebugRenderInScene(Shader sh)
+	{
+		base.DebugRenderInScene(sh);
+		Dictionary<int, IBoxable> boxDict = new();
+		for (int i = 0; i < boxes.Length; i++)
+		{
+			boxDict[i] = (IBoxable)boxes[i];
+		}
+
+		BVH bvh = BVH.Build(boxDict);
+
+		BvhWireframe bvhWireframe = new(bvh);
+		bvhWireframe.Render(sh);
+		Console.WriteLine("Rendering BvhWireframe");
 	}
 
 	/// <summary>

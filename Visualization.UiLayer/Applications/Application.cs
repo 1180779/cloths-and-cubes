@@ -22,7 +22,9 @@ public class Application : GameWindow
 	protected readonly WindowFrameBuffer SceneRenderWindowFrb;
 	protected readonly SceneManager Scene;
 
+
 #if DEBUG
+	protected readonly Shader DebugBasicShader;
 	protected readonly QuadMesh QuadMesh;
 	protected readonly Shader QuadCsmShader;
 	protected readonly Shader TextureQuadShader;
@@ -59,6 +61,7 @@ public class Application : GameWindow
 		IbLreflectanceWindow = new(width, height);
 		QuadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
 		TextureQuadShader = new("depthMapShader.vert", "textureShader.frag");
+		DebugBasicShader = new("debugBasicShader.vert", "debugBasicShader.frag");
 		// windows
 		shadowSettingsWindow = new ShadowSettingsWindow(() => this.Scene.LightsManager.DirectionalLight);
 #endif
@@ -228,6 +231,7 @@ public class Application : GameWindow
 #if DEBUG
 		QuadCsmShader.Dispose();
 		TextureQuadShader.Dispose();
+		DebugBasicShader.Dispose();
 
 		QuadMesh.Dispose();
 		DepthMapWindowFrb.Dispose();
@@ -273,6 +277,13 @@ public class Application : GameWindow
 		}
 	}
 
+	protected virtual void DebugRenderInScene(Shader sh)
+	{
+		DebugBasicShader.Use();
+		sh.SetMatrix4("view", Scene.CamerasManager.CurrentCamera.ViewMatrix);
+		sh.SetMatrix4("projection", Scene.CamerasManager.CurrentCamera.ProjectionMatrix);
+	}
+
 	private void RenderSceneWindow(float dt)
 	{
 		ImGui.Begin("Game Viewport");
@@ -293,7 +304,7 @@ public class Application : GameWindow
 		int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
 		SceneRenderWindowFrb.Resize(fbW, fbH);
 		Scene.RenderSceneWindow(fbW, fbH, SceneRenderWindowFrb);
-
+		DebugRenderInScene(DebugBasicShader);
 		SceneRenderWindowFrb.Unbind();
 		GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
 		ImGui.Image(SceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
