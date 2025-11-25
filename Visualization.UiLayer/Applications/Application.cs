@@ -246,21 +246,13 @@ public class Application : GameWindow
 	{
 		RenderEnvironmentMapWindow();
 		HelpWindow.Draw();
-		RenderPerformanceWindow();
+		StatsWindow.Draw();
 #if DEBUG
 		RenderObjectInspectorWindow();
 		ShadowCascadingMapsWindow();
 		shadowSettingsWindow.Render();
 #endif
 		RenderSceneWindow((float)dt);
-	}
-
-	private void RenderPerformanceWindow()
-	{
-		ImGui.Begin("Performance");
-		ImGui.Text(
-			$"Application average {1000.0f / ImGui.GetIO().Framerate:F3} ms/frame ({ImGui.GetIO().Framerate:F1} FPS)");
-		ImGui.End();
 	}
 
 	private void RenderEnvironmentMapWindow()
