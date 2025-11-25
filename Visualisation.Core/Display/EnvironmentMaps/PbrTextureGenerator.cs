@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
+
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 

@@ -1,4 +1,5 @@
 using OpenTK.Windowing.GraphicsLibraryFramework;
+
 using Visualisation.Core.Inputs;
 
 namespace Visualization.UiLayer.Inputs;
@@ -20,7 +21,6 @@ internal static class KeyMap
         { InputKey.D0, Keys.D0 },
         { InputKey.Minus, Keys.Minus },
         { InputKey.Equal, Keys.Equal },
-
         { InputKey.Tab, Keys.Tab },
         { InputKey.Q, Keys.Q },
         { InputKey.W, Keys.W },
@@ -34,7 +34,6 @@ internal static class KeyMap
         { InputKey.P, Keys.P },
         { InputKey.LeftBracket, Keys.LeftBracket },
         { InputKey.RightBracket, Keys.RightBracket },
-
         { InputKey.CapsLock, Keys.CapsLock },
         { InputKey.A, Keys.A },
         { InputKey.S, Keys.S },
@@ -47,7 +46,6 @@ internal static class KeyMap
         { InputKey.L, Keys.L },
         { InputKey.Semicolon, Keys.Semicolon },
         { InputKey.Apostrophe, Keys.Apostrophe },
-
         { InputKey.LeftShift, Keys.LeftShift },
         { InputKey.Z, Keys.Z },
         { InputKey.X, Keys.X },
@@ -59,7 +57,6 @@ internal static class KeyMap
         { InputKey.Comma, Keys.Comma },
         { InputKey.Period, Keys.Period },
         { InputKey.Slash, Keys.Slash },
-
         { InputKey.LeftCtrl, Keys.LeftControl },
         { InputKey.LeftSuper, Keys.LeftSuper },
         { InputKey.LeftAlt, Keys.LeftAlt },

@@ -47,12 +47,7 @@ public sealed class QuadMesh : IMesh
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float),
                 3 * sizeof(float));
 
-            return new MeshManager.MeshData
-            {
-                MeshName = MeshName,
-                Vbo = quadVbo,
-                Vao = quadVao
-            };
+            return new MeshManager.MeshData { MeshName = MeshName, Vbo = quadVbo, Vao = quadVao };
         });
     }
 

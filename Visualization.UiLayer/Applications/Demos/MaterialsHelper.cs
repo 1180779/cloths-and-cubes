@@ -1,4 +1,5 @@
 using System.Reflection;
+
 using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.Applications.Demos;

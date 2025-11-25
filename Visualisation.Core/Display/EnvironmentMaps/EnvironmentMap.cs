@@ -1,5 +1,7 @@
 using System.Diagnostics;
+
 using OpenTK.Graphics.OpenGL4;
+
 using Visualisation.Core.Display.Texture;
 
 namespace Visualisation.Core.Display.EnvironmentMaps;

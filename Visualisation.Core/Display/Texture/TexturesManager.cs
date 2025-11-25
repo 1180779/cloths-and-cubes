@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+
 using ImageMagick;
+
 using OpenTK.Graphics.OpenGL4;
+
 using StbImageSharp;
 
 namespace Visualisation.Core.Display.Texture;
@@ -336,18 +339,11 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData
-            {
-                TextureId = PlaceholderTextureId!.Value,
-                TexturePath = path
-            };
+            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
 
             var e = new Entry
             {
-                PublicTextureData = td,
-                UsagesCount = 0,
-                InitCallback = initCallback,
-                IsLoaded = false
+                PublicTextureData = td, UsagesCount = 0, InitCallback = initCallback, IsLoaded = false
             };
 
             EnqueueLoad(path, e);
@@ -370,18 +366,11 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData
-            {
-                TextureId = PlaceholderTextureId!.Value,
-                TexturePath = path
-            };
+            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
 
             var e = new Entry
             {
-                PublicTextureData = td,
-                UsagesCount = 0,
-                InitCallback = initCallback,
-                IsLoaded = false
+                PublicTextureData = td, UsagesCount = 0, InitCallback = initCallback, IsLoaded = false
             };
 
             PerformImmediateLoad(e, path, initCallback);

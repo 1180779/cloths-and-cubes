@@ -33,10 +33,7 @@ public static class MeshManager
 
         public static InternalMeshData FromMeshData(MeshData meshData)
         {
-            return new InternalMeshData
-            {
-                PublicMeshData = meshData,
-            };
+            return new InternalMeshData { PublicMeshData = meshData, };
         }
     }
 

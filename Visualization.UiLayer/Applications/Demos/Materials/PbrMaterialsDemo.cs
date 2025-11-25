@@ -4,8 +4,8 @@ namespace Visualization.UiLayer.Applications.Demos.Materials;
 
 public class PbrMaterialsDemo : BoxesMaterialsDemo
 {
-	protected override IMaterial[] GetMaterials()
-	{
-		return MaterialsHelper.GetTexturedMaterials(50 * NrOfRows);
-	}
+    protected override IMaterial[] GetMaterials()
+    {
+        return MaterialsHelper.GetTexturedMaterials(50 * NrOfRows);
+    }
 }

@@ -1,4 +1,5 @@
 using ImGuiNET;
+
 using Visualisation.Core.Display.Light;
 
 namespace Visualization.UiLayer.UI.Windows;

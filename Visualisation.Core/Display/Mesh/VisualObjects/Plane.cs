@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+
 using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects;
@@ -43,12 +44,7 @@ public sealed class PlaneMesh : IMesh
             GL.BindVertexArray(vao);
             VertexData.VertexAttribPositionNormalTexCoordsTangentBitangent();
 
-            return new MeshManager.MeshData
-            {
-                MeshName = MeshName,
-                Vbo = vbo,
-                Vao = vao
-            };
+            return new MeshManager.MeshData { MeshName = MeshName, Vbo = vbo, Vao = vao };
         });
     }
 

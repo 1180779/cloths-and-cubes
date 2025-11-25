@@ -1,4 +1,5 @@
 using System.Diagnostics;
+
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.GameObjects.Scenes;
 

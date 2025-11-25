@@ -37,41 +37,26 @@ public class MaterialConstant : IMaterial
 
     public static MaterialConstant RedPlastic => new MaterialConstant
     {
-        Albedo = new Vector3(0.8f, 0.1f, 0.1f),
-        Metallic = 0.0f,
-        Roughness = 0.3f,
-        Ao = 1.0f
+        Albedo = new Vector3(0.8f, 0.1f, 0.1f), Metallic = 0.0f, Roughness = 0.3f, Ao = 1.0f
     };
 
     public static MaterialConstant BlueRubber => new MaterialConstant
     {
-        Albedo = new Vector3(0.1f, 0.1f, 0.8f),
-        Metallic = 0.0f,
-        Roughness = 0.7f,
-        Ao = 1.0f
+        Albedo = new Vector3(0.1f, 0.1f, 0.8f), Metallic = 0.0f, Roughness = 0.7f, Ao = 1.0f
     };
 
     public static MaterialConstant Gold => new MaterialConstant
     {
-        Albedo = new Vector3(1.0f, 0.766f, 0.336f),
-        Metallic = 1.0f,
-        Roughness = 0.1f,
-        Ao = 1.0f
+        Albedo = new Vector3(1.0f, 0.766f, 0.336f), Metallic = 1.0f, Roughness = 0.1f, Ao = 1.0f
     };
 
     public static MaterialConstant Silver => new MaterialConstant
     {
-        Albedo = new Vector3(0.972f, 0.960f, 0.915f),
-        Metallic = 1.0f,
-        Roughness = 0.2f,
-        Ao = 1.0f
+        Albedo = new Vector3(0.972f, 0.960f, 0.915f), Metallic = 1.0f, Roughness = 0.2f, Ao = 1.0f
     };
 
     public static MaterialConstant Wood => new MaterialConstant
     {
-        Albedo = new Vector3(0.5f, 0.3f, 0.1f),
-        Metallic = 0.0f,
-        Roughness = 0.6f,
-        Ao = 1.0f
+        Albedo = new Vector3(0.5f, 0.3f, 0.1f), Metallic = 0.0f, Roughness = 0.6f, Ao = 1.0f
     };
 }

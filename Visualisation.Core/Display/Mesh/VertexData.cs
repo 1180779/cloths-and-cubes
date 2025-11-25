@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+
 using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh;

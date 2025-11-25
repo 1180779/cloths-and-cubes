@@ -114,13 +114,7 @@ public sealed class SphereMesh : IMesh
 
             VertexData.VertexAttribPositionNormalTexCoordsTangentBitangent();
 
-            return new MeshManager.MeshData
-            {
-                MeshName = MeshName,
-                Vbo = vbo,
-                Vao = vao,
-                Ebo = ebo
-            };
+            return new MeshManager.MeshData { MeshName = MeshName, Vbo = vbo, Vao = vao, Ebo = ebo };
         });
     }
 

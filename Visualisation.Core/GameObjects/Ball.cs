@@ -1,6 +1,8 @@
 ﻿using Engine.RigidBodies;
+
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
+
 using Sphere = Engine.RigidBodies.Sphere;
 
 namespace Visualisation.Core.GameObjects;

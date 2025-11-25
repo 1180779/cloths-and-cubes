@@ -13,15 +13,9 @@ public static class HelpWindow
                 "Camera",
                 new()
                 {
-                    {
-                        "Enter camera mode", "Mouse click on the scene"
-                    },
-                    {
-                        "Disable camera mode", "Esc"
-                    },
-                    {
-                        "Next camera", "C"
-                    },
+                    { "Enter camera mode", "Mouse click on the scene" },
+                    { "Disable camera mode", "Esc" },
+                    { "Next camera", "C" },
                     { "Move camera up", "Space" },
                     { "Move camera down", "Left Shift" },
                     { "Move camera forward", "W" },
@@ -33,54 +27,27 @@ public static class HelpWindow
             {
                 "Frame mode", new()
                 {
-                    {
-                        "Enable frame after frame mode", "Left Bracket ([)"
-                    },
-                    {
-                        "Disable frame after frame mode", "Right Bracket (])"
-                    },
-                    {
-                        "Add 1 frame (frame mode)", "1"
-                    },
-                    {
-                        "Add 2 frames (frame mode)", "2"
-                    },
-                    {
-                        "Add 3 frames (frame mode)", "3"
-                    },
-                    {
-                        "Add 4 frames (frame mode)", "4"
-                    },
-                    {
-                        "Add 5 frames (frame mode)", "5"
-                    },
-                    {
-                        "Add 6 frames (frame mode)", "6"
-                    },
-                    {
-                        "Add 7 frames (frame mode)", "7"
-                    },
-                    {
-                        "Add 8 frames (frame mode)", "8"
-                    },
-                    {
-                        "Add 9 frames (frame mode)", "9"
-                    },
-                    {
-                        "Add frames (frame mode)", "0"
-                    },
+                    { "Enable frame after frame mode", "Left Bracket ([)" },
+                    { "Disable frame after frame mode", "Right Bracket (])" },
+                    { "Add 1 frame (frame mode)", "1" },
+                    { "Add 2 frames (frame mode)", "2" },
+                    { "Add 3 frames (frame mode)", "3" },
+                    { "Add 4 frames (frame mode)", "4" },
+                    { "Add 5 frames (frame mode)", "5" },
+                    { "Add 6 frames (frame mode)", "6" },
+                    { "Add 7 frames (frame mode)", "7" },
+                    { "Add 8 frames (frame mode)", "8" },
+                    { "Add 9 frames (frame mode)", "9" },
+                    { "Add frames (frame mode)", "0" },
                 }
             },
 #if DEBUG
             {
-                " Objects in time", new()
+                " Objects in time",
+                new()
                 {
-                    {
-                        "Go back", "Left"
-                    },
-                    {
-                        "Go forward", "Right"
-                    },
+                    { "Go back", "Left" },
+                    { "Go forward", "Right" },
                     {
                         "Using this feature while not being in (single) frame mode can lead to unexpected results. Use with caution. ",
                         ""
@@ -88,14 +55,7 @@ public static class HelpWindow
                 }
             },
 #endif
-            {
-                "Scene", new()
-                {
-                    {
-                        "Reset demo", "R"
-                    },
-                }
-            }
+            { "Scene", new() { { "Reset demo", "R" }, } }
         };
 
     public static void Draw()

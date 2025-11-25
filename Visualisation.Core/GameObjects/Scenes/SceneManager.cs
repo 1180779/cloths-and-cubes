@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL4;
+
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Light;
@@ -24,9 +25,7 @@ public abstract class SceneManager : IDisposable
         // TODO: remove magic numbers
         var camera = new FreeMovingCamera(aspectRatio)
         {
-            Position = new(-6.5f, 3.2f, 6.6f),
-            PitchDegrees = 6.3f,
-            YawDegrees = -777.8f,
+            Position = new(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
         };
         CamerasManager.AddCamera(camera);
     }

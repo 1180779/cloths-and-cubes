@@ -1,8 +1,12 @@
 using ImGuiNET;
+
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+
 using Visualisation.Core.Inputs;
+
 using Visualization.UiLayer.UI;
+
 using CursorState = Visualisation.Core.Inputs.CursorState;
 using MouseButton = Visualisation.Core.Inputs.MouseButton;
 

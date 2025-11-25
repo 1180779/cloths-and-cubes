@@ -8,7 +8,7 @@ public static class ProjectionHelper
         // to match the effect of GLM's (column-major) proj * view.
         var viewProj = view * proj;
         var inverse = Matrix4.Invert(viewProj);
-        
+
         List<Vector4> frustumCorners = new();
         for (int x = 0; x < 2; ++x)
         {
