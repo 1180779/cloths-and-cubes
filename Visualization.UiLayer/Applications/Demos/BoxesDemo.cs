@@ -109,8 +109,17 @@ public class BoxesDemo : RigidBodyApplication
 
 			List<(int, int)> potentialCollisions = new();
 			BVH.TraverseRecursive(ref potentialCollisions, ref bvh, box.GetBoundingBox(), i, bvh.root);
+
+			HashSet<(int, int)> processedPairs = new();
 			foreach (var other in potentialCollisions)
 			{
+				// Skip self-collision
+				if (i == other.Item1) continue;
+
+				// Create an ordered pair to avoid duplicates (smaller index first)
+				var pair = i < other.Item1 ? (i, other.Item1) : (other.Item1, i);
+				if (!processedPairs.Add(pair)) continue; // Skip if already processed
+
 				if (box == Boxes[other.Item1]) continue;
 				if (!CollisionData.HasMoreContacts()) return;
 				if (IntersectionTests.BoxAndBox(box.EngineBox, Boxes[other.Item1].EngineBox))

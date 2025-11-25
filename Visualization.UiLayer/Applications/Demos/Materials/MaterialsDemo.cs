@@ -6,7 +6,7 @@ public class MaterialsDemo : BoxesMaterialsDemo
 {
 	protected override IMaterial[] GetMaterials()
 	{
-		NrOfRows = 5;
+		NrOfRows = 10;
 		var nrOfColumns = NrOfRows;
 
 		var materials = new List<IMaterial>(NrOfRows * nrOfColumns);
