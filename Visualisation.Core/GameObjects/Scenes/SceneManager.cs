@@ -30,8 +30,8 @@ public abstract class SceneManager : IDisposable
         CamerasManager.AddCamera(camera);
     }
 
-    private const string PbrVertexShader = "phongShader.vert";
-    private const string PbrFragmentShader = "phongShader.frag";
+    private const string PbrVertexShader = "scenePBRShader.vert";
+    private const string PbrFragmentShader = "scenePBRShader.frag";
     public readonly Shader PbrShader = new(PbrVertexShader, PbrFragmentShader);
 
     private const string CubemapVertexShader = "cubemap.vert";
@@ -45,8 +45,8 @@ public abstract class SceneManager : IDisposable
     public readonly Shader IrradianceConvolutionShader = new(CubemapVertexShader, IrradianceConvolutionFragmentShader);
     public readonly Shader PrefilterShader = new(CubemapVertexShader, PrefilterFragmentShader);
 
-    private const string SkyboxVertexShader = "skyboxShader.vert";
-    private const string SkyboxFragmentShader = "skyboxShader.frag";
+    private const string SkyboxVertexShader = "sceneSkyboxShader.vert";
+    private const string SkyboxFragmentShader = "sceneSkyboxShader.frag";
     public readonly Shader SkyboxShader = new(SkyboxVertexShader, SkyboxFragmentShader);
 
     private const string BrdfLutVertexShader = "depthMapShader.vert";

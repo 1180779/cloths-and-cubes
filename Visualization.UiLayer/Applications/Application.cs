@@ -56,7 +56,7 @@ public class Application : GameWindow
 
         SceneRenderWindowFrb = new(width, height);
 
-        DebugBasicShader = new("debugBasicShader.vert", "debugBasicShader.frag");
+        DebugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
 #if DEBUG
         QuadMesh = new();
         DepthMapWindowFrb = new(width, height);
