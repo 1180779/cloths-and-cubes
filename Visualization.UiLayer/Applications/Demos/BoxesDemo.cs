@@ -125,63 +125,63 @@ public class BoxesDemo : RigidBodyApplication
         List<(int, int)> potentialCollisions = new();
         BVH.GetPotentialContacts(ref potentialCollisions, bvh.root);
         //
-        // foreach (var pair in potentialCollisions)
-        // {
-        //     if (!_collisionData.HasMoreContacts()) return;
-        //
-        //     // TODO: refactor this check
-        //     if (pair.Item1 < _boxes.Length)
-        //     {
-        //         if (pair.Item2 < _boxes.Length)
-        //         {
-        //             var box1 = _boxes[pair.Item1];
-        //             var box2 = _boxes[pair.Item2];
-        //
-        //             var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, _collisionData);
-        //             if (contacts > 0)
-        //             {
-        //                 box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
-        //             }
-        //         }
-        //         else
-        //         {
-        //             var box1 = _boxes[pair.Item1];
-        //             var ball2 = _balls[pair.Item2 - _boxes.Length];
-        //
-        //             var contacts = CollisionDetector.BoxAndSphere(box1.EngineBox, ball2.EngineBall, _collisionData);
-        //             if (contacts)
-        //             {
-        //                 box1.EngineBox.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
-        //             }
-        //         }
-        //     }
-        //     else
-        //     {
-        //         if (pair.Item2 < _boxes.Length)
-        //         {
-        //             var ball1 = _balls[pair.Item1 - _boxes.Length];
-        //             var box2 = _boxes[pair.Item2];
-        //
-        //             var contacts = CollisionDetector.BoxAndSphere(box2.EngineBox, ball1.EngineBall, _collisionData);
-        //             if (contacts)
-        //             {
-        //                 box2.EngineBox.IsOverlapping = ball1.EngineBall.IsOverlapping = true;
-        //             }
-        //         }
-        //         else
-        //         {
-        //             var ball1 = _balls[pair.Item1 - _boxes.Length];
-        //             var ball2 = _balls[pair.Item2 - _boxes.Length];
-        //
-        //             var contacts =
-        //                 CollisionDetector.SphereAndSphere(ball1.EngineBall, ball2.EngineBall, _collisionData);
-        //             if (contacts)
-        //             {
-        //                 ball1.EngineBall.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
-        //             }
-        //         }
-        //     }
-        // }
+        foreach (var pair in potentialCollisions)
+        {
+            if (!_collisionData.HasMoreContacts()) return;
+
+            // TODO: refactor this check
+            if (pair.Item1 < _boxes.Length)
+            {
+                if (pair.Item2 < _boxes.Length)
+                {
+                    var box1 = _boxes[pair.Item1];
+                    var box2 = _boxes[pair.Item2];
+
+                    var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, _collisionData);
+                    if (contacts > 0)
+                    {
+                        box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
+                    }
+                }
+                else
+                {
+                    var box1 = _boxes[pair.Item1];
+                    var ball2 = _balls[pair.Item2 - _boxes.Length];
+
+                    var contacts = CollisionDetector.BoxAndSphere(box1.EngineBox, ball2.EngineBall, _collisionData);
+                    if (contacts)
+                    {
+                        box1.EngineBox.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
+                    }
+                }
+            }
+            else
+            {
+                if (pair.Item2 < _boxes.Length)
+                {
+                    var ball1 = _balls[pair.Item1 - _boxes.Length];
+                    var box2 = _boxes[pair.Item2];
+
+                    var contacts = CollisionDetector.BoxAndSphere(box2.EngineBox, ball1.EngineBall, _collisionData);
+                    if (contacts)
+                    {
+                        box2.EngineBox.IsOverlapping = ball1.EngineBall.IsOverlapping = true;
+                    }
+                }
+                else
+                {
+                    var ball1 = _balls[pair.Item1 - _boxes.Length];
+                    var ball2 = _balls[pair.Item2 - _boxes.Length];
+
+                    var contacts =
+                        CollisionDetector.SphereAndSphere(ball1.EngineBall, ball2.EngineBall, _collisionData);
+                    if (contacts)
+                    {
+                        ball1.EngineBall.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
+                    }
+                }
+            }
+        }
 
         // cloth contacts
         var engCloth = _cloth.EngineCloth;

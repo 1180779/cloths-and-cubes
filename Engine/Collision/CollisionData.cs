@@ -56,6 +56,10 @@ public class CollisionData
     /// </summary>
     public void Reset(uint maxContacts)
     {
+        for(int i = 0; i<ContactCount; i++)
+        {
+            ContactList[i] = new Contact();
+        }
         ContactsLeft = (int)maxContacts;
         ContactCount = 0;
         NextContactIndex = 0;

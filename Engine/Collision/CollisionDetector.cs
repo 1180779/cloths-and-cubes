@@ -371,7 +371,7 @@ public static class CollisionDetector
     }
     public static uint BoxAndParticle(CollisionBox box, CollisionParticle particle, CollisionData data)
     {
-        Vector3 point=particle.Body.Position;
+        Vector3 point=new Vector3(particle.Body.Position);
         // Transform the point into box coordinates
         Vector3 relPt = box.Transform.TransformInverse(point);
 
