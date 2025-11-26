@@ -30,7 +30,7 @@ public class BoxesRandomConfigurationDemo : BoxesDemo
 
         /* add ground plane to the scene */
         _plane = new();
-        _scene.AddGameObject(_plane);
+        // _scene.AddGameObject(_plane);
 
         /* add cloth to the scene */
         this._cloth = new Cloth(_forceRegistry);
