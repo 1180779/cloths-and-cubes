@@ -4,8 +4,8 @@ namespace Visualisation.Core;
 
 public sealed class Shader : IDisposable
 {
-    private readonly int handle;
-    private readonly Dictionary<string, int> uniformLocations = new();
+    private readonly int _handle;
+    private readonly Dictionary<string, int> _uniformLocations = new();
 
     public Shader(string vertexPath, string fragmentPath, string? geometryPath = null)
     {
@@ -40,10 +40,10 @@ public sealed class Shader : IDisposable
             throw new Exception($"Fragment shader compilation failed! {infoLog}");
         }
 
-        handle = GL.CreateProgram();
+        _handle = GL.CreateProgram();
 
-        GL.AttachShader(handle, vertexShader);
-        GL.AttachShader(handle, fragmentShader);
+        GL.AttachShader(_handle, vertexShader);
+        GL.AttachShader(_handle, fragmentShader);
 
         int geometryShader = 0;
         if (geometryPath != null)
@@ -63,25 +63,25 @@ public sealed class Shader : IDisposable
                 throw new Exception($"GeometryShader shader compilation failed! {infoLog}");
             }
 
-            GL.AttachShader(handle, geometryShader);
+            GL.AttachShader(_handle, geometryShader);
         }
 
-        GL.LinkProgram(handle);
+        GL.LinkProgram(_handle);
         GlHelper.CheckGlError("Shader program linking");
 
-        GL.GetProgram(handle, GetProgramParameterName.LinkStatus, out success);
+        GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out success);
         if (success == 0)
         {
-            var infoLog = GL.GetProgramInfoLog(handle);
+            var infoLog = GL.GetProgramInfoLog(_handle);
             Console.WriteLine(infoLog);
             throw new Exception($"Shader linking failed! {infoLog}");
         }
 
-        GL.DetachShader(handle, vertexShader);
-        GL.DetachShader(handle, fragmentShader);
+        GL.DetachShader(_handle, vertexShader);
+        GL.DetachShader(_handle, fragmentShader);
         if (geometryPath != null)
         {
-            GL.DetachShader(handle, geometryShader);
+            GL.DetachShader(_handle, geometryShader);
             GL.DeleteShader(geometryShader);
         }
 
@@ -90,26 +90,26 @@ public sealed class Shader : IDisposable
         GlHelper.CheckGlError("Shader cleanup");
 
         // get uniform locations
-        GL.GetProgram(handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+        GL.GetProgram(_handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
         for (var i = 0; i < numberOfUniforms; i++)
         {
-            var key = GL.GetActiveUniform(handle, i, out _, out _);
-            var location = GL.GetUniformLocation(handle, key);
-            uniformLocations.Add(key, location);
+            var key = GL.GetActiveUniform(_handle, i, out _, out _);
+            var location = GL.GetUniformLocation(_handle, key);
+            _uniformLocations.Add(key, location);
         }
     }
 
     public void Use()
     {
-        GL.UseProgram(handle);
+        GL.UseProgram(_handle);
         GlHelper.CheckGlError("Shader use");
     }
 
-    private bool disposedValue;
+    private bool _disposedValue;
 
     ~Shader()
     {
-        if (!disposedValue)
+        if (!_disposedValue)
         {
             Console.WriteLine("GPU Resource leak! Did you forget to call Dispose()?");
         }
@@ -118,12 +118,12 @@ public sealed class Shader : IDisposable
 
     public void Dispose()
     {
-        if (!disposedValue)
+        if (!_disposedValue)
         {
-            GL.DeleteProgram(handle);
+            GL.DeleteProgram(_handle);
             GlHelper.CheckGlError("Shader deletion");
 
-            disposedValue = true;
+            _disposedValue = true;
         }
 
         GC.SuppressFinalize(this);
@@ -147,14 +147,14 @@ public sealed class Shader : IDisposable
 
     public void SetBool(string name, bool b)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(uniformLocations[name], b ? 1 : 0);
+        GL.UseProgram(_handle);
+        GL.Uniform1(_uniformLocations[name], b ? 1 : 0);
     }
 
     public void SetInt(string name, int v)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(uniformLocations[name], v);
+        GL.UseProgram(_handle);
+        GL.Uniform1(_uniformLocations[name], v);
     }
 
     /// <summary>
@@ -164,8 +164,8 @@ public sealed class Shader : IDisposable
     /// <param name="v">The value to set</param>
     public void SetFloat(string name, float v)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(uniformLocations[name], v);
+        GL.UseProgram(_handle);
+        GL.Uniform1(_uniformLocations[name], v);
         GlHelper.CheckGlError("Shader SetFloat");
     }
 
@@ -176,15 +176,15 @@ public sealed class Shader : IDisposable
     /// </summary>
     public void SetFloatMember(string name, float v)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(GL.GetUniformLocation(handle, name), v);
+        GL.UseProgram(_handle);
+        GL.Uniform1(GL.GetUniformLocation(_handle, name), v);
         GlHelper.CheckGlError("Shader SetFloatMember");
     }
 
     public void SetFloat(string name, int count, float[] values)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(uniformLocations[name], count, values);
+        GL.UseProgram(_handle);
+        GL.Uniform1(_uniformLocations[name], count, values);
         GlHelper.CheckGlError("Shader SetFloat");
     }
 
@@ -196,15 +196,15 @@ public sealed class Shader : IDisposable
     /// <param name="data">The data to set</param>
     public void SetFloatN(string name, int n, float[] data)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(uniformLocations[name], n, ref data[0]);
+        GL.UseProgram(_handle);
+        GL.Uniform1(_uniformLocations[name], n, ref data[0]);
         GlHelper.CheckGlError("Shader SetFloatN");
     }
 
     public void SetVector3(string name, float v0, float v1, float v2)
     {
-        GL.UseProgram(handle);
-        GL.Uniform3(uniformLocations[name], v0, v1, v2);
+        GL.UseProgram(_handle);
+        GL.Uniform3(_uniformLocations[name], v0, v1, v2);
         GlHelper.CheckGlError("Shader SetVector3");
     }
 
@@ -215,8 +215,8 @@ public sealed class Shader : IDisposable
     /// </summary>
     public void SetVector3Member(string name, float v0, float v1, float v2)
     {
-        GL.UseProgram(handle);
-        GL.Uniform3(GL.GetUniformLocation(handle, name), v0, v1, v2);
+        GL.UseProgram(_handle);
+        GL.Uniform3(GL.GetUniformLocation(_handle, name), v0, v1, v2);
         GlHelper.CheckGlError("Shader SetVector3Member");
     }
 
@@ -227,8 +227,8 @@ public sealed class Shader : IDisposable
     /// </summary>
     public void SetVector3Member(string name, Vector3 v)
     {
-        GL.UseProgram(handle);
-        GL.Uniform3(GL.GetUniformLocation(handle, name), v);
+        GL.UseProgram(_handle);
+        GL.Uniform3(GL.GetUniformLocation(_handle, name), v);
         GlHelper.CheckGlError("Shader SetVector3Member");
     }
 
@@ -240,22 +240,22 @@ public sealed class Shader : IDisposable
     /// <param name="v">The vector v to set</param>
     public void SetVector3(string name, Vector3 v)
     {
-        GL.UseProgram(handle);
-        GL.Uniform3(uniformLocations[name], v);
+        GL.UseProgram(_handle);
+        GL.Uniform3(_uniformLocations[name], v);
         GlHelper.CheckGlError("Shader SetVector3");
     }
 
     public void SetVector4(string name, float v0, float v1, float v2, float v3)
     {
-        GL.UseProgram(handle);
-        GL.Uniform4(uniformLocations[name], v0, v1, v2, v3);
+        GL.UseProgram(_handle);
+        GL.Uniform4(_uniformLocations[name], v0, v1, v2, v3);
         GlHelper.CheckGlError("Shader SetVector4");
     }
 
     public void SetVector4(string name, Vector4 v)
     {
-        GL.UseProgram(handle);
-        GL.Uniform4(uniformLocations[name], v);
+        GL.UseProgram(_handle);
+        GL.Uniform4(_uniformLocations[name], v);
         GlHelper.CheckGlError("Shader SetVector4");
     }
 
@@ -271,8 +271,8 @@ public sealed class Shader : IDisposable
     /// </remarks>
     public void SetMatrix4(string name, Matrix4 data)
     {
-        GL.UseProgram(handle);
-        GL.UniformMatrix4(uniformLocations[name], false, ref data);
+        GL.UseProgram(_handle);
+        GL.UniformMatrix4(_uniformLocations[name], false, ref data);
         GlHelper.CheckGlError("Shader SetMatrix4");
     }
 
@@ -289,24 +289,24 @@ public sealed class Shader : IDisposable
     /// </remarks>
     public void SetMatrix4N(string name, int n, Matrix4[] data)
     {
-        GL.UseProgram(handle);
-        GL.UniformMatrix4(uniformLocations[name], n, false, ref data[0].Row0.X);
+        GL.UseProgram(_handle);
+        GL.UniformMatrix4(_uniformLocations[name], n, false, ref data[0].Row0.X);
         GlHelper.CheckGlError("Shader SetMatrix4N");
     }
 
     public void ReserveTexture(string name, TextureUnit unit)
     {
-        GL.UseProgram(handle);
-        GL.Uniform1(uniformLocations[name], (int)unit - (int)TextureUnit.Texture0);
+        GL.UseProgram(_handle);
+        GL.Uniform1(_uniformLocations[name], (int)unit - (int)TextureUnit.Texture0);
         GlHelper.CheckGlError("Shader ReserveTexture");
     }
 
     public void SetTexture(string name, TextureTarget textureTarget, TextureUnit unit, int textureHandle)
     {
-        GL.UseProgram(handle);
+        GL.UseProgram(_handle);
         GL.ActiveTexture(unit);
         GL.BindTexture(textureTarget, textureHandle);
-        GL.Uniform1(uniformLocations[name], (int)unit - (int)TextureUnit.Texture0);
+        GL.Uniform1(_uniformLocations[name], (int)unit - (int)TextureUnit.Texture0);
         GlHelper.CheckGlError("Shader SetTexture");
     }
 }

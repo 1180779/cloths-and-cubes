@@ -9,7 +9,7 @@ namespace Visualisation.Core.Display.EnvironmentMaps;
 /// </summary>
 public static class BrdfLutManager
 {
-    private static int? CachedBrdfLutTexture;
+    private static int? s_cachedBrdfLutTexture;
     private static readonly Lock Lock = new();
 
     /// <summary>
@@ -21,27 +21,27 @@ public static class BrdfLutManager
     {
         lock (Lock)
         {
-            if (CachedBrdfLutTexture.HasValue && !forceRegenerate)
+            if (s_cachedBrdfLutTexture.HasValue && !forceRegenerate)
             {
-                return CachedBrdfLutTexture.Value;
+                return s_cachedBrdfLutTexture.Value;
             }
 
             var cachePath = Path.Combine(Config.Pbr.CacheDirectory, Config.Pbr.BrfdLuftCacheFile);
             if (!forceRegenerate && File.Exists(cachePath))
             {
                 Debug.WriteLine($"Loading BRDF LUT from cache: {cachePath}");
-                CachedBrdfLutTexture = LoadBrdfLut(cachePath);
+                s_cachedBrdfLutTexture = LoadBrdfLut(cachePath);
             }
             else
             {
                 Debug.WriteLine("Generating BRDF LUT...");
-                CachedBrdfLutTexture = PbrTextureGenerator.GenerateBrdfLutOnly(brdfShader);
+                s_cachedBrdfLutTexture = PbrTextureGenerator.GenerateBrdfLutOnly(brdfShader);
 
                 Debug.WriteLine($"Saving BRDF LUT to cache: {cachePath}");
-                SaveBrdfLut(cachePath, CachedBrdfLutTexture.Value);
+                SaveBrdfLut(cachePath, s_cachedBrdfLutTexture.Value);
             }
 
-            return CachedBrdfLutTexture.Value;
+            return s_cachedBrdfLutTexture.Value;
         }
     }
 
@@ -115,7 +115,7 @@ public static class BrdfLutManager
     {
         lock (Lock)
         {
-            CachedBrdfLutTexture = null;
+            s_cachedBrdfLutTexture = null;
         }
     }
 

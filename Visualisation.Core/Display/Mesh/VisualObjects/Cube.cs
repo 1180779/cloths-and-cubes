@@ -12,7 +12,7 @@ public sealed class CubeMesh : IMesh
     }
 
     private static readonly string MeshName = nameof(CubeMesh);
-    private static MeshManager.MeshData? _meshData;
+    private static MeshManager.MeshData? s_meshData;
 
     private static readonly VertexData[] Vertices =
     [
@@ -62,7 +62,7 @@ public sealed class CubeMesh : IMesh
 
     private void Init()
     {
-        _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
+        s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
             Vertices.CalculateTangentBitangent();
 
@@ -91,9 +91,9 @@ public sealed class CubeMesh : IMesh
 
     public void Render()
     {
-        if (_meshData is null)
+        if (s_meshData is null)
             throw new MeshDataEmptyException();
-        GL.BindVertexArray(_meshData.Vao);
+        GL.BindVertexArray(s_meshData.Vao);
         GL.DrawArrays(PrimitiveType.Triangles, 0, Vertices.Length);
     }
 }

@@ -12,7 +12,7 @@ public sealed class PlaneMesh : IMesh
     }
 
     private static readonly string MeshName = nameof(PlaneMesh);
-    private static MeshManager.MeshData? _meshData;
+    private static MeshManager.MeshData? s_meshData;
 
     // Two triangles forming a unit square on the XZ plane, centered at origin (Y = 0)
     // Each vertex: position (x, y, z) + normal (nx, ny, nz) + texture coords (u, v)
@@ -31,7 +31,7 @@ public sealed class PlaneMesh : IMesh
 
     private void Init()
     {
-        _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
+        s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
             Vertices.CalculateTangentBitangent();
 
@@ -60,10 +60,10 @@ public sealed class PlaneMesh : IMesh
 
     public void Render()
     {
-        if (_meshData is null)
+        if (s_meshData is null)
             throw new MeshDataEmptyException();
 
-        GL.BindVertexArray(_meshData.Vao);
+        GL.BindVertexArray(s_meshData.Vao);
         GL.DrawArrays(PrimitiveType.Triangles, 0, Vertices.Length);
     }
 }

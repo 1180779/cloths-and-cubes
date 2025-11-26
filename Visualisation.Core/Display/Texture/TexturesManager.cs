@@ -28,8 +28,8 @@ public static class TexturesManager
         /// </summary>
         public int TextureId
         {
-            get => Volatile.Read(ref textureId);
-            set => Volatile.Write(ref textureId, value);
+            get => Volatile.Read(ref _textureId);
+            set => Volatile.Write(ref _textureId, value);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ public static class TexturesManager
         /// </summary>
         public required string TexturePath { get; init; }
 
-        private int textureId;
+        private int _textureId;
     }
 
     /// <summary>
@@ -53,11 +53,11 @@ public static class TexturesManager
 
         public bool IsLoaded
         {
-            get => Volatile.Read(ref isLoaded);
-            set => Volatile.Write(ref isLoaded, value);
+            get => Volatile.Read(ref _isLoaded);
+            set => Volatile.Write(ref _isLoaded, value);
         }
 
-        private bool isLoaded;
+        private bool _isLoaded;
     }
 
     private interface IPixelData
@@ -74,11 +74,11 @@ public static class TexturesManager
 
     private class PixelDataByte : IPixelData
     {
-        private readonly byte[] data;
+        private readonly byte[] _data;
 
         public PixelDataByte(byte[] data)
         {
-            this.data = data;
+            this._data = data;
         }
 
         public void UploadToGpu(
@@ -91,17 +91,17 @@ public static class TexturesManager
             PixelFormat format)
         {
             GL.TexImage2D(target, level, internalformat, width, height, border, format, PixelType.UnsignedByte,
-                data);
+                _data);
         }
     }
 
     private class PixelDataFloat : IPixelData
     {
-        private readonly float[] data;
+        private readonly float[] _data;
 
         public PixelDataFloat(float[] data)
         {
-            this.data = data;
+            this._data = data;
         }
 
         public void UploadToGpu(
@@ -113,7 +113,7 @@ public static class TexturesManager
             int border,
             PixelFormat format)
         {
-            GL.TexImage2D(target, level, internalformat, width, height, border, format, PixelType.Float, data);
+            GL.TexImage2D(target, level, internalformat, width, height, border, format, PixelType.Float, _data);
         }
     }
 
@@ -129,7 +129,7 @@ public static class TexturesManager
 
     private static readonly ConcurrentDictionary<string, Entry> TextureDataDict = new();
     private static readonly ConcurrentQueue<PendingLoadResult> PendingUploads = new();
-    private static int? PlaceholderTextureId;
+    private static int? s_placeholderTextureId;
 
     /// <summary>
     /// Represents a delegate defining a callback to be invoked during the initialization
@@ -174,7 +174,7 @@ public static class TexturesManager
 
     private static void EnsurePlaceholderCreated()
     {
-        if (PlaceholderTextureId.HasValue) return;
+        if (s_placeholderTextureId.HasValue) return;
 
         GL.CreateTextures(TextureTarget.Texture2D, 1, out int texId);
         GL.BindTexture(TextureTarget.Texture2D, texId);
@@ -193,7 +193,7 @@ public static class TexturesManager
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
 
-        PlaceholderTextureId = texId;
+        s_placeholderTextureId = texId;
         GlHelper.CheckGlError("TexturesManager::EnsurePlaceholderCreated");
     }
 
@@ -339,7 +339,7 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
+            var td = new TextureData { TextureId = s_placeholderTextureId!.Value, TexturePath = path };
 
             var e = new Entry
             {
@@ -366,7 +366,7 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
+            var td = new TextureData { TextureId = s_placeholderTextureId!.Value, TexturePath = path };
 
             var e = new Entry
             {
@@ -461,7 +461,7 @@ public static class TexturesManager
             {
                 // exchange to zero atomically if you want to avoid double-delete elsewhere:
                 var idToDelete = entry.PublicTextureData.TextureId;
-                if (idToDelete != PlaceholderTextureId)
+                if (idToDelete != s_placeholderTextureId)
                 {
                     GL.DeleteTexture(idToDelete);
                 }

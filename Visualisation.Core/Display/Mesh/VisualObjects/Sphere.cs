@@ -10,10 +10,10 @@ public sealed class SphereMesh : IMesh
     }
 
     private static readonly string MeshName = nameof(SphereMesh);
-    private static MeshManager.MeshData? _meshData;
+    private static MeshManager.MeshData? s_meshData;
 
-    private static VertexData[] Vertices = null!;
-    private static uint[] Indices = null!;
+    private static VertexData[] s_vertices = null!;
+    private static uint[] s_indices = null!;
     private static readonly int Precision = 40; // number of segments per half circle
 
     private void GenerateSurface()
@@ -63,18 +63,18 @@ public sealed class SphereMesh : IMesh
             }
         }
 
-        Vertices = [.. vertices.ToArray()];
-        Indices = [.. indices.ToArray()];
+        s_vertices = [.. vertices.ToArray()];
+        s_indices = [.. indices.ToArray()];
     }
 
     private void CalculateTangentsAndBitangents()
     {
-        for (int i = 0; i < Indices.Length; i += 3)
+        for (int i = 0; i < s_indices.Length; i += 3)
         {
             // Get the vertices of the triangle
-            ref var v0 = ref Vertices[Indices[i]];
-            ref var v1 = ref Vertices[Indices[i + 1]];
-            ref var v2 = ref Vertices[Indices[i + 2]];
+            ref var v0 = ref s_vertices[s_indices[i]];
+            ref var v1 = ref s_vertices[s_indices[i + 1]];
+            ref var v2 = ref s_vertices[s_indices[i + 2]];
 
             // Calculate tangent and bitangent
             // This method adds the results to the existing values
@@ -97,11 +97,11 @@ public sealed class SphereMesh : IMesh
         GenerateSurface();
         CalculateTangentsAndBitangents();
 
-        _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
+        s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
             int vbo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * 14 * sizeof(float), Vertices,
+            GL.BufferData(BufferTarget.ArrayBuffer, s_vertices.Length * 14 * sizeof(float), s_vertices,
                 BufferUsageHint.StaticDraw);
 
             int vao = GL.GenVertexArray();
@@ -109,7 +109,7 @@ public sealed class SphereMesh : IMesh
 
             int ebo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices,
+            GL.BufferData(BufferTarget.ElementArrayBuffer, s_indices.Length * sizeof(uint), s_indices,
                 BufferUsageHint.StaticDraw);
 
             VertexData.VertexAttribPositionNormalTexCoordsTangentBitangent();
@@ -120,9 +120,9 @@ public sealed class SphereMesh : IMesh
 
     public void Render()
     {
-        if (_meshData is null)
+        if (s_meshData is null)
             throw new MeshDataEmptyException();
-        GL.BindVertexArray(_meshData.Vao);
-        GL.DrawElements(PrimitiveType.Triangles, Indices.Length, DrawElementsType.UnsignedInt, 0);
+        GL.BindVertexArray(s_meshData.Vao);
+        GL.DrawElements(PrimitiveType.Triangles, s_indices.Length, DrawElementsType.UnsignedInt, 0);
     }
 }

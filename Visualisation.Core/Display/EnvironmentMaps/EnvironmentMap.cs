@@ -12,18 +12,18 @@ namespace Visualisation.Core.Display.EnvironmentMaps;
 /// </summary>
 public class EnvironmentMap : IDisposable
 {
-    public enum DisplayType
+    public enum EnvironmentMapDisplayType
     {
         EnvironmentCubemap,
         IrradianceMap,
         PrefilterMap,
     }
 
-    public DisplayType displayType = DisplayType.EnvironmentCubemap;
+    public EnvironmentMapDisplayType DisplayType = EnvironmentMapDisplayType.EnvironmentCubemap;
     public float PrefilterMapValue = 1.0f;
 
-    private readonly PbrTextures textures;
-    private readonly int brdfLutTexture;
+    private readonly PbrTextures _textures;
+    private readonly int _brdfLutTexture;
 
     /// <summary>
     /// Creates an EnvironmentMap by loading from cache or generating if cache doesn't exist.
@@ -53,7 +53,7 @@ public class EnvironmentMap : IDisposable
         if (allCached)
         {
             Debug.WriteLine($"Loading PBR textures from cache: {Config.Pbr.CacheDirectory}");
-            textures = PbrTextureCache.Load(hdrFileName);
+            _textures = PbrTextureCache.Load(hdrFileName);
         }
         else
         {
@@ -61,7 +61,7 @@ public class EnvironmentMap : IDisposable
 
             var hdr = LoadHdrTexture(hdrPath);
 
-            textures = PbrTextureGenerator.GenerateFromHdr(
+            _textures = PbrTextureGenerator.GenerateFromHdr(
                 hdr.TextureId,
                 equirectangularToCubemapShader,
                 irradianceConvolutionShader,
@@ -70,10 +70,10 @@ public class EnvironmentMap : IDisposable
             TexturesManager.FreeTexture(hdr.TexturePath);
 
             Debug.WriteLine($"Saving PBR textures to cache: {Config.Pbr.CacheDirectory}");
-            PbrTextureCache.Save(hdrFileName, textures);
+            PbrTextureCache.Save(hdrFileName, _textures);
         }
 
-        brdfLutTexture = BrdfLutManager.GetOrGenerateBrdfLut(brdfShader, forceRegenerate);
+        _brdfLutTexture = BrdfLutManager.GetOrGenerateBrdfLut(brdfShader, forceRegenerate);
     }
 
     private static TexturesManager.TextureData LoadHdrTexture(string path)
@@ -94,21 +94,21 @@ public class EnvironmentMap : IDisposable
 
     public void SetForSkyBoxShader(Shader skyboxShader)
     {
-        switch (displayType)
+        switch (DisplayType)
         {
-            case DisplayType.EnvironmentCubemap:
+            case EnvironmentMapDisplayType.EnvironmentCubemap:
                 skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
-                    textures.EnvCubemap);
+                    _textures.EnvCubemap);
                 skyboxShader.SetFloat("lookup", 1.0f);
                 break;
-            case DisplayType.IrradianceMap:
+            case EnvironmentMapDisplayType.IrradianceMap:
                 skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
-                    textures.IrradianceMap);
+                    _textures.IrradianceMap);
                 skyboxShader.SetFloat("lookup", 1.0f);
                 break;
-            case DisplayType.PrefilterMap:
+            case EnvironmentMapDisplayType.PrefilterMap:
                 skyboxShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
-                    textures.PrefilterMap);
+                    _textures.PrefilterMap);
                 skyboxShader.SetFloat("lookup", PrefilterMapValue);
                 break;
         }
@@ -117,13 +117,14 @@ public class EnvironmentMap : IDisposable
     public void SetForPbrShader(Shader pbrShader)
     {
         pbrShader.SetTexture("irradianceMap", TextureTarget.TextureCubeMap, TextureUnit.Texture1,
-            textures.IrradianceMap);
-        pbrShader.SetTexture("prefilterMap", TextureTarget.TextureCubeMap, TextureUnit.Texture2, textures.PrefilterMap);
-        pbrShader.SetTexture("brdfLUT", TextureTarget.Texture2D, TextureUnit.Texture3, brdfLutTexture);
+            _textures.IrradianceMap);
+        pbrShader.SetTexture("prefilterMap", TextureTarget.TextureCubeMap, TextureUnit.Texture2,
+            _textures.PrefilterMap);
+        pbrShader.SetTexture("brdfLUT", TextureTarget.Texture2D, TextureUnit.Texture3, _brdfLutTexture);
     }
 
     public void Dispose()
     {
-        textures.Dispose();
+        _textures.Dispose();
     }
 }

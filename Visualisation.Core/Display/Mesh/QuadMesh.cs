@@ -19,7 +19,7 @@ public sealed class QuadMesh : IMesh
     ];
 
     private static readonly string MeshName = nameof(QuadMesh);
-    private static MeshManager.MeshData? _meshData;
+    private static MeshManager.MeshData? s_meshData;
 
     public void Dispose()
     {
@@ -33,7 +33,7 @@ public sealed class QuadMesh : IMesh
 
     private void Init()
     {
-        _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
+        s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
             GL.GenVertexArrays(1, out int quadVao);
             GL.GenBuffers(1, out int quadVbo);
@@ -53,9 +53,9 @@ public sealed class QuadMesh : IMesh
 
     public void Render()
     {
-        if (_meshData is null)
+        if (s_meshData is null)
             throw new MeshDataEmptyException();
-        GL.BindVertexArray(_meshData.Vao);
+        GL.BindVertexArray(s_meshData.Vao);
         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
     }
 }

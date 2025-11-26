@@ -47,19 +47,19 @@ public class FrameSaver
         FrameBufferLimit = frameBufferLimit;
     }
 
-    private int currentFrameIndex = 0;
+    private int _currentFrameIndex = 0;
 
     public int CurrentFrameIndex
     {
-        get => currentFrameIndex;
+        get => _currentFrameIndex;
         set
         {
-            currentFrameIndex = value;
+            _currentFrameIndex = value;
             // wrap around the buffer if necessary
-            if (currentFrameIndex < FrameBufferLimit && currentFrameIndex >= 0) return;
-            currentFrameIndex %= FrameBufferLimit;
-            if (currentFrameIndex >= 0) return;
-            currentFrameIndex += FrameBufferLimit;
+            if (_currentFrameIndex < FrameBufferLimit && _currentFrameIndex >= 0) return;
+            _currentFrameIndex %= FrameBufferLimit;
+            if (_currentFrameIndex >= 0) return;
+            _currentFrameIndex += FrameBufferLimit;
         }
     }
 
@@ -69,7 +69,7 @@ public class FrameSaver
         {
             if (NotYetUsedIndex == NotYetUsedIndexAllUsedValue)
             {
-                return (savedFrameIndex + 1) % FrameBufferLimit;
+                return (_savedFrameIndex + 1) % FrameBufferLimit;
             }
 
             var res = NotYetUsedIndex;
@@ -79,40 +79,40 @@ public class FrameSaver
     }
 
     private const int NotYetUsedIndexAllUsedValue = -1;
-    private int notYetUsedIndex = 0;
+    private int _notYetUsedIndex = 0;
 
     private int NotYetUsedIndex
     {
-        get => notYetUsedIndex;
+        get => _notYetUsedIndex;
         set
         {
-            notYetUsedIndex = value;
-            if (notYetUsedIndex >= FrameBufferLimit)
+            _notYetUsedIndex = value;
+            if (_notYetUsedIndex >= FrameBufferLimit)
             {
-                notYetUsedIndex = -1;
+                _notYetUsedIndex = -1;
             }
         }
     }
 
-    private int savedFrameIndex = -1;
+    private int _savedFrameIndex = -1;
 
-    private FrameSnapshot[] frameBuffer = [];
+    private FrameSnapshot[] _frameBuffer = [];
 
-    public FrameSnapshot? CurrentFrame => FrameBufferLimit == 0 ? null : frameBuffer[CurrentFrameIndex];
+    public FrameSnapshot? CurrentFrame => FrameBufferLimit == 0 ? null : _frameBuffer[CurrentFrameIndex];
 
     public int FrameBufferLimit
     {
-        get => frameBuffer.Length;
+        get => _frameBuffer.Length;
         set
         {
-            if (frameBuffer.Length > value)
+            if (_frameBuffer.Length > value)
             {
-                frameBuffer = [..frameBuffer.Skip(CurrentFrameIndex - value).Take(value)];
+                _frameBuffer = [.._frameBuffer.Skip(CurrentFrameIndex - value).Take(value)];
             }
-            else if (frameBuffer.Length < value)
+            else if (_frameBuffer.Length < value)
             {
-                Array.Resize(ref frameBuffer, value);
-                NotYetUsedIndex = savedFrameIndex + 1;
+                Array.Resize(ref _frameBuffer, value);
+                NotYetUsedIndex = _savedFrameIndex + 1;
             }
         }
     }
@@ -128,13 +128,13 @@ public class FrameSaver
             var clone = ObjectCloner.CreateDeepCopy(go);
             return clone ?? null;
         }).Where(o => o != null).ToArray()!);
-        frameBuffer[CurrentFrameIndex] = snapshot;
-        savedFrameIndex = CurrentFrameIndex;
+        _frameBuffer[CurrentFrameIndex] = snapshot;
+        _savedFrameIndex = CurrentFrameIndex;
     }
 
     public void GoBackNFrames(int n)
     {
-        if (CurrentFrameIndex <= savedFrameIndex)
+        if (CurrentFrameIndex <= _savedFrameIndex)
         {
             int maxGoBack;
             if (NotYetUsedIndex != NotYetUsedIndexAllUsedValue)
@@ -143,7 +143,7 @@ public class FrameSaver
             }
             else
             {
-                maxGoBack = FrameBufferLimit - (savedFrameIndex - CurrentFrameIndex);
+                maxGoBack = FrameBufferLimit - (_savedFrameIndex - CurrentFrameIndex);
             }
 
             if (n > maxGoBack)
@@ -155,9 +155,9 @@ public class FrameSaver
             Debug.Assert(CurrentFrameIndex >= 0 && CurrentFrameIndex < FrameBufferLimit);
             Debug.Assert(NotYetUsedIndex == NotYetUsedIndexAllUsedValue || CurrentFrameIndex < NotYetUsedIndex);
         }
-        else if (CurrentFrameIndex > savedFrameIndex)
+        else if (CurrentFrameIndex > _savedFrameIndex)
         {
-            int maxGoBack = CurrentFrameIndex - savedFrameIndex - 1;
+            int maxGoBack = CurrentFrameIndex - _savedFrameIndex - 1;
             if (n > maxGoBack)
             {
                 n = maxGoBack;
@@ -171,9 +171,9 @@ public class FrameSaver
 
     public void GoForwardNFrames(int n)
     {
-        if (CurrentFrameIndex < savedFrameIndex)
+        if (CurrentFrameIndex < _savedFrameIndex)
         {
-            int maxGoForward = savedFrameIndex - CurrentFrameIndex - 1;
+            int maxGoForward = _savedFrameIndex - CurrentFrameIndex - 1;
             if (n > maxGoForward)
             {
                 n = maxGoForward;
@@ -183,16 +183,16 @@ public class FrameSaver
             Debug.Assert(CurrentFrameIndex >= 0 && CurrentFrameIndex < FrameBufferLimit);
             Debug.Assert(NotYetUsedIndex == NotYetUsedIndexAllUsedValue || CurrentFrameIndex < NotYetUsedIndex);
         }
-        else if (CurrentFrameIndex >= savedFrameIndex)
+        else if (CurrentFrameIndex >= _savedFrameIndex)
         {
             int maxGoForward;
             if (NotYetUsedIndex != NotYetUsedIndexAllUsedValue)
             {
-                maxGoForward = NotYetUsedIndex - currentFrameIndex;
+                maxGoForward = NotYetUsedIndex - _currentFrameIndex;
             }
             else
             {
-                maxGoForward = FrameBufferLimit - (savedFrameIndex - CurrentFrameIndex);
+                maxGoForward = FrameBufferLimit - (_savedFrameIndex - CurrentFrameIndex);
             }
 
             if (n > maxGoForward)

@@ -45,38 +45,38 @@ public class LightDirectional : LightPoint
 
     private const int ShadowWidth = 1024, ShadowHeight = 1024;
 
-    private float shadowBiasMin = 0.005f;
-    private float shadowBiasMax = 0.05f;
-    private float shadowBiasModifier = 0.31f;
-    private bool shadowsBiasChanged = true;
+    private float _shadowBiasMin = 0.005f;
+    private float _shadowBiasMax = 0.05f;
+    private float _shadowBiasModifier = 0.31f;
+    private bool _shadowsBiasChanged = true;
 
     public float ShadowBiasMin
     {
-        get => shadowBiasMin;
+        get => _shadowBiasMin;
         set
         {
-            shadowBiasMin = value;
-            shadowsBiasChanged = true;
+            _shadowBiasMin = value;
+            _shadowsBiasChanged = true;
         }
     }
 
     public float ShadowBiasMax
     {
-        get => shadowBiasMax;
+        get => _shadowBiasMax;
         set
         {
-            shadowBiasMax = value;
-            shadowsBiasChanged = true;
+            _shadowBiasMax = value;
+            _shadowsBiasChanged = true;
         }
     }
 
     public float ShadowBiasModifier
     {
-        get => shadowBiasModifier;
+        get => _shadowBiasModifier;
         set
         {
-            shadowBiasModifier = value;
-            shadowsBiasChanged = true;
+            _shadowBiasModifier = value;
+            _shadowsBiasChanged = true;
         }
     }
 
@@ -191,7 +191,7 @@ public class LightDirectional : LightPoint
         return ret.ToArray();
     }
 
-    private int depthMapFbo;
+    private int _depthMapFbo;
     public int DepthMapsTextureArray { get; private set; }
 
     public void SetForDepthTextureShader(Shader sh, int layer)
@@ -221,7 +221,7 @@ public class LightDirectional : LightPoint
 
     private void Init()
     {
-        GL.GenFramebuffers(1, out depthMapFbo);
+        GL.GenFramebuffers(1, out _depthMapFbo);
         GL.GenTextures(1, out int depthMap);
         DepthMapsTextureArray = depthMap;
 
@@ -248,7 +248,7 @@ public class LightDirectional : LightPoint
         float[] borderColor = { 1.0f, 1.0f, 1.0f, 1.0f };
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureBorderColor, borderColor);
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFbo);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.FramebufferTexture(
             FramebufferTarget.Framebuffer,
             FramebufferAttachment.DepthAttachment,
@@ -274,7 +274,7 @@ public class LightDirectional : LightPoint
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFbo);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.Clear(ClearBufferMask.DepthBufferBit);
 
         foreach (var o in objects)
@@ -288,21 +288,21 @@ public class LightDirectional : LightPoint
 
     public void Dispose()
     {
-        GL.DeleteFramebuffers(1, ref depthMapFbo);
+        GL.DeleteFramebuffers(1, ref _depthMapFbo);
         int depthMap = DepthMapsTextureArray;
         GL.DeleteTextures(1, ref depthMap);
         DepthMapsTextureArray = 0;
     }
 
-    private Vector3 direction;
+    private Vector3 _direction;
 
     public Vector3 Direction
     {
-        get => direction;
+        get => _direction;
         set
         {
             var normalized = value.Normalized();
-            direction = normalized;
+            _direction = normalized;
         }
     }
 
@@ -318,12 +318,12 @@ public class LightDirectional : LightPoint
         sh.SetFloatN("cascadePlaneDistances[0]", ShadowCascadeLevels.Length, ShadowCascadeLevels);
 
         // set shadow bias if it has changed
-        if (shadowsBiasChanged)
+        if (_shadowsBiasChanged)
         {
             sh.SetFloat("BIAS_MAX", ShadowBiasMax);
             sh.SetFloat("BIAS_MIN", ShadowBiasMin);
             sh.SetFloat("BIAS_MODIFIER", ShadowBiasModifier);
-            shadowsBiasChanged = false;
+            _shadowsBiasChanged = false;
         }
     }
 }

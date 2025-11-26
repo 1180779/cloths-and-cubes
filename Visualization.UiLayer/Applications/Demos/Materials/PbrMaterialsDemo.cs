@@ -6,6 +6,6 @@ public class PbrMaterialsDemo : BoxesMaterialsDemo
 {
     protected override IMaterial[] GetMaterials()
     {
-        return MaterialsHelper.GetTexturedMaterials(50 * NrOfRows);
+        return MaterialsHelper.GetTexturedMaterials(50 * _nrOfRows);
     }
 }

@@ -10,11 +10,11 @@ public class BvhWireframe
 {
     public BvhWireframe(BVH bvh)
     {
-        this.bvh = bvh;
+        this._bvh = bvh;
     }
 
-    private BVH bvh;
-    private static CubeMesh? _debugMesh;
+    private BVH _bvh;
+    private static CubeMesh? s_debugMesh;
 
     public Vector3[]? LevelColors { get; set; }
     public int[]? LevelsToRender { get; set; }
@@ -22,8 +22,8 @@ public class BvhWireframe
     public void Render(Shader shader)
     {
         GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
-        _debugMesh ??= new CubeMesh();
-        RenderRecursive(bvh.root, shader, 0);
+        s_debugMesh ??= new CubeMesh();
+        RenderRecursive(_bvh.root, shader, 0);
         GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
     }
 
@@ -42,7 +42,7 @@ public class BvhWireframe
 
             shader.SetMatrix4("model", model);
             shader.SetVector3("color", LevelColors[depth % LevelColors.Length]);
-            _debugMesh!.Render();
+            s_debugMesh!.Render();
         }
 
         if (!node.isLeaf)

@@ -20,23 +20,23 @@ namespace Visualization.UiLayer.Applications;
 
 public class Application : GameWindow
 {
-    private readonly ImGuiController imGuiController;
-    protected readonly IInputProvider InputProvider;
-    protected readonly WindowFrameBuffer SceneRenderWindowFrb;
-    protected readonly SceneManager Scene;
+    private readonly ImGuiController _imGuiController;
+    protected readonly IInputProvider _inputProvider;
+    protected readonly WindowFrameBuffer _sceneRenderWindowFrb;
+    protected readonly SceneManager _scene;
 
 
-    protected readonly Shader DebugBasicShader;
+    protected readonly Shader _debugBasicShader;
 #if DEBUG
-    protected readonly QuadMesh QuadMesh;
-    protected readonly Shader QuadCsmShader;
-    protected readonly Shader TextureQuadShader;
-    protected readonly WindowFrameBuffer DepthMapWindowFrb;
-    protected readonly WindowFrameBuffer IbLreflectanceWindow;
+    protected readonly QuadMesh _quadMesh;
+    protected readonly Shader _quadCsmShader;
+    protected readonly Shader _textureQuadShader;
+    protected readonly WindowFrameBuffer _depthMapWindowFrb;
+    protected readonly WindowFrameBuffer _ibLreflectanceWindow;
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
 #endif
-    private readonly ShadowSettingsWindow shadowSettingsWindow;
+    private readonly ShadowSettingsWindow _shadowSettingsWindow;
 #endif
 
     protected const int DefaultWidth = 800;
@@ -50,24 +50,24 @@ public class Application : GameWindow
         Size = (width, height);
         Title = title;
 
-        imGuiController = new ImGuiController(this);
-        imGuiController.HookToWindow(this);
-        InputProvider = new ImGuiInputProvider(this, imGuiController);
+        _imGuiController = new ImGuiController(this);
+        _imGuiController.HookToWindow(this);
+        _inputProvider = new ImGuiInputProvider(this, _imGuiController);
 
-        SceneRenderWindowFrb = new(width, height);
+        _sceneRenderWindowFrb = new(width, height);
 
-        DebugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
+        _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
 #if DEBUG
-        QuadMesh = new();
-        DepthMapWindowFrb = new(width, height);
-        IbLreflectanceWindow = new(width, height);
-        QuadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
-        TextureQuadShader = new("depthMapShader.vert", "textureShader.frag");
+        _quadMesh = new();
+        _depthMapWindowFrb = new(width, height);
+        _ibLreflectanceWindow = new(width, height);
+        _quadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
+        _textureQuadShader = new("depthMapShader.vert", "textureShader.frag");
         // windows
-        shadowSettingsWindow = new ShadowSettingsWindow(() => this.Scene.LightsManager.DirectionalLight);
+        _shadowSettingsWindow = new ShadowSettingsWindow(() => this._scene.LightsManager.DirectionalLight);
 #endif
 
-        Scene = new SceneLightningOnly(Size.X / (float)Size.Y, InputProvider);
+        _scene = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
 
         // GL
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
@@ -99,19 +99,19 @@ public class Application : GameWindow
     {
         base.OnUpdateFrame(e);
 
-        InputProvider.UpdateMousePosition();
+        _inputProvider.UpdateMousePosition();
 
         if (!IsFocused)
         {
             return;
         }
 
-        if (InputProvider.IsKeyPressed(InputKey.Equal))
+        if (_inputProvider.IsKeyPressed(InputKey.Equal))
         {
             DirectionalLightLayer++;
         }
 
-        if (InputProvider.IsKeyPressed(InputKey.Minus))
+        if (_inputProvider.IsKeyPressed(InputKey.Minus))
         {
             DirectionalLightLayer--;
         }
@@ -134,14 +134,14 @@ public class Application : GameWindow
         // set up internal scene objects after the scene is initialized
         // this way some objects are already in the scene and can be accessed
         // during the scene setup (e.g. attach camera to an object from demo)
-        Scene.SetUp();
+        _scene.SetUp();
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
 
-        imGuiController.Update((float)args.Time);
+        _imGuiController.Update((float)args.Time);
 
         Update((float)args.Time); // Update game/app logic before any rendering
 
@@ -169,7 +169,7 @@ public class Application : GameWindow
 
         // clear the screen underneath the imGui windows (now background only)
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        imGuiController.Render();
+        _imGuiController.Render();
 
         SwapBuffers();
 
@@ -192,19 +192,19 @@ public class Application : GameWindow
 
         TexturesManager.AbortAllLoads();
 
-        imGuiController.UnhookFromWindow(this);
-        SceneRenderWindowFrb.Dispose();
+        _imGuiController.UnhookFromWindow(this);
+        _sceneRenderWindowFrb.Dispose();
 
-        DebugBasicShader.Dispose();
+        _debugBasicShader.Dispose();
 #if DEBUG
-        QuadCsmShader.Dispose();
-        TextureQuadShader.Dispose();
+        _quadCsmShader.Dispose();
+        _textureQuadShader.Dispose();
 
-        QuadMesh.Dispose();
-        DepthMapWindowFrb.Dispose();
-        IbLreflectanceWindow.Dispose();
+        _quadMesh.Dispose();
+        _depthMapWindowFrb.Dispose();
+        _ibLreflectanceWindow.Dispose();
 #endif
-        Scene.Dispose();
+        _scene.Dispose();
 
         base.OnUnload();
     }
@@ -213,9 +213,9 @@ public class Application : GameWindow
     {
         base.OnMouseWheel(e);
 
-        if (!ImGui.GetIO().WantCaptureMouse && Scene.CamerasManager.CameraMode)
+        if (!ImGui.GetIO().WantCaptureMouse && _scene.CamerasManager.CameraMode)
         {
-            Scene.CamerasManager.CurrentCamera.FovDegrees -= InputProvider.GetMouseScroll();
+            _scene.CamerasManager.CurrentCamera.FovDegrees -= _inputProvider.GetMouseScroll();
         }
     }
 
@@ -226,20 +226,20 @@ public class Application : GameWindow
         GL.Viewport(0, 0, Size.X, Size.Y);
     }
 
-    private int directionalLightLayer;
+    private int _directionalLightLayer;
 
     private int DirectionalLightLayer
     {
-        get => directionalLightLayer;
+        get => _directionalLightLayer;
         set
         {
-            if (Scene.LightsManager.DirectionalLight is null)
+            if (_scene.LightsManager.DirectionalLight is null)
                 return;
 
-            directionalLightLayer = value % (Scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
-            if (directionalLightLayer < 0)
+            _directionalLightLayer = value % (_scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
+            if (_directionalLightLayer < 0)
             {
-                directionalLightLayer += (Scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
+                _directionalLightLayer += (_scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
             }
         }
     }
@@ -252,7 +252,7 @@ public class Application : GameWindow
 #if DEBUG
         RenderObjectInspectorWindow();
         ShadowCascadingMapsWindow();
-        shadowSettingsWindow.Render();
+        _shadowSettingsWindow.Render();
 #endif
         RenderSceneWindow((float)dt);
     }
@@ -260,21 +260,24 @@ public class Application : GameWindow
     private void RenderEnvironmentMapWindow()
     {
         ImGui.Begin("Environment Map Settings");
-        int currentDisplayType = (int)Scene.EnvironmentMap.displayType;
+        int currentDisplayType = (int)_scene.EnvironmentMap.DisplayType;
         ImGui.Text("Display Type:");
-        ImGui.RadioButton("Skybox", ref currentDisplayType, (int)EnvironmentMap.DisplayType.EnvironmentCubemap);
+        ImGui.RadioButton("Skybox", ref currentDisplayType,
+            (int)EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap);
         ImGui.SameLine();
-        ImGui.RadioButton("Irradiance Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.IrradianceMap);
+        ImGui.RadioButton("Irradiance Map", ref currentDisplayType,
+            (int)EnvironmentMap.EnvironmentMapDisplayType.IrradianceMap);
         ImGui.SameLine();
-        ImGui.RadioButton("Prefiltered Map", ref currentDisplayType, (int)EnvironmentMap.DisplayType.PrefilterMap);
-        Scene.EnvironmentMap.displayType = (EnvironmentMap.DisplayType)currentDisplayType;
+        ImGui.RadioButton("Prefiltered Map", ref currentDisplayType,
+            (int)EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap);
+        _scene.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
 
-        if (Scene.EnvironmentMap.displayType == EnvironmentMap.DisplayType.PrefilterMap)
+        if (_scene.EnvironmentMap.DisplayType == EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
         {
-            float roughness = Scene.EnvironmentMap.PrefilterMapValue;
+            float roughness = _scene.EnvironmentMap.PrefilterMapValue;
             if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
             {
-                Scene.EnvironmentMap.PrefilterMapValue = roughness;
+                _scene.EnvironmentMap.PrefilterMapValue = roughness;
             }
         }
 
@@ -283,9 +286,9 @@ public class Application : GameWindow
 
     protected virtual void DebugRenderInScene(Shader sh)
     {
-        DebugBasicShader.Use();
-        sh.SetMatrix4("view", Scene.CamerasManager.CurrentCamera.ViewMatrix);
-        sh.SetMatrix4("projection", Scene.CamerasManager.CurrentCamera.ProjectionMatrix);
+        _debugBasicShader.Use();
+        sh.SetMatrix4("view", _scene.CamerasManager.CurrentCamera.ViewMatrix);
+        sh.SetMatrix4("projection", _scene.CamerasManager.CurrentCamera.ProjectionMatrix);
     }
 
     private void RenderSceneWindow(float dt)
@@ -295,23 +298,23 @@ public class Application : GameWindow
         bool isWindowHovered = ImGui.IsWindowHovered();
         if (isWindowHovered)
         {
-            Scene.ProcessInput(InputProvider, dt);
+            _scene.ProcessInput(_inputProvider, dt);
         }
         else
         {
-            Scene.ProcessInputOutOfFocus(InputProvider, dt);
+            _scene.ProcessInputOutOfFocus(_inputProvider, dt);
         }
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        var fbScale = imGuiController.ScaleFactor;
+        var fbScale = _imGuiController.ScaleFactor;
         int fbW = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
         int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        SceneRenderWindowFrb.Resize(fbW, fbH);
-        Scene.RenderSceneWindow(fbW, fbH, SceneRenderWindowFrb);
-        DebugRenderInScene(DebugBasicShader);
-        SceneRenderWindowFrb.Unbind();
+        _sceneRenderWindowFrb.Resize(fbW, fbH);
+        _scene.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
+        DebugRenderInScene(_debugBasicShader);
+        _sceneRenderWindowFrb.Unbind();
         GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
-        ImGui.Image(SceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
+        ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
         ImGui.End();
     }
@@ -320,14 +323,14 @@ public class Application : GameWindow
 #if DEBUG
     private void RenderObjectInspectorWindow()
     {
-        if (Scene.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
+        if (_scene.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
         {
-            var o = Scene.GameObjects.First(g => g == followingCamera.TargetObject);
+            var o = _scene.GameObjects.First(g => g == followingCamera.TargetObject);
             ObjectInspectorWindow.Draw([o.PhysicsObject]);
         }
         else
         {
-            ObjectInspectorWindow.Draw(Scene.GameObjects.Select(g => g.PhysicsObject).ToArray());
+            ObjectInspectorWindow.Draw(_scene.GameObjects.Select(g => g.PhysicsObject).ToArray());
         }
     }
 
@@ -336,21 +339,21 @@ public class Application : GameWindow
         ImGui.Begin("Cascading Depth Maps");
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        var fbScale = imGuiController.ScaleFactor;
+        var fbScale = _imGuiController.ScaleFactor;
         int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
         int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        DepthMapWindowFrb.Resize(fbWidth, fbHeight);
+        _depthMapWindowFrb.Resize(fbWidth, fbHeight);
 
-        DepthMapWindowFrb.Bind();
+        _depthMapWindowFrb.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        QuadCsmShader.Use();
-        Scene.LightsManager.DirectionalLight?.SetForDepthTextureShader(QuadCsmShader, DirectionalLightLayer);
-        QuadMesh.Render();
+        _quadCsmShader.Use();
+        _scene.LightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader, DirectionalLightLayer);
+        _quadMesh.Render();
 
-        DepthMapWindowFrb.Unbind();
+        _depthMapWindowFrb.Unbind();
 
-        ImGui.Image(DepthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
+        ImGui.Image(_depthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
         ImGui.End();
     }

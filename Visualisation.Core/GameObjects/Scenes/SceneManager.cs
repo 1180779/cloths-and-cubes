@@ -19,13 +19,13 @@ public abstract class SceneManager : IDisposable
             PrefilterShader,
             BrdfLutShader);
 
-        CamerasManager = new(inputProvider);
-        LightsManager = new(CamerasManager);
+        CamerasManager = new CamerasManager(inputProvider);
+        LightsManager = new LightsManager(CamerasManager);
 
         // TODO: remove magic numbers
         var camera = new FreeMovingCamera(aspectRatio)
         {
-            Position = new(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
+            Position = new Vector3(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
         };
         CamerasManager.AddCamera(camera);
     }
@@ -54,21 +54,21 @@ public abstract class SceneManager : IDisposable
     public readonly Shader BrdfLutShader = new(BrdfLutVertexShader, BrdfLutFragmentShader);
     private const string Hdr = "Hdr/symmetrical_garden_02_4k.exr";
     public EnvironmentMap EnvironmentMap { get; set; }
-    private SphereMesh cube = new();
+    private SphereMesh _cube = new();
 
     public LightsManager LightsManager { get; private set; }
     public CamerasManager CamerasManager { get; private set; }
-    protected List<GameObject> gameObjects = [];
-    public ICollection<GameObject> GameObjects => gameObjects;
+    protected List<GameObject> _gameObjects = [];
+    public ICollection<GameObject> GameObjects => _gameObjects;
 
     public void AddGameObject(GameObject gameObject)
     {
-        gameObjects.Add(gameObject);
+        _gameObjects.Add(gameObject);
     }
 
     public void RemoveGameObject(GameObject gameObject)
     {
-        gameObjects.Remove(gameObject);
+        _gameObjects.Remove(gameObject);
     }
 
     public abstract void SetUp();
@@ -85,7 +85,7 @@ public abstract class SceneManager : IDisposable
 
     public void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)
     {
-        LightsManager.RenderShadowsToMaps(gameObjects);
+        LightsManager.RenderShadowsToMaps(_gameObjects);
 
         /* clear before rendering */
         framebuffer.Bind();
@@ -97,14 +97,14 @@ public abstract class SceneManager : IDisposable
         SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
         SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
         EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
-        cube.Render();
+        _cube.Render();
 
         /* render every other object */
         PbrShader.Use();
         EnvironmentMap.SetForPbrShader(PbrShader);
         CamerasManager.CurrentCamera.SetForShader(PbrShader);
         LightsManager.SetForShader(PbrShader);
-        foreach (var gameObject in gameObjects)
+        foreach (var gameObject in _gameObjects)
         {
             gameObject.SetForShader(PbrShader);
             gameObject.Render();
@@ -113,13 +113,13 @@ public abstract class SceneManager : IDisposable
 
     public void Dispose()
     {
-        cube.Dispose();
+        _cube.Dispose();
         PbrShader.Dispose();
         SkyboxShader.Dispose();
         EquirectangularToCubemapShader.Dispose();
 
         LightsManager.Dispose();
-        foreach (var gameObject in gameObjects)
+        foreach (var gameObject in _gameObjects)
         {
             gameObject.Dispose();
         }

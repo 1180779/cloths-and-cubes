@@ -9,28 +9,28 @@ public class BoxesRandomConfigurationDemo : BoxesDemo
 
     protected override void InitializeScene()
     {
-        Boxes = new Box[BoxesCount];
-        Balls = new Ball[BallsCount];
+        _boxes = new Box[BoxesCount];
+        _balls = new Ball[BallsCount];
 
         /* add the cubes to the scene to be rendered */
-        for (var i = 0; i < Boxes.Length; i++)
+        for (var i = 0; i < _boxes.Length; i++)
         {
-            this.Boxes[i] = new Box();
-            var box = Boxes[i];
-            Scene.AddGameObject(box);
+            this._boxes[i] = new Box();
+            var box = _boxes[i];
+            _scene.AddGameObject(box);
         }
 
         /* add the spheres to the scene to be rendered */
-        for (var i = 0; i < Balls.Length; ++i)
+        for (var i = 0; i < _balls.Length; ++i)
         {
-            this.Balls[i] = new Ball();
-            var ball = Balls[i];
-            Scene.AddGameObject(ball);
+            this._balls[i] = new Ball();
+            var ball = _balls[i];
+            _scene.AddGameObject(ball);
         }
 
         /* add ground plane to the scene */
-        Plane = new();
-        Scene.AddGameObject(Plane);
+        _plane = new();
+        _scene.AddGameObject(_plane);
 
         /* set everything up */
         Reset();

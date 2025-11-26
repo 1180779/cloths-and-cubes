@@ -11,11 +11,11 @@ public sealed partial class MaterialTextured : IMaterial
     public override string ToString()
     {
         return $"{{Material: " +
-            $"AlbedoMap: {albedoMap}, " +
-            $"NormalMap: {normalMap}, " +
-            $"MetallicMap: {metallicMap}, " +
-            $"Roughness: {roughnessMap}, " +
-            $"Ao: {aoMap}}}";
+            $"AlbedoMap: {_albedoMap}, " +
+            $"NormalMap: {_normalMap}, " +
+            $"MetallicMap: {_metallicMap}, " +
+            $"Roughness: {_roughnessMap}, " +
+            $"Ao: {_aoMap}}}";
     }
 
     public void SetForShader(Shader sh)
@@ -38,12 +38,12 @@ public sealed partial class MaterialTextured : IMaterial
         sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8, AoMap.TextureId);
     }
 
-    private bool loaded = false;
-    private string albedoMap;
-    private string normalMap;
-    private string metallicMap;
-    private string roughnessMap;
-    private string aoMap;
+    private bool _loaded = false;
+    private string _albedoMap;
+    private string _normalMap;
+    private string _metallicMap;
+    private string _roughnessMap;
+    private string _aoMap;
 
     private TexturesManager.TextureData? AlbedoMap { get; set; }
     private TexturesManager.TextureData? NormalMap { get; set; }
@@ -53,24 +53,24 @@ public sealed partial class MaterialTextured : IMaterial
 
     public MaterialTextured(string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
     {
-        this.albedoMap = albedoMap;
-        this.normalMap = normalMap;
-        this.metallicMap = metallicMap;
-        this.roughnessMap = roughnessMap;
-        this.aoMap = aoMap;
+        this._albedoMap = albedoMap;
+        this._normalMap = normalMap;
+        this._metallicMap = metallicMap;
+        this._roughnessMap = roughnessMap;
+        this._aoMap = aoMap;
     }
 
     public void EnsureLoaded()
     {
-        if (loaded)
+        if (_loaded)
             return;
 
-        AlbedoMap = TexturesManager.GetOrLoadTexture(albedoMap, TextureInit);
-        NormalMap = TexturesManager.GetOrLoadTexture(normalMap, TextureInit);
-        MetallicMap = TexturesManager.GetOrLoadTexture(metallicMap, TextureInit);
-        RoughnessMap = TexturesManager.GetOrLoadTexture(roughnessMap, TextureInit);
-        AoMap = TexturesManager.GetOrLoadTexture(aoMap, TextureInit);
-        loaded = true;
+        AlbedoMap = TexturesManager.GetOrLoadTexture(_albedoMap, TextureInit);
+        NormalMap = TexturesManager.GetOrLoadTexture(_normalMap, TextureInit);
+        MetallicMap = TexturesManager.GetOrLoadTexture(_metallicMap, TextureInit);
+        RoughnessMap = TexturesManager.GetOrLoadTexture(_roughnessMap, TextureInit);
+        AoMap = TexturesManager.GetOrLoadTexture(_aoMap, TextureInit);
+        _loaded = true;
         return;
 
         void TextureInit()
@@ -88,7 +88,7 @@ public sealed partial class MaterialTextured : IMaterial
 
     public void Dispose()
     {
-        if (!loaded)
+        if (!_loaded)
             return;
 
         Debug.Assert(

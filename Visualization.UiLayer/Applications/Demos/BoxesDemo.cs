@@ -12,13 +12,13 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesDemo : RigidBodyApplication
 {
-    protected Box[] Boxes = [];
-    protected Ball[] Balls = [];
-    protected Plane Plane;
+    protected Box[] _boxes = [];
+    protected Ball[] _balls = [];
+    protected Plane _plane;
 
-    private bool[] bvhLevelsToRender = Enumerable.Repeat(false, 10).ToArray();
+    private bool[] _bvhLevelsToRender = Enumerable.Repeat(false, 10).ToArray();
 
-    private readonly Vector3[] levelColors =
+    private readonly Vector3[] _levelColors =
     [
         new(1.0f, 0.0f, 0.0f), // Red
         new(0.0f, 1.0f, 0.0f), // Green
@@ -30,7 +30,7 @@ public class BoxesDemo : RigidBodyApplication
 
     protected BoxesDemo()
     {
-        Plane = new();
+        _plane = new();
     }
 
     protected override void RenderWindows(double dt)
@@ -40,21 +40,21 @@ public class BoxesDemo : RigidBodyApplication
 
         if (ImGui.Button("Select All"))
         {
-            bvhLevelsToRender = Enumerable.Repeat(true, bvhLevelsToRender.Length).ToArray();
+            _bvhLevelsToRender = Enumerable.Repeat(true, _bvhLevelsToRender.Length).ToArray();
         }
 
         ImGui.SameLine();
         if (ImGui.Button("Deselect All"))
         {
-            bvhLevelsToRender = Enumerable.Repeat(false, bvhLevelsToRender.Length).ToArray();
+            _bvhLevelsToRender = Enumerable.Repeat(false, _bvhLevelsToRender.Length).ToArray();
         }
 
-        for (var i = 0; i < bvhLevelsToRender.Length; i++)
+        for (var i = 0; i < _bvhLevelsToRender.Length; i++)
         {
-            var color = levelColors[i % levelColors.Length];
+            var color = _levelColors[i % _levelColors.Length];
             ImGui.PushStyleColor(ImGuiCol.Text,
                 new System.Numerics.Vector4(new System.Numerics.Vector3(color.X, color.Y, color.Z), 1.0f));
-            ImGui.Checkbox($"Level {i}", ref bvhLevelsToRender[i]);
+            ImGui.Checkbox($"Level {i}", ref _bvhLevelsToRender[i]);
             ImGui.PopStyleColor();
         }
 
@@ -65,17 +65,17 @@ public class BoxesDemo : RigidBodyApplication
     {
         base.DebugRenderInScene(sh);
         Dictionary<int, IBoxable> boxDict = new();
-        for (int i = 0; i < Boxes.Length + Balls.Length; i++)
+        for (int i = 0; i < _boxes.Length + _balls.Length; i++)
         {
-            boxDict[i] = i < Boxes.Length ? Boxes[i] : Balls[i - Boxes.Length];
+            boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
         BVH bvh = BVH.Build(boxDict);
 
         BvhWireframe bvhWireframe = new(bvh)
         {
-            LevelColors = levelColors,
-            LevelsToRender = bvhLevelsToRender
+            LevelColors = _levelColors,
+            LevelsToRender = _bvhLevelsToRender
                 .Select((enabled, index) => new { enabled, index })
                 .Where(x => x.enabled)
                 .Select(x => x.index)
@@ -90,31 +90,31 @@ public class BoxesDemo : RigidBodyApplication
     protected override void GenerateContacts()
     {
         // Set up the collision data structure
-        CollisionData.Reset(MaxContacts);
-        CollisionData.Friction = (Real)0.9;
-        CollisionData.Restitution = (Real)0.6;
-        CollisionData.Tolerance = (Real)0.1;
+        _collisionData.Reset(MaxContacts);
+        _collisionData.Friction = (Real)0.9;
+        _collisionData.Restitution = (Real)0.6;
+        _collisionData.Tolerance = (Real)0.1;
 
         Dictionary<int, IBoxable> boxDict = new();
-        for (int i = 0; i < Boxes.Length + Balls.Length; i++)
+        for (int i = 0; i < _boxes.Length + _balls.Length; i++)
         {
-            boxDict[i] = i < Boxes.Length ? Boxes[i] : Balls[i - Boxes.Length];
+            boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
         BVH bvh = BVH.Build(boxDict);
 
         // Process box-plane collisions
-        foreach (var box in Boxes)
+        foreach (var box in _boxes)
         {
-            if (!CollisionData.HasMoreContacts()) return;
-            CollisionDetector.BoxAndHalfSpace(box.EngineBox, Plane.EnginePlane, CollisionData);
+            if (!_collisionData.HasMoreContacts()) return;
+            CollisionDetector.BoxAndHalfSpace(box.EngineBox, _plane.EnginePlane, _collisionData);
         }
 
         // Process sphere-plane collisions
-        foreach (var ball in Balls)
+        foreach (var ball in _balls)
         {
-            if (!CollisionData.HasMoreContacts()) return;
-            CollisionDetector.SphereAndHalfSpace(ball.EngineBall, Plane.EnginePlane, CollisionData);
+            if (!_collisionData.HasMoreContacts()) return;
+            CollisionDetector.SphereAndHalfSpace(ball.EngineBall, _plane.EnginePlane, _collisionData);
         }
 
         List<(int, int)> potentialCollisions = new();
@@ -122,17 +122,17 @@ public class BoxesDemo : RigidBodyApplication
 
         foreach (var pair in potentialCollisions)
         {
-            if (!CollisionData.HasMoreContacts()) return;
+            if (!_collisionData.HasMoreContacts()) return;
 
             // TODO: refactor this check
-            if (pair.Item1 < Boxes.Length)
+            if (pair.Item1 < _boxes.Length)
             {
-                if (pair.Item2 < Boxes.Length)
+                if (pair.Item2 < _boxes.Length)
                 {
-                    var box1 = Boxes[pair.Item1];
-                    var box2 = Boxes[pair.Item2];
+                    var box1 = _boxes[pair.Item1];
+                    var box2 = _boxes[pair.Item2];
 
-                    var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, CollisionData);
+                    var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, _collisionData);
                     if (contacts > 0)
                     {
                         box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
@@ -140,10 +140,10 @@ public class BoxesDemo : RigidBodyApplication
                 }
                 else
                 {
-                    var box1 = Boxes[pair.Item1];
-                    var ball2 = Balls[pair.Item2 - Boxes.Length];
+                    var box1 = _boxes[pair.Item1];
+                    var ball2 = _balls[pair.Item2 - _boxes.Length];
 
-                    var contacts = CollisionDetector.BoxAndSphere(box1.EngineBox, ball2.EngineBall, CollisionData);
+                    var contacts = CollisionDetector.BoxAndSphere(box1.EngineBox, ball2.EngineBall, _collisionData);
                     if (contacts)
                     {
                         box1.EngineBox.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
@@ -152,12 +152,12 @@ public class BoxesDemo : RigidBodyApplication
             }
             else
             {
-                if (pair.Item2 < Boxes.Length)
+                if (pair.Item2 < _boxes.Length)
                 {
-                    var ball1 = Balls[pair.Item1 - Boxes.Length];
-                    var box2 = Boxes[pair.Item2];
+                    var ball1 = _balls[pair.Item1 - _boxes.Length];
+                    var box2 = _boxes[pair.Item2];
 
-                    var contacts = CollisionDetector.BoxAndSphere(box2.EngineBox, ball1.EngineBall, CollisionData);
+                    var contacts = CollisionDetector.BoxAndSphere(box2.EngineBox, ball1.EngineBall, _collisionData);
                     if (contacts)
                     {
                         box2.EngineBox.IsOverlapping = ball1.EngineBall.IsOverlapping = true;
@@ -165,10 +165,11 @@ public class BoxesDemo : RigidBodyApplication
                 }
                 else
                 {
-                    var ball1 = Balls[pair.Item1 - Boxes.Length];
-                    var ball2 = Balls[pair.Item2 - Boxes.Length];
+                    var ball1 = _balls[pair.Item1 - _boxes.Length];
+                    var ball2 = _balls[pair.Item2 - _boxes.Length];
 
-                    var contacts = CollisionDetector.SphereAndSphere(ball1.EngineBall, ball2.EngineBall, CollisionData);
+                    var contacts =
+                        CollisionDetector.SphereAndSphere(ball1.EngineBall, ball2.EngineBall, _collisionData);
                     if (contacts)
                     {
                         ball1.EngineBall.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
@@ -184,14 +185,14 @@ public class BoxesDemo : RigidBodyApplication
     protected override void UpdateObjects(float duration)
     {
         // Update the physics of each box in turn
-        foreach (var box in Boxes)
+        foreach (var box in _boxes)
         {
             box.EngineBox.Body.Integrate(duration);
             box.EngineBox.CalculateInternals();
             box.EngineBox.IsOverlapping = false;
         }
 
-        foreach (var ball in Balls)
+        foreach (var ball in _balls)
         {
             ball.EngineBall.Body.Integrate(duration);
             ball.EngineBall.CalculateInternals();
@@ -205,9 +206,9 @@ public class BoxesDemo : RigidBodyApplication
     protected override void Reset()
     {
         // reset boxes; some in preconfigured positions
-        if (Boxes.Length > 0)
+        if (_boxes.Length > 0)
         {
-            Boxes[0].EngineBox.SetState(
+            _boxes[0].EngineBox.SetState(
                 position: new Engine.Vector3(0, 3, 0),
                 orientation: new Engine.Quaternion(),
                 extents: new Engine.Vector3(4, 1, 1),
@@ -215,9 +216,9 @@ public class BoxesDemo : RigidBodyApplication
             );
         }
 
-        if (Boxes.Length > 1)
+        if (_boxes.Length > 1)
         {
-            Boxes[1].EngineBox.SetState(
+            _boxes[1].EngineBox.SetState(
                 position: new Engine.Vector3(0, 4.75f, 2),
                 orientation: new Engine.Quaternion(1.0f, 0.1f, 0.05f, 0.01f),
                 extents: new Engine.Vector3(1, 1, 4),
@@ -226,36 +227,36 @@ public class BoxesDemo : RigidBodyApplication
         }
 
         Random random = new();
-        for (var i = 2; i < Boxes.Length; i++)
+        for (var i = 2; i < _boxes.Length; i++)
         {
-            Boxes[i].EngineBox.Random(random);
+            _boxes[i].EngineBox.Random(random);
         }
 
         // reset spheres; some in preconfigured positions
-        if (Balls.Length > 0)
+        if (_balls.Length > 0)
         {
-            Balls[0].EngineBall.SetState(
+            _balls[0].EngineBall.SetState(
                 position: new Engine.Vector3(0, 10, 0),
                 orientation: new Engine.Quaternion(),
                 radius: 1.0f,
                 velocity: new Engine.Vector3(0, 0, 0));
         }
 
-        if (Balls.Length > 1)
+        if (_balls.Length > 1)
         {
-            Balls[1].EngineBall.SetState(
+            _balls[1].EngineBall.SetState(
                 position: new Engine.Vector3(3, 4.75f, 2),
                 orientation: new Engine.Quaternion(),
                 radius: 1.0f,
                 velocity: new Engine.Vector3(0, 0, 0));
         }
 
-        for (var i = 2; i < Balls.Length; i++)
+        for (var i = 2; i < _balls.Length; i++)
         {
-            Balls[i].EngineBall.Random(random);
+            _balls[i].EngineBall.Random(random);
         }
 
         // Reset the contacts
-        CollisionData.ContactCount = 0;
+        _collisionData.ContactCount = 0;
     }
 }

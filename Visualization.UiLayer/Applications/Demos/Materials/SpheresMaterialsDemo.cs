@@ -5,20 +5,20 @@ namespace Visualization.UiLayer.Applications.Demos.Materials;
 
 public abstract class SpheresMaterialsDemo : BoxesDemo
 {
-    protected int NrOfRows = 5;
+    protected int _nrOfRows = 5;
 
     protected abstract IMaterial[] GetMaterials();
 
     protected override void InitializeScene()
     {
         var materials = GetMaterials();
-        Balls = new Ball[materials.Length];
+        _balls = new Ball[materials.Length];
         for (var i = 0; i < materials.Length; i++)
         {
             var material = materials[i];
             var ball = new Ball();
-            var row = i / NrOfRows;
-            var col = i % NrOfRows;
+            var row = i / _nrOfRows;
+            var col = i % _nrOfRows;
             ball.EngineBall.SetState(
                 position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
                 orientation: new Engine.Quaternion(),
@@ -26,14 +26,14 @@ public abstract class SpheresMaterialsDemo : BoxesDemo
                 velocity: new Engine.Vector3()
             );
             ball.Material = material;
-            Balls[i] = ball;
-            Scene.AddGameObject(ball);
+            _balls[i] = ball;
+            _scene.AddGameObject(ball);
         }
 
 
         /* add ground plane to the scene */
-        Plane = new();
-        Scene.AddGameObject(Plane);
+        _plane = new();
+        _scene.AddGameObject(_plane);
 
         /* set everything up */
         Reset();
@@ -41,11 +41,11 @@ public abstract class SpheresMaterialsDemo : BoxesDemo
 
     protected override void Reset()
     {
-        for (var i = 0; i < Balls.Length; i++)
+        for (var i = 0; i < _balls.Length; i++)
         {
-            var ball = Balls[i];
-            var row = i / NrOfRows;
-            var col = i % NrOfRows;
+            var ball = _balls[i];
+            var row = i / _nrOfRows;
+            var col = i % _nrOfRows;
             ball.EngineBall.SetState(
                 position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
                 orientation: new Engine.Quaternion(),
@@ -55,6 +55,6 @@ public abstract class SpheresMaterialsDemo : BoxesDemo
         }
 
         // Reset the contacts
-        CollisionData.ContactCount = 0;
+        _collisionData.ContactCount = 0;
     }
 }

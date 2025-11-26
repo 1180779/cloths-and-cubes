@@ -14,25 +14,25 @@ namespace Visualization.UiLayer.Inputs;
 
 public class ImGuiInputProvider : IInputProvider
 {
-    private readonly ImGuiController imGuiController;
-    private readonly GameWindow gameWindow;
-    private Vector2 mousePosition, lastMousePosition;
-    private bool isMousePositionSet;
-    private CursorState lastCursorState = CursorState.Normal;
-    private float mouseScrollDelta;
+    private readonly ImGuiController _imGuiController;
+    private readonly GameWindow _gameWindow;
+    private Vector2 _mousePosition, _lastMousePosition;
+    private bool _isMousePositionSet;
+    private CursorState _lastCursorState = CursorState.Normal;
+    private float _mouseScrollDelta;
 
     public ImGuiInputProvider(GameWindow gameWindow, ImGuiController imGuiController)
     {
-        this.gameWindow = gameWindow;
-        this.imGuiController = imGuiController;
+        this._gameWindow = gameWindow;
+        this._imGuiController = imGuiController;
 
         // Subscribe to the mouse wheel event to capture scroll data
-        this.gameWindow.MouseWheel += OnMouseWheel;
+        this._gameWindow.MouseWheel += OnMouseWheel;
     }
 
     private void OnMouseWheel(MouseWheelEventArgs e)
     {
-        mouseScrollDelta = e.OffsetY;
+        _mouseScrollDelta = e.OffsetY;
     }
 
     public bool IsMouseButtonPressed(MouseButton button)
@@ -44,17 +44,17 @@ public class ImGuiInputProvider : IInputProvider
             MouseButton.Middle => OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Middle,
             _ => throw new ArgumentOutOfRangeException(nameof(button), button, null)
         };
-        return gameWindow.MouseState.IsButtonPressed(mappedButton);
+        return _gameWindow.MouseState.IsButtonPressed(mappedButton);
     }
 
     public float GetMouseScroll()
     {
-        return mouseScrollDelta;
+        return _mouseScrollDelta;
     }
 
     public void ResetMouseScroll()
     {
-        mouseScrollDelta = 0;
+        _mouseScrollDelta = 0;
     }
 
     public bool IsKeyDown(InputKey key)
@@ -69,7 +69,7 @@ public class ImGuiInputProvider : IInputProvider
             throw new ArgumentOutOfRangeException(nameof(key), key, null);
         }
 
-        return gameWindow.KeyboardState.IsKeyDown(mappedKey);
+        return _gameWindow.KeyboardState.IsKeyDown(mappedKey);
     }
 
     public bool IsKeyPressed(InputKey key)
@@ -84,50 +84,50 @@ public class ImGuiInputProvider : IInputProvider
             throw new ArgumentOutOfRangeException(nameof(key), key, null);
         }
 
-        return gameWindow.KeyboardState.IsKeyPressed(mappedKey);
+        return _gameWindow.KeyboardState.IsKeyPressed(mappedKey);
     }
 
     public Vector2 GetMouseDelta()
     {
-        if (!isMousePositionSet)
+        if (!_isMousePositionSet)
         {
             return Vector2.Zero;
         }
 
-        return new Vector2(gameWindow.MouseState.X, gameWindow.MouseState.Y) - lastMousePosition;
+        return new Vector2(_gameWindow.MouseState.X, _gameWindow.MouseState.Y) - _lastMousePosition;
     }
 
     public void UpdateMousePosition()
     {
-        lastMousePosition = mousePosition;
-        mousePosition = new Vector2(gameWindow.MouseState.X, gameWindow.MouseState.Y);
+        _lastMousePosition = _mousePosition;
+        _mousePosition = new Vector2(_gameWindow.MouseState.X, _gameWindow.MouseState.Y);
 
-        if (!isMousePositionSet)
+        if (!_isMousePositionSet)
         {
-            isMousePositionSet = true;
+            _isMousePositionSet = true;
         }
     }
 
     public Vector2 GetMousePosition()
     {
-        return new Vector2(gameWindow.MouseState.X, gameWindow.MouseState.Y);
+        return new Vector2(_gameWindow.MouseState.X, _gameWindow.MouseState.Y);
     }
 
     public void SetCursorState(CursorState state)
     {
-        if (state != lastCursorState)
+        if (state != _lastCursorState)
         {
             // sync imGui with cursor state
             if (state == CursorState.Normal)
             {
-                gameWindow.MouseMove += imGuiController.MouseMove;
+                _gameWindow.MouseMove += _imGuiController.MouseMove;
             }
             else
             {
-                gameWindow.MouseMove -= imGuiController.MouseMove;
+                _gameWindow.MouseMove -= _imGuiController.MouseMove;
             }
 
-            lastCursorState = state;
+            _lastCursorState = state;
         }
 
         OpenTK.Windowing.Common.CursorState mappedState = state switch
@@ -138,12 +138,12 @@ public class ImGuiInputProvider : IInputProvider
             CursorState.Hidden => OpenTK.Windowing.Common.CursorState.Hidden,
             _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
         };
-        gameWindow.CursorState = mappedState;
+        _gameWindow.CursorState = mappedState;
     }
 
     public CursorState GetCursorState()
     {
-        OpenTK.Windowing.Common.CursorState state = gameWindow.CursorState;
+        OpenTK.Windowing.Common.CursorState state = _gameWindow.CursorState;
         CursorState mappedState = state switch
         {
             OpenTK.Windowing.Common.CursorState.Normal => CursorState.Normal,

@@ -16,17 +16,17 @@ namespace Visualization.UiLayer.UI;
 
 public class ImGuiController : IDisposable
 {
-    private readonly Shader shader = new("imguiShader.vert", "imguiShader.frag");
+    private readonly Shader _shader = new("imguiShader.vert", "imguiShader.frag");
 
-    private bool frameBegun;
+    private bool _frameBegun;
 
-    private int vertexArray;
-    private int vertexBuffer;
-    private int vertexBufferSize;
-    private int indexBuffer;
-    private int indexBufferSize;
+    private int _vertexArray;
+    private int _vertexBuffer;
+    private int _vertexBufferSize;
+    private int _indexBuffer;
+    private int _indexBufferSize;
 
-    private int fontTexture;
+    private int _fontTexture;
     public Vector2i FramebufferSize { get; private set; }
 
     // logical window size (in window units / logical pixels)
@@ -37,9 +37,9 @@ public class ImGuiController : IDisposable
     public Vector2 ScaleFactor { get; private set; } = Vector2.One;
     public int GlVersion { get; private set; }
 
-    private static bool KhrDebugAvailable;
+    private static bool s_khrDebugAvailable;
 
-    private bool compatibilityProfile;
+    private bool _compatibilityProfile;
 
     /// <summary>
     /// Constructs a new ImGuiController.
@@ -55,9 +55,9 @@ public class ImGuiController : IDisposable
 
         GlVersion = major * 100 + minor * 10;
 
-        KhrDebugAvailable = (major == 4 && minor >= 3) || IsExtensionSupported("KHR_debug");
+        s_khrDebugAvailable = (major == 4 && minor >= 3) || IsExtensionSupported("KHR_debug");
 
-        compatibilityProfile =
+        _compatibilityProfile =
             (GL.GetInteger((GetPName)All.ContextProfileMask) & (int)All.ContextCompatibilityProfileBit) != 0;
 
         IntPtr context = ImGui.CreateContext();
@@ -74,7 +74,7 @@ public class ImGuiController : IDisposable
         SetPerFrameImGuiData(1f / 60f);
 
         ImGui.NewFrame();
-        frameBegun = true;
+        _frameBegun = true;
     }
 
     public void HookToWindow(GameWindow window)
@@ -113,25 +113,25 @@ public class ImGuiController : IDisposable
 
     public void CreateDeviceResources()
     {
-        vertexBufferSize = 10000;
-        indexBufferSize = 2000;
+        _vertexBufferSize = 10000;
+        _indexBufferSize = 2000;
 
         int prevVao = GL.GetInteger(GetPName.VertexArrayBinding);
         int prevArrayBuffer = GL.GetInteger(GetPName.ArrayBufferBinding);
 
-        vertexArray = GL.GenVertexArray();
-        GL.BindVertexArray(vertexArray);
-        LabelObject(ObjectLabelIdentifier.VertexArray, vertexArray, "ImGui");
+        _vertexArray = GL.GenVertexArray();
+        GL.BindVertexArray(_vertexArray);
+        LabelObject(ObjectLabelIdentifier.VertexArray, _vertexArray, "ImGui");
 
-        vertexBuffer = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
-        LabelObject(ObjectLabelIdentifier.Buffer, vertexBuffer, "VBO: ImGui");
-        GL.BufferData(BufferTarget.ArrayBuffer, vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+        _vertexBuffer = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
+        LabelObject(ObjectLabelIdentifier.Buffer, _vertexBuffer, "VBO: ImGui");
+        GL.BufferData(BufferTarget.ArrayBuffer, _vertexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
-        indexBuffer = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
-        LabelObject(ObjectLabelIdentifier.Buffer, indexBuffer, "EBO: ImGui");
-        GL.BufferData(BufferTarget.ElementArrayBuffer, indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+        _indexBuffer = GL.GenBuffer();
+        GL.BindBuffer(BufferTarget.ElementArrayBuffer, _indexBuffer);
+        LabelObject(ObjectLabelIdentifier.Buffer, _indexBuffer, "EBO: ImGui");
+        GL.BufferData(BufferTarget.ElementArrayBuffer, _indexBufferSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
 
         RecreateFontDeviceTexture();
         int stride = Unsafe.SizeOf<ImDrawVert>();
@@ -163,10 +163,10 @@ public class ImGuiController : IDisposable
         GL.ActiveTexture(TextureUnit.Texture0);
         int prevTexture2D = GL.GetInteger(GetPName.TextureBinding2D);
 
-        fontTexture = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D, fontTexture);
+        _fontTexture = GL.GenTexture();
+        GL.BindTexture(TextureTarget.Texture2D, _fontTexture);
         GL.TexStorage2D(TextureTarget2d.Texture2D, mips, SizedInternalFormat.Rgba8, width, height);
-        LabelObject(ObjectLabelIdentifier.Texture, fontTexture, "ImGui Text Atlas");
+        LabelObject(ObjectLabelIdentifier.Texture, _fontTexture, "ImGui Text Atlas");
 
         GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height, PixelFormat.Bgra, PixelType.UnsignedByte,
             pixels);
@@ -187,7 +187,7 @@ public class ImGuiController : IDisposable
         GL.BindTexture(TextureTarget.Texture2D, prevTexture2D);
         GL.ActiveTexture((TextureUnit)prevActiveTexture);
 
-        io.Fonts.SetTexID((IntPtr)fontTexture);
+        io.Fonts.SetTexID((IntPtr)_fontTexture);
 
         io.Fonts.ClearTexData();
     }
@@ -197,9 +197,9 @@ public class ImGuiController : IDisposable
     /// </summary>
     public void Render()
     {
-        if (frameBegun)
+        if (_frameBegun)
         {
-            frameBegun = false;
+            _frameBegun = false;
             ImGui.Render();
             RenderImDrawData(ImGui.GetDrawData());
         }
@@ -210,14 +210,14 @@ public class ImGuiController : IDisposable
     /// </summary>
     public void Update(float deltaSeconds)
     {
-        if (frameBegun)
+        if (_frameBegun)
         {
             ImGui.Render();
         }
 
         SetPerFrameImGuiData(deltaSeconds);
 
-        frameBegun = true;
+        _frameBegun = true;
         ImGui.NewFrame();
     }
 
@@ -361,7 +361,7 @@ public class ImGuiController : IDisposable
             }
         }
 
-        if (GlVersion <= 310 || compatibilityProfile)
+        if (GlVersion <= 310 || _compatibilityProfile)
         {
             GL.PolygonMode(TriangleFace.Front, PolygonMode.Fill);
             GL.PolygonMode(TriangleFace.Back, PolygonMode.Fill);
@@ -372,29 +372,29 @@ public class ImGuiController : IDisposable
         }
 
         // Bind the element buffer so that we can resize it.
-        GL.BindVertexArray(vertexArray);
+        GL.BindVertexArray(_vertexArray);
         // Bind the vertex buffer so that we can resize it.
-        GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBuffer);
+        GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
         for (int i = 0; i < drawData.CmdListsCount; i++)
         {
             ImDrawListPtr cmdList = drawData.CmdLists[i];
 
             int vertexSize = cmdList.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>();
 
-            if (vertexSize > vertexBufferSize)
+            if (vertexSize > _vertexBufferSize)
             {
-                int newSize = (int)Math.Max(vertexBufferSize * 1.5f, vertexSize);
+                int newSize = (int)Math.Max(_vertexBufferSize * 1.5f, vertexSize);
 
                 GL.BufferData(BufferTarget.ArrayBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-                vertexBufferSize = newSize;
+                _vertexBufferSize = newSize;
             }
 
             int indexSize = cmdList.IdxBuffer.Size * sizeof(ushort);
-            if (indexSize > indexBufferSize)
+            if (indexSize > _indexBufferSize)
             {
-                int newSize = (int)Math.Max(indexBufferSize * 1.5f, indexSize);
+                int newSize = (int)Math.Max(_indexBufferSize * 1.5f, indexSize);
                 GL.BufferData(BufferTarget.ElementArrayBuffer, newSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-                indexBufferSize = newSize;
+                _indexBufferSize = newSize;
             }
         }
 
@@ -413,12 +413,12 @@ public class ImGuiController : IDisposable
             -1.0f,
             1.0f);
 
-        shader.Use();
-        shader.SetMatrix4("projection_matrix", mvp);
-        shader.SetInt("in_fontTexture", 0);
+        _shader.Use();
+        _shader.SetMatrix4("projection_matrix", mvp);
+        _shader.SetInt("in_fontTexture", 0);
         GlHelper.CheckGlError("Projection");
 
-        GL.BindVertexArray(vertexArray);
+        GL.BindVertexArray(_vertexArray);
         GlHelper.CheckGlError("VAO");
 
         // clip rects are expected to be scaled from logical to framebuffer pixels by ImGui using DisplayFramebufferScale
@@ -504,7 +504,7 @@ public class ImGuiController : IDisposable
         else GL.Disable(EnableCap.CullFace);
         if (prevScissorTestEnabled) GL.Enable(EnableCap.ScissorTest);
         else GL.Disable(EnableCap.ScissorTest);
-        if (GlVersion <= 310 || compatibilityProfile)
+        if (GlVersion <= 310 || _compatibilityProfile)
         {
             GL.PolygonMode(TriangleFace.Front, (PolygonMode)prevPolygonMode[0]);
             GL.PolygonMode(TriangleFace.Back, (PolygonMode)prevPolygonMode[1]);
@@ -520,17 +520,17 @@ public class ImGuiController : IDisposable
     /// </summary>
     public void Dispose()
     {
-        GL.DeleteVertexArray(vertexArray);
-        GL.DeleteBuffer(vertexBuffer);
-        GL.DeleteBuffer(indexBuffer);
+        GL.DeleteVertexArray(_vertexArray);
+        GL.DeleteBuffer(_vertexBuffer);
+        GL.DeleteBuffer(_indexBuffer);
 
-        GL.DeleteTexture(fontTexture);
-        shader.Dispose();
+        GL.DeleteTexture(_fontTexture);
+        _shader.Dispose();
     }
 
     public static void LabelObject(ObjectLabelIdentifier objLabelIdent, int glObject, string name)
     {
-        if (KhrDebugAvailable)
+        if (s_khrDebugAvailable)
             GL.ObjectLabel(objLabelIdent, glObject, name.Length, name);
     }
 
