@@ -1,83 +1,56 @@
 ﻿using Engine.Force;
+
+using Visualisation.Core.Display.Materials;
+using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
-namespace Visualisation.Core.GameObjects
+namespace Visualisation.Core.GameObjects;
+
+public sealed class Cloth : GameObject
 {
-    public class Cloth : IVisualObject
+    public Engine.Cloth EngineCloth { get; set; }
+    public SpringMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
+    public ForceRegistry ForceRegistry { get; set; }
+
+    public Cloth(ForceRegistry registry)
     {
-        public Engine.Cloth EngineCloth { get; set; }
-        public SpringMesh VisualCloth { get; set; }
-        public ForceRegistry ForceRegistry { get; set; }
+        ForceRegistry = registry;
+        EngineCloth = new Engine.Cloth(ForceRegistry);
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+        VisualCloth = new SpringMesh(pts);
+        Mesh = VisualCloth;
 
-        public Cloth(ForceRegistry registry)
+        Material = MaterialConstant.Gold;
+    }
+
+    protected override void PreRender()
+    {
+        var pts = ConvertToOpenTk(EngineCloth.Points());
+        VisualCloth.UpdatePoints(pts);
+    }
+
+    public override Vector3 Position =>
+        new(EngineCloth.particle0pos.X, EngineCloth.particle0pos.Y, EngineCloth.particle0pos.Z);
+
+    protected override IMesh Mesh { get; set; }
+    public override object PhysicsObject => EngineCloth;
+    public override Matrix4 Model => new();
+
+    private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
+    {
+        int sx = enginePoints.GetLength(0);
+        int sy = enginePoints.GetLength(1);
+        var result = new Vector3[sx, sy];
+
+        for (int x = 0; x < sx; x++)
         {
-            ForceRegistry = registry;
-        }
-
-        public void Init()
-        {
-            EngineCloth = new Engine.Cloth(ForceRegistry);
-
-            Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-            VisualCloth?.Dispose();
-            VisualCloth = new SpringMesh(pts);
-            VisualCloth.Init();
-        }
-
-        public void Render()
-        {
-            if (EngineCloth == null) // no engine cloth! use placeholder instead
-                return;
-
-            // use the engine cloth
-            var pts = ConvertToOpenTk(EngineCloth.Points());
-
-            if (VisualCloth == null)
+            for (int y = 0; y < sy; y++)
             {
-                VisualCloth = new SpringMesh(pts);
-                VisualCloth.Init();
+                var e = enginePoints[x, y];
+                result[x, y] = new Vector3((float)e.X, (float)e.Y, (float)e.Z);
             }
-            else
-            {
-                VisualCloth.UpdatePoints(pts);
-            }
-
-            VisualCloth.Render();
         }
 
-        public void Dispose()
-        {
-            VisualCloth.Dispose();
-        }
-
-        public void SetForShader(Shader sh)
-        {
-            VisualCloth?.SetForShader(sh);
-        }
-
-
-        public Guid Id => VisualCloth.Id;
-        public AbstractVisualObject AbstractVisualObject => VisualCloth;
-        public object PhysicsObject => EngineCloth;
-
-        private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
-        {
-            if (enginePoints == null) return null!;
-
-            int sx = enginePoints.GetLength(0);
-            int sy = enginePoints.GetLength(1);
-            var result = new Vector3[sx, sy];
-
-            for (int x = 0; x < sx; x++)
-            {
-                for (int y = 0; y < sy; y++)
-                {
-                    var e = enginePoints[x, y];
-                    result[x, y] = new Vector3((float)e.X, (float)e.Y, (float)e.Z);
-                }
-            }
-
-            return result;
-        }
+        return result;
     }
 }

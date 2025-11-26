@@ -4,8 +4,8 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesRandomConfigurationDemo : BoxesDemo
 {
-    private const int BoxesCount = 0;
-    private const int BallsCount = 20;
+    private const int BoxesCount = 1;
+    private const int BallsCount = 0;
 
     protected override void InitializeScene()
     {
@@ -31,6 +31,10 @@ public class BoxesRandomConfigurationDemo : BoxesDemo
         /* add ground plane to the scene */
         _plane = new();
         _scene.AddGameObject(_plane);
+
+        /* add cloth to the scene */
+        this._cloth = new Cloth(_forceRegistry);
+        _scene.AddGameObject(this._cloth);
 
         /* set everything up */
         Reset();

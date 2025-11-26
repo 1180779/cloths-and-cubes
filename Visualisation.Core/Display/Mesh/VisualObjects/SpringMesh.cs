@@ -2,7 +2,7 @@
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects
 {
-    public class SpringMesh : AbstractVisualObject
+    public class SpringMesh : IMesh
     {
         private readonly Vector3[,] _points;
         private MeshManager.MeshData? _meshData;
@@ -15,6 +15,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         {
             _points = points ?? throw new ArgumentNullException(nameof(points));
             _meshName = meshName ?? Guid.NewGuid().ToString();
+            Init();
         }
 
         public void UpdatePoints(Vector3[,] newPoints)
@@ -99,7 +100,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             AddVertex(c);
         }
 
-        public override void Init()
+        private void Init()
         {
             BuildMesh();
 
@@ -125,16 +126,11 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                     3 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
 
-                return new MeshManager.MeshData
-                {
-                    MeshName = _meshName,
-                    Vbo = vbo,
-                    Vao = vao
-                };
+                return new MeshManager.MeshData { MeshName = _meshName, Vbo = vbo, Vao = vao };
             });
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             MeshManager.FreeMesh(_meshName, (data) =>
             {
@@ -144,7 +140,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             });
         }
 
-        public override void Render()
+        public void Render()
         {
             if (_meshData is null)
                 throw new MeshDataEmptyException();

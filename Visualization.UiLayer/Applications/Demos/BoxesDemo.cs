@@ -1,5 +1,6 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.Force;
 
 using ImGuiNET;
 
@@ -16,6 +17,9 @@ public class BoxesDemo : RigidBodyApplication
     protected Ball[] _balls = [];
     protected Plane _plane;
 
+    protected ForceRegistry _forceRegistry = new();
+    protected Cloth _cloth;
+
     private bool[] _bvhLevelsToRender = Enumerable.Repeat(false, 10).ToArray();
 
     private readonly Vector3[] _levelColors =
@@ -30,6 +34,7 @@ public class BoxesDemo : RigidBodyApplication
 
     protected BoxesDemo()
     {
+        _cloth = new Cloth(_forceRegistry);
         _plane = new();
     }
 
@@ -177,6 +182,34 @@ public class BoxesDemo : RigidBodyApplication
                 }
             }
         }
+
+        // cloth contacts
+        var engCloth = _cloth.EngineCloth;
+        for (int x = 0; x < engCloth.sizeX; x++)
+        {
+            for (int y = 0; y < engCloth.sizeY; y++)
+            {
+                if (!_collisionData.HasMoreContacts()) return;
+
+                var rigidParticle = engCloth.particles[x, y];
+                if (rigidParticle == null || rigidParticle.Body == null) continue;
+
+                var collParticle = new CollisionParticle();
+                collParticle.Body = rigidParticle.Body;
+                collParticle.CalculateInternals();
+
+
+                if (!_collisionData.HasMoreContacts()) return;
+                CollisionDetector.ParticleAndHalfSpace(collParticle, _plane.EnginePlane, _collisionData);
+
+
+                for (var b = 0; b < _boxes.Length; b++)
+                {
+                    if (!_collisionData.HasMoreContacts()) return;
+                    CollisionDetector.BoxAndParticle(_boxes[b].EngineBox, collParticle, _collisionData);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -184,6 +217,9 @@ public class BoxesDemo : RigidBodyApplication
     /// </summary>
     protected override void UpdateObjects(float duration)
     {
+        _forceRegistry.updateForces(duration);
+        _cloth.EngineCloth.Update(duration);
+
         // Update the physics of each box in turn
         foreach (var box in _boxes)
         {
@@ -205,6 +241,8 @@ public class BoxesDemo : RigidBodyApplication
     /// </summary>
     protected override void Reset()
     {
+        _cloth.EngineCloth = new Engine.Cloth(_forceRegistry);
+
         // reset boxes; some in preconfigured positions
         if (_boxes.Length > 0)
         {

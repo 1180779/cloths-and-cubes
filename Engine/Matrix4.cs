@@ -13,12 +13,19 @@ public class Matrix4 : ICloneable
         this.Data[0] = this.Data[5] = this.Data[10] = 1;
     }
 
+    public Matrix3 Matrix3 =>
+        new(Data[0], Data[1], Data[2], Data[4], Data[5], Data[6], Data[8], Data[9], Data[10]);
+
+    public Matrix3 Matrix3Abs =>
+        new(Math.Abs(Data[0]), Math.Abs(Data[1]), Math.Abs(Data[2]), Math.Abs(Data[4]), Math.Abs(Data[5]),
+            Math.Abs(Data[6]), Math.Abs(Data[8]), Math.Abs(Data[9]), Math.Abs(Data[10]));
+
     [Conditional("DEBUG")]
     public void DebugAssertNotNan()
     {
         Debug.Assert(Data != null);
         Debug.Assert(Data.Length == 12);
-        
+
         Debug.Assert(!Real.IsNaN(Data[0]));
         Debug.Assert(!Real.IsNaN(Data[1]));
         Debug.Assert(!Real.IsNaN(Data[2]));
@@ -32,7 +39,7 @@ public class Matrix4 : ICloneable
         Debug.Assert(!Real.IsNaN(Data[10]));
         Debug.Assert(!Real.IsNaN(Data[11]));
     }
-    
+
     /// <summary>
     /// Represents a 3x4 transformation matrix with an additional row of (0, 0, 0, 1).
     /// Used for performing transformations such as translation, rotation, and scaling on 3D vectors.

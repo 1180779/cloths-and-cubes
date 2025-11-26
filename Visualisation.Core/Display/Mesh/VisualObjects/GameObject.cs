@@ -21,8 +21,11 @@ public abstract class GameObject : IIdentifiable, IDisposable
         Material.SetForShader(sh);
     }
 
+    protected virtual void PreRender() { }
+
     public void Render()
     {
+        PreRender();
         Mesh.Render();
     }
 
