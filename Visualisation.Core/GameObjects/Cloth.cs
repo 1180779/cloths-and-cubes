@@ -30,7 +30,8 @@ public sealed class Cloth : GameObject
     }
 
     public override Vector3 Position =>
-        new(EngineCloth.particle0pos.X, EngineCloth.particle0pos.Y, EngineCloth.particle0pos.Z);
+        new(EngineCloth.particles[0, 0].Body.Position.X, EngineCloth.particles[0, 0].Body.Position.Y,
+            EngineCloth.particles[0, 0].Body.Position.Z);
 
     protected override IMesh Mesh { get; set; }
     public override object PhysicsObject => EngineCloth;

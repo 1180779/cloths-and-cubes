@@ -1,5 +1,5 @@
 ﻿using Engine.Force;
-  using Engine.RigidBodies;
+using Engine.RigidBodies;
 
 namespace Engine
 {
@@ -45,6 +45,7 @@ namespace Engine
                         new Vector3());
                 }
             }
+
             Rotate(new Vector3(1, 1, 0));
             for (int i = 0; i < sizeX; i++)
             {
@@ -52,23 +53,36 @@ namespace Engine
                 {
                     if (i != sizeX - 1)
                     {
+                        // Horizontal spring - add for both directions
                         registry.Add(particles[i, j].Body,
-                            new Spring(particles[i + 1, j].Body.Position, particles[i, j].Body,
-                                particles[i, j].Body.Position, springConstant, springLength));
+                            new Spring(new Vector3(), particles[i + 1, j].Body,
+                                new Vector3(), springConstant, springLength));
+                        registry.Add(particles[i + 1, j].Body,
+                            new Spring(new Vector3(), particles[i, j].Body,
+                                new Vector3(), springConstant, springLength));
                     }
 
                     if (j != sizeY - 1)
                     {
+                        // Vertical spring - add for both directions
                         registry.Add(particles[i, j].Body,
-                            new Spring(particles[i, j + 1].Body.Position, particles[i, j].Body,
-                                particles[i, j].Body.Position, springConstant, springLength));
+                            new Spring(new Vector3(), particles[i, j + 1].Body,
+                                new Vector3(), springConstant, springLength));
+                        registry.Add(particles[i, j + 1].Body,
+                            new Spring(new Vector3(), particles[i, j].Body,
+                                new Vector3(), springConstant, springLength));
                     }
 
                     if (i != sizeX - 1 && j != sizeY - 1)
                     {
+                        // Diagonal spring has longer rest length: sqrt(2) * springLength
+                        float diagonalLength = springLength * (float)Math.Sqrt(2.0);
                         registry.Add(particles[i, j].Body,
-                            new Spring(particles[i + 1, j + 1].Body.Position, particles[i, j].Body,
-                                particles[i, j].Body.Position, springConstant, springLength));
+                            new Spring(new Vector3(), particles[i + 1, j + 1].Body,
+                                new Vector3(), springConstant, diagonalLength));
+                        registry.Add(particles[i + 1, j + 1].Body,
+                            new Spring(new Vector3(), particles[i, j].Body,
+                                new Vector3(), springConstant, diagonalLength));
                     }
                 }
             }
@@ -96,6 +110,7 @@ namespace Engine
             }
             //TODO
         }
+
         public void Update(float duration)
         {
             for (int i = 0; i < sizeX; i++)
@@ -107,11 +122,10 @@ namespace Engine
                     // Run the physics
                     box.Body.Integrate(duration);
                     box.CalculateInternals();
-
                 }
             }
-
         }
+
         public void Move(Vector3 move)
         {
             //TODO
@@ -141,7 +155,7 @@ namespace Engine
             Real r20 = (Real)(-sy);
             Real r21 = (Real)(cy * sx);
             Real r22 = (Real)(cy * cx);
-            Matrix3 rotMat = new Matrix3(r00, r01, r02,r10, r11, r12,r20, r21, r22);
+            Matrix3 rotMat = new Matrix3(r00, r01, r02, r10, r11, r12, r20, r21, r22);
 
             for (int i = 0; i < sizeX; i++)
             {
@@ -162,5 +176,4 @@ namespace Engine
             }
         }
     }
-    
 }
