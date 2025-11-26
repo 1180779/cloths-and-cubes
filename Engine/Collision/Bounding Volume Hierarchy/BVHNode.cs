@@ -34,7 +34,7 @@
 
     public class BVH
     {
-        public BVHNode root;
+        public BVHNode? root;
 
         public BVH(BVHNode root)
         {
@@ -43,6 +43,12 @@
 
         public static BVH Build(Dictionary<int, IBoxable> bodies)
         {
+            if(bodies.Count == 0)
+            {
+                return new BVH(null);
+            }
+
+
             Vector3 minV = new(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 maxV = new(float.MinValue, float.MinValue, float.MinValue);
 
