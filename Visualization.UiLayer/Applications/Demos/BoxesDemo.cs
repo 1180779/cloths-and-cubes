@@ -75,18 +75,18 @@ public class BoxesDemo : RigidBodyApplication
             boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
-        // BVH bvh = BVH.Build(boxDict);
+        BVH bvh = BVH.Build(boxDict);
 
-        // BvhWireframe bvhWireframe = new(bvh)
-        // {
-        //     LevelColors = _levelColors,
-        //     LevelsToRender = _bvhLevelsToRender
-        //         .Select((enabled, index) => new { enabled, index })
-        //         .Where(x => x.enabled)
-        //         .Select(x => x.index)
-        //         .ToArray()
-        // };
-        // bvhWireframe.Render(sh);
+        BvhWireframe bvhWireframe = new(bvh)
+        {
+            LevelColors = _levelColors,
+            LevelsToRender = _bvhLevelsToRender
+                .Select((enabled, index) => new { enabled, index })
+                .Where(x => x.enabled)
+                .Select(x => x.index)
+                .ToArray()
+        };
+        bvhWireframe.Render(sh);
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public class BoxesDemo : RigidBodyApplication
             boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
-        // BVH bvh = BVH.Build(boxDict);
+        BVH bvh = BVH.Build(boxDict);
 
         // Process box-plane collisions
         foreach (var box in _boxes)
@@ -122,8 +122,8 @@ public class BoxesDemo : RigidBodyApplication
             CollisionDetector.SphereAndHalfSpace(ball.EngineBall, _plane.EnginePlane, _collisionData);
         }
 
-        // List<(int, int)> potentialCollisions = new();
-        // BVH.GetPotentialContacts(ref potentialCollisions, bvh.root);
+        List<(int, int)> potentialCollisions = new();
+        BVH.GetPotentialContacts(ref potentialCollisions, bvh.root);
         //
         // foreach (var pair in potentialCollisions)
         // {

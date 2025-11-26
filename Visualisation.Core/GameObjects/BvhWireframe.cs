@@ -21,6 +21,8 @@ public class BvhWireframe
 
     public void Render(Shader shader)
     {
+        if(this._bvh.root == null) return;
+
         GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
         s_debugMesh ??= new CubeMesh();
         RenderRecursive(_bvh.root, shader, 0);
