@@ -7,6 +7,8 @@ using ImGuiNET;
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
 
+using Visualization.UiLayer.UI.Windows;
+
 using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
@@ -41,6 +43,9 @@ public class BoxesDemo : RigidBodyApplication
     protected override void RenderWindows(double dt)
     {
         base.RenderWindows(dt);
+
+        ContactsInspectorWindow.Draw(_collisionData.ContactList);
+
         ImGui.Begin("Bvh Nodes to render");
 
         if (ImGui.Button("Select All"))

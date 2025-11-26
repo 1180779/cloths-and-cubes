@@ -84,7 +84,7 @@ public static class ObjectInspectorWindow
     /// <param name="value"></param>
     /// <param name="visited"></param>
     /// <param name="depth"></param>
-    private static void DrawNode(string? label, object? value, HashSet<object> visited, int depth)
+    internal static void DrawNode(string? label, object? value, HashSet<object> visited, int depth)
     {
         // null or simple types: render inline
         if (value is null)
@@ -303,7 +303,7 @@ public static class ObjectInspectorWindow
         }
     }
 
-    private sealed class ReferenceEqualityComparer : IEqualityComparer<object>
+    internal sealed class ReferenceEqualityComparer : IEqualityComparer<object>
     {
         public static readonly ReferenceEqualityComparer Instance = new();
 
