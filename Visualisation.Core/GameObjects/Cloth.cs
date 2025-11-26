@@ -20,7 +20,7 @@ public sealed class Cloth : GameObject
         VisualCloth = new SpringMesh(pts);
         Mesh = VisualCloth;
 
-        Material = MaterialConstant.Gold;
+        Material = MaterialConstant.BlueRubber;
     }
 
     protected override void PreRender()
@@ -34,7 +34,7 @@ public sealed class Cloth : GameObject
 
     protected override IMesh Mesh { get; set; }
     public override object PhysicsObject => EngineCloth;
-    public override Matrix4 Model => new();
+    public override Matrix4 Model => Matrix4.Identity;
 
     private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
     {
