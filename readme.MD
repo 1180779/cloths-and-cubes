@@ -132,11 +132,26 @@ Planned:
 
 ## License
 
-TBD
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
+license.
+
+This restriction applies largely due to the inclusion of code derived from **LearnOpenGL**.
+
+See the `Licenses` folder for specific license details regarding third-party code incorporated in this project:
+
+- **Cyclone Physics**: MIT License (Copyright (c) 2003-2009 Ian Millington)
+- **ImGui.NET OpenTK Sample**: MIT License (Copyright (c) 2025 Julius Häger)
+- **LearnOpenGL**: CC BY-NC 4.0 (Copyright (c) Joey de Vries)
 
 ---
 
 ## Acknowledgements
+
+This project incorporates code and knowledge from the following sources:
+
+- **LearnOpenGL** by Joey de Vries. See `Licenses/LearnOpenGL.txt`.
+- **Cyclone Physics** by Ian Millington. See `Licenses/cyclone-physics.txt`.
+- **ImGui.NET OpenTK Sample** by Julius Häger. See `Licenses/ImGui.NET_OpenTK_Sample.txt`.
 
 - Community knowledge and research in real-time physics
 - Open-source ecosystem around .NET and graphics tools
