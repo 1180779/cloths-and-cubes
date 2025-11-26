@@ -1,24 +1,22 @@
 using Engine;
 using Engine.Collision;
+
 using OpenTK.Windowing.Common;
+
 using Visualisation.Core.Inputs;
 
 namespace Visualization.UiLayer.Applications;
 
 public abstract class RigidBodyApplication : Application
 {
-    protected static uint MaxContacts => 256;
-    protected CollisionData CollisionData = new();
+    protected static uint MaxContacts => 1024;
+    protected CollisionData _collisionData = new();
 
-    protected ContactResolver ContactResolver = new(MaxContacts * 8);
+    protected ContactResolver _contactResolver = new(MaxContacts * 8);
 
-    // TODO: implement this after adding some ui elements
-    // protected bool RenderDebugInfo = false;
     protected abstract void GenerateContacts();
     protected abstract void UpdateObjects(float duration);
     protected abstract void Reset();
-
-    private int simulationStep = 0;
 
     protected override void Update(float deltaTime)
     {
@@ -32,21 +30,22 @@ public abstract class RigidBodyApplication : Application
             deltaTime = 0.05f;
         }
 
-        simulationStep++;
-        // Console.WriteLine($"Simulation step: {simulationStep}");
         UpdateObjects(deltaTime);
 
         // Perform the contact generation
         GenerateContacts();
 
         // Resolve detected contacts
-        ContactResolver.ResolveContacts(
-            CollisionData.ContactList,
-            CollisionData.ContactCount,
+        _contactResolver.ResolveContacts(
+            _collisionData.ContactList,
+            _collisionData.ContactCount,
             deltaTime
         );
-
+#if DEBUG
+#if FRAMESAVER
         FrameSaver.SaveFrame(Scene);
+#endif
+#endif
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
@@ -58,40 +57,42 @@ public abstract class RigidBodyApplication : Application
             return;
         }
 
-        if (InputProvider.IsKeyPressed(InputKey.LeftBracket))
+        if (_inputProvider.IsKeyPressed(InputKey.LeftBracket))
         {
             StepsLimit = true;
         }
 
         if (StepsLimit)
         {
-            if (InputProvider.IsKeyDown(InputKey.D0))
+            if (_inputProvider.IsKeyDown(InputKey.D0))
                 AvailableSteps = 1;
-            if (InputProvider.IsKeyPressed(InputKey.D1))
+            if (_inputProvider.IsKeyPressed(InputKey.D1))
                 AvailableSteps = 1;
-            if (InputProvider.IsKeyPressed(InputKey.D2))
+            if (_inputProvider.IsKeyPressed(InputKey.D2))
                 AvailableSteps = 2;
-            if (InputProvider.IsKeyPressed(InputKey.D3))
+            if (_inputProvider.IsKeyPressed(InputKey.D3))
                 AvailableSteps = 3;
-            if (InputProvider.IsKeyPressed(InputKey.D4))
+            if (_inputProvider.IsKeyPressed(InputKey.D4))
                 AvailableSteps = 4;
-            if (InputProvider.IsKeyPressed(InputKey.D5))
+            if (_inputProvider.IsKeyPressed(InputKey.D5))
                 AvailableSteps = 5;
-            if (InputProvider.IsKeyPressed(InputKey.D6))
+            if (_inputProvider.IsKeyPressed(InputKey.D6))
                 AvailableSteps = 6;
-            if (InputProvider.IsKeyPressed(InputKey.D7))
+            if (_inputProvider.IsKeyPressed(InputKey.D7))
                 AvailableSteps = 7;
-            if (InputProvider.IsKeyPressed(InputKey.D8))
+            if (_inputProvider.IsKeyPressed(InputKey.D8))
                 AvailableSteps = 8;
-            if (InputProvider.IsKeyPressed(InputKey.D9))
+            if (_inputProvider.IsKeyPressed(InputKey.D9))
                 AvailableSteps = 9;
         }
 
-        if (InputProvider.IsKeyPressed(InputKey.RightBracket))
+        if (_inputProvider.IsKeyPressed(InputKey.RightBracket))
         {
             StepsLimit = false;
         }
 
+#if DEBUG
+#if FRAMESAVER
         // frame saver
         if (InputProvider.IsKeyDown(InputKey.Right))
         {
@@ -104,9 +105,11 @@ public abstract class RigidBodyApplication : Application
             FrameSaver.GoBackNFrames(1);
             FrameSaver.CurrentFrame?.Restore(Scene);
         }
+#endif
+#endif
 
         // reset
-        if (InputProvider.IsKeyPressed(InputKey.R))
+        if (_inputProvider.IsKeyPressed(InputKey.R))
         {
             Reset();
         }

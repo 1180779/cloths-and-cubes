@@ -7,13 +7,13 @@ public class CameraBase
     protected const float CameraSpeed = 15f;
     protected const float Sensitivity = 0.2f;
 
-    protected Vector3 front = -Vector3.UnitZ;
-    protected Vector3 up = Vector3.UnitY;
-    protected Vector3 right = Vector3.UnitX;
+    protected Vector3 _front = -Vector3.UnitZ;
+    protected Vector3 _up = Vector3.UnitY;
+    protected Vector3 _right = Vector3.UnitX;
 
-    protected float pitch;
-    protected float yaw = -MathHelper.PiOver2;
-    protected float fov = MathHelper.PiOver2;
+    protected float _pitch;
+    protected float _yaw = -MathHelper.PiOver2;
+    protected float _fov = MathHelper.PiOver2;
 
     public CameraBase(float aspectRatio)
     {
@@ -29,57 +29,57 @@ public class CameraBase
     public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
     public float AspectRatio { get; set; }
 
-    public Vector3 Front => front;
-    public Vector3 Up => up;
-    public Vector3 Right => right;
+    public Vector3 Front => _front;
+    public Vector3 Up => _up;
+    public Vector3 Right => _right;
 
     public float NearPlane => 0.01f;
     public float FarPlane => 100f;
 
     public float PitchDegrees
     {
-        get => MathHelper.RadiansToDegrees(pitch);
+        get => MathHelper.RadiansToDegrees(_pitch);
         set
         {
             var angle = MathHelper.Clamp(value, -89f, 89f);
-            pitch = MathHelper.DegreesToRadians(angle);
+            _pitch = MathHelper.DegreesToRadians(angle);
             UpdateVectors();
         }
     }
 
     public float YawDegrees
     {
-        get => MathHelper.RadiansToDegrees(yaw);
+        get => MathHelper.RadiansToDegrees(_yaw);
         set
         {
-            yaw = MathHelper.DegreesToRadians(value);
+            _yaw = MathHelper.DegreesToRadians(value);
             UpdateVectors();
         }
     }
 
     public float FovRadians
     {
-        get => fov;
+        get => _fov;
         set
         {
             var angleRadians = MathHelper.Clamp(value, 1f, MathHelper.PiOver2);
-            fov = angleRadians;
+            _fov = angleRadians;
         }
     }
 
     public float FovDegrees
     {
-        get => MathHelper.RadiansToDegrees(fov);
+        get => MathHelper.RadiansToDegrees(_fov);
         set
         {
             var angle = MathHelper.Clamp(value, 1f, 90f);
-            fov = MathHelper.DegreesToRadians(angle);
+            _fov = MathHelper.DegreesToRadians(angle);
         }
     }
 
-    public Matrix4 ViewMatrix => Matrix4.LookAt(Position, Position + front, up);
+    public Matrix4 ViewMatrix => Matrix4.LookAt(Position, Position + _front, _up);
 
-    public Matrix4 ProjectionMatrix => Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, NearPlane, FarPlane);
+    public Matrix4 ProjectionMatrix => Matrix4.CreatePerspectiveFieldOfView(_fov, AspectRatio, NearPlane, FarPlane);
 
     public virtual void ProcessInput(IInputProvider input, float dt)
     {
@@ -87,14 +87,14 @@ public class CameraBase
 
     private void UpdateVectors()
     {
-        front.X = MathF.Cos(pitch) * MathF.Cos(yaw);
-        front.Y = MathF.Sin(pitch);
-        front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
+        _front.X = MathF.Cos(_pitch) * MathF.Cos(_yaw);
+        _front.Y = MathF.Sin(_pitch);
+        _front.Z = MathF.Cos(_pitch) * MathF.Sin(_yaw);
 
-        front = Vector3.Normalize(front);
+        _front = Vector3.Normalize(_front);
 
-        right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
-        up = Vector3.Normalize(Vector3.Cross(right, front));
+        _right = Vector3.Normalize(Vector3.Cross(_front, Vector3.UnitY));
+        _up = Vector3.Normalize(Vector3.Cross(_right, _front));
     }
 
     public void SetForShader(Shader sh)

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Engine;
+﻿using Engine;
 using Engine.Collision;
 using Engine.RigidBodies;
 
@@ -50,7 +44,7 @@ namespace EngineTests
             boxA.Body.Integrate(1.1f);
             boxB.Body.Integrate(1.1f);
 
-           
+
             Assert.That(Engine.Collision.IntersectionTests.BoxAndBox(boxA, boxB), Is.EqualTo(true));
         }
 
@@ -122,7 +116,6 @@ namespace EngineTests
             CollisionDetector.BoxAndBox(boxA, boxC, data);
             CollisionDetector.BoxAndBox(boxB, boxC, data);
             Assert.That(data.ContactCount, Is.EqualTo(3));
-
         }
 
         [Test]

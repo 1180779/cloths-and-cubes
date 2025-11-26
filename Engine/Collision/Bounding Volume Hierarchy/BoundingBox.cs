@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Engine.RigidBodies;
+﻿using Engine.RigidBodies;
 
 namespace Engine.Collision.Bounding_Volume_Hierarchy
 {
     public abstract class BoundingVolume
     {
     }
+
     public class BoundingBox : BoundingVolume
     {
-        public Engine.Vector3 center;
-        public Engine.Vector3 halfSize;
+        public Vector3 center;
+        public Vector3 halfSize;
 
         public BoundingBox(Vector3 center, Vector3 halfSize)
         {
@@ -69,6 +65,7 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             {
                 box = JoinAABBs(box, bodies[i]);
             }
+
             return box;
         }
     }

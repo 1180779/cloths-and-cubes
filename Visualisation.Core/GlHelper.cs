@@ -1,4 +1,5 @@
 using System.Diagnostics;
+
 using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core;

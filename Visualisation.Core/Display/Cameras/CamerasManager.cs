@@ -4,33 +4,41 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class CamerasManager
 {
-    private readonly List<CameraBase> cameras = [];
+    public CamerasManager(IInputProvider inputProvider)
+    {
+        if (CameraMode)
+        {
+            inputProvider.SetCursorState(CursorState.Grabbed);
+        }
+    }
 
-    private int currentCameraIndex = 0;
+    private readonly List<CameraBase> _cameras = [];
+
+    private int _currentCameraIndex = 0;
 
     public int CurrentCameraIndex
     {
-        get => currentCameraIndex;
-        set => currentCameraIndex = value % cameras.Count;
+        get => _currentCameraIndex;
+        set => _currentCameraIndex = value % _cameras.Count;
     }
 
     public void AddCamera(CameraBase camera)
     {
-        cameras.Add(camera);
+        _cameras.Add(camera);
     }
 
     public void RemoveCamera(CameraBase camera)
     {
-        cameras.Remove(camera);
+        _cameras.Remove(camera);
     }
 
     public void RemoveCurrentCamera()
     {
-        cameras.RemoveAt(CurrentCameraIndex);
+        _cameras.RemoveAt(CurrentCameraIndex);
         CurrentCameraIndex--;
     }
 
-    public CameraBase CurrentCamera => cameras[CurrentCameraIndex];
+    public CameraBase CurrentCamera => _cameras[CurrentCameraIndex];
 
     public bool CameraMode { get; set; }
 
@@ -67,13 +75,5 @@ public class CamerasManager
         }
 
         CurrentCamera.ProcessInput(input, dt);
-    }
-
-    public void Init(IInputProvider input)
-    {
-        if (CameraMode)
-        {
-            input.SetCursorState(CursorState.Grabbed);
-        }
     }
 }

@@ -5,19 +5,19 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class FollowingCamera : CameraBase
 {
-    private AbstractVisualObject[] targetObjects = [];
-    private int currentTargetIndex;
+    private GameObject[] _targetObjects = [];
+    private int _currentTargetIndex;
 
-    public AbstractVisualObject? TargetObject => targetObjects.Length != 0 ? targetObjects[currentTargetIndex] : null;
+    public GameObject? TargetObject => _targetObjects.Length != 0 ? _targetObjects[_currentTargetIndex] : null;
 
     public int CurrentTargetIndex
     {
-        get => currentTargetIndex;
+        get => _currentTargetIndex;
         set
         {
-            currentTargetIndex = value % targetObjects.Length;
-            if (currentTargetIndex < 0)
-                currentTargetIndex += targetObjects.Length;
+            _currentTargetIndex = value % _targetObjects.Length;
+            if (_currentTargetIndex < 0)
+                _currentTargetIndex += _targetObjects.Length;
         }
     }
 
@@ -33,18 +33,18 @@ public class FollowingCamera : CameraBase
     {
     }
 
-    public void AttachTo(AbstractVisualObject target)
+    public void AttachTo(GameObject target)
     {
-        targetObjects = [target];
+        _targetObjects = [target];
         UpdatePositionFromTarget();
     }
 
-    public void AttachTo(AbstractVisualObject[] targets)
+    public void AttachTo(GameObject[] targets)
     {
-        targetObjects = targets;
+        _targetObjects = targets;
     }
 
-    private Vector3 CurrentTarget => targetObjects.Length != 0 ? targetObjects[CurrentTargetIndex].Position : Target;
+    private Vector3 CurrentTarget => _targetObjects.Length != 0 ? _targetObjects[CurrentTargetIndex].Position : Target;
 
     private void UpdatePositionFromTarget()
     {
@@ -68,6 +68,8 @@ public class FollowingCamera : CameraBase
             CurrentTargetIndex--;
         }
 
+        Distance -= input.GetMouseScroll() * 0.5f;
+        input.ResetMouseScroll();
         UpdatePositionFromTarget();
     }
 }

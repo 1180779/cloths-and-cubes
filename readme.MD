@@ -9,6 +9,33 @@ complete toolkit with scene management and modern graphics.
 
 ---
 
+## Getting Started
+
+Prerequisites:
+
+- .NET SDK 9.0 or newer
+- A GPU/driver supporting modern OpenGL (if using the default renderer)
+
+Build and run:
+
+1. Clone the repository
+2. Download files from links below
+    - textures: optional, but useful for better demonstration of pbr
+      [Textures.zip](https://drive.google.com/file/d/14D9zDoMZPjnYEwdqEP6SLOKJi2nxBn1U/view?usp=sharing) (this one
+      should be extacted into the folder of the same name: _Textures_)
+    - .ext/.hdr maps: environment cube; kind of necessary to get a good visual result
+      [Hdr](https://drive.google.com/drive/folders/1VPNXxa2OMOoKXYhZLsZPBg508YBBYo04?usp=sharing)
+
+For them to work properly place the downloaded folders into the output directory (
+_../Visualization.UiLayer/bin/../../.net9.0/_)
+
+Notes:
+
+- Shaders may compile at startup.
+- If you encounter issues with the graphics context on Linux, ensure required OpenGL packages/drivers are installed.
+
+---
+
 ## Highlights
 
 - Rigid body dynamics for simple primitives (spheres, boxes)
@@ -35,28 +62,6 @@ Planned:
 - Windowing/Input/GL: OpenTK (planned/assumed)
 - Rendering: OpenGL (current), with planned PBR pipeline
 - Serialization: JSON (planned; subject to change)
-
----
-
-## Getting Started
-
-Prerequisites:
-
-- .NET SDK 9.0 or newer
-- A GPU/driver supporting modern OpenGL (if using the default renderer)
-
-Build and run:
-
-1. Clone the repository
-2. From the repository root, run:
-    - Debug: `dotnet run --project <PathToYourAppProject>`
-    - Release: `dotnet run -c Release --project <PathToYourAppProject>`
-3. If multiple sample apps exist, choose the one you want to start by specifying its project path.
-
-Notes:
-
-- On first run, shaders may compile at startup.
-- If you encounter issues with the graphics context on Linux, ensure required OpenGL packages/drivers are installed.
 
 ---
 
@@ -127,11 +132,26 @@ Notes:
 
 ## License
 
-TBD
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**
+license.
+
+This restriction applies largely due to the inclusion of code derived from **LearnOpenGL**.
+
+See the `Licenses` folder for specific license details regarding third-party code incorporated in this project:
+
+- **Cyclone Physics**: MIT License (Copyright (c) 2003-2009 Ian Millington)
+- **ImGui.NET OpenTK Sample**: MIT License (Copyright (c) 2025 Julius Häger)
+- **LearnOpenGL**: CC BY-NC 4.0 (Copyright (c) Joey de Vries)
 
 ---
 
 ## Acknowledgements
+
+This project incorporates code and knowledge from the following sources:
+
+- **LearnOpenGL** by Joey de Vries. See `Licenses/LearnOpenGL.txt`.
+- **Cyclone Physics** by Ian Millington. See `Licenses/cyclone-physics.txt`.
+- **ImGui.NET OpenTK Sample** by Julius Häger. See `Licenses/ImGui.NET_OpenTK_Sample.txt`.
 
 - Community knowledge and research in real-time physics
 - Open-source ecosystem around .NET and graphics tools

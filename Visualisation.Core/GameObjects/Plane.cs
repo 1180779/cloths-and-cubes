@@ -1,39 +1,26 @@
 using Engine.Collision;
+
+using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public class Plane : IVisualObject
+public sealed class Plane : GameObject
 {
-    public readonly Display.Mesh.VisualObjects.Plane AbstractVisualPlane = new();
+    public CollisionPlane EnginePlane = new() { Direction = new Engine.Vector3(0, 1, 0), Offset = 0, };
 
-    public CollisionPlane EnginePlane = new()
-    {
-        Direction = new Engine.Vector3(0, 1, 0),
-        Offset = 0,
-    };
+    protected override IMesh Mesh { get; set; } = new PlaneMesh();
+    public override object PhysicsObject => EnginePlane;
 
-    public void Dispose()
+    public override Matrix4 Model
     {
-        AbstractVisualPlane.Dispose();
+        get
+        {
+            var position = new Vector3(0.0f, 0.0f, 0.0f);
+            var scale = new Vector3(1000.0f, 1000.0f, 1000.0f);
+            var q = Quaternion.Identity;
+
+            return GenerateModelMatrix(position, scale, q);
+        }
     }
-
-    public void Init()
-    {
-        AbstractVisualPlane.Init();
-    }
-
-    public void SetForShader(Shader sh)
-    {
-        AbstractVisualPlane.SetForShader(sh);
-    }
-
-    public void Render()
-    {
-        AbstractVisualPlane.Render();
-    }
-
-    public AbstractVisualObject AbstractVisualObject => AbstractVisualPlane;
-    public object PhysicsObject => EnginePlane;
-    public Guid Id => AbstractVisualPlane.Id;
 }

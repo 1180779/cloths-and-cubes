@@ -1,16 +1,6 @@
 namespace Visualisation.Core.Display.Light;
 
-public class LightPoint : LightLocatableBase
+public abstract class LightPoint : LightBase
 {
-    public float Constant = 1.0f;
-    public float Linear = 0.09f;
-    public float Quadratic = 0.032f;
-
-    public override void SetForShader(Shader sh, string structShName)
-    {
-        base.SetForShader(sh, structShName);
-        sh.SetFloatMember(structShName + ".constant", Constant);
-        sh.SetFloatMember(structShName + ".linear", Linear);
-        sh.SetFloatMember(structShName + ".quadratic", Quadratic);
-    }
+    public Vector3 Position = new(0.0f, 0.0f, 0.0f);
 }

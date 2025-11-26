@@ -6,6 +6,7 @@
 // #define CASTER_MARGIN
 
 using OpenTK.Graphics.OpenGL4;
+
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
@@ -13,21 +14,20 @@ namespace Visualisation.Core.Display.Light;
 
 public class LightDirectional : LightPoint
 {
-    public LightDirectional()
+    public LightDirectional(Func<CameraBase> getCurrentCamera)
     {
+        GetCurrentCamera = getCurrentCamera;
         Direction = new(2, 2, 2);
+        Init();
     }
 
-    public Func<CameraBase>? GetCurrentCamera { get; set; }
+    public Func<CameraBase> GetCurrentCamera { get; set; }
 
     // TODO: change the shader associated with the shadow to allow for specification of number of cascades before compilation
     public float[] ShadowCascadeLevels
     {
         get
         {
-            if (GetCurrentCamera is null)
-                return [];
-
             var camera = GetCurrentCamera();
             return
             [
@@ -45,38 +45,38 @@ public class LightDirectional : LightPoint
 
     private const int ShadowWidth = 1024, ShadowHeight = 1024;
 
-    private float shadowBiasMin = 0.005f;
-    private float shadowBiasMax = 0.05f;
-    private float shadowBiasModifier = 0.31f;
-    private bool shadowsBiasChanged = true;
+    private float _shadowBiasMin = 0.005f;
+    private float _shadowBiasMax = 0.05f;
+    private float _shadowBiasModifier = 0.31f;
+    private bool _shadowsBiasChanged = true;
 
     public float ShadowBiasMin
     {
-        get => shadowBiasMin;
+        get => _shadowBiasMin;
         set
         {
-            shadowBiasMin = value;
-            shadowsBiasChanged = true;
+            _shadowBiasMin = value;
+            _shadowsBiasChanged = true;
         }
     }
 
     public float ShadowBiasMax
     {
-        get => shadowBiasMax;
+        get => _shadowBiasMax;
         set
         {
-            shadowBiasMax = value;
-            shadowsBiasChanged = true;
+            _shadowBiasMax = value;
+            _shadowsBiasChanged = true;
         }
     }
 
     public float ShadowBiasModifier
     {
-        get => shadowBiasModifier;
+        get => _shadowBiasModifier;
         set
         {
-            shadowBiasModifier = value;
-            shadowsBiasChanged = true;
+            _shadowBiasModifier = value;
+            _shadowsBiasChanged = true;
         }
     }
 
@@ -85,9 +85,6 @@ public class LightDirectional : LightPoint
 
     public Matrix4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
-        if (GetCurrentCamera is null)
-            throw new InvalidOperationException("No camera set");
-
         var camera = GetCurrentCamera();
         var corners = ProjectionHelper.GetFrustumCornersWorldSpace(
             Matrix4.CreatePerspectiveFieldOfView(
@@ -172,8 +169,6 @@ public class LightDirectional : LightPoint
 
     public Matrix4[] GetLightSpaceMatrices()
     {
-        if (GetCurrentCamera is null)
-            return [];
         var camera = GetCurrentCamera();
 
         List<Matrix4> ret = new();
@@ -196,14 +191,11 @@ public class LightDirectional : LightPoint
         return ret.ToArray();
     }
 
-    private int depthMapFbo;
+    private int _depthMapFbo;
     public int DepthMapsTextureArray { get; private set; }
 
     public void SetForDepthTextureShader(Shader sh, int layer)
     {
-        if (GetCurrentCamera is null)
-            return;
-
         var camera = GetCurrentCamera();
         GL.ActiveTexture(TextureUnit.Texture0);
         sh.SetInt("depthMap", 0);
@@ -227,9 +219,9 @@ public class LightDirectional : LightPoint
         }
     }
 
-    public void Init()
+    private void Init()
     {
-        GL.GenFramebuffers(1, out depthMapFbo);
+        GL.GenFramebuffers(1, out _depthMapFbo);
         GL.GenTextures(1, out int depthMap);
         DepthMapsTextureArray = depthMap;
 
@@ -256,7 +248,7 @@ public class LightDirectional : LightPoint
         float[] borderColor = { 1.0f, 1.0f, 1.0f, 1.0f };
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureBorderColor, borderColor);
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFbo);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.FramebufferTexture(
             FramebufferTarget.Framebuffer,
             FramebufferAttachment.DepthAttachment,
@@ -274,7 +266,7 @@ public class LightDirectional : LightPoint
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    public void RenderToDepthMap(Shader sh, ICollection<IVisualObject> objects)
+    public void RenderToDepthMap(Shader sh, ICollection<GameObject> objects)
     {
         GL.Viewport(0, 0, ShadowWidth, ShadowHeight);
         sh.Use();
@@ -282,12 +274,12 @@ public class LightDirectional : LightPoint
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, depthMapFbo);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.Clear(ClearBufferMask.DepthBufferBit);
 
         foreach (var o in objects)
         {
-            sh.SetMatrix4("model", o.AbstractVisualObject.Model);
+            sh.SetMatrix4("model", o.Model);
             o.Render();
         }
 
@@ -296,27 +288,26 @@ public class LightDirectional : LightPoint
 
     public void Dispose()
     {
-        GL.DeleteFramebuffers(1, ref depthMapFbo);
+        GL.DeleteFramebuffers(1, ref _depthMapFbo);
         int depthMap = DepthMapsTextureArray;
         GL.DeleteTextures(1, ref depthMap);
         DepthMapsTextureArray = 0;
     }
 
-    private Vector3 direction;
+    private Vector3 _direction;
 
     public Vector3 Direction
     {
-        get => direction;
+        get => _direction;
         set
         {
             var normalized = value.Normalized();
-            direction = normalized;
+            _direction = normalized;
         }
     }
 
     public override void SetForShader(Shader sh, string structShName)
     {
-        base.SetForShader(sh, structShName);
         sh.SetVector3Member(structShName + ".direction", -Direction);
 
         sh.SetTexture($"shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
@@ -324,17 +315,15 @@ public class LightDirectional : LightPoint
 
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
-
-        var planeDistances = ShadowCascadeLevels;
         sh.SetFloatN("cascadePlaneDistances[0]", ShadowCascadeLevels.Length, ShadowCascadeLevels);
 
         // set shadow bias if it has changed
-        if (shadowsBiasChanged)
+        if (_shadowsBiasChanged)
         {
             sh.SetFloat("BIAS_MAX", ShadowBiasMax);
             sh.SetFloat("BIAS_MIN", ShadowBiasMin);
             sh.SetFloat("BIAS_MODIFIER", ShadowBiasModifier);
-            shadowsBiasChanged = false;
+            _shadowsBiasChanged = false;
         }
     }
 }

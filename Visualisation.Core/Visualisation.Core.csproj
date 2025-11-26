@@ -7,40 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\AssetPathGenerator\AssetPathGenerator.csproj"/>
         <ProjectReference Include="..\Engine\Engine.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.8.2"/>
         <PackageReference Include="OpenTK" Version="4.9.4"/>
         <PackageReference Include="OpenTK.Mathematics" Version="4.9.4"/>
+        <PackageReference Include="Pfim" Version="0.11.3"/>
+        <PackageReference Include="StbImageSharp" Version="2.30.15"/>
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Shaders\shadowDepthMapShader.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\shadowDepthMapShader.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\depthMapShader.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\depthMapShader.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\phongShader.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\phongShader.vert">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\shadowDepthMapShader.geom">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\imguiShader.frag">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="Shaders\imguiShader.vert">
+        <None Update="Shaders\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

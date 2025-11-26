@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
@@ -184,7 +185,7 @@ public static class ObjectInspectorWindow
     {
         public static readonly ReferenceEqualityComparer Instance = new();
 
-        public new bool Equals(object? x, object? y) => ReferenceEquals(x, y);
+        bool IEqualityComparer<object>.Equals(object? x, object? y) => ReferenceEquals(x, y);
 
         public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
     }

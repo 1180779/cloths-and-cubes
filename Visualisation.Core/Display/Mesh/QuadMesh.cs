@@ -1,15 +1,14 @@
 using OpenTK.Graphics.OpenGL4;
-using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.Display.Mesh;
 
-public sealed class QuadMesh: IMesh
+public sealed class QuadMesh : IMesh
 {
     public QuadMesh()
     {
         Init();
     }
-    
+
     private static readonly float[] QuadVertices =
     [
         // positions        // texture Coords
@@ -18,10 +17,10 @@ public sealed class QuadMesh: IMesh
         1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
         1.0f, -1.0f, 0.0f, 1.0f, 0.0f
     ];
-    
+
     private static readonly string MeshName = nameof(QuadMesh);
-    private static MeshManager.MeshData? _meshData;
-    
+    private static MeshManager.MeshData? s_meshData;
+
     public void Dispose()
     {
         MeshManager.FreeMesh(MeshName, (data) =>
@@ -32,9 +31,9 @@ public sealed class QuadMesh: IMesh
         });
     }
 
-    public void Init()
+    private void Init()
     {
-        _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
+        s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
             GL.GenVertexArrays(1, out int quadVao);
             GL.GenBuffers(1, out int quadVbo);
@@ -48,20 +47,15 @@ public sealed class QuadMesh: IMesh
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float),
                 3 * sizeof(float));
 
-            return new MeshManager.MeshData
-            {
-                MeshName = MeshName,
-                Vbo = quadVbo,
-                Vao = quadVao
-            };
+            return new MeshManager.MeshData { MeshName = MeshName, Vbo = quadVbo, Vao = quadVao };
         });
     }
 
     public void Render()
     {
-        if (_meshData is null)
+        if (s_meshData is null)
             throw new MeshDataEmptyException();
-        GL.BindVertexArray(_meshData.Vao);
+        GL.BindVertexArray(s_meshData.Vao);
         GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
     }
 }

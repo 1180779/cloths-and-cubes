@@ -1,5 +1,7 @@
 using OpenTK.Graphics.OpenGL4;
+
 using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Light;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
@@ -8,38 +10,65 @@ namespace Visualisation.Core.GameObjects.Scenes;
 
 public abstract class SceneManager : IDisposable
 {
-    public SceneManager(float aspectRatio)
+    public SceneManager(float aspectRatio, IInputProvider inputProvider)
     {
-        CamerasManager = new();
-        LightsManager = new(CamerasManager);
+        EnvironmentMap = new(
+            Hdr,
+            EquirectangularToCubemapShader,
+            IrradianceConvolutionShader,
+            PrefilterShader,
+            BrdfLutShader);
+
+        CamerasManager = new CamerasManager(inputProvider);
+        LightsManager = new LightsManager(CamerasManager);
 
         // TODO: remove magic numbers
         var camera = new FreeMovingCamera(aspectRatio)
         {
-            Position = new(-6.5f, 3.2f, 6.6f),
-            PitchDegrees = 6.3f,
-            YawDegrees = -777.8f,
+            Position = new Vector3(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
         };
         CamerasManager.AddCamera(camera);
     }
 
-    private const string VertexShader = "phongShader.vert";
-    private const string FragmentShader = "phongShader.frag";
-    public readonly Shader Shader = new(VertexShader, FragmentShader);
+    private const string PbrVertexShader = "scenePBRShader.vert";
+    private const string PbrFragmentShader = "scenePBRShader.frag";
+    public readonly Shader PbrShader = new(PbrVertexShader, PbrFragmentShader);
+
+    private const string CubemapVertexShader = "cubemap.vert";
+    private const string EquirectangularToCubemapFragmentShader = "equirectangularToCubemapShader.frag";
+    private const string PrefilterFragmentShader = "prefilterShader.frag";
+    private const string IrradianceConvolutionFragmentShader = "irradianceConvolutionShader.frag";
+
+    public readonly Shader EquirectangularToCubemapShader =
+        new(CubemapVertexShader, EquirectangularToCubemapFragmentShader);
+
+    public readonly Shader IrradianceConvolutionShader = new(CubemapVertexShader, IrradianceConvolutionFragmentShader);
+    public readonly Shader PrefilterShader = new(CubemapVertexShader, PrefilterFragmentShader);
+
+    private const string SkyboxVertexShader = "sceneSkyboxShader.vert";
+    private const string SkyboxFragmentShader = "sceneSkyboxShader.frag";
+    public readonly Shader SkyboxShader = new(SkyboxVertexShader, SkyboxFragmentShader);
+
+    private const string BrdfLutVertexShader = "depthMapShader.vert";
+    private const string BrdfLutFragmentShader = "brdfLUTShader.frag";
+    public readonly Shader BrdfLutShader = new(BrdfLutVertexShader, BrdfLutFragmentShader);
+    private const string Hdr = "Hdr/symmetrical_garden_02_4k.exr";
+    public EnvironmentMap EnvironmentMap { get; set; }
+    private SphereMesh _cube = new();
 
     public LightsManager LightsManager { get; private set; }
     public CamerasManager CamerasManager { get; private set; }
-    protected List<IVisualObject> gameObjects = [];
-    public ICollection<IVisualObject> GameObjects => gameObjects;
+    protected List<GameObject> _gameObjects = [];
+    public ICollection<GameObject> GameObjects => _gameObjects;
 
-    public void AddGameObject(IVisualObject gameObject)
+    public void AddGameObject(GameObject gameObject)
     {
-        gameObjects.Add(gameObject);
+        _gameObjects.Add(gameObject);
     }
 
-    public void RemoveGameObject(IVisualObject gameObject)
+    public void RemoveGameObject(GameObject gameObject)
     {
-        gameObjects.Remove(gameObject);
+        _gameObjects.Remove(gameObject);
     }
 
     public abstract void SetUp();
@@ -54,38 +83,43 @@ public abstract class SceneManager : IDisposable
         CamerasManager.ProcessInput(input, dt);
     }
 
-    public virtual void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)
+    public void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)
     {
-        LightsManager.RenderShadowsToMaps(gameObjects);
-        // TODO: bind the textures for the shadow maps
+        LightsManager.RenderShadowsToMaps(_gameObjects);
 
+        /* clear before rendering */
         framebuffer.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        Shader.Use();
-        CamerasManager.CurrentCamera.SetForShader(Shader);
-        LightsManager.SetForShader(Shader);
-        foreach (var gameObject in gameObjects)
+
+        /* render environment first */
+        GL.DepthFunc(DepthFunction.Lequal);
+        SkyboxShader.Use();
+        SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
+        SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
+        EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
+        _cube.Render();
+
+        /* render every other object */
+        PbrShader.Use();
+        EnvironmentMap.SetForPbrShader(PbrShader);
+        CamerasManager.CurrentCamera.SetForShader(PbrShader);
+        LightsManager.SetForShader(PbrShader);
+        foreach (var gameObject in _gameObjects)
         {
-            gameObject.SetForShader(Shader);
+            gameObject.SetForShader(PbrShader);
             gameObject.Render();
-        }
-    }
-
-    public void Init(IInputProvider input)
-    {
-        LightsManager.Init();
-        CamerasManager.Init(input);
-
-        foreach (var gameObject in gameObjects)
-        {
-            gameObject.Init();
         }
     }
 
     public void Dispose()
     {
+        _cube.Dispose();
+        PbrShader.Dispose();
+        SkyboxShader.Dispose();
+        EquirectangularToCubemapShader.Dispose();
+
         LightsManager.Dispose();
-        foreach (var gameObject in gameObjects)
+        foreach (var gameObject in _gameObjects)
         {
             gameObject.Dispose();
         }

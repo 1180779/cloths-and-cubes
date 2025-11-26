@@ -3,7 +3,7 @@ using Engine.Collision.Bounding_Volume_Hierarchy;
 
 namespace Engine;
 
-public class Particle: IBoxable
+public class Particle : IBoxable
 {
     public Vector3 position;
     public Vector3 velocity;
@@ -15,8 +15,8 @@ public class Particle: IBoxable
     Collision.Bounding_Volume_Hierarchy.BoundingBox IBoxable.GetBoundingBox()
     {
         return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
-                center: this.position,
-                halfSize: new Vector3(0.1f, 0.1f, 0.1f) // small AABB for particle
+            center: this.position,
+            halfSize: new Vector3(0.1f, 0.1f, 0.1f) // small AABB for particle
         );
     }
 
@@ -51,7 +51,7 @@ public class Particle: IBoxable
     {
         if (inverseMass < 0.0f) return;
         Debug.Assert(duration > 0.0, $"Duration has to be greater than 0.0. Duration: {duration:F3}.");
-        
+
         position += velocity * duration;
 
         var acc = acceleration;

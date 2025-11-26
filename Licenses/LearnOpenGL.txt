@@ -1,0 +1,27 @@
+This project includes shader and/or other code derived from LearnOpenGL by Joey de Vries.
+
+Copyright (c) Joey de Vries
+Website: https://learnopengl.com/
+Author: Joey de Vries (Twitter: https://twitter.com/JoeyDeVriez)
+
+License for code samples:
+- Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+- Human-readable summary: https://creativecommons.org/licenses/by-nc/4.0/
+- Full legal code: https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+Source of incorporated materials:
+- LearnOpenGL
+
+Attribution requirements:
+When redistributing or displaying works that include LearnOpenGL code:
+- Include a copyright notice for Joey de Vries.
+- Provide a (hyper)link to the original copyrighted work (e.g., the specific LearnOpenGL article).
+- Provide a link to the CC BY-NC 4.0 license.
+- Mention the author’s full name (Joey de Vries), the LearnOpenGL website (or the relevant article), 
+    and the author’s Twitter handle: https://twitter.com/JoeyDeVriez.
+    
+Notes:
+- The CC BY-NC 4.0 license permits non-commercial use only. 
+    Commercial use of LearnOpenGL code is not allowed under this license without separate permission from the author.
+- Images and videos from LearnOpenGL are licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), 
+    which allows commercial use with attribution; this project does not include such media unless otherwise stated.

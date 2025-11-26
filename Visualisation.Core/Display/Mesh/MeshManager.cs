@@ -14,6 +14,8 @@ public static class MeshManager
         /// </summary>
         public int Vao { get; init; }
 
+        public int? Ebo { get; init; }
+
         /// <summary>
         /// Name used to identify the mesh.
         /// </summary>
@@ -31,10 +33,7 @@ public static class MeshManager
 
         public static InternalMeshData FromMeshData(MeshData meshData)
         {
-            return new InternalMeshData
-            {
-                PublicMeshData = meshData,
-            };
+            return new InternalMeshData { PublicMeshData = meshData, };
         }
     }
 
@@ -87,6 +86,7 @@ public static class MeshManager
             if (meshData.UsagesCount == 0)
             {
                 freeCallback?.Invoke(meshData.PublicMeshData);
+                MeshDataDict.Remove(meshName);
             }
         }
     }

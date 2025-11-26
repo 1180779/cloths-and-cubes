@@ -1,65 +1,54 @@
+using System.Runtime.InteropServices;
+
 using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
-public sealed class Plane : AbstractVisualObject
+public sealed class PlaneMesh : IMesh
 {
-    public Plane()
+    public PlaneMesh()
     {
-        Material = Material.CyanRubber;
-        Scale = new(1000.0f, 1000.0f, 1000.0f);
+        Init();
     }
 
-    private static readonly string MeshName = nameof(Plane);
-    private static MeshManager.MeshData? _meshData;
+    private static readonly string MeshName = nameof(PlaneMesh);
+    private static MeshManager.MeshData? s_meshData;
 
     // Two triangles forming a unit square on the XZ plane, centered at origin (Y = 0)
-    // Each vertex: position (x, y, z) + normal (nx, ny, nz)
-    private static readonly float[] Vertices =
-    {
+    // Each vertex: position (x, y, z) + normal (nx, ny, nz) + texture coords (u, v)
+    private static readonly VertexData[] Vertices =
+    [
         // Triangle 1
-        -0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
-        0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f,
+        new(-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f),
+        new(0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f),
+        new(0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f),
 
-        // Triangle 2
-        0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f
-    };
+        // Triangle 2 
+        new(0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f),
+        new(-0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f),
+        new(-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f)
+    ];
 
-    private static readonly int VerticesTriangleCount = Vertices.Length / 6;
-
-    public override void Init()
+    private void Init()
     {
-        _meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
+        s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
+            Vertices.CalculateTangentBitangent();
+
             int vbo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * sizeof(float), Vertices,
+            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * Marshal.SizeOf(Vertices[0]), Vertices,
                 BufferUsageHint.StaticDraw);
 
             int vao = GL.GenVertexArray();
             GL.BindVertexArray(vao);
+            VertexData.VertexAttribPositionNormalTexCoordsTangentBitangent();
 
-            // layout (location = 0) vec3 position
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            // layout (location = 1) vec3 normal
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-
-            return new MeshManager.MeshData
-            {
-                MeshName = MeshName,
-                Vbo = vbo,
-                Vao = vao
-            };
+            return new MeshManager.MeshData { MeshName = MeshName, Vbo = vbo, Vao = vao };
         });
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
         MeshManager.FreeMesh(MeshName, data =>
         {
@@ -69,12 +58,12 @@ public sealed class Plane : AbstractVisualObject
         });
     }
 
-    public override void Render()
+    public void Render()
     {
-        if (_meshData is null)
+        if (s_meshData is null)
             throw new MeshDataEmptyException();
 
-        GL.BindVertexArray(_meshData.Vao);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, VerticesTriangleCount);
+        GL.BindVertexArray(s_meshData.Vao);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, Vertices.Length);
     }
 }

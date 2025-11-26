@@ -1,4 +1,5 @@
 using ImGuiNET;
+
 using Visualisation.Core.Display.Light;
 
 namespace Visualization.UiLayer.UI.Windows;
@@ -7,115 +8,115 @@ public sealed class ShadowSettingsWindow
 {
     public ShadowSettingsWindow(Func<LightDirectional?> getDirectionalLight)
     {
-        this.getDirectionalLight = getDirectionalLight;
+        this._getDirectionalLight = getDirectionalLight;
     }
 
-    private Func<LightDirectional?> getDirectionalLight;
+    private Func<LightDirectional?> _getDirectionalLight;
 
-    private float shadowBiasMin;
-    private float shadowBiasMax;
-    private float shadowBiasModifier;
-    private float zMult;
+    private float _shadowBiasMin;
+    private float _shadowBiasMax;
+    private float _shadowBiasModifier;
+    private float _zMult;
 
     public void Render()
     {
         ImGui.SetNextWindowSize(new System.Numerics.Vector2(250f, 160f), ImGuiCond.Always);
         ImGui.Begin("Shadow Settings", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse);
 
-        var light = this.getDirectionalLight();
+        var light = this._getDirectionalLight();
         if (light is not null)
         {
-            shadowBiasMin = light.ShadowBiasMin;
-            shadowBiasMax = light.ShadowBiasMax;
-            shadowBiasModifier = light.ShadowBiasModifier;
-            zMult = light.ZMult;
+            _shadowBiasMin = light.ShadowBiasMin;
+            _shadowBiasMax = light.ShadowBiasMax;
+            _shadowBiasModifier = light.ShadowBiasModifier;
+            _zMult = light.ZMult;
 
             // ========================================
             // min bias
             if (ImGui.SmallButton("-##minBias"))
             {
-                shadowBiasMin -= 0.01f;
-                light.ShadowBiasMin = shadowBiasMin;
+                _shadowBiasMin -= 0.01f;
+                light.ShadowBiasMin = _shadowBiasMin;
             }
 
             ImGui.SameLine();
             if (ImGui.SmallButton("+##minBias"))
             {
-                shadowBiasMin += 0.01f;
-                light.ShadowBiasMin = shadowBiasMin;
+                _shadowBiasMin += 0.01f;
+                light.ShadowBiasMin = _shadowBiasMin;
             }
 
             ImGui.SameLine();
             ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("min bias", ref shadowBiasMin))
+            if (ImGui.InputFloat("min bias", ref _shadowBiasMin))
             {
-                light.ShadowBiasMin = shadowBiasMin;
+                light.ShadowBiasMin = _shadowBiasMin;
             }
 
             // ========================================
             // max bias
             if (ImGui.SmallButton("-##maxBias"))
             {
-                shadowBiasMax -= 0.01f;
-                light.ShadowBiasMax = shadowBiasMax;
+                _shadowBiasMax -= 0.01f;
+                light.ShadowBiasMax = _shadowBiasMax;
             }
 
             ImGui.SameLine();
             if (ImGui.SmallButton("+##maxBias"))
             {
-                shadowBiasMax += 0.01f;
-                light.ShadowBiasMax = shadowBiasMax;
+                _shadowBiasMax += 0.01f;
+                light.ShadowBiasMax = _shadowBiasMax;
             }
 
             ImGui.SameLine();
             ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("max bias", ref shadowBiasMax))
+            if (ImGui.InputFloat("max bias", ref _shadowBiasMax))
             {
-                light.ShadowBiasMax = shadowBiasMax;
+                light.ShadowBiasMax = _shadowBiasMax;
             }
 
             // ========================================
             // bias modifier
             if (ImGui.SmallButton("-##biasModifier"))
             {
-                shadowBiasModifier -= 0.01f;
-                light.ShadowBiasModifier = shadowBiasModifier;
+                _shadowBiasModifier -= 0.01f;
+                light.ShadowBiasModifier = _shadowBiasModifier;
             }
 
             ImGui.SameLine();
             if (ImGui.SmallButton("+##biasModifier"))
             {
-                shadowBiasModifier += 0.01f;
-                light.ShadowBiasModifier = shadowBiasModifier;
+                _shadowBiasModifier += 0.01f;
+                light.ShadowBiasModifier = _shadowBiasModifier;
             }
 
             ImGui.SameLine();
             ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("bias modifier", ref shadowBiasModifier))
+            if (ImGui.InputFloat("bias modifier", ref _shadowBiasModifier))
             {
-                light.ShadowBiasModifier = shadowBiasModifier;
+                light.ShadowBiasModifier = _shadowBiasModifier;
             }
 
             // ========================================
             // zMult
             if (ImGui.SmallButton("-##zMult"))
             {
-                zMult -= 0.5f;
-                light.ZMult = zMult;
+                _zMult -= 0.5f;
+                light.ZMult = _zMult;
             }
 
             ImGui.SameLine();
             if (ImGui.SmallButton("+##zMult"))
             {
-                zMult += 0.5f;
-                light.ZMult = zMult;
+                _zMult += 0.5f;
+                light.ZMult = _zMult;
             }
 
             ImGui.SameLine();
             ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("z Mult", ref zMult))
+            if (ImGui.InputFloat("z Mult", ref _zMult))
             {
-                light.ZMult = zMult;
+                light.ZMult = _zMult;
             }
 
             ImGui.Spacing();

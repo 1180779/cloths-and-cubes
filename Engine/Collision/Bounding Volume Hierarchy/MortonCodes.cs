@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Engine.Collision.Bounding_Volume_Hierarchy
+﻿namespace Engine.Collision.Bounding_Volume_Hierarchy
 {
     public static class MortonCodes
     {
@@ -21,7 +15,7 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
         public static ulong Encode(Vector3 position, Vector3 min, Vector3 max)
         {
             // Normalize position to [0, 1]
-            Engine.Vector3 normalized = new();
+            Vector3 normalized = new();
             normalized.X = (position.X - min.X) / (max.X - min.X);
             normalized.Y = (position.Y - min.Y) / (max.Y - min.Y);
             normalized.Z = (position.Z - min.Z) / (max.Z - min.Z);
