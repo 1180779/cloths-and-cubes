@@ -44,7 +44,7 @@ class ParticleContact
         Real totalInverseMass = particles[0].inverseMass;
         if (particles[1] != null) totalInverseMass += particles[1].inverseMass;
 
-        if (totalInverseMass <= (Real)0) return;
+        if (totalInverseMass <= 0) return;
 
         Real impulse = deltaVelocity / totalInverseMass;
         Vector3 impulsePerIMass = contactNormal * impulse;

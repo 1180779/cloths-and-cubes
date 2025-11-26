@@ -249,4 +249,5 @@ public class Vector3 : ICloneable
         get => GetValue(key);
         set => SetValue(key, value);
     }
+
 }

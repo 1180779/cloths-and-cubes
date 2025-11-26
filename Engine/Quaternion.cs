@@ -22,10 +22,10 @@ public class Quaternion : ICloneable
     
     public Quaternion(Real r, Real i, Real j, Real k)
     {
-        this.R = r;
-        this.I = i;
-        this.J = j;
-        this.K = k;
+        R = r;
+        I = i;
+        J = j;
+        K = k;
     }
 
     public Quaternion()
@@ -75,7 +75,7 @@ public class Quaternion : ICloneable
             return;
         }
 
-        d = (Real)(1.0) / (Real)Math.Sqrt(d);
+        d = (Real)1.0 / (Real)Math.Sqrt(d);
         R *= d;
         I *= d;
         J *= d;

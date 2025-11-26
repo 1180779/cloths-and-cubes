@@ -7,4 +7,9 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="Maths\" />
+      <Folder Include="ParticleEngine\" />
+    </ItemGroup>
+
 </Project>
