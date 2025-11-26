@@ -93,11 +93,11 @@ public abstract class SceneManager : IDisposable
 
         /* render environment first */
         GL.DepthFunc(DepthFunction.Lequal);
-        SkyboxShader.Use();
-        SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
-        SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
-        EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
-        _cube.Render();
+        // SkyboxShader.Use();
+        // SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
+        // SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
+        // EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
+        // _cube.Render();
 
         /* render every other object */
         PbrShader.Use();
