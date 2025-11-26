@@ -46,7 +46,7 @@ namespace Engine
                 }
             }
 
-            Rotate(new Vector3(1, 1, 0));
+            //Rotate(new Vector3(1, 1, 0));
             float diagonalLength = springLength * (float)Math.Sqrt(2.0);
             for (int i = 0; i < sizeX; i++)
             {
