@@ -241,6 +241,7 @@ public class BoxesDemo : RigidBodyApplication
     /// </summary>
     protected override void Reset()
     {
+        _forceRegistry.Clear();
         _cloth.EngineCloth = new Engine.Cloth(_forceRegistry);
 
         // reset boxes; some in preconfigured positions

@@ -47,6 +47,7 @@ namespace Engine
             }
 
             Rotate(new Vector3(1, 1, 0));
+            float diagonalLength = springLength * (float)Math.Sqrt(2.0);
             for (int i = 0; i < sizeX; i++)
             {
                 for (int j = 0; j < sizeY; j++)
@@ -57,9 +58,7 @@ namespace Engine
                         registry.Add(particles[i, j].Body,
                             new Spring(new Vector3(), particles[i + 1, j].Body,
                                 new Vector3(), springConstant, springLength));
-                        registry.Add(particles[i + 1, j].Body,
-                            new Spring(new Vector3(), particles[i, j].Body,
-                                new Vector3(), springConstant, springLength));
+
                     }
 
                     if (j != sizeY - 1)
@@ -68,21 +67,24 @@ namespace Engine
                         registry.Add(particles[i, j].Body,
                             new Spring(new Vector3(), particles[i, j + 1].Body,
                                 new Vector3(), springConstant, springLength));
-                        registry.Add(particles[i, j + 1].Body,
-                            new Spring(new Vector3(), particles[i, j].Body,
-                                new Vector3(), springConstant, springLength));
+
                     }
 
                     if (i != sizeX - 1 && j != sizeY - 1)
                     {
                         // Diagonal spring has longer rest length: sqrt(2) * springLength
-                        float diagonalLength = springLength * (float)Math.Sqrt(2.0);
+                        
                         registry.Add(particles[i, j].Body,
                             new Spring(new Vector3(), particles[i + 1, j + 1].Body,
                                 new Vector3(), springConstant, diagonalLength));
-                        registry.Add(particles[i + 1, j + 1].Body,
-                            new Spring(new Vector3(), particles[i, j].Body,
-                                new Vector3(), springConstant, diagonalLength));
+
+                    }
+                    if (i != 0 && j != sizeY - 1)
+                    {
+                        
+                        registry.Add(particles[i, j].Body,
+                            new Spring(particles[i - 1, j + 1].Body.Position, particles[i, j].Body,
+                            particles[i, j].Body.Position, springConstant, diagonalLength));
                     }
                 }
             }

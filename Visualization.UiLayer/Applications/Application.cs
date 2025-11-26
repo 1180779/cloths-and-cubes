@@ -39,8 +39,8 @@ public class Application : GameWindow
     private readonly ShadowSettingsWindow _shadowSettingsWindow;
 #endif
 
-    protected const int DefaultWidth = 800;
-    protected const int DefaultHeight = 600;
+    protected const int DefaultWidth = 8000;
+    protected const int DefaultHeight = 6000;
     protected const string DefaultTitle = "Display";
 
     protected Application(int width = DefaultWidth, int height = DefaultHeight, string title = DefaultTitle) : base(
