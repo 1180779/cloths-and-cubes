@@ -16,16 +16,16 @@ namespace Engine
 
         public Cloth(
             ForceRegistry _registry,
-            int sizeX = 2,
-            int sizeY = 2,
-            float springLength = 3f,
-            float springConstant = 1f,
+            int sizeX = 21,
+            int sizeY = 21,
+            float springLength = 0.25f,
+            float springConstant = 1.0f,
             float particleMass = 0.1f,
-            Vector3 particle0pos = null)
+            Vector3? particle0pos = null)
         {
             if (particle0pos == null)
             {
-                particle0pos = new Vector3(1f, 1f, 0f);
+                particle0pos = new Vector3(0f, 10f, 0f);
             }
 
             registry = _registry;
@@ -34,14 +34,14 @@ namespace Engine
             this.springLength = springLength;
             this.springConstant = springConstant;
             this.ParticleMass = particleMass;
-            this.particle0pos = particle0pos;
+            this.particle0pos = particle0pos.Value;
             particles = new RigidParticle[sizeX, sizeY];
             for (int i = 0; i < sizeX; i++)
             {
                 for (int j = 0; j < sizeY; j++)
                 {
                     particles[i, j] = new RigidParticle();
-                    particles[i, j].SetState(particle0pos + new Vector3(springLength * i, 0, springLength * j), 0,
+                    particles[i, j].SetState(particle0pos.Value + new Vector3(springLength * i, 0, springLength * j), 0,
                         new Vector3());
                 }
             }
@@ -58,7 +58,6 @@ namespace Engine
                         registry.Add(particles[i, j].Body,
                             new Spring(new Vector3(), particles[i + 1, j].Body,
                                 new Vector3(), springConstant, springLength));
-
                     }
 
                     if (j != sizeY - 1)
@@ -67,24 +66,22 @@ namespace Engine
                         registry.Add(particles[i, j].Body,
                             new Spring(new Vector3(), particles[i, j + 1].Body,
                                 new Vector3(), springConstant, springLength));
-
                     }
 
                     if (i != sizeX - 1 && j != sizeY - 1)
                     {
                         // Diagonal spring has longer rest length: sqrt(2) * springLength
-                        
+
                         registry.Add(particles[i, j].Body,
                             new Spring(new Vector3(), particles[i + 1, j + 1].Body,
                                 new Vector3(), springConstant, diagonalLength));
-
                     }
+
                     if (i != 0 && j != sizeY - 1)
                     {
-                        
                         registry.Add(particles[i, j].Body,
                             new Spring(particles[i - 1, j + 1].Body.Position, particles[i, j].Body,
-                            particles[i, j].Body.Position, springConstant, diagonalLength));
+                                particles[i, j].Body.Position, springConstant, diagonalLength));
                     }
                 }
             }
@@ -135,7 +132,7 @@ namespace Engine
 
         public void Rotate(Vector3 rot)
         {
-            var pivot = particle0pos ?? new Vector3();
+            var pivot = particle0pos;
 
             // Precompute sines and cosines (rot components are in radians).
             double cx = Math.Cos(rot.X);

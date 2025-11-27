@@ -18,8 +18,9 @@ public class RigidBody
     /// </summary>
     public Vector3 Position { get; set; } = new();
 
-    
+
     private Quaternion orientation = new();
+
     /// <summary>
     /// Holds the angular orientation of the rigid body in world space.
     /// </summary>
@@ -91,7 +92,6 @@ public class RigidBody
      * simulation step. At the simulation step, the accelerations
      * are calculated and stored to be applied to the rigid body.
      */
-
     /// <summary>
     /// Holds the accumulated force to be applied at the next
     /// integration step.
@@ -124,9 +124,9 @@ public class RigidBody
     /// motion.  Damping is required to remove energy added
     /// through numerical instability in the integrator.
     /// </summary>
-    public Real LinearDamping = 0.0f;
+    public Real LinearDamping = 0.001f;
 
-    public Matrix3 InverseInertiaTensor { get; set; }= new();
+    public Matrix3 InverseInertiaTensor { get; set; } = new();
 
     static void CalculateTransformMatrix(Matrix4 transformMatrix, Vector3 position, Quaternion orientation)
     {
@@ -158,10 +158,10 @@ public class RigidBody
     public void CalculateDerivedData()
     {
         Orientation.Normalise();
-        
+
         // Calculate the transform matrix for the body.
         CalculateTransformMatrix(TransformMatrix, Position, Orientation);
-        
+
         // Calculate the inertiaTensor in world space.
         TransformInertiaTensor(InverseInertiaTensorWorld, Orientation, InverseInertiaTensor, TransformMatrix);
     }
@@ -275,7 +275,8 @@ public class RigidBody
 
         // Update the kinetic energy store and possibly put the body to
         // sleep.
-        if (CanSleep) {
+        if (CanSleep)
+        {
             Real currentMotion = Velocity.SqMagnitude +
                 Rotation.SqMagnitude;
 

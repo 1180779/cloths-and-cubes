@@ -9,7 +9,7 @@ namespace Visualization.UiLayer.Applications;
 
 public abstract class RigidBodyApplication : Application
 {
-    private static bool FpsCappedTo60 = true;
+    private static bool FpsCappedTo60 = false;
     protected static uint MaxContacts => 1024;
     protected CollisionData _collisionData = new();
 
@@ -43,6 +43,7 @@ public abstract class RigidBodyApplication : Application
             deltaTime
         );
 #if DEBUG
+
 #if FRAMESAVER
         FrameSaver.SaveFrame(Scene);
 #endif
@@ -133,6 +134,6 @@ public abstract class RigidBodyApplication : Application
         int height = DefaultHeight,
         string title = DefaultTitle) : base(width, height, title)
     {
-        if(FpsCappedTo60) UpdateFrequency = 60.0;
+        if (FpsCappedTo60) UpdateFrequency = 60.0;
     }
 }

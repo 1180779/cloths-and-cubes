@@ -43,7 +43,7 @@
 
         public static BVH Build(Dictionary<int, IBoxable> bodies)
         {
-            if(bodies.Count == 0)
+            if (bodies.Count == 0)
             {
                 return new BVH(null);
             }
@@ -136,6 +136,7 @@
 
         private static int CountZeros(uint x)
         {
+            if (x == 0) return 32;
             // Keep shifting x by one until
             // the leftmost bit does not become 1.
             int total_bits = sizeof(uint) * 8;

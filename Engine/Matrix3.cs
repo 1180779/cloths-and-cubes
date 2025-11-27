@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Engine;
 
-public class Matrix3 : ICloneable
+public struct Matrix3 : ICloneable
 {
     public Real[] Data;
     public const int ExpectedSize = 9;
@@ -74,11 +74,11 @@ public class Matrix3 : ICloneable
                 left.Data[0] * o.Data[0] + left.Data[1] * o.Data[3] + left.Data[2] * o.Data[6],
                 left.Data[0] * o.Data[1] + left.Data[1] * o.Data[4] + left.Data[2] * o.Data[7],
                 left.Data[0] * o.Data[2] + left.Data[1] * o.Data[5] + left.Data[2] * o.Data[8],
-                
+
                 left.Data[3] * o.Data[0] + left.Data[4] * o.Data[3] + left.Data[5] * o.Data[6],
                 left.Data[3] * o.Data[1] + left.Data[4] * o.Data[4] + left.Data[5] * o.Data[7],
                 left.Data[3] * o.Data[2] + left.Data[4] * o.Data[5] + left.Data[5] * o.Data[8],
-                
+
                 left.Data[6] * o.Data[0] + left.Data[7] * o.Data[3] + left.Data[8] * o.Data[6],
                 left.Data[6] * o.Data[1] + left.Data[7] * o.Data[4] + left.Data[8] * o.Data[7],
                 left.Data[6] * o.Data[2] + left.Data[7] * o.Data[5] + left.Data[8] * o.Data[8]
@@ -261,6 +261,6 @@ public class Matrix3 : ICloneable
 
     public object Clone()
     {
-        return new Matrix3((Real[])Data.Clone());   
+        return new Matrix3((Real[])Data.Clone());
     }
 }

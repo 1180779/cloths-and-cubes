@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace Engine;
 
-public class Vector3 : ICloneable
+public struct Vector3 : ICloneable
 {
     public static Vector3 Gravity = new Vector3(0, (Real)(-9.81), 0);
     public static Vector3 HighGravity = new Vector3(0, (Real)(-19.62), 0);
@@ -249,5 +249,4 @@ public class Vector3 : ICloneable
         get => GetValue(key);
         set => SetValue(key, value);
     }
-
 }

@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Engine;
 
-public class Matrix4 : ICloneable
+public struct Matrix4 : ICloneable
 {
     // assumes 3x4 with extra 0,0,0,1
     public readonly Real[] Data; // row major

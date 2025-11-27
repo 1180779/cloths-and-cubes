@@ -83,8 +83,8 @@ public static class CollisionDetector
         // Go through each combination of + and - for each half-size
         Real[,] mults =
         {
-            { 1, 1, 1 }, { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, 1 },
-            { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 }, { -1, -1, -1 }
+            { 1, 1, 1 }, { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, 1 }, { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 },
+            { -1, -1, -1 }
         };
 
         uint contactsUsed = 0;
@@ -369,9 +369,10 @@ public static class CollisionDetector
         data.NextContactIndex++;
         return 1;
     }
+
     public static uint BoxAndParticle(CollisionBox box, CollisionParticle particle, CollisionData data)
     {
-        Vector3 point=new Vector3(particle.Body.Position);
+        Vector3 point = new Vector3(particle.Body.Position);
         // Transform the point into box coordinates
         Vector3 relPt = box.Transform.TransformInverse(point);
 
@@ -399,7 +400,7 @@ public static class CollisionDetector
 
         // Compile the contact
         Contact contact = data.ContactList[data.NextContactIndex];
-        contact.ContactNormal = normal;
+        contact.ContactNormal = normal * -1;
         contact.ContactPoint = point;
         contact.Penetration = minDepth;
 
@@ -413,9 +414,9 @@ public static class CollisionDetector
         data.AddContacts(1);
         return 1;
     }
+
     public static uint ParticleAndHalfSpace(CollisionParticle particle, CollisionPlane plane, CollisionData data)
     {
-
         if (data.ContactsLeft <= 0) return 0;
 
 
