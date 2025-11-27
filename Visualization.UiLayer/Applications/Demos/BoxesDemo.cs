@@ -80,6 +80,18 @@ public class BoxesDemo : RigidBodyApplication
             boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
+        for (int i = 0; i < _cloth.EngineCloth.particles.GetLength(0); i++)
+        {
+            for (int j = 0; j < _cloth.EngineCloth.particles.GetLength(1); j++)
+            {
+                var particle = _cloth.EngineCloth.particles[i, j];
+                if (particle != null && particle.Body != null)
+                {
+                    boxDict[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.sizeY + j] = particle;
+                }
+            }
+        }
+
         BVH bvh = BVH.Build(boxDict);
 
         BvhWireframe bvhWireframe = new(bvh)
@@ -111,6 +123,18 @@ public class BoxesDemo : RigidBodyApplication
             boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
+        for(int i = 0; i< _cloth.EngineCloth.particles.GetLength(0); i++)
+        {
+            for (int j = 0; j < _cloth.EngineCloth.particles.GetLength(1); j++)
+            {
+                var particle = _cloth.EngineCloth.particles[i, j];
+                if (particle != null && particle.Body != null)
+                {
+                    boxDict[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.sizeY + j] = particle;
+                }
+            }
+        }
+
         BVH bvh = BVH.Build(boxDict);
 
         // Process box-plane collisions
@@ -127,6 +151,14 @@ public class BoxesDemo : RigidBodyApplication
             CollisionDetector.SphereAndHalfSpace(ball.EngineBall, _plane.EnginePlane, _collisionData);
         }
 
+        // Process particle-plane collisions
+        foreach (var particle in _cloth.EngineCloth.particles)
+        {
+            if (particle == null || particle.Body == null) continue;
+            if (!_collisionData.HasMoreContacts()) return;
+            CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
+        }
+
         List<(int, int)> potentialCollisions = new();
         BVH.GetPotentialContacts(ref potentialCollisions, bvh.root);
         //
@@ -135,9 +167,9 @@ public class BoxesDemo : RigidBodyApplication
             if (!_collisionData.HasMoreContacts()) return;
 
             // TODO: refactor this check
-            if (pair.Item1 < _boxes.Length)
+            if (pair.Item1 < _boxes.Length) // box and ...
             {
-                if (pair.Item2 < _boxes.Length)
+                if (pair.Item2 < _boxes.Length) // box and box
                 {
                     var box1 = _boxes[pair.Item1];
                     var box2 = _boxes[pair.Item2];
@@ -148,7 +180,7 @@ public class BoxesDemo : RigidBodyApplication
                         box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
                     }
                 }
-                else
+                else if(pair.Item2 >= _boxes.Length && pair.Item2 < _boxes.Length + _balls.Length) // box and sphere
                 {
                     var box1 = _boxes[pair.Item1];
                     var ball2 = _balls[pair.Item2 - _boxes.Length];
@@ -159,10 +191,24 @@ public class BoxesDemo : RigidBodyApplication
                         box1.EngineBox.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
                     }
                 }
+                else // box and particle
+                {
+                    var box1 = _boxes[pair.Item1];
+                    var particle2 = _cloth.EngineCloth.particles[
+                        (pair.Item2 - _boxes.Length - _balls.Length) / _cloth.EngineCloth.sizeY,
+                        (pair.Item2 - _boxes.Length - _balls.Length) % _cloth.EngineCloth.sizeY];
+                    if (particle2 == null || particle2.Body == null) continue;
+
+                    var contacts = CollisionDetector.BoxAndParticle(box1.EngineBox, particle2, _collisionData);
+                    if(contacts > 0)
+                    {
+                        box1.EngineBox.IsOverlapping = true;
+                    }
+                }
             }
-            else
+            else if(pair.Item1 >= _boxes.Length && pair.Item1 < _boxes.Length + _balls.Length) // sphere and ...
             {
-                if (pair.Item2 < _boxes.Length)
+                if (pair.Item2 < _boxes.Length) // sphere and box
                 {
                     var ball1 = _balls[pair.Item1 - _boxes.Length];
                     var box2 = _boxes[pair.Item2];
@@ -173,7 +219,7 @@ public class BoxesDemo : RigidBodyApplication
                         box2.EngineBox.IsOverlapping = ball1.EngineBall.IsOverlapping = true;
                     }
                 }
-                else
+                else if(pair.Item2 >= _boxes.Length && pair.Item2 < _boxes.Length + _balls.Length) // sphere and sphere
                 {
                     var ball1 = _balls[pair.Item1 - _boxes.Length];
                     var ball2 = _balls[pair.Item2 - _boxes.Length];
@@ -186,35 +232,43 @@ public class BoxesDemo : RigidBodyApplication
                     }
                 }
             }
+            else // particle and ...
+            {
+                //var particle1 = _cloth.EngineCloth.particles[
+                //    (pair.Item1 - _boxes.Length - _balls.Length) / _cloth.EngineCloth.sizeY,
+                //    (pair.Item1 - _boxes.Length - _balls.Length) % _cloth.EngineCloth.sizeY];
+                //if (particle1 == null || particle1.Body == null) continue;
+                
+            }
         }
 
         // cloth contacts
-        var engCloth = _cloth.EngineCloth;
-        for (int x = 0; x < engCloth.sizeX; x++)
-        {
-            for (int y = 0; y < engCloth.sizeY; y++)
-            {
-                if (!_collisionData.HasMoreContacts()) return;
+        //var engCloth = _cloth.EngineCloth;
+        //for (int x = 0; x < engCloth.sizeX; x++)
+        //{
+        //    for (int y = 0; y < engCloth.sizeY; y++)
+        //    {
+        //        if (!_collisionData.HasMoreContacts()) return;
 
-                var rigidParticle = engCloth.particles[x, y];
-                if (rigidParticle == null || rigidParticle.Body == null) continue;
+        //        var rigidParticle = engCloth.particles[x, y];
+        //        if (rigidParticle == null || rigidParticle.Body == null) continue;
 
-                var collParticle = new CollisionParticle();
-                collParticle.Body = rigidParticle.Body;
-                collParticle.CalculateInternals();
-
-
-                if (!_collisionData.HasMoreContacts()) return;
-                CollisionDetector.ParticleAndHalfSpace(collParticle, _plane.EnginePlane, _collisionData);
+        //        var collParticle = new CollisionParticle();
+        //        collParticle.Body = rigidParticle.Body;
+        //        collParticle.CalculateInternals();
 
 
-                for (var b = 0; b < _boxes.Length; b++)
-                {
-                    if (!_collisionData.HasMoreContacts()) return;
-                    CollisionDetector.BoxAndParticle(_boxes[b].EngineBox, collParticle, _collisionData);
-                }
-            }
-        }
+        //        if (!_collisionData.HasMoreContacts()) return;
+        //        CollisionDetector.ParticleAndHalfSpace(collParticle, _plane.EnginePlane, _collisionData);
+
+
+        //        for (var b = 0; b < _boxes.Length; b++)
+        //        {
+        //            if (!_collisionData.HasMoreContacts()) return;
+        //            CollisionDetector.BoxAndParticle(_boxes[b].EngineBox, collParticle, _collisionData);
+        //        }
+        //    }
+        //}
     }
 
     /// <summary>

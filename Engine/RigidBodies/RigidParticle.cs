@@ -1,4 +1,6 @@
 ﻿using Engine.Collision;
+using Engine.Collision.Bounding_Volume_Hierarchy;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +9,16 @@ using System.Threading.Tasks;
 
 namespace Engine.RigidBodies
 {
-    public class RigidParticle : CollisionParticle
+    public class RigidParticle : CollisionParticle, IBoxable
     {
+        public Collision.Bounding_Volume_Hierarchy.BoundingBox GetBoundingBox()
+        {
+            return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+                center: this.Body.Position,
+                halfSize: new Vector3(0.1f, 0.1f, 0.1f) // small AABB for particle
+            );
+        }
+
         public void SetState(
         Vector3 position,
         

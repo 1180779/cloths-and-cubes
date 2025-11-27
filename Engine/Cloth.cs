@@ -16,16 +16,16 @@ namespace Engine
 
         public Cloth(
             ForceRegistry _registry,
-            int sizeX = 2,
-            int sizeY = 2,
-            float springLength = 3f,
+            int sizeX = 10,
+            int sizeY = 10,
+            float springLength = 0.5f,
             float springConstant = 1f,
             float particleMass = 0.1f,
             Vector3 particle0pos = null)
         {
             if (particle0pos == null)
             {
-                particle0pos = new Vector3(0f, 1f, 0f);
+                particle0pos = new Vector3(1f, 1f, 0f);
             }
 
             registry = _registry;
