@@ -248,7 +248,7 @@ public class Application : GameWindow
     {
         RenderEnvironmentMapWindow();
         HelpWindow.Draw();
-        StatsWindow.Draw();
+        StatsWindow.Draw(_scene.CamerasManager.CurrentCamera.Position);
 #if DEBUG
         RenderObjectInspectorWindow();
         ShadowCascadingMapsWindow();

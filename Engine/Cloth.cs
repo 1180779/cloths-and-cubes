@@ -16,9 +16,9 @@ namespace Engine
 
         public Cloth(
             ForceRegistry _registry,
-            int sizeX = 10,
-            int sizeY = 10,
-            float springLength = 0.5f,
+            int sizeX = 2,
+            int sizeY = 2,
+            float springLength = 3f,
             float springConstant = 1f,
             float particleMass = 0.1f,
             Vector3 particle0pos = null)
