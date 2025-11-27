@@ -55,7 +55,8 @@ public static class HelpWindow
                 }
             },
 #endif
-            { "Scene", new() { { "Reset demo", "R" }, } }
+            { "Scene", new() { { "Reset demo", "R" }, } },
+            {"Performance", new(){{"Cap/Uncap FPS", "X"},} },
         };
 
     public static void Draw()
