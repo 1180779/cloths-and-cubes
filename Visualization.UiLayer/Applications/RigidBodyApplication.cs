@@ -9,9 +9,13 @@ namespace Visualization.UiLayer.Applications;
 
 public abstract class RigidBodyApplication : Application
 {
-    private static bool FpsCappedTo60 = false;
+    private static bool s_fpsCappedTo60;
     protected static uint MaxContacts => 1024;
-    protected CollisionData _collisionData = new();
+
+    protected CollisionData _collisionData = new()
+    {
+        Friction = (Real)0.9, Restitution = (Real)0.6, Tolerance = (Real)0.1,
+    };
 
     protected ContactResolver _contactResolver = new(MaxContacts * 8);
 
@@ -125,7 +129,7 @@ public abstract class RigidBodyApplication : Application
                 _ => 0.0
             };
 
-            FpsCappedTo60 = !FpsCappedTo60;
+            s_fpsCappedTo60 = !s_fpsCappedTo60;
         }
     }
 
@@ -134,6 +138,6 @@ public abstract class RigidBodyApplication : Application
         int height = DefaultHeight,
         string title = DefaultTitle) : base(width, height, title)
     {
-        if (FpsCappedTo60) UpdateFrequency = 60.0;
+        if (s_fpsCappedTo60) UpdateFrequency = 60.0;
     }
 }
