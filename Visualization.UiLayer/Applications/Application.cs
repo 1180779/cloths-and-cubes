@@ -5,6 +5,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
 using Visualisation.Core;
+using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Texture;
 using Visualisation.Core.GameObjects.Scenes;
@@ -254,6 +255,7 @@ public class Application : GameWindow
     {
         ImGui.Begin("Game Viewport");
 
+        
         bool isWindowHovered = ImGui.IsWindowHovered();
         if (isWindowHovered)
         {
@@ -269,6 +271,9 @@ public class Application : GameWindow
         int fbW = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
         int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
         _sceneRenderWindowFrb.Resize(fbW, fbH);
+        
+        CameraBase.AspectRatio = viewportSize.X / viewportSize.Y;
+
         _scene.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
         DebugRenderInScene(_debugBasicShader);
         

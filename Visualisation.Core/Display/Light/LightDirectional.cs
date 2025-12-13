@@ -89,7 +89,7 @@ public class LightDirectional : LightPoint
         var corners = ProjectionHelper.GetFrustumCornersWorldSpace(
             Matrix4.CreatePerspectiveFieldOfView(
                 camera.FovRadians,
-                camera.AspectRatio,
+                CameraBase.AspectRatio,
                 nearPlane,
                 farPlane),
             camera.ViewMatrix);

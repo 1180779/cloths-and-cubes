@@ -31,7 +31,7 @@ public class SceneLightningOnly : SceneManager
         // };
         // LightsManager.PointLights.Add(pointLight);
 
-        FollowingCamera followingCamera = new(CamerasManager.CurrentCamera.AspectRatio);
+        FollowingCamera followingCamera = new();
         followingCamera.AttachTo(GameObjects.ToArray());
         CamerasManager.AddCamera(followingCamera);
     }

@@ -4,11 +4,11 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class FreeMovingCamera : CameraBase
 {
-    public FreeMovingCamera(float aspectRatio) : base(aspectRatio)
+    public FreeMovingCamera(float aspectRatio)
     {
     }
 
-    public FreeMovingCamera(Vector3 position, float aspectRatio) : base(position, aspectRatio)
+    public FreeMovingCamera(Vector3 position, float aspectRatio) : base(position)
     {
     }
 

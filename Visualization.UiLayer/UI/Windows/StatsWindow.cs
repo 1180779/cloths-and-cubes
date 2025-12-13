@@ -4,7 +4,7 @@ namespace Visualization.UiLayer.UI.Windows;
 
 public static class StatsWindow
 {
-    public static void Draw(OpenTK.Mathematics.Vector3 cameraPos)
+    public static void Draw(Vector3 cameraPos)
     {
         ImGui.Begin("Stats");
         ImGui.Text($"Application FPS: {ImGui.GetIO().Framerate:0.0}");
