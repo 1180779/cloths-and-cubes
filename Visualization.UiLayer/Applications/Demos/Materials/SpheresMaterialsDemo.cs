@@ -27,13 +27,13 @@ public abstract class SpheresMaterialsDemo : BoxesDemo
             );
             ball.Material = material;
             _balls[i] = ball;
-            _scene.AddGameObject(ball);
+            _sceneManager.AddGameObject(ball);
         }
 
 
         /* add ground plane to the scene */
         _plane = new();
-        _scene.AddGameObject(_plane);
+        _sceneManager.AddGameObject(_plane);
 
         /* set everything up */
         Reset();

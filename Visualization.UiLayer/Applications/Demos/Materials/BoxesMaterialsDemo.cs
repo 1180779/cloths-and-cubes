@@ -27,13 +27,13 @@ public abstract class BoxesMaterialsDemo : BoxesDemo
             );
             box.Material = material;
             _boxes[i] = box;
-            _scene.AddGameObject(box);
+            _sceneManager.AddGameObject(box);
         }
 
 
         /* add ground plane to the scene */
         _plane = new();
-        _scene.AddGameObject(_plane);
+        _sceneManager.AddGameObject(_plane);
 
         /* set everything up */
         Reset();

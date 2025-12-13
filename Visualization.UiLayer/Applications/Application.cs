@@ -5,7 +5,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
 using Visualisation.Core;
-using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Texture;
 using Visualisation.Core.GameObjects.Scenes;
@@ -21,23 +20,23 @@ public class Application : GameWindow
 {
     private readonly ImGuiController _imGuiController;
     protected readonly IInputProvider _inputProvider;
-    protected readonly WindowFrameBuffer _sceneRenderWindowFrb;
-    protected readonly SceneManager _scene;
+    protected readonly SceneManager _sceneManager;
     protected readonly SettingsSaverLoader _settingsSaverLoader;
 
-    protected readonly Shader _debugBasicShader;
-    
+    protected readonly SceneWindow _sceneWindow;
+    protected readonly StatsWindow _statsWindow;
 #if DEBUG
     protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
     protected readonly ObjectInspectorWindow _objectInspectorWindow;
+    private readonly ShadowSettingsWindow _shadowSettingsWindow;
+    
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
 #endif
-    private readonly ShadowSettingsWindow _shadowSettingsWindow;
 #endif
 
-    protected const int DefaultWidth = 8000;
-    protected const int DefaultHeight = 6000;
+    protected const int DefaultWidth = 800;
+    protected const int DefaultHeight = 600;
     protected const string DefaultTitle = "Display";
 
     protected Application(int width = DefaultWidth, int height = DefaultHeight, string title = DefaultTitle) : base(
@@ -51,18 +50,18 @@ public class Application : GameWindow
         _imGuiController.HookToWindow(this);
         _inputProvider = new ImGuiInputProvider(this, _imGuiController);
 
-        _sceneRenderWindowFrb = new(width, height);
-
-        _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
+        _sceneManager = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
+        _sceneWindow = new SceneWindow(_imGuiController, _sceneManager, _inputProvider, Size);
+        _statsWindow = new StatsWindow(_sceneManager);
+        _sceneWindow.DebugRenderInScene += DebugRenderInScene;
         
-        _scene = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
         _settingsSaverLoader = new SettingsSaverLoader();
 #if DEBUG
-        _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _scene, Size);
-        _objectInspectorWindow = new(_scene);
+        _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _sceneManager, Size);
+        _objectInspectorWindow = new(_sceneManager);
         
         // windows
-        _shadowSettingsWindow = new ShadowSettingsWindow(() => this._scene.LightsManager.DirectionalLight);
+        _shadowSettingsWindow = new ShadowSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight);
 #endif
 
         // GL
@@ -87,8 +86,8 @@ public class Application : GameWindow
 
     protected virtual void Update(float deltaTime)
     {
-        if (!DoUpdate)
-            return;
+        // if (!DoUpdate)
+        //     return;
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
@@ -97,10 +96,10 @@ public class Application : GameWindow
 
         _inputProvider.UpdateMousePosition();
 
-        if (!IsFocused)
-        {
-            return;
-        }
+        // if (!IsFocused)
+        // {
+        //     return;
+        // }
         
 #if DEBUG
         _cascadingShadowMapsWindow.HandleInput();
@@ -130,7 +129,7 @@ public class Application : GameWindow
         // set up internal scene objects after the scene is initialized
         // this way some objects are already in the scene and can be accessed
         // during the scene setup (e.g. attach camera to an object from demo)
-        _scene.SetUp();
+        _sceneManager.SetUp();
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
@@ -193,9 +192,8 @@ public class Application : GameWindow
 #endif
         TexturesManager.AbortAllLoads();
         _imGuiController.UnhookFromWindow(this);
-        _debugBasicShader.Dispose();
-        _scene.Dispose();
-        _sceneRenderWindowFrb.Dispose();
+        _sceneManager.Dispose();
+        _sceneWindow.Dispose();
 
         base.OnUnload();
     }
@@ -204,9 +202,9 @@ public class Application : GameWindow
     {
         base.OnMouseWheel(e);
 
-        if (!ImGui.GetIO().WantCaptureMouse && _scene.CamerasManager.CameraMode)
+        if (!ImGui.GetIO().WantCaptureMouse && _sceneManager.CamerasManager.CameraMode)
         {
-            _scene.CamerasManager.CurrentCamera.FovDegrees -= _inputProvider.GetMouseScroll();
+            _sceneManager.CamerasManager.CurrentCamera.FovDegrees -= _inputProvider.GetMouseScroll();
         }
     }
 
@@ -221,19 +219,19 @@ public class Application : GameWindow
     {
         RenderEnvironmentMapWindow();
         HelpWindow.Draw();
-        StatsWindow.Draw(_scene.CamerasManager.CurrentCamera.Position);
+        _statsWindow.Draw();
 #if DEBUG
         _cascadingShadowMapsWindow.Draw();
         _objectInspectorWindow.Draw();
         _shadowSettingsWindow.Render();
 #endif
-        RenderSceneWindow((float)dt);
+        _sceneWindow.Draw(FramebufferSize, (float)dt);
     }
 
     private void RenderEnvironmentMapWindow()
     {
         ImGui.Begin("Environment Map Settings");
-        int currentDisplayType = (int)_scene.EnvironmentMap.DisplayType;
+        int currentDisplayType = (int)_sceneManager.EnvironmentMap.DisplayType;
         ImGui.Text("Display Type:");
         ImGui.RadioButton("Skybox", ref currentDisplayType,
             (int)EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap);
@@ -243,14 +241,14 @@ public class Application : GameWindow
         ImGui.SameLine();
         ImGui.RadioButton("Prefiltered Map", ref currentDisplayType,
             (int)EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap);
-        _scene.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
+        _sceneManager.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
 
-        if (_scene.EnvironmentMap.DisplayType == EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
+        if (_sceneManager.EnvironmentMap.DisplayType == EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
         {
-            float roughness = _scene.EnvironmentMap.PrefilterMapValue;
+            float roughness = _sceneManager.EnvironmentMap.PrefilterMapValue;
             if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
             {
-                _scene.EnvironmentMap.PrefilterMapValue = roughness;
+                _sceneManager.EnvironmentMap.PrefilterMapValue = roughness;
             }
         }
 
@@ -259,42 +257,7 @@ public class Application : GameWindow
 
     protected virtual void DebugRenderInScene(Shader sh)
     {
-        _debugBasicShader.Use();
-        sh.SetMatrix4("view", _scene.CamerasManager.CurrentCamera.ViewMatrix);
-        sh.SetMatrix4("projection", _scene.CamerasManager.CurrentCamera.ProjectionMatrix);
-    }
 
-    private void RenderSceneWindow(float dt)
-    {
-        ImGui.Begin("Game Viewport");
-
-        
-        bool isWindowHovered = ImGui.IsWindowHovered();
-        if (isWindowHovered)
-        {
-            _scene.ProcessInput(_inputProvider, dt);
-        }
-        else
-        {
-            _scene.ProcessInputOutOfFocus(_inputProvider, dt);
-        }
-
-        System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        var fbScale = _imGuiController.ScaleFactor;
-        int fbW = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
-        int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        _sceneRenderWindowFrb.Resize(fbW, fbH);
-        
-        CameraBase.AspectRatio = viewportSize.X / viewportSize.Y;
-
-        _scene.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
-        DebugRenderInScene(_debugBasicShader);
-        
-        _sceneRenderWindowFrb.Unbind();
-        GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
-        ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
-            new System.Numerics.Vector2(1, 0));
-        ImGui.End();
     }
 
     protected virtual ApplicationState SaveState()

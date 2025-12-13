@@ -16,9 +16,9 @@ public sealed class CascadingShadowMapsWindow(ImGuiController imGuiController, I
     private readonly SceneManager _sceneManager = scene; /* borrowed */
 
     private bool _disposed;
-    private readonly WindowFrameBuffer _depthMapWindowFrb = new(size.X, size.Y);
+    private readonly WindowFrameBuffer _depthMapWindowFrb = new(size.X, size.Y); /* owned */
     private readonly Shader _quadCsmShader = new("depthMapShader.vert", "depthMapShader.frag"); /* owned */
-    private readonly QuadMesh _quadMesh = new();
+    private readonly QuadMesh _quadMesh = new(); /* owned */
     
     private int _directionalLightLayer;
     public int DirectionalLightLayer

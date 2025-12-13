@@ -7,7 +7,7 @@ namespace Visualization.UiLayer
     {
         private static void Main(string[] args)
         {
-            using Application application = new BoxesRandomConfigurationDemo();
+            using Application application = new BoxesDemo();
             application.Run();
             application.Focus();
         }

@@ -13,10 +13,6 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesDemo : RigidBodyApplication
 {
-    protected BvhNodesWindow _bvhNodesWindow = new();
-    protected CollisionParametersWindow _collisionParametersWindow;
-    protected ClothSettingsWindow _clothSettingsWindow = new();
-
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
     protected Plane _plane = null!; // initialized in scene initialization
@@ -24,17 +20,83 @@ public class BoxesDemo : RigidBodyApplication
     protected ForceRegistry _forceRegistry = new();
     protected Cloth _cloth = null!; // initialized in scene initialization
 
-    protected BoxesDemo()
+    protected BvhNodesWindow _bvhNodesWindow = new();
+    protected CollisionParametersWindow _collisionParametersWindow;
+
+    protected BoxesDemoSettingsWindow
+        _boxesDemoSettingsWindow =
+            new(0, 0); // the delegates need to be initialized in the constructor
+
+    public BoxesDemo()
     {
         _collisionParametersWindow = new(_collisionData);
+
+        _boxesDemoSettingsWindow.SetBoxesCount = count =>
+        {
+            Random random = new();
+            int length = _boxes.Length;
+            if (count < length)
+            {
+                for (int i = count; i < length; ++i)
+                {
+                    _sceneManager.RemoveGameObject(_boxes[i]);
+                }
+            }
+
+            Array.Resize(ref _boxes, count);
+            if (count > length)
+            {
+                for (int i = length; i < count; ++i)
+                {
+                    _boxes[i] = new Box();
+                    _boxes[i].EngineBox.Random(random);
+                    _sceneManager.AddGameObject(_boxes[i]);
+                }
+            }
+        };
+        _boxesDemoSettingsWindow.SetSpheresCount = count =>
+        {
+            Random random = new();
+            int length = _balls.Length;
+            if (count < length)
+            {
+                for (int i = count; i < length; ++i)
+                {
+                    _sceneManager.RemoveGameObject(_balls[i]);
+                }
+            }
+            
+            Array.Resize(ref _balls, count);
+            if (count > length)
+            {
+                for (int i = length; i < count; ++i)
+                {
+                    _balls[i] = new Ball();
+                    _balls[i].EngineBall.Random(random);
+                    _sceneManager.AddGameObject(_balls[i]);
+                }
+            }
+        };
     }
 
     protected override void InitializeScene()
     {
         base.InitializeScene();
-        _cloth = new Cloth(_forceRegistry, _clothSettingsWindow.SizeX, _clothSettingsWindow.SizeY,
-            _clothSettingsWindow.SpringLength, _clothSettingsWindow.SpringConstant, _clothSettingsWindow.ParticleMass);
+        /* add cloth to the scene */
+        _cloth = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+            _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+            _boxesDemoSettingsWindow.ParticleMass);
+        _sceneManager.AddGameObject(this._cloth);
+        
+        /* add ground plane to the scene */
         _plane = new();
+
+        /* boxes already added by the boxes demo settings callback on loading of settings; or empty */
+        /* the boxes can be added via ui */
+        // _sceneManager.AddGameObject(_plane); // TODO: add not rendered objects; or rendered with wireframe only
+        
+        /* set everything up */
+        Reset();
     }
 
     protected override void RenderWindows(double dt)
@@ -44,8 +106,8 @@ public class BoxesDemo : RigidBodyApplication
         _bvhNodesWindow.Draw();
 #if DEBUG
         ContactsInspectorWindow.Draw(_collisionData.ContactList);
-#endif        
-        _clothSettingsWindow.Draw();
+#endif
+        _boxesDemoSettingsWindow.Draw();
     }
 
     protected override void DebugRenderInScene(Shader sh)
@@ -264,8 +326,10 @@ public class BoxesDemo : RigidBodyApplication
     protected override void Reset()
     {
         _forceRegistry.Clear();
-        _cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _clothSettingsWindow.SizeX, _clothSettingsWindow.SizeY,
-            _clothSettingsWindow.SpringLength, _clothSettingsWindow.SpringConstant, _clothSettingsWindow.ParticleMass);
+        _cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX,
+            _boxesDemoSettingsWindow.SizeY,
+            _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+            _boxesDemoSettingsWindow.ParticleMass);
 
         // reset boxes; some in preconfigured positions
         if (_boxes.Length > 0)
@@ -327,7 +391,7 @@ public class BoxesDemo : RigidBodyApplication
         var state = base.SaveState();
         state.BvhNodes = _bvhNodesWindow.SaveState();
         state.CollisionParameters = _collisionParametersWindow.SaveState();
-        state.ClothSettings = _clothSettingsWindow.SaveState();
+        state.ClothSettings = _boxesDemoSettingsWindow.SaveState();
         return state;
     }
 
@@ -346,7 +410,7 @@ public class BoxesDemo : RigidBodyApplication
 
         if (state.ClothSettings is not null)
         {
-            _clothSettingsWindow.RestoreState(state.ClothSettings);
+            _boxesDemoSettingsWindow.RestoreState(state.ClothSettings);
         }
     }
 }

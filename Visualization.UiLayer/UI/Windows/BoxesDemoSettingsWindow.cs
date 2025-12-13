@@ -2,8 +2,15 @@ using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class ClothSettingsWindow
+public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount)
 {
+    public delegate void SetObjectCount(int count); // set boxes or spheres count
+
+    private int _boxesCount = boxesCount;
+    public SetObjectCount? SetBoxesCount { get; set; }
+    private int _spheresCount = spheresCount;
+    public SetObjectCount? SetSpheresCount { get; set; }
+
     private int _sizeX = 21;
     public int SizeX => _sizeX;
     private int _sizeY = 21;
@@ -28,7 +35,18 @@ public sealed class ClothSettingsWindow
 
     public void Draw()
     {
-        ImGui.Begin("Cloth Settings");
+        ImGui.Begin("Boxes Demo Settings");
+        DrawClothGeneral();
+        DrawClothLsctpm();
+        DrawClothLsctsl();
+
+        DrawCounts();
+        ImGui.End();
+    }
+
+    private void DrawClothGeneral()
+    {
+        ImGui.SeparatorText("Cloth parameters");
 
         ImGui.SliderInt("Size X", ref _sizeX, 1, 100);
         ImGui.SliderInt("Size Y", ref _sizeY, 1, 100);
@@ -37,9 +55,10 @@ public sealed class ClothSettingsWindow
         {
             if (_lsctsl)
             {
-                _springConstant = _lsctpmScale * _particleMass + _lsctslBias;
+                _springConstant = _lsctslScale * _springLength + _lsctslBias;
             }
         }
+
         if (ImGui.SliderFloat("Spring Constant", ref _springConstant, 0.0f, 10.0f))
         {
             if (_lsctpm)
@@ -56,8 +75,10 @@ public sealed class ClothSettingsWindow
         {
             _springConstant = _particleMass * _lsctpmScale + _lsctpmBias;
         }
+    }
 
-        // _lsctpm
+    private void DrawClothLsctpm()
+    {
         if (_lsctsl)
         {
             ImGui.BeginDisabled();
@@ -78,35 +99,50 @@ public sealed class ClothSettingsWindow
             ImGui.BeginDisabled();
         }
 
-        if (ImGui.SliderFloat("Scale (particle mass)", ref _lsctpmScale, 0.0f, 10.0f))
+        ImGui.PushID("Scale (particle mass)");
+        if (ImGui.SliderFloat("Scale", ref _lsctpmScale, 0.0f, 10.0f))
         {
             _springConstant = _lsctpmScale * _particleMass + _lsctpmBias;
         }
 
-        if (ImGui.SliderFloat("Bias (particle mass)", ref _lsctpmBias, 0.0f, 10.0f))
+        ImGui.PopID();
+
+
+        ImGui.PushID("Bias (particle mass)");
+        if (ImGui.SliderFloat("Bias", ref _lsctpmBias, 0.0f, 10.0f))
         {
             _springConstant = _lsctpmScale * _particleMass + _lsctpmBias;
         }
 
-        if (ImGui.Button("Reset Scale (particle mass)"))
+        ImGui.PopID();
+
+        ImGui.PushID("Reset Scale (particle mass)");
+        if (ImGui.Button("Reset Scale"))
         {
             _lsctpmScale = (Real)1.0;
             _springConstant = _lsctpmScale * _particleMass + _lsctpmBias;
         }
 
+        ImGui.PopID();
+
         ImGui.SameLine();
-        if (ImGui.Button("Reset Bias (particle mass)"))
+        ImGui.PushID("Reset Bias (particle mass)");
+        if (ImGui.Button("Reset Bias"))
         {
             _lsctpmBias = (Real)0.0;
             _springConstant = _lsctpmScale * _particleMass + _lsctpmBias;
         }
 
+        ImGui.PopID();
+
         if (!_lsctpm || _lsctsl)
         {
             ImGui.EndDisabled();
         }
+    }
 
-        // _lsctsl
+    private void DrawClothLsctsl()
+    {
         if (_lsctpm)
         {
             ImGui.BeginDisabled();
@@ -121,41 +157,66 @@ public sealed class ClothSettingsWindow
         {
             ImGui.EndDisabled();
         }
-        
+
         if (!_lsctsl || _lsctpm)
         {
             ImGui.BeginDisabled();
         }
 
-        if (ImGui.SliderFloat("Scale (spring length)", ref _lsctslScale, 0.0f, 10.0f))
+        ImGui.PushID("Scale (spring length)");
+        if (ImGui.SliderFloat("Scale", ref _lsctslScale, 0.0f, 10.0f))
         {
             _springConstant = _lsctslScale * _springLength + _lsctslBias;
         }
 
-        if (ImGui.SliderFloat("Bias (spring length)", ref _lsctslBias, 0.0f, 10.0f))
+        ImGui.PopID();
+
+
+        ImGui.PushID("Bias (spring length)");
+        if (ImGui.SliderFloat("Bias", ref _lsctslBias, 0.0f, 10.0f))
         {
             _springConstant = _lsctslScale * _springLength + _lsctslBias;
         }
 
-        if (ImGui.Button("Reset Scale (spring length)"))
+        ImGui.PopID();
+
+        ImGui.PushID("Reset Scale (spring length)");
+        if (ImGui.Button("Reset Scale"))
         {
             _lsctslScale = (Real)1.0;
             _springConstant = _lsctslScale * _springLength + _lsctslBias;
         }
 
+        ImGui.PopID();
+
         ImGui.SameLine();
-        if (ImGui.Button("Reset Bias (spring length)"))
+        ImGui.PushID("Reset Bias (spring length)");
+        if (ImGui.Button("Reset Bias"))
         {
             _lsctslBias = (Real)0.0;
             _springConstant = _lsctslScale * _springLength + _lsctslBias;
         }
 
+        ImGui.PopID();
+
         if (!_lsctsl)
         {
             ImGui.EndDisabled();
         }
+    }
 
-        ImGui.End();
+    private void DrawCounts()
+    {
+        ImGui.SeparatorText("Object counts");
+        if (ImGui.SliderInt("Boxes", ref _boxesCount, 0, 20))
+        {
+            SetBoxesCount?.Invoke(_boxesCount);
+        }
+
+        if (ImGui.SliderInt("Spheres", ref _spheresCount, 0, 20))
+        {
+            SetSpheresCount?.Invoke(_boxesCount);
+        }
     }
 
     public record State(
@@ -164,20 +225,20 @@ public sealed class ClothSettingsWindow
         Real SpringLength,
         Real SpringConstant,
         Real ParticleMass,
-        
         bool Lsctpm,
         Real LsctpmScale,
         Real LsctpmBias,
-        
         bool Lsctsl,
         Real LsctslScale,
-        Real LsctslBias
+        Real LsctslBias,
+        int BoxesCount,
+        int SpheresCount
     );
 
     public State SaveState()
     {
         return new State(_sizeX, _sizeY, _springLength, _springConstant, ParticleMass, _lsctpm, _lsctpmScale,
-            _lsctpmBias, _lsctsl, _lsctslScale, _lsctslBias);
+            _lsctpmBias, _lsctsl, _lsctslScale, _lsctslBias, _boxesCount, _spheresCount);
     }
 
     public void RestoreState(State state)
@@ -196,5 +257,10 @@ public sealed class ClothSettingsWindow
         _lsctsl = state.Lsctsl;
         _lsctslScale = state.LsctslScale;
         _lsctslBias = state.LsctslBias;
+
+        _boxesCount = state.BoxesCount;
+        _spheresCount = state.SpheresCount;
+        SetBoxesCount?.Invoke(_boxesCount);
+        SetSpheresCount?.Invoke(_spheresCount);
     }
 }

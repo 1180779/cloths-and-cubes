@@ -7,6 +7,7 @@ namespace Visualization.UiLayer.UI.Windows;
 public sealed class CollisionParametersWindow(CollisionData collisionData)
 {
     private CollisionData _collisionData = collisionData; /* borrowed */
+    
     public void Draw()
     {
         ImGui.Begin("Collision Data");
