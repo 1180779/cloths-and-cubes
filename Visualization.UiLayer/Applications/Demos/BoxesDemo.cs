@@ -27,7 +27,6 @@ public class BoxesDemo : RigidBodyApplication
     protected BoxesDemo()
     {
         _collisionParametersWindow = new(_collisionData);
-        
     }
 
     protected override void InitializeScene()
@@ -43,7 +42,9 @@ public class BoxesDemo : RigidBodyApplication
         base.RenderWindows(dt);
         _collisionParametersWindow.Draw();
         _bvhNodesWindow.Draw();
+#if DEBUG
         ContactsInspectorWindow.Draw(_collisionData.ContactList);
+#endif        
         _clothSettingsWindow.Draw();
     }
 

@@ -9,7 +9,7 @@ namespace Engine.RigidBodies
         {
             return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
                 center: this.Body.Position,
-                halfSize: new Vector3(0.05f, 0.05f, 0.05f) // small AABB for particle
+                halfSize: new Vector3(0.001f, 0.001f, 0.001f) // small AABB for particle
             );
         }
 

@@ -101,8 +101,10 @@ public class Application : GameWindow
         {
             return;
         }
-
+        
+#if DEBUG
         _cascadingShadowMapsWindow.HandleInput();
+#endif
     }
 
     /// <summary>
@@ -299,13 +301,16 @@ public class Application : GameWindow
     {
         return new ApplicationState
         {
+#if DEBUG
             ShadowSettings = _shadowSettingsWindow.SaveState(),
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState()
+#endif
         };
     }
 
     protected virtual void LoadState(ApplicationState state)
     {
+#if DEBUG
         if (state.ShadowSettings is not null)
         {
             _shadowSettingsWindow.RestoreState(state.ShadowSettings);
@@ -315,5 +320,6 @@ public class Application : GameWindow
         {
             _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);
         }
+#endif
     }
 }
