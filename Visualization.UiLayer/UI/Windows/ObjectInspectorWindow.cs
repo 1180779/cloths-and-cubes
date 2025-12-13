@@ -4,14 +4,32 @@ using System.Runtime.CompilerServices;
 
 using ImGuiNET;
 
+using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.GameObjects.Scenes;
+
 namespace Visualization.UiLayer.UI.Windows;
 
-public static class ObjectInspectorWindow
+public sealed class ObjectInspectorWindow(SceneManager sceneManager)
 {
+    private readonly SceneManager _sceneManager = sceneManager;
+    
     private static readonly System.Numerics.Vector4 HeaderColor = new(0.2f, 0.5f, 0.8f, 1.0f);
     private static readonly System.Numerics.Vector4 SeparatorColor = new(0.5f, 0.5f, 0.5f, 0.5f);
+    
+    public void Draw()
+    {
+        if (_sceneManager.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
+        {
+            var o = _sceneManager.GameObjects.First(g => g == followingCamera.TargetObject);
+            DrawInternal([o.PhysicsObject]);
+        }
+        else
+        {
+            DrawInternal(_sceneManager.GameObjects.Select(g => g.PhysicsObject).ToArray());
+        }
+    }
 
-    public static void Draw(object?[] objects, String windowName = "Scene Objects Inspector")
+    private void DrawInternal(object?[] objects, String windowName = "Scene Objects Inspector")
     {
         ImGui.Begin(windowName);
 

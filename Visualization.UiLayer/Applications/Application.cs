@@ -5,9 +5,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
 using Visualisation.Core;
-using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
-using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Texture;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
@@ -25,14 +23,11 @@ public class Application : GameWindow
     protected readonly WindowFrameBuffer _sceneRenderWindowFrb;
     protected readonly SceneManager _scene;
 
-
     protected readonly Shader _debugBasicShader;
+    
 #if DEBUG
-    protected readonly QuadMesh _quadMesh;
-    protected readonly Shader _quadCsmShader;
-    protected readonly Shader _textureQuadShader;
-    protected readonly WindowFrameBuffer _depthMapWindowFrb;
-    protected readonly WindowFrameBuffer _ibLreflectanceWindow;
+    protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
+    protected readonly ObjectInspectorWindow _objectInspectorWindow;
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
 #endif
@@ -45,7 +40,7 @@ public class Application : GameWindow
 
     protected Application(int width = DefaultWidth, int height = DefaultHeight, string title = DefaultTitle) : base(
         GameWindowSettings.Default,
-        new NativeWindowSettings() { WindowState = WindowState.Maximized, })
+        new NativeWindowSettings { WindowState = WindowState.Maximized, })
     {
         Size = (width, height);
         Title = title;
@@ -57,17 +52,15 @@ public class Application : GameWindow
         _sceneRenderWindowFrb = new(width, height);
 
         _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
+        
+        _scene = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
 #if DEBUG
-        _quadMesh = new();
-        _depthMapWindowFrb = new(width, height);
-        _ibLreflectanceWindow = new(width, height);
-        _quadCsmShader = new("depthMapShader.vert", "depthMapShader.frag");
-        _textureQuadShader = new("depthMapShader.vert", "textureShader.frag");
+        _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _scene, Size);
+        _objectInspectorWindow = new(_scene);
+        
         // windows
         _shadowSettingsWindow = new ShadowSettingsWindow(() => this._scene.LightsManager.DirectionalLight);
 #endif
-
-        _scene = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
 
         // GL
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
@@ -106,15 +99,7 @@ public class Application : GameWindow
             return;
         }
 
-        if (_inputProvider.IsKeyPressed(InputKey.Equal))
-        {
-            DirectionalLightLayer++;
-        }
-
-        if (_inputProvider.IsKeyPressed(InputKey.Minus))
-        {
-            DirectionalLightLayer--;
-        }
+        _cascadingShadowMapsWindow.HandleInput();
     }
 
     /// <summary>
@@ -189,22 +174,14 @@ public class Application : GameWindow
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
         GL.UseProgram(0);
-
-        TexturesManager.AbortAllLoads();
-
-        _imGuiController.UnhookFromWindow(this);
-        _sceneRenderWindowFrb.Dispose();
-
-        _debugBasicShader.Dispose();
 #if DEBUG
-        _quadCsmShader.Dispose();
-        _textureQuadShader.Dispose();
-
-        _quadMesh.Dispose();
-        _depthMapWindowFrb.Dispose();
-        _ibLreflectanceWindow.Dispose();
+        _cascadingShadowMapsWindow.Dispose();
 #endif
+        TexturesManager.AbortAllLoads();
+        _imGuiController.UnhookFromWindow(this);
+        _debugBasicShader.Dispose();
         _scene.Dispose();
+        _sceneRenderWindowFrb.Dispose();
 
         base.OnUnload();
     }
@@ -226,32 +203,14 @@ public class Application : GameWindow
         GL.Viewport(0, 0, Size.X, Size.Y);
     }
 
-    private int _directionalLightLayer;
-
-    private int DirectionalLightLayer
-    {
-        get => _directionalLightLayer;
-        set
-        {
-            if (_scene.LightsManager.DirectionalLight is null)
-                return;
-
-            _directionalLightLayer = value % (_scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
-            if (_directionalLightLayer < 0)
-            {
-                _directionalLightLayer += (_scene.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
-            }
-        }
-    }
-
     protected virtual void RenderWindows(double dt)
     {
         RenderEnvironmentMapWindow();
         HelpWindow.Draw();
         StatsWindow.Draw(_scene.CamerasManager.CurrentCamera.Position);
 #if DEBUG
-        RenderObjectInspectorWindow();
-        ShadowCascadingMapsWindow();
+        _cascadingShadowMapsWindow.Draw();
+        _objectInspectorWindow.Draw();
         _shadowSettingsWindow.Render();
 #endif
         RenderSceneWindow((float)dt);
@@ -312,50 +271,11 @@ public class Application : GameWindow
         _sceneRenderWindowFrb.Resize(fbW, fbH);
         _scene.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
         DebugRenderInScene(_debugBasicShader);
+        
         _sceneRenderWindowFrb.Unbind();
         GL.Viewport(0, 0, FramebufferSize.X, FramebufferSize.Y);
         ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
         ImGui.End();
     }
-
-/* debug code */
-#if DEBUG
-    private void RenderObjectInspectorWindow()
-    {
-        if (_scene.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
-        {
-            var o = _scene.GameObjects.First(g => g == followingCamera.TargetObject);
-            ObjectInspectorWindow.Draw([o.PhysicsObject]);
-        }
-        else
-        {
-            ObjectInspectorWindow.Draw(_scene.GameObjects.Select(g => g.PhysicsObject).ToArray());
-        }
-    }
-
-    private void ShadowCascadingMapsWindow()
-    {
-        ImGui.Begin("Cascading Depth Maps");
-
-        System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        var fbScale = _imGuiController.ScaleFactor;
-        int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
-        int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        _depthMapWindowFrb.Resize(fbWidth, fbHeight);
-
-        _depthMapWindowFrb.Bind();
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-        _quadCsmShader.Use();
-        _scene.LightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader, DirectionalLightLayer);
-        _quadMesh.Render();
-
-        _depthMapWindowFrb.Unbind();
-
-        ImGui.Image(_depthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
-            new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
-        ImGui.End();
-    }
-#endif
 }

@@ -28,11 +28,13 @@ public abstract class RigidBodyApplication : Application
         if (!DoUpdate)
             return;
 
-        if (deltaTime <= 0.0f)
-            return;
-        if (deltaTime > 0.05f)
+        switch (deltaTime)
         {
-            deltaTime = 0.05f;
+            case <= 0.0f:
+                return;
+            case > 0.05f:
+                deltaTime = 0.05f;
+                break;
         }
 
         UpdateObjects(deltaTime);
