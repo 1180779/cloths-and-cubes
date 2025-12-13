@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Engine;
 
-public struct Quaternion : ICloneable
+public struct Quaternion
 {
     public Real I, J, K, R;
 
@@ -131,10 +131,5 @@ public struct Quaternion : ICloneable
         J = p.J;
         K = p.K;
         I = p.I;
-    }
-
-    public object Clone()
-    {
-        return new Quaternion(R, I, J, K);
     }
 }

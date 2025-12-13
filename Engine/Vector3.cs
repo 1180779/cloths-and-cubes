@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace Engine;
 
-public struct Vector3 : ICloneable
+public struct Vector3
 {
     public static Vector3 Gravity = new Vector3(0, (Real)(-9.81), 0);
     public static Vector3 HighGravity = new Vector3(0, (Real)(-19.62), 0);
@@ -80,11 +80,6 @@ public struct Vector3 : ICloneable
     public override string ToString()
     {
         return $"[{X:F2}, {Y:F2}, {Z:F2}]";
-    }
-
-    public object Clone()
-    {
-        return new Vector3(X, Y, Z);
     }
 
     public static Real ScalarProduct(Vector3 v1, Vector3 v2)

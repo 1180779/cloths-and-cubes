@@ -532,7 +532,7 @@ public static class CollisionDetector
         // Zero denominator indicates parallel lines
         if ((Real)Math.Abs(denom) < (Real)0.0001)
         {
-            return useOne ? (Vector3)pOne.Clone() : (Vector3)pTwo.Clone();
+            return useOne ? pOne : pTwo;
         }
 
         mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
@@ -547,7 +547,7 @@ public static class CollisionDetector
             mub > twoSize ||
             mub < -twoSize)
         {
-            return useOne ? (Vector3)pOne.Clone() : (Vector3)pTwo.Clone();
+            return useOne ? pOne : pTwo;
         }
 
         cOne = pOne + dOne * mua;
