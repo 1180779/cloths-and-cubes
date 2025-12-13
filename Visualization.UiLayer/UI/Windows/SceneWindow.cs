@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using ImGuiNET;
 
 using OpenTK.Graphics.OpenGL4;
@@ -11,16 +13,18 @@ namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class SceneWindow(
     ImGuiController imGuiController,
-    SceneManager sceneManager,
+    SceneManager sceneManagerManager,
     IInputProvider inputProvider,
     Vector2i size
 ) : IDisposable
 {
     private ImGuiController _imGuiController = imGuiController; /* borrowed */
-    private SceneManager _scene = sceneManager; /* borrowed */
+    private SceneManager _sceneManager = sceneManagerManager; /* borrowed */
     private IInputProvider _inputProvider = inputProvider; /* borrowed */
 
+    private bool _disposed;
     private WindowFrameBuffer _sceneRenderWindowFrb = new(size.X, size.Y);
+    private MsaaFrameBuffer? _msaaFrameBuffer;
     private Shader _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
 
     public delegate void DebugDraw(Shader sh);
@@ -34,26 +38,41 @@ public sealed class SceneWindow(
         bool isWindowHovered = ImGui.IsWindowHovered();
         if (isWindowHovered)
         {
-            _scene.ProcessInput(_inputProvider, dt);
+            _sceneManager.ProcessInput(_inputProvider, dt);
         }
         else
         {
-            _scene.ProcessInputOutOfFocus(_inputProvider, dt);
+            _sceneManager.ProcessInputOutOfFocus(_inputProvider, dt);
         }
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
         var fbScale = _imGuiController.ScaleFactor;
         int fbW = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
         int fbH = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        _sceneRenderWindowFrb.Resize(fbW, fbH);
-
         CameraBase.AspectRatio = viewportSize.X / viewportSize.Y;
 
-        _scene.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
+        _sceneRenderWindowFrb.Resize(fbW, fbH);
+        if (_antialiasingType != AntialiasingType.None)
+        {
+            Debug.Assert(_msaaFrameBuffer is not null);
+            _msaaFrameBuffer.Resize(fbW, fbH);
+            _sceneManager.RenderSceneWindow(fbW, fbH, _msaaFrameBuffer);
 
-        DrawDebug();
+            _msaaFrameBuffer.Bind();
+            DrawDebug();
+            _msaaFrameBuffer.Unbind();
+            
+            _msaaFrameBuffer.BlitTo(_sceneRenderWindowFrb);
+        }
+        else
+        {
+            _sceneManager.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
+            
+            _sceneRenderWindowFrb.Bind();
+            DrawDebug();
+            _sceneRenderWindowFrb.Unbind();
+        }
 
-        _sceneRenderWindowFrb.Unbind();
         GL.Viewport(0, 0, framebufferSize.X, framebufferSize.Y);
         ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
@@ -66,14 +85,70 @@ public sealed class SceneWindow(
             return;
 
         _debugBasicShader.Use();
-        _debugBasicShader.SetMatrix4("view", _scene.CamerasManager.CurrentCamera.ViewMatrix);
-        _debugBasicShader.SetMatrix4("projection", _scene.CamerasManager.CurrentCamera.ProjectionMatrix);
+        _debugBasicShader.SetMatrix4("view", _sceneManager.CamerasManager.CurrentCamera.ViewMatrix);
+        _debugBasicShader.SetMatrix4("projection", _sceneManager.CamerasManager.CurrentCamera.ProjectionMatrix);
         DebugRenderInScene(_debugBasicShader);
     }
 
     public void Dispose()
     {
+        if (_disposed)
+            return;
+        _disposed = true;
+        
         _sceneRenderWindowFrb.Dispose();
         _debugBasicShader.Dispose();
+        if (_msaaFrameBuffer is not null)
+        {
+            _msaaFrameBuffer.Dispose();
+        }
+    }
+
+    public enum AntialiasingType
+    {
+        None,
+        MSAA2,
+        MSAA4,
+        MSAA8,
+    }
+
+    private AntialiasingType _antialiasingType = AntialiasingType.None;
+    public AntialiasingType Antialiasing
+    {
+        get
+        {
+            return _antialiasingType;
+        }
+        
+        set
+        {
+            if (value == _antialiasingType)
+                return;
+            _antialiasingType = value;
+
+            int samples = _antialiasingType switch
+            {
+                AntialiasingType.None => 0,
+                AntialiasingType.MSAA2 => 2,
+                AntialiasingType.MSAA4 => 4,
+                AntialiasingType.MSAA8 => 8,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            if (_msaaFrameBuffer is not null)
+            {
+                _msaaFrameBuffer.Dispose();
+            }
+            
+            if (samples == 0)
+            {
+                _msaaFrameBuffer = null;
+            }
+            else
+            {
+                _msaaFrameBuffer =
+                    new MsaaFrameBuffer(_sceneRenderWindowFrb.Width, _sceneRenderWindowFrb.Height, samples);
+            }
+        }
     }
 }

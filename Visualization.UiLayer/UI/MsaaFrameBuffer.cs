@@ -1,10 +1,12 @@
+using System.Diagnostics;
+
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core;
 
 namespace Visualization.UiLayer.UI;
 
-public class WindowFrameBuffer : IDisposable, IBindable
+public class MsaaFrameBuffer : IDisposable, IBindable
 {
     public int FboId { get; private set; }
     public int TextureId { get; private set; }
@@ -12,14 +14,13 @@ public class WindowFrameBuffer : IDisposable, IBindable
 
     private int _width;
     private int _height;
+    private readonly int _samples;
 
-    public int Width => _width;
-    public int Height => _height;
-
-    public WindowFrameBuffer(int width, int height)
+    public MsaaFrameBuffer(int width, int height, int samples)
     {
         this._width = width;
         this._height = height;
+        this._samples = samples;
         SetupFbo();
     }
 
@@ -29,31 +30,26 @@ public class WindowFrameBuffer : IDisposable, IBindable
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, FboId);
 
         TextureId = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D, TextureId);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, _width, _height, 0, PixelFormat.Rgba,
-            PixelType.UnsignedByte, IntPtr.Zero);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+        GL.BindTexture(TextureTarget.Texture2DMultisample, TextureId);
+        GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, _samples, PixelInternalFormat.Rgba,
+            _width, _height, true);
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-            TextureTarget.Texture2D, TextureId, 0);
+            TextureTarget.Texture2DMultisample, TextureId, 0);
 
         DepthBufferId = GL.GenRenderbuffer();
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, DepthBufferId);
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, _width, _height);
+        GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, _samples,
+            RenderbufferStorage.Depth24Stencil8, _width, _height);
         GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
             RenderbufferTarget.Renderbuffer, DepthBufferId);
 
-        FramebufferErrorCode status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != FramebufferErrorCode.FramebufferComplete)
         {
-            Console.WriteLine($"Error creating FBO: {status}");
+            Debug.WriteLine($"Error creating MSAA FBO: {status}");
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        GL.BindTexture(TextureTarget.Texture2D, 0);
-        GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
     }
 
     public void Resize(int width, int height)
@@ -63,16 +59,25 @@ public class WindowFrameBuffer : IDisposable, IBindable
         this._width = width;
         this._height = height;
 
-        GL.BindTexture(TextureTarget.Texture2D, TextureId);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, this._width, this._height, 0,
-            PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+        GL.BindTexture(TextureTarget.Texture2DMultisample, TextureId);
+        GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample, _samples, PixelInternalFormat.Rgba,
+            _width, _height, true);
 
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, DepthBufferId);
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, this._width,
-            this._height);
+        GL.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, _samples,
+            RenderbufferStorage.Depth24Stencil8, _width, _height);
 
-        GL.BindTexture(TextureTarget.Texture2D, 0);
+        GL.BindTexture(TextureTarget.Texture2DMultisample, 0);
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+    }
+
+    public void BlitTo(WindowFrameBuffer target)
+    {
+        GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FboId);
+        GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, target.FboId);
+        GL.BlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, ClearBufferMask.ColorBufferBit,
+            BlitFramebufferFilter.Nearest);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
     public void Bind()

@@ -5,7 +5,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
 using Visualisation.Core;
-using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Texture;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
@@ -28,7 +27,7 @@ public class Application : GameWindow
 #if DEBUG
     protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
     protected readonly ObjectInspectorWindow _objectInspectorWindow;
-    private readonly ShadowSettingsWindow _shadowSettingsWindow;
+    private readonly GraphicsSettingsWindow _graphicsSettingsWindow;
     
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
@@ -61,7 +60,7 @@ public class Application : GameWindow
         _objectInspectorWindow = new(_sceneManager);
         
         // windows
-        _shadowSettingsWindow = new ShadowSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight);
+        _graphicsSettingsWindow = new GraphicsSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight, _sceneManager, _sceneWindow);
 #endif
 
         // GL
@@ -217,42 +216,14 @@ public class Application : GameWindow
 
     protected virtual void RenderWindows(double dt)
     {
-        RenderEnvironmentMapWindow();
         HelpWindow.Draw();
         _statsWindow.Draw();
 #if DEBUG
         _cascadingShadowMapsWindow.Draw();
         _objectInspectorWindow.Draw();
-        _shadowSettingsWindow.Render();
+        _graphicsSettingsWindow.Render();
 #endif
         _sceneWindow.Draw(FramebufferSize, (float)dt);
-    }
-
-    private void RenderEnvironmentMapWindow()
-    {
-        ImGui.Begin("Environment Map Settings");
-        int currentDisplayType = (int)_sceneManager.EnvironmentMap.DisplayType;
-        ImGui.Text("Display Type:");
-        ImGui.RadioButton("Skybox", ref currentDisplayType,
-            (int)EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap);
-        ImGui.SameLine();
-        ImGui.RadioButton("Irradiance Map", ref currentDisplayType,
-            (int)EnvironmentMap.EnvironmentMapDisplayType.IrradianceMap);
-        ImGui.SameLine();
-        ImGui.RadioButton("Prefiltered Map", ref currentDisplayType,
-            (int)EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap);
-        _sceneManager.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
-
-        if (_sceneManager.EnvironmentMap.DisplayType == EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
-        {
-            float roughness = _sceneManager.EnvironmentMap.PrefilterMapValue;
-            if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
-            {
-                _sceneManager.EnvironmentMap.PrefilterMapValue = roughness;
-            }
-        }
-
-        ImGui.End();
     }
 
     protected virtual void DebugRenderInScene(Shader sh)
@@ -265,7 +236,7 @@ public class Application : GameWindow
         return new ApplicationState
         {
 #if DEBUG
-            ShadowSettings = _shadowSettingsWindow.SaveState(),
+            ShadowSettings = _graphicsSettingsWindow.SaveState(),
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState()
 #endif
         };
@@ -276,7 +247,7 @@ public class Application : GameWindow
 #if DEBUG
         if (state.ShadowSettings is not null)
         {
-            _shadowSettingsWindow.RestoreState(state.ShadowSettings);
+            _graphicsSettingsWindow.RestoreState(state.ShadowSettings);
         }
 
         if (state.CascadingShadowMaps is not null)
