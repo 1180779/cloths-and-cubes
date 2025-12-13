@@ -8,4 +8,5 @@ public class ApplicationState
     public CascadingShadowMapsWindow.State? CascadingShadowMaps { get; set; }
     public BvhNodesWindow.State? BvhNodes { get; set; }
     public CollisionParametersWindow.State? CollisionParameters { get; set; }
+    public ClothSettingsWindow.State? ClothSettings { get; set; }
 }

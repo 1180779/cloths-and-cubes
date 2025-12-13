@@ -1,8 +1,10 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
+
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
+
 using Visualization.UiLayer.UI.Windows;
 
 using Random = Engine.Random;
@@ -13,18 +15,26 @@ public class BoxesDemo : RigidBodyApplication
 {
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
-    
+    protected ClothSettingsWindow _clothSettingsWindow = new();
+
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
-    protected Plane _plane;
+    protected Plane _plane = null!; // initialized in scene initialization
 
     protected ForceRegistry _forceRegistry = new();
-    protected Cloth _cloth;
+    protected Cloth _cloth = null!; // initialized in scene initialization
 
     protected BoxesDemo()
     {
-        _collisionParametersWindow = new (_collisionData);
-        _cloth = new Cloth(_forceRegistry);
+        _collisionParametersWindow = new(_collisionData);
+        
+    }
+
+    protected override void InitializeScene()
+    {
+        base.InitializeScene();
+        _cloth = new Cloth(_forceRegistry, _clothSettingsWindow.SizeX, _clothSettingsWindow.SizeY,
+            _clothSettingsWindow.SpringLength, _clothSettingsWindow.SpringConstant, _clothSettingsWindow.ParticleMass);
         _plane = new();
     }
 
@@ -34,7 +44,7 @@ public class BoxesDemo : RigidBodyApplication
         _collisionParametersWindow.Draw();
         _bvhNodesWindow.Draw();
         ContactsInspectorWindow.Draw(_collisionData.ContactList);
-        
+        _clothSettingsWindow.Draw();
     }
 
     protected override void DebugRenderInScene(Shader sh)
@@ -253,7 +263,8 @@ public class BoxesDemo : RigidBodyApplication
     protected override void Reset()
     {
         _forceRegistry.Clear();
-        _cloth.EngineCloth = new Engine.Cloth(_forceRegistry);
+        _cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _clothSettingsWindow.SizeX, _clothSettingsWindow.SizeY,
+            _clothSettingsWindow.SpringLength, _clothSettingsWindow.SpringConstant, _clothSettingsWindow.ParticleMass);
 
         // reset boxes; some in preconfigured positions
         if (_boxes.Length > 0)
@@ -309,12 +320,13 @@ public class BoxesDemo : RigidBodyApplication
         // Reset the contacts
         _collisionData.ContactCount = 0;
     }
-    
+
     protected override ApplicationState SaveState()
     {
         var state = base.SaveState();
         state.BvhNodes = _bvhNodesWindow.SaveState();
         state.CollisionParameters = _collisionParametersWindow.SaveState();
+        state.ClothSettings = _clothSettingsWindow.SaveState();
         return state;
     }
 
@@ -329,6 +341,11 @@ public class BoxesDemo : RigidBodyApplication
         if (state.CollisionParameters is not null)
         {
             _collisionParametersWindow.RestoreState(state.CollisionParameters);
+        }
+
+        if (state.ClothSettings is not null)
+        {
+            _clothSettingsWindow.RestoreState(state.ClothSettings);
         }
     }
 }

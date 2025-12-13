@@ -23,6 +23,23 @@ public sealed class Cloth : GameObject
         Material = MaterialConstant.BlueRubber;
     }
 
+    public Cloth(
+        ForceRegistry registry,
+        int sizeX = 21,
+        int sizeY = 21,
+        float springLength = 0.25f,
+        float springConstant = 1.0f,
+        float particleMass = 0.1f)
+    {
+        ForceRegistry = registry;
+        EngineCloth = new Engine.Cloth(ForceRegistry, sizeX, sizeY, springLength, springConstant, particleMass);
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+        VisualCloth = new SpringMesh(pts);
+        Mesh = VisualCloth;
+
+        Material = MaterialConstant.BlueRubber;
+    }
+
     protected override void PreRender()
     {
         var pts = ConvertToOpenTk(EngineCloth.Points());

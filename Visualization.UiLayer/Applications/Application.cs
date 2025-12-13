@@ -117,12 +117,13 @@ public class Application : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
-        InitializeScene();
         var state = _settingsSaverLoader.Load();
         if (state is not null)
         {
             LoadState(state);
         }
+        
+        InitializeScene();
 
         // set up internal scene objects after the scene is initialized
         // this way some objects are already in the scene and can be accessed
