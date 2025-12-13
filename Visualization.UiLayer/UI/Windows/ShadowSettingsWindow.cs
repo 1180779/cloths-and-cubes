@@ -125,4 +125,28 @@ public sealed class ShadowSettingsWindow
 
         ImGui.End();
     }
+
+    public record State(float ShadowBiasMin, float ShadowBiasMax, float ShadowBiasModifier, float ZMult);
+
+    public State SaveState()
+    {
+        return new State(_shadowBiasMin, _shadowBiasMax, _shadowBiasModifier, _zMult);
+    }
+    
+    public void RestoreState(State state)
+    {
+        _shadowBiasMin = state.ShadowBiasMin;
+        _shadowBiasMax = state.ShadowBiasMax;
+        _shadowBiasModifier = state.ShadowBiasModifier;
+        _zMult = state.ZMult;
+        
+        var light = this._getDirectionalLight();
+        if (light is not null)
+        {
+            light.ShadowBiasMin = _shadowBiasMin;
+            light.ShadowBiasMax = _shadowBiasMax;
+            light.ShadowBiasModifier = _shadowBiasModifier;
+            light.ZMult = _zMult;
+        }
+    }
 }

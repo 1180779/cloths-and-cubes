@@ -23,6 +23,7 @@ public class Application : GameWindow
     protected readonly IInputProvider _inputProvider;
     protected readonly WindowFrameBuffer _sceneRenderWindowFrb;
     protected readonly SceneManager _scene;
+    protected readonly SettingsSaverLoader _settingsSaverLoader;
 
     protected readonly Shader _debugBasicShader;
     
@@ -55,6 +56,7 @@ public class Application : GameWindow
         _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
         
         _scene = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
+        _settingsSaverLoader = new SettingsSaverLoader();
 #if DEBUG
         _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _scene, Size);
         _objectInspectorWindow = new(_scene);
@@ -116,6 +118,11 @@ public class Application : GameWindow
     {
         base.OnLoad();
         InitializeScene();
+        var state = _settingsSaverLoader.Load();
+        if (state is not null)
+        {
+            LoadState(state);
+        }
 
         // set up internal scene objects after the scene is initialized
         // this way some objects are already in the scene and can be accessed
@@ -172,6 +179,9 @@ public class Application : GameWindow
 
     protected override void OnUnload()
     {
+        var state = SaveState();
+        _settingsSaverLoader.Save(state);
+        
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
         GL.UseProgram(0);
@@ -282,5 +292,27 @@ public class Application : GameWindow
         ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
         ImGui.End();
+    }
+
+    protected virtual ApplicationState SaveState()
+    {
+        return new ApplicationState
+        {
+            ShadowSettings = _shadowSettingsWindow.SaveState(),
+            CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState()
+        };
+    }
+
+    protected virtual void LoadState(ApplicationState state)
+    {
+        if (state.ShadowSettings is not null)
+        {
+            _shadowSettingsWindow.RestoreState(state.ShadowSettings);
+        }
+
+        if (state.CascadingShadowMaps is not null)
+        {
+            _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);
+        }
     }
 }

@@ -83,7 +83,16 @@ public sealed class CascadingShadowMapsWindow(ImGuiController imGuiController, I
         _depthMapWindowFrb.Dispose();
         _quadCsmShader.Dispose();
         _quadMesh.Dispose();
-        
-        GC.SuppressFinalize(this);
+    }
+
+    public record State(int DirectionalLightLayer); 
+    public State SaveState()
+    {
+        return new State(DirectionalLightLayer);
+    }
+
+    public void RestoreState(State state)
+    {
+        DirectionalLightLayer = state.DirectionalLightLayer;
     }
 }

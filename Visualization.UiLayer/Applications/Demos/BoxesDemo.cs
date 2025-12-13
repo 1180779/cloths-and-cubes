@@ -1,12 +1,8 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
-
-using ImGuiNET;
-
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
-
 using Visualization.UiLayer.UI.Windows;
 
 using Random = Engine.Random;
@@ -15,6 +11,9 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesDemo : RigidBodyApplication
 {
+    protected BvhNodesWindow _bvhNodesWindow = new();
+    protected CollisionParametersWindow _collisionParametersWindow;
+    
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
     protected Plane _plane;
@@ -22,23 +21,9 @@ public class BoxesDemo : RigidBodyApplication
     protected ForceRegistry _forceRegistry = new();
     protected Cloth _cloth;
 
-    private bool[] _bvhLevelsToRender = Enumerable.Repeat(false, 10).ToArray();
-    private bool _bvhLeafsRender = false;
-
-    private readonly Vector3 _leafColor = new(0.5f, 0.5f, 1);
-
-    private readonly Vector3[] _levelColors =
-    [
-        new(1.0f, 0.0f, 0.0f), // Red
-        new(0.0f, 1.0f, 0.0f), // Green
-        new(0.0f, 0.0f, 1.0f), // Blue
-        new(1.0f, 1.0f, 0.0f), // Yellow
-        new(0.0f, 1.0f, 1.0f), // Cyan
-        new(1.0f, 0.0f, 1.0f) // Magenta
-    ];
-
     protected BoxesDemo()
     {
+        _collisionParametersWindow = new (_collisionData);
         _cloth = new Cloth(_forceRegistry);
         _plane = new();
     }
@@ -46,33 +31,10 @@ public class BoxesDemo : RigidBodyApplication
     protected override void RenderWindows(double dt)
     {
         base.RenderWindows(dt);
-        CollisionParametersWindow.Draw(_collisionData);
+        _collisionParametersWindow.Draw();
+        _bvhNodesWindow.Draw();
         ContactsInspectorWindow.Draw(_collisionData.ContactList);
-
-        ImGui.Begin("Bvh Nodes to render");
-        if (ImGui.Button("Select All"))
-        {
-            _bvhLevelsToRender = Enumerable.Repeat(true, _bvhLevelsToRender.Length).ToArray();
-        }
-
-        ImGui.SameLine();
-        if (ImGui.Button("Deselect All"))
-        {
-            _bvhLevelsToRender = Enumerable.Repeat(false, _bvhLevelsToRender.Length).ToArray();
-        }
-
-        ImGui.Checkbox("Leafs", ref _bvhLeafsRender);
-
-        for (var i = 0; i < _bvhLevelsToRender.Length; i++)
-        {
-            var color = _levelColors[i % _levelColors.Length];
-            ImGui.PushStyleColor(ImGuiCol.Text,
-                new System.Numerics.Vector4(new System.Numerics.Vector3(color.X, color.Y, color.Z), 1.0f));
-            ImGui.Checkbox($"Level {i}", ref _bvhLevelsToRender[i]);
-            ImGui.PopStyleColor();
-        }
-
-        ImGui.End();
+        
     }
 
     protected override void DebugRenderInScene(Shader sh)
@@ -97,19 +59,7 @@ public class BoxesDemo : RigidBodyApplication
         }
 
         BVH bvh = BVH.Build(boxDict);
-
-        BvhWireframe bvhWireframe = new(bvh)
-        {
-            RenderLeafs = _bvhLeafsRender,
-            LeafColor = _leafColor,
-            LevelColors = _levelColors,
-            LevelsToRender = _bvhLevelsToRender
-                .Select((enabled, index) => new { enabled, index })
-                .Where(x => x.enabled)
-                .Select(x => x.index)
-                .ToArray()
-        };
-        bvhWireframe.Render(sh);
+        _bvhNodesWindow.DebugRenderInScene(sh, bvh);
     }
 
     /// <summary>
@@ -358,5 +308,27 @@ public class BoxesDemo : RigidBodyApplication
 
         // Reset the contacts
         _collisionData.ContactCount = 0;
+    }
+    
+    protected override ApplicationState SaveState()
+    {
+        var state = base.SaveState();
+        state.BvhNodes = _bvhNodesWindow.SaveState();
+        state.CollisionParameters = _collisionParametersWindow.SaveState();
+        return state;
+    }
+
+    protected override void LoadState(ApplicationState state)
+    {
+        base.LoadState(state);
+        if (state.BvhNodes is not null)
+        {
+            _bvhNodesWindow.RestoreState(state.BvhNodes);
+        }
+
+        if (state.CollisionParameters is not null)
+        {
+            _collisionParametersWindow.RestoreState(state.CollisionParameters);
+        }
     }
 }
