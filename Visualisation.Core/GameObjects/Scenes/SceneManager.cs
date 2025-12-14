@@ -1,8 +1,11 @@
+using System.Security;
+
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Light;
+using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
 
@@ -61,6 +64,9 @@ public abstract class SceneManager : IDisposable
     }
 
     public abstract void SetUp();
+    
+    public SelectionManager? SelectionManager { get; set; }
+    public IMaterial SelectionMaterial { get; set; } = MaterialConstant.WhitePlastic;
 
     public void ProcessInputOutOfFocus(IInputProvider input, float dt)
     {
@@ -101,7 +107,15 @@ public abstract class SceneManager : IDisposable
         LightsManager.SetForShader(PbrShader);
         foreach (var gameObject in _gameObjects)
         {
-            gameObject.SetForShader(PbrShader);
+            if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)
+            {
+                gameObject.SetForShaderNoMaterial(PbrShader);
+                SelectionMaterial.SetForShader(PbrShader);
+            }
+            else
+            {
+                gameObject.SetForShader(PbrShader);
+            }
             gameObject.Render();
         }
     }

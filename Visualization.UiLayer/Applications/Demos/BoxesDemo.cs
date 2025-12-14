@@ -1,12 +1,17 @@
+using Engine;
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
+using Engine.Rays;
+
+using ImGuiNET;
 
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
 
 using Visualization.UiLayer.UI.Windows;
 
+using Cloth = Visualisation.Core.GameObjects.Cloth;
 using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
@@ -16,12 +21,17 @@ public class BoxesDemo : RigidBodyApplication
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
     protected Plane _plane = null!; // initialized in scene initialization
-
+    protected BVH _bvh = BVH.Build([]);
+    protected Dictionary<int, IBoxable> _bvhDictionary = [];
+    
+    protected SelectionManager _selectionManager = null!;
+    
     protected ForceRegistry _forceRegistry = new();
     protected Cloth _cloth = null!; // initialized in scene initialization
 
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
+    protected SelectedObjectWindow _selectedObjectWindow = null!;
 
     protected BoxesDemoSettingsWindow
         _boxesDemoSettingsWindow =
@@ -82,6 +92,38 @@ public class BoxesDemo : RigidBodyApplication
     protected override void InitializeScene()
     {
         base.InitializeScene();
+        
+        _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
+            (ray, index) =>
+            {
+                if (!_bvhDictionary.TryGetValue(index, out var item))
+                {
+                    return (false, 0, null);
+                }
+
+                Real distance;
+                switch (item)
+                {
+                    case Box box:
+                        if (RayIntersection.IntersectRayOBB(ray, box.EngineBox, out distance))
+                            return (true, distance, box);
+                        break;
+                    case Ball ball:
+                        if (RayIntersection.IntersectRaySphere(ray, ball.EngineBall, out distance))
+                            return (true, distance, ball);
+                        break;
+                    case Particle particle:
+                        if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
+                            return (true, distance, particle);
+                        break;
+                }
+
+                return (false, 0, null);
+            });
+
+        _selectedObjectWindow = new(_selectionManager);
+        _sceneManager.SelectionManager = _selectionManager;
+
         /* add cloth to the scene */
         _cloth = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
             _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
@@ -103,6 +145,7 @@ public class BoxesDemo : RigidBodyApplication
     {
         base.RenderWindows(dt);
         _collisionParametersWindow.Draw();
+        _selectedObjectWindow.Draw();
         _bvhNodesWindow.Draw();
 #if DEBUG
         ContactsInspectorWindow.Draw(_collisionData.ContactList);
@@ -143,10 +186,10 @@ public class BoxesDemo : RigidBodyApplication
         // Set up the collision data structure
         _collisionData.Reset(MaxContacts);
 
-        Dictionary<int, IBoxable> boxDict = new();
+        _bvhDictionary.Clear();
         for (int i = 0; i < _boxes.Length + _balls.Length; i++)
         {
-            boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
+            _bvhDictionary[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
         for (int i = 0; i < _cloth.EngineCloth.Particles.GetLength(0); i++)
@@ -156,12 +199,28 @@ public class BoxesDemo : RigidBodyApplication
                 var particle = _cloth.EngineCloth.Particles[i, j];
                 if (particle != null && particle.Body != null)
                 {
-                    boxDict[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.SizeY + j] = particle;
+                    _bvhDictionary[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.SizeY + j] = particle;
                 }
             }
         }
 
-        BVH bvh = BVH.Build(boxDict);
+        _bvh = BVH.Build(_bvhDictionary);
+        
+        if (_sceneWindow.IsHovered && !_sceneManager.CamerasManager.CameraMode)
+        {
+            var mousePos = ImGui.GetMousePos();
+            var cursorScreenPos = ImGui.GetCursorScreenPos();
+            var imageTopLeft = cursorScreenPos;
+
+            float relativeX = mousePos.X - imageTopLeft.X;
+            float relativeY = mousePos.Y - imageTopLeft.Y;
+            
+            var fbScale = _imGuiController.ScaleFactor;
+            float scaledX = relativeX * fbScale.X;
+            float scaledY = relativeY * fbScale.Y;
+            var viewportMousePos = new Vector2(scaledX, scaledY);
+            _selectionManager.HandleInput(viewportMousePos, _sceneWindow.Width, _sceneWindow.Height);
+        }
 
         // Process box-plane collisions
         foreach (var box in _boxes)
@@ -186,7 +245,7 @@ public class BoxesDemo : RigidBodyApplication
         }
 
         List<(int, int)> potentialCollisions = new();
-        BVH.GetPotentialContacts(ref potentialCollisions, bvh.root);
+        BVH.GetPotentialContacts(ref potentialCollisions, _bvh.root);
         //
         foreach (var pair in potentialCollisions)
         {

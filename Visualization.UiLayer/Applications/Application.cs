@@ -17,7 +17,7 @@ namespace Visualization.UiLayer.Applications;
 
 public class Application : GameWindow
 {
-    private readonly ImGuiController _imGuiController;
+    protected readonly ImGuiController _imGuiController;
     protected readonly IInputProvider _inputProvider;
     protected readonly SceneManager _sceneManager;
     protected readonly SettingsSaverLoader _settingsSaverLoader;

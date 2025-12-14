@@ -12,9 +12,9 @@ public class Particle : IBoxable
     public Real damping;
     public Real inverseMass { get; private set; }
 
-    Collision.Bounding_Volume_Hierarchy.BoundingBox IBoxable.GetBoundingBox()
+    public BoundingBox GetBoundingBox()
     {
-        return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+        return new BoundingBox(
             center: this.position,
             halfSize: new Vector3(0.1f, 0.1f, 0.1f) // small AABB for particle
         );

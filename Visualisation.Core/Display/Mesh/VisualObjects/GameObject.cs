@@ -1,4 +1,5 @@
 using Visualisation.Core.Display.Materials;
+using Visualisation.Core.GameObjects;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
@@ -15,6 +16,10 @@ public abstract class GameObject : IIdentifiable, IDisposable
     public IMaterial Material { get; set; } = MaterialConstant.RedPlastic; // MaterialTextured.Organic.Feathers;
     public Guid Id { get; set; } = Guid.NewGuid();
 
+    public void SetForShaderNoMaterial(Shader sh)
+    {
+        sh.SetMatrix4("model", Model);
+    }
     public void SetForShader(Shader sh)
     {
         sh.SetMatrix4("model", Model);
@@ -33,4 +38,7 @@ public abstract class GameObject : IIdentifiable, IDisposable
     {
         Mesh.Dispose();
     }
+
+    public string DisplayName => $"{GetType().Name} ({Id.ToString().Substring(0, 8)})";
+    public object InspectedObject => this;
 }

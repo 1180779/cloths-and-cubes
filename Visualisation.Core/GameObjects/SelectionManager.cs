@@ -2,7 +2,6 @@ using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects;
@@ -11,15 +10,15 @@ namespace Visualisation.Core.GameObjects;
 /// Manages object selection via mouse raycasting.
 /// Handles converting mouse coordinates to world-space rays and detecting intersections.
 /// </summary>
-public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBase> cameraProvider, Func<BVH> bvhProvider, Func<Ray, int, (bool, Real, GameObject)> testBvhIndexRayIntersection)
+public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBase> cameraProvider, Func<BVH> bvhProvider, Func<Ray, int, (bool, Real, object?)> testBvhIndexRayIntersection)
 {
-    private GameObject? _selectedObject;
+    private object? _selectedObject;
     private readonly IInputProvider _inputProvider = inputProvider;
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
-    private readonly Func<Ray, int, (bool, Real, GameObject)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
+    private readonly Func<Ray, int, (bool, Real, object?)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
 
-    public GameObject? SelectedObject
+    public object? SelectedObject
     {
         get
         {
@@ -40,7 +39,7 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
     /// <summary>
     /// Event raised when the selected object changes.
     /// </summary>
-    public event Action<GameObject?>? OnSelectionChanged;
+    public event Action<object?>? OnSelectionChanged;
 
     /// <summary>
     /// Updates selection based on mouse input. 
@@ -104,7 +103,7 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
         Ray ray = new Ray(engineRayOrigin, engineRayDirection);
 
         // Find the closest intersecting object
-        GameObject? closestObject = null;
+        object? closestObject = null;
         Real closestDistance = Real.MaxValue;
 
         BVH bvh = _bvhProvider();

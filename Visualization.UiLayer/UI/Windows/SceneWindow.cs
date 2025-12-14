@@ -31,12 +31,17 @@ public sealed class SceneWindow(
 
     public DebugDraw? DebugRenderInScene { get; set; }
 
+    public int Width => _sceneRenderWindowFrb.Width;
+    public int Height => _sceneRenderWindowFrb.Height;
+    private bool _isHovered;
+    public bool IsHovered => _isHovered;
+    
     public void Draw(Vector2i framebufferSize, float dt)
     {
         ImGui.Begin("Game Viewport");
 
-        bool isWindowHovered = ImGui.IsWindowHovered();
-        if (isWindowHovered)
+        _isHovered = ImGui.IsWindowHovered();
+        if (_isHovered)
         {
             _sceneManager.ProcessInput(_inputProvider, dt);
         }

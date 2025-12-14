@@ -54,16 +54,16 @@ public class CamerasManager
     {
         if (!CameraMode)
         {
-            if (input.IsMouseButtonPressed(MouseButton.Left))
+            if (input.IsKeyPressed(InputKey.L))
             {
-                input.SetCursorState(CursorState.Grabbed); //
+                input.SetCursorState(CursorState.Grabbed);
                 CameraMode = true;
             }
 
             return;
         }
 
-        if (input.IsKeyPressed(InputKey.Escape))
+        if (input.IsKeyPressed(InputKey.L) || input.IsKeyPressed(InputKey.Escape))
         {
             input.SetCursorState(CursorState.Normal);
             CameraMode = false;

@@ -59,4 +59,64 @@ public class MaterialConstant : IMaterial
     {
         Albedo = new Vector3(0.5f, 0.3f, 0.1f), Metallic = 0.0f, Roughness = 0.6f, Ao = 1.0f
     };
+    
+    public static MaterialConstant Bronze => new MaterialConstant
+    {
+        Albedo = new Vector3(0.714f, 0.428f, 0.181f), Metallic = 1.0f, Roughness = 0.30f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Copper => new MaterialConstant
+    {
+        Albedo = new Vector3(0.955f, 0.637f, 0.538f), Metallic = 1.0f, Roughness = 0.25f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Brass => new MaterialConstant
+    {
+        Albedo = new Vector3(0.71f, 0.65f, 0.26f), Metallic = 1.0f, Roughness = 0.25f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Chrome => new MaterialConstant
+    {
+        Albedo = new Vector3(0.95f, 0.93f, 0.88f), Metallic = 1.0f, Roughness = 0.05f, Ao = 1.0f
+    };
+
+    public static MaterialConstant WhitePlastic => new MaterialConstant
+    {
+        Albedo = new Vector3(0.9f, 0.9f, 0.9f), Metallic = 0.0f, Roughness = 0.40f, Ao = 1.0f
+    };
+
+    public static MaterialConstant GreenPlastic => new MaterialConstant
+    {
+        Albedo = new Vector3(0.0f, 0.6f, 0.1f), Metallic = 0.0f, Roughness = 0.30f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Obsidian => new MaterialConstant
+    {
+        Albedo = new Vector3(0.053f, 0.05f, 0.066f), Metallic = 0.0f, Roughness = 0.08f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Marble => new MaterialConstant
+    {
+        Albedo = new Vector3(0.86f, 0.86f, 0.86f), Metallic = 0.0f, Roughness = 0.60f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Concrete => new MaterialConstant
+    {
+        Albedo = new Vector3(0.5f, 0.5f, 0.5f), Metallic = 0.0f, Roughness = 0.90f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Fabric => new MaterialConstant
+    {
+        Albedo = new Vector3(0.4f, 0.1f, 0.1f), Metallic = 0.0f, Roughness = 0.80f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Leather => new MaterialConstant
+    {
+        Albedo = new Vector3(0.36f, 0.25f, 0.2f), Metallic = 0.0f, Roughness = 0.60f, Ao = 1.0f
+    };
+
+    public static MaterialConstant Porcelain => new MaterialConstant
+    {
+        Albedo = new Vector3(0.98f, 0.97f, 0.95f), Metallic = 0.0f, Roughness = 0.12f, Ao = 1.0f
+    };
 }
