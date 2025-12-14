@@ -82,13 +82,13 @@ public static class IntersectionTests
     {
         if (a == null || b == null) return false;
 
-        var distX = Math.Abs(a.center.X - b.center.X);
-        var distY = Math.Abs(a.center.Y - b.center.Y);
-        var distZ = Math.Abs(a.center.Z - b.center.Z);
+        var distX = Math.Abs(a.Center.X - b.Center.X);
+        var distY = Math.Abs(a.Center.Y - b.Center.Y);
+        var distZ = Math.Abs(a.Center.Z - b.Center.Z);
 
-        return distX < a.halfSize.X + b.halfSize.X &&
-            distY < a.halfSize.Y + b.halfSize.Y &&
-            distZ < a.halfSize.Z + b.halfSize.Z;
+        return distX < a.HalfSize.X + b.HalfSize.X &&
+            distY < a.HalfSize.Y + b.HalfSize.Y &&
+            distZ < a.HalfSize.Z + b.HalfSize.Z;
     }
     
     /// <summary>

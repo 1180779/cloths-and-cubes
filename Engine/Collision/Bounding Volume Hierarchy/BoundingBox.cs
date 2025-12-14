@@ -8,13 +8,13 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
 
     public class BoundingBox : BoundingVolume
     {
-        public Vector3 center;
-        public Vector3 halfSize;
+        public Vector3 Center;
+        public Vector3 HalfSize;
 
         public BoundingBox(Vector3 center, Vector3 halfSize)
         {
-            this.center = center;
-            this.halfSize = halfSize;
+            this.Center = center;
+            this.HalfSize = halfSize;
         }
 
         public static BoundingBox CreateFastAABBFromBox(Box box)
@@ -36,14 +36,14 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
         public static BoundingBox JoinAABBs(BoundingBox a, BoundingBox b)
         {
             var min = new Vector3(
-                Math.Min(a.center.X - a.halfSize.X, b.center.X - b.halfSize.X),
-                Math.Min(a.center.Y - a.halfSize.Y, b.center.Y - b.halfSize.Y),
-                Math.Min(a.center.Z - a.halfSize.Z, b.center.Z - b.halfSize.Z)
+                Math.Min(a.Center.X - a.HalfSize.X, b.Center.X - b.HalfSize.X),
+                Math.Min(a.Center.Y - a.HalfSize.Y, b.Center.Y - b.HalfSize.Y),
+                Math.Min(a.Center.Z - a.HalfSize.Z, b.Center.Z - b.HalfSize.Z)
             );
             var max = new Vector3(
-                Math.Max(a.center.X + a.halfSize.X, b.center.X + b.halfSize.X),
-                Math.Max(a.center.Y + a.halfSize.Y, b.center.Y + b.halfSize.Y),
-                Math.Max(a.center.Z + a.halfSize.Z, b.center.Z + b.halfSize.Z)
+                Math.Max(a.Center.X + a.HalfSize.X, b.Center.X + b.HalfSize.X),
+                Math.Max(a.Center.Y + a.HalfSize.Y, b.Center.Y + b.HalfSize.Y),
+                Math.Max(a.Center.Z + a.HalfSize.Z, b.Center.Z + b.HalfSize.Z)
             );
             var center = new Vector3(
                 (min.X + max.X) / 2,

@@ -37,8 +37,8 @@ public class BvhWireframe
 
         if (LevelColors != null && RenderLeafs && node.isLeaf)
         {
-            var center = node.bounds.center;
-            var size = node.bounds.halfSize * 2.0f;
+            var center = node.bounds.Center;
+            var size = node.bounds.HalfSize * 2.0f;
 
             // Calculate model matrix: Translate to center, then Scale
             var model = Matrix4.CreateScale(new Vector3(size.X, size.Y, size.Z)) *
@@ -51,8 +51,8 @@ public class BvhWireframe
 
         if (LevelsToRender == null || Array.IndexOf(LevelsToRender, depth) != -1)
         {
-            var center = node.bounds.center;
-            var size = node.bounds.halfSize * 2.0f;
+            var center = node.bounds.Center;
+            var size = node.bounds.HalfSize * 2.0f;
 
             // Calculate model matrix: Translate to center, then Scale
             var model = Matrix4.CreateScale(new Vector3(size.X, size.Y, size.Z)) *
