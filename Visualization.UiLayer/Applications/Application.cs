@@ -70,7 +70,19 @@ public class Application : GameWindow
     }
 
     protected bool StepsLimit { get; set; }
-    protected long AvailableSteps { get; set; }
+    protected long AvailableStepsInternal { get; set; }
+
+    protected virtual long AvailableSteps
+    {
+        get
+        {
+            return AvailableStepsInternal;
+        }
+        set
+        {
+            AvailableStepsInternal = value;
+        }
+    }
 
     protected bool DoUpdate
     {

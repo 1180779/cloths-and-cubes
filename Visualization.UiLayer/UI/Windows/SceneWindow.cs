@@ -35,6 +35,8 @@ public sealed class SceneWindow(
     public int Height => _sceneRenderWindowFrb.Height;
     private bool _isHovered;
     public bool IsHovered => _isHovered;
+    public System.Numerics.Vector2 ImageTopLeft { get; private set; }
+    public System.Numerics.Vector2 ImageSize { get; private set; }
     
     public void Draw(Vector2i framebufferSize, float dt)
     {
@@ -79,8 +81,17 @@ public sealed class SceneWindow(
         }
 
         GL.Viewport(0, 0, framebufferSize.X, framebufferSize.Y);
+        
+        // Get cursor position before drawing the image
+        var cursorPos = ImGui.GetCursorScreenPos();
+        
         ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
+        
+        // Store the image bounds for mouse coordinate calculations
+        ImageTopLeft = cursorPos;
+        ImageSize = viewportSize;
+        
         ImGui.End();
     }
 

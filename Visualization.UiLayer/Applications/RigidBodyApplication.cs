@@ -23,10 +23,15 @@ public abstract class RigidBodyApplication : Application
     protected abstract void UpdateObjects(float duration);
     protected abstract void Reset();
 
+    protected virtual void OnNoPhysicsUpdate() { }
+
     protected override void Update(float deltaTime)
     {
         if (!DoUpdate)
+        {
+            OnNoPhysicsUpdate();
             return;
+        }
 
         switch (deltaTime)
         {
@@ -41,7 +46,7 @@ public abstract class RigidBodyApplication : Application
 
         // Perform the contact generation
         GenerateContacts();
-
+        
         // Resolve detected contacts
         _contactResolver.ResolveContacts(
             _collisionData.ContactList,

@@ -176,16 +176,11 @@ public class BoxesDemo : RigidBodyApplication
 
         BVH bvh = BVH.Build(boxDict);
         _bvhNodesWindow.DebugRenderInScene(sh, bvh);
+        _selectionManager.DebugRenderInScene();
     }
 
-    /// <summary>
-    /// Processes the contact generation code.
-    /// </summary>
-    protected override void GenerateContacts()
+    protected void BvhRebuild()
     {
-        // Set up the collision data structure
-        _collisionData.Reset(MaxContacts);
-
         _bvhDictionary.Clear();
         for (int i = 0; i < _boxes.Length + _balls.Length; i++)
         {
@@ -203,14 +198,42 @@ public class BoxesDemo : RigidBodyApplication
                 }
             }
         }
+    }
+    
+    protected override long AvailableSteps
+    {
+        get
+        {
+            return base.AvailableSteps;
+        }
+        set
+        {
+            _bhvRebuildOnNoUpdate = true;
+            base.AvailableSteps = value;
+        }
+    }
+    
+    protected bool _bhvRebuildOnNoUpdate;
+    protected override void OnNoPhysicsUpdate()
+    {
+        base.OnNoPhysicsUpdate();
+
+        if (!_bhvRebuildOnNoUpdate)
+        {
+            BvhRebuild();
+            _bhvRebuildOnNoUpdate = true;
+        }
 
         _bvh = BVH.Build(_bvhDictionary);
-        
+        ObjectSelectionHandling();
+    }
+
+    protected void ObjectSelectionHandling()
+    {
         if (_sceneWindow.IsHovered && !_sceneManager.CamerasManager.CameraMode)
         {
             var mousePos = ImGui.GetMousePos();
-            var cursorScreenPos = ImGui.GetCursorScreenPos();
-            var imageTopLeft = cursorScreenPos;
+            var imageTopLeft = _sceneWindow.ImageTopLeft;
 
             float relativeX = mousePos.X - imageTopLeft.X;
             float relativeY = mousePos.Y - imageTopLeft.Y;
@@ -221,7 +244,19 @@ public class BoxesDemo : RigidBodyApplication
             var viewportMousePos = new Vector2(scaledX, scaledY);
             _selectionManager.HandleInput(viewportMousePos, _sceneWindow.Width, _sceneWindow.Height);
         }
+    }
 
+    /// <summary>
+    /// Processes the contact generation code.
+    /// </summary>
+    protected override void GenerateContacts()
+    {
+        // Set up the collision data structure
+        _collisionData.Reset(MaxContacts);
+
+        BvhRebuild();
+        ObjectSelectionHandling();
+        
         // Process box-plane collisions
         foreach (var box in _boxes)
         {
