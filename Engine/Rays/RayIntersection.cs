@@ -37,27 +37,6 @@ public static class RayIntersection
 
         distance = tMin;
         return true;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool Slab(Real origin, Real dir, Real invDir, Real minVal, Real maxVal, ref Real tMin, ref Real tMax)
-        {
-            Real eps = Core.Epsilon;
-
-            // Parallel case would produce Nans (0 * infinity)
-            if (dir > -eps && dir < eps)
-                return origin >= minVal && origin <= maxVal;
-
-            Real t1 = (minVal - origin) * invDir;
-            Real t2 = (maxVal - origin) * invDir;
-
-            if (t1 > t2)
-                (t1, t2) = (t2, t1);
-
-            if (t1 > tMin) tMin = t1;
-            if (t2 < tMax) tMax = t2;
-
-            return tMin <= tMax;
-        }
     }
 
     /// <summary>
@@ -69,15 +48,21 @@ public static class RayIntersection
     /// <returns>True if the ray intersects the sphere, false otherwise.</returns>
     public static bool IntersectRaySphere(Ray ray, CollisionSphere sphere, out Real distance)
     {
-        // P(t) = O + t*D                       C - sphere center
-        // |X - C|^2 = R^2                      X - point on the sphere surface
-        // |P(t) - C|^2 = R^2                   R - sphere radius
-        // |O + t*D - C|^2 = R^2                D - ray direction
-        // |O + t*D - C|^2 - R^2 = 0
+        // Solves the intersection of a ray
+        // P(t) = O + t*D
+        // with a sphere
+        // (X - C)^2 = R^2.
         //
-        // |m + t*D|^2 - R^2 = 0                m = O - C
-        // m*m + 2*m*t*D + t^2*D*D - R^2 = 0
-        // (D*D) t^2 + 2 (m*D) t + (m*m − R^2) = 0
+        // This yields a quadratic equation in t:
+        // (D*D)t^2 + 2(D*(O - C))t + (O - C)*(O - C) - R^2 = 0
+        //
+        // Let m = O - C. Assuming the ray direction is normalized (D*D = 1), this simplifies to:
+        // t^2 + 2(D*m)t + m*m - R^2 = 0
+        //
+        // Let b = D*m and c = m*m - R^2.
+        // The equation is
+        // t^2 + 2bt + c = 0.
+        // The solutions are t = -b +- sqrt(b^2 - c).
         distance = 0;
 
         Vector3 sphereCenter = sphere.GetAxis(3);
@@ -86,23 +71,34 @@ public static class RayIntersection
         Real b = m * ray.Direction;
         Real c = m * m - sphere.Radius * sphere.Radius;
 
-        // Exit if the ray's origin is outside the sphere (c > 0) and the ray is pointing away from the sphere (b > 0)
+        // Exit if the ray's origin is outside the sphere (c > 0) and the ray is pointing away from the sphere (b > 0).
         if (c > 0.0f && b > 0.0f)
             return false;
 
         Real discr = b * b - c;
 
-        // A negative discriminant corresponds to the ray missing the sphere
+        // A negative discriminant corresponds to the ray missing the sphere.
         if (discr < 0.0f)
             return false;
 
-        // Ray now found to intersect the sphere, compute smallest t value of intersection
-        distance = -b - (Real)Math.Sqrt(discr);
+        // Ray intersects the sphere. We want the smallest non-negative root, which is the nearest intersection point.
+        // The smaller root is t0 = -b - sqrt(discr).
+        
+        Real t;
+        Real sqrtDiscr = (Real)Math.Sqrt(discr);
+        if (b < 0)
+        {
+            // When b is negative, compute the larger root t1 = -b + sqrt(discr) first,
+            // and then find t0 using Vieta's formulas: t0 * t1 = c => t0 = c / t1.
+            t = c / (-b + sqrtDiscr);
+        }
+        else
+        {
+            // When b is non-negative, use the standard formula for t0
+            t = -b - sqrtDiscr;
+        }
 
-        // If t is negative, the ray started inside the sphere so clamp t to zero
-        if (distance < 0.0f)
-            distance = 0.0f;
-
+        distance = t;
         return true;
     }
 
@@ -117,69 +113,56 @@ public static class RayIntersection
     public static bool IntersectRayOBB(Ray ray, CollisionBox box, out Real distance)
     {
         distance = 0;
-
-        // Transform ray into box's local space
-        Vector3 boxCenter = box.GetAxis(3);
-        Vector3 localOrigin = ray.Origin - boxCenter;
-
-        // Get the three axes of the box
-        Vector3 axisX = box.GetAxis(0);
-        Vector3 axisY = box.GetAxis(1);
-        Vector3 axisZ = box.GetAxis(2);
-
-        // Transform ray to local space by projecting onto box axes
-        Vector3 localRayOrigin = new(
-            localOrigin * axisX,
-            localOrigin * axisY,
-            localOrigin * axisZ
-        );
-
-        Vector3 localRayDir = new(
-            ray.Direction * axisX,
-            ray.Direction * axisY,
-            ray.Direction * axisZ
-        );
-
-        // Now perform AABB test in local space
-        Vector3 min = new(-box.HalfSize.X, -box.HalfSize.Y, -box.HalfSize.Z);
-        Vector3 max = new(box.HalfSize.X, box.HalfSize.Y, box.HalfSize.Z);
-
         Real tMin = 0.0f;
         Real tMax = Real.MaxValue;
 
-        for (int i = 0; i < 3; i++)
-        {
-            Real origin = i == 0 ? localRayOrigin.X : (i == 1 ? localRayOrigin.Y : localRayOrigin.Z);
-            Real dir = i == 0 ? localRayDir.X : (i == 1 ? localRayDir.Y : localRayDir.Z);
-            Real minVal = i == 0 ? min.X : (i == 1 ? min.Y : min.Z);
-            Real maxVal = i == 0 ? max.X : (i == 1 ? max.Y : max.Z);
+        Vector3 boxCenter = box.GetAxis(3);
+        Vector3 localOrigin = ray.Origin - boxCenter;
 
-            if (Math.Abs(dir) < Core.Epsilon)
-            {
-                if (origin < minVal || origin > maxVal)
-                    return false;
-            }
-            else
-            {
-                Real ood = 1.0f / dir;
-                Real t1 = (minVal - origin) * ood;
-                Real t2 = (maxVal - origin) * ood;
+        // X-axis slab test
+        Vector3 axisX = box.GetAxis(0);
+        Real dotOriginX = localOrigin * axisX;
+        Real dotDirX = ray.Direction * axisX;
+        if (!Slab(dotOriginX, dotDirX, 1.0f / dotDirX, -box.HalfSize.X, box.HalfSize.X, ref tMin, ref tMax))
+            return false;
 
-                if (t1 > t2)
-                {
-                    (t1, t2) = (t2, t1);
-                }
+        // Y-axis slab test
+        Vector3 axisY = box.GetAxis(1);
+        Real dotOriginY = localOrigin * axisY;
+        Real dotDirY = ray.Direction * axisY;
+        if (!Slab(dotOriginY, dotDirY, 1.0f / dotDirY, -box.HalfSize.Y, box.HalfSize.Y, ref tMin, ref tMax))
+            return false;
 
-                tMin = Math.Max(tMin, t1);
-                tMax = Math.Min(tMax, t2);
-
-                if (tMin > tMax)
-                    return false;
-            }
-        }
+        // Z-axis slab test
+        Vector3 axisZ = box.GetAxis(2);
+        Real dotOriginZ = localOrigin * axisZ;
+        Real dotDirZ = ray.Direction * axisZ;
+        if (!Slab(dotOriginZ, dotDirZ, 1.0f / dotDirZ, -box.HalfSize.Z, box.HalfSize.Z, ref tMin, ref tMax))
+            return false;
 
         distance = tMin;
         return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool Slab(Real origin, Real dir, Real invDir, Real minVal, Real maxVal, ref Real tMin, ref Real tMax)
+    {
+        Real eps = Core.Epsilon;
+
+        // Parallel case would produce Nans (0 * infinity)
+        if (dir > -eps && dir < eps)
+            return origin >= minVal && origin <= maxVal;
+
+        Real t1 = (minVal - origin) * invDir;
+        Real t2 = (maxVal - origin) * invDir;
+
+        if (t1 > t2)
+            (t1, t2) = (t2, t1);
+
+        if (t1 > tMin) tMin = t1;
+        if (t2 < tMax) tMax = t2;
+
+        return tMin <= tMax;
     }
     
     /// <summary>
