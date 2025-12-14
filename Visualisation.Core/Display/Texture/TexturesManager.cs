@@ -129,7 +129,12 @@ public static class TexturesManager
 
     private static readonly ConcurrentDictionary<string, Entry> TextureDataDict = new();
     private static readonly ConcurrentQueue<PendingLoadResult> PendingUploads = new();
-    private static int? s_placeholderTextureId;
+    public static int? PlaceholderTextureId;
+
+    public static bool IsPlaceholderTexture(TextureData textureData)
+    {
+        return PlaceholderTextureId is not null && textureData.TextureId == PlaceholderTextureId;
+    }
 
     /// <summary>
     /// Represents a delegate defining a callback to be invoked during the initialization
@@ -174,7 +179,7 @@ public static class TexturesManager
 
     private static void EnsurePlaceholderCreated()
     {
-        if (s_placeholderTextureId.HasValue) return;
+        if (PlaceholderTextureId.HasValue) return;
 
         GL.CreateTextures(TextureTarget.Texture2D, 1, out int texId);
         GL.BindTexture(TextureTarget.Texture2D, texId);
@@ -193,7 +198,7 @@ public static class TexturesManager
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
 
-        s_placeholderTextureId = texId;
+        PlaceholderTextureId = texId;
         GlHelper.CheckGlError("TexturesManager::EnsurePlaceholderCreated");
     }
 
@@ -339,7 +344,7 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData { TextureId = s_placeholderTextureId!.Value, TexturePath = path };
+            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
 
             var e = new Entry
             {
@@ -366,7 +371,7 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData { TextureId = s_placeholderTextureId!.Value, TexturePath = path };
+            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
 
             var e = new Entry
             {
@@ -461,7 +466,7 @@ public static class TexturesManager
             {
                 // exchange to zero atomically if you want to avoid double-delete elsewhere:
                 var idToDelete = entry.PublicTextureData.TextureId;
-                if (idToDelete != s_placeholderTextureId)
+                if (idToDelete != PlaceholderTextureId)
                 {
                     GL.DeleteTexture(idToDelete);
                 }

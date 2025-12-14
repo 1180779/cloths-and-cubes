@@ -5,6 +5,27 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.Display.EnvironmentMaps;
 
+public record PbrTexturesMonocolor(HdrMonocolor GeneratedEnvironmentMap, PbrTextures PbrTextures);
+
+public struct HdrMonocolor(
+    int hdrEnvironmentMap
+) : IDisposable
+{
+    public int HdrEnvironmentMap { get; private set; } = hdrEnvironmentMap;
+
+    private bool _disposed;
+
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+
+        GL.DeleteTexture(HdrEnvironmentMap);
+        HdrEnvironmentMap = 0;
+    }
+}
+
 public struct PbrTextures(
     int envCubemap,
     int irradianceMap,
@@ -15,8 +36,13 @@ public struct PbrTextures(
     public int IrradianceMap { get; private set; } = irradianceMap;
     public int PrefilterMap { get; private set; } = prefilterMap;
 
+    private bool _disposed;
+
     public void Dispose()
     {
+        if (_disposed)
+            return;
+        _disposed = true;
         GL.DeleteTexture(EnvCubemap);
         GL.DeleteTexture(IrradianceMap);
         GL.DeleteTexture(PrefilterMap);
@@ -88,6 +114,42 @@ public static class PbrTextureGenerator
         GL.DeleteRenderbuffer(captureRbo);
 
         return new PbrTextures(envCubemap, irradianceMap, prefilterMap);
+    }
+
+    /// <summary>
+    /// Generates PBR textures from a generated 1x1 HDR equirectangular map (excluding BRDF LUT which is environment-independent).
+    /// </summary>
+    public static PbrTexturesMonocolor Generate1X1(
+        Shader equirectangularToCubemapShader,
+        Shader irradianceConvolutionShader,
+        Shader prefilterShader,
+        byte[]? pixels = null)
+    {
+        // Generate monocolor "Hdr" replacement, then proceed with the proper call
+        GL.CreateTextures(TextureTarget.Texture2D, 1, out int texId);
+        GL.BindTexture(TextureTarget.Texture2D, texId);
+
+        if (pixels is null || pixels.Length < 4)
+        {
+            pixels =
+            [
+                (int)(0.2f * 255), (int)(0.3f * 255), (int)(0.5f * 255), 255
+            ];
+        }
+
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, 1, 1, 0,
+            PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
+
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+
+        GlHelper.CheckGlError("TexturesManager::EnsurePlaceholderCreated");
+
+        var textures = GenerateFromHdr(texId, equirectangularToCubemapShader, irradianceConvolutionShader,
+            prefilterShader);
+        return new PbrTexturesMonocolor(new HdrMonocolor(texId), textures);
     }
 
     /// <summary>

@@ -60,17 +60,27 @@ public class EnvironmentMap : IDisposable
             Debug.WriteLine($"Generating PBR textures from HDR: {hdrPath}");
 
             var hdr = LoadHdrTexture(hdrPath);
+            if (TexturesManager.IsPlaceholderTexture(hdr))
+            {
+                var monotextures = PbrTextureGenerator.Generate1X1(
+                    equirectangularToCubemapShader,
+                    irradianceConvolutionShader,
+                    prefilterShader);
+                monotextures.GeneratedEnvironmentMap.Dispose();
+                _textures = monotextures.PbrTextures;
+            }
+            else
+            {
+                _textures = PbrTextureGenerator.GenerateFromHdr(
+                    hdr.TextureId,
+                    equirectangularToCubemapShader,
+                    irradianceConvolutionShader,
+                    prefilterShader);
+                TexturesManager.FreeTexture(hdr.TexturePath);
 
-            _textures = PbrTextureGenerator.GenerateFromHdr(
-                hdr.TextureId,
-                equirectangularToCubemapShader,
-                irradianceConvolutionShader,
-                prefilterShader);
-
-            TexturesManager.FreeTexture(hdr.TexturePath);
-
-            Debug.WriteLine($"Saving PBR textures to cache: {Config.Pbr.CacheDirectory}");
-            PbrTextureCache.Save(hdrFileName, _textures);
+                Debug.WriteLine($"Saving PBR textures to cache: {Config.Pbr.CacheDirectory}");
+                PbrTextureCache.Save(hdrFileName, _textures);   
+            }
         }
 
         _brdfLutTexture = BrdfLutManager.GetOrGenerateBrdfLut(brdfShader, forceRegenerate);

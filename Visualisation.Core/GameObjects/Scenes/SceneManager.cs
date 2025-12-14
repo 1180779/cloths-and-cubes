@@ -94,11 +94,11 @@ public abstract class SceneManager : IDisposable
         // will be revisited later to allow for creation of single color environment map from scratch
         /* render environment first */
         GL.DepthFunc(DepthFunction.Lequal);
-        // SkyboxShader.Use();
-        // SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
-        // SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
-        // EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
-        // _cube.Render();
+        SkyboxShader.Use();
+        SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
+        SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
+        EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
+        _cube.Render();
 
         /* render every other object */
         PbrShader.Use();
