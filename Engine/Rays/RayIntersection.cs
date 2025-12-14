@@ -172,27 +172,35 @@ public static class RayIntersection
     /// <param name="ray">The ray to test.</param>
     /// <param name="node">The current BVH node.</param>
     /// <param name="potentialHits">List to store IDs of potentially intersecting objects.</param>
-    public static void TraverseBVHForRay(Ray ray, BVHNode? node, List<int> potentialHits)
+    public static void TraverseBVHForRay(Ray ray, BVHNode? node, ref List<int> potentialHits)
     {
         if (node == null)
             return;
 
-        // Test against bounding box
-        if (!IntersectRayAABB(ray, node.bounds, out _))
-            return;
+        var stack = new Stack<BVHNode?>();
+        stack.Push(node);
 
-        if (node.isLeaf)
+        while (stack.Count > 0)
         {
-            // Leaf node - add object ID to potential hits
-            BVHLeaf leaf = (BVHLeaf)node;
-            potentialHits.Add(leaf.objectId);
-        }
-        else
-        {
-            // Internal node - recurse on children
-            BVHInternal inter = (BVHInternal)node;
-            TraverseBVHForRay(ray, inter.left, potentialHits);
-            TraverseBVHForRay(ray, inter.right, potentialHits);
+            var currentNode = stack.Pop();
+
+            if (currentNode == null)
+                continue;
+
+            if (!IntersectRayAABB(ray, currentNode.bounds, out _))
+                continue;
+
+            if (currentNode.isLeaf)
+            {
+                var leaf = (BVHLeaf)currentNode;
+                potentialHits.Add(leaf.objectId);
+            }
+            else
+            {
+                var inter = (BVHInternal)currentNode;
+                stack.Push(inter.left);
+                stack.Push(inter.right);
+            }
         }
     }
 }
