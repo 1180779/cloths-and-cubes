@@ -30,28 +30,17 @@ public abstract class SceneManager : IDisposable
         CamerasManager.AddCamera(camera);
     }
 
-    private const string PbrVertexShader = "scenePBRShader.vert";
-    private const string PbrFragmentShader = "scenePBRShader.frag";
-    public readonly Shader PbrShader = new(PbrVertexShader, PbrFragmentShader);
-
-    private const string CubemapVertexShader = "cubemap.vert";
-    private const string EquirectangularToCubemapFragmentShader = "equirectangularToCubemapShader.frag";
-    private const string PrefilterFragmentShader = "prefilterShader.frag";
-    private const string IrradianceConvolutionFragmentShader = "irradianceConvolutionShader.frag";
+    public readonly Shader PbrShader = new("scenePBRShader.vert",  "scenePBRShader.frag");
 
     public readonly Shader EquirectangularToCubemapShader =
-        new(CubemapVertexShader, EquirectangularToCubemapFragmentShader);
+        new("cubemap.vert", "equirectangularToCubemapShader.frag");
 
-    public readonly Shader IrradianceConvolutionShader = new(CubemapVertexShader, IrradianceConvolutionFragmentShader);
-    public readonly Shader PrefilterShader = new(CubemapVertexShader, PrefilterFragmentShader);
+    public readonly Shader IrradianceConvolutionShader = new("cubemap.vert", "irradianceConvolutionShader.frag");
+    public readonly Shader PrefilterShader = new("cubemap.vert", "prefilterShader.frag");
+    
+    public readonly Shader SkyboxShader = new("sceneSkyboxShader.vert", "sceneSkyboxShader.frag");
 
-    private const string SkyboxVertexShader = "sceneSkyboxShader.vert";
-    private const string SkyboxFragmentShader = "sceneSkyboxShader.frag";
-    public readonly Shader SkyboxShader = new(SkyboxVertexShader, SkyboxFragmentShader);
-
-    private const string BrdfLutVertexShader = "depthMapShader.vert";
-    private const string BrdfLutFragmentShader = "brdfLUTShader.frag";
-    public readonly Shader BrdfLutShader = new(BrdfLutVertexShader, BrdfLutFragmentShader);
+    public readonly Shader BrdfLutShader = new("depthMapShader.vert", "brdfLUTShader.frag");
     private const string Hdr = "Hdr/symmetrical_garden_02_4k.exr";
     public EnvironmentMap EnvironmentMap { get; set; }
     private SphereMesh _cube = new();
