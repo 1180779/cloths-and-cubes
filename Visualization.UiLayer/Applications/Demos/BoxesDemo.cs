@@ -27,8 +27,7 @@ public class BoxesDemo : RigidBodyApplication
     protected BVH _bvh = BVH.Build([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
 
-    protected SelectionManager _selectionManager = null!;
-
+    protected SelectionManager _selectionManager;
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
     protected BoxesDemoSettingsWindow

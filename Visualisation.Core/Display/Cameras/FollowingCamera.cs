@@ -1,4 +1,4 @@
-using Visualisation.Core.Display.Mesh.VisualObjects;
+using Visualisation.Core.GameObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.Display.Cameras;

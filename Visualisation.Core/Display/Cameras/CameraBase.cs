@@ -95,11 +95,17 @@ public class CameraBase
         _up = Vector3.Normalize(Vector3.Cross(_right, _front));
     }
 
-    public void SetForShader(Shader sh)
+    public void SetForPbrShader(Shader sh)
     {
         sh.SetVector3("viewPos", Position);
         sh.SetMatrix4("view", ViewMatrix);
         sh.SetMatrix4("projection", ProjectionMatrix);
         sh.SetFloat("farPlane", FarPlane);
+    }
+
+    public void SetForSimpleShader(Shader sh)
+    {
+        sh.SetMatrix4("view", ViewMatrix);
+        sh.SetMatrix4("projection", ProjectionMatrix);
     }
 }

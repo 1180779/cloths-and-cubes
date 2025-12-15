@@ -1,6 +1,8 @@
 using Visualisation.Core.Display.Materials;
+using Visualisation.Core.Display.Mesh;
+using Visualisation.Core.Display.Mesh.VisualObjects;
 
-namespace Visualisation.Core.Display.Mesh.VisualObjects;
+namespace Visualisation.Core.GameObjects;
 
 public abstract class GameObject : IIdentifiable, IDisposable
 {
@@ -13,7 +15,7 @@ public abstract class GameObject : IIdentifiable, IDisposable
     public abstract object PhysicsObject { get; }
     public abstract Matrix4 Model { get; }
     public virtual Vector3 Position => Vector3.Zero;
-    public IMaterial Material { get; set; } = MaterialConstant.RedPlastic; // MaterialTextured.Organic.Feathers;
+    public IMaterial Material { get; set; } = MaterialConstant.RedPlastic;
     public Guid Id { get; set; } = Guid.NewGuid();
 
     public void SetForShaderNoMaterial(Shader sh)
@@ -23,7 +25,7 @@ public abstract class GameObject : IIdentifiable, IDisposable
     public void SetForShader(Shader sh)
     {
         sh.SetMatrix4("model", Model);
-        Material.SetForShader(sh);
+        Material.SetForPbrShader(sh);
     }
 
     protected virtual void PreRender() { }

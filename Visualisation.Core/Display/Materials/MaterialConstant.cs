@@ -15,7 +15,7 @@ public class MaterialConstant : IMaterial
         /* nothing to do here */
     }
 
-    public void SetForShader(Shader sh)
+    public void SetForPbrShader(Shader sh)
     {
         sh.SetBool(IMaterial.UseMaps, false);
 
@@ -39,6 +39,18 @@ public class MaterialConstant : IMaterial
     public override string ToString()
     {
         return Name;
+    }
+
+    public IMaterial TypedClone()
+    {
+        return new MaterialConstant
+        {
+            Name = Name,
+            Albedo = Albedo,
+            Metallic = Metallic,
+            Roughness = Roughness,
+            Ao = Ao
+        };
     }
 
     public static MaterialConstant RedPlastic => new MaterialConstant

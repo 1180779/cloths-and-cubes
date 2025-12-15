@@ -6,7 +6,6 @@ using ImGuiNET;
 
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Materials;
-using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects;
@@ -49,8 +48,9 @@ public sealed class SelectionManager(
         }
     }
 
-    public bool DrawInvisibleObjects = false;
-
+    public bool DrawInvisibleObjects;
+    public bool DrawSelectedObjectWithoutDepthTesting = true;
+    
     /// <summary>
     /// Event raised when the selected object changes.
     /// </summary>
@@ -93,7 +93,7 @@ public sealed class SelectionManager(
     }
 
     /// <summary>
-    /// Performs raycasting from the mouse position to detect object selection.
+    /// Performs ray casting from the mouse position to detect object selection.
     /// </summary>
     private void PerformSelection(Vector2 mousePos, int screenWidth, int screenHeight)
     {
@@ -117,13 +117,13 @@ public sealed class SelectionManager(
         var ray = new Ray(engineRayOrigin, engineRayDirection);
         LastRay = ray;
         _debugRayRecreate = true;
-        // Find the closest intersecting object
+        
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
         var bvh = _bvhProvider();
         var potentialHits = new List<int>();
         RayIntersection.TraverseBVHForRay(ray, bvh.root, ref potentialHits);
-        // Test detailed intersection with each potential hit
+        
         foreach (var hitIndex in potentialHits)
         {
             var (hit, distance, obj) = _testBvhIndexRayIntersection(ray, hitIndex);
@@ -161,8 +161,9 @@ public sealed class SelectionManager(
     public void DrawWindow()
     {
         ImGui.Begin("Selected Object");
-        ImGui.Checkbox("Draw Selection Ray", ref _debugRayDraw);
-        ImGui.Checkbox("Draw Invisible objects", ref DrawInvisibleObjects);
+        ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
+        ImGui.Checkbox("Draw invisible objects", ref DrawInvisibleObjects);
+        ImGui.Checkbox("Draw selected object even behind other objects", ref DrawSelectedObjectWithoutDepthTesting);
         ImGui.Separator();
         ImGui.Spacing();
         if (_selectedObject is GameObject gameObject)
@@ -196,7 +197,8 @@ public sealed class SelectionManager(
             {
                 if (ImGui.Button(material.Name))
                 {
-                    gameObject.Material = material;
+                    gameObject.Material.Dispose();
+                    gameObject.Material = material.TypedClone();
                 }
             }
         }
@@ -208,7 +210,8 @@ public sealed class SelectionManager(
             {
                 if (ImGui.Button(material.Name))
                 {
-                    gameObject.Material = material;
+                    gameObject.Material.Dispose();
+                    gameObject.Material = material.TypedClone();
                 }
             }
         }
@@ -258,18 +261,20 @@ public sealed class SelectionManager(
 
     private void DrawParticle(Particle particle)
     {
+        // TODO: implement
     }
 
-    public record State(bool DrawInvisibleObjects, bool DrawDebugRay);
+    public record State(bool DrawInvisibleObjects, bool DrawDebugRay, bool DrawSelectedObjectWithoutDepthTesting);
 
     public State SaveState()
     {
-        return new State(DrawInvisibleObjects, _debugRayDraw);
+        return new State(DrawInvisibleObjects, _debugRayDraw, DrawSelectedObjectWithoutDepthTesting);
     }
 
     public void RestoreState(State state)
     {
         _debugRayDraw = state.DrawDebugRay;
         DrawInvisibleObjects = state.DrawInvisibleObjects;
+        DrawSelectedObjectWithoutDepthTesting = state.DrawSelectedObjectWithoutDepthTesting;
     }
 }

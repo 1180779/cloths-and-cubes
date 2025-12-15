@@ -16,11 +16,18 @@ public sealed partial class MaterialTextured : IMaterial
         return Name;
     }
 
-    public void SetForShader(Shader sh)
+    public IMaterial TypedClone()
+    {
+        return new MaterialTextured(Name, _albedoMap, _normalMap, _metallicMap, _roughnessMap, _aoMap);
+    }
+
+
+    public void SetForPbrShader(Shader sh)
     {
         EnsureLoaded();
         Debug.Assert(
-            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null && _roughnessMapTextureData != null && _aoMapTextureData != null,
+            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null &&
+            _roughnessMapTextureData != null && _aoMapTextureData != null,
             "Material not loaded"
         );
         sh.SetBool(IMaterial.UseMaps, true);
@@ -33,12 +40,14 @@ public sealed partial class MaterialTextured : IMaterial
             _metallicMapTextureData.TextureId);
         sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
             _roughnessMapTextureData.TextureId);
-        sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8, _aoMapTextureData.TextureId);
+        sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8,
+            _aoMapTextureData.TextureId);
     }
 
     [XmlIgnore]
     [NonSerialized]
     private bool _loaded = false;
+
     private string _albedoMap;
     private string _normalMap;
     private string _metallicMap;
@@ -48,24 +57,30 @@ public sealed partial class MaterialTextured : IMaterial
     [XmlIgnore]
     [NonSerialized]
     private TexturesManager.TextureData? _albedoMapTextureData;
-    
+
     [XmlIgnore]
     [NonSerialized]
     private TexturesManager.TextureData? _normalMapTextureData;
-    
+
     [XmlIgnore]
     [NonSerialized]
     private TexturesManager.TextureData? _metallicMapTextureData;
-    
+
     [XmlIgnore]
     [NonSerialized]
     private TexturesManager.TextureData? _roughnessMapTextureData;
-    
+
     [XmlIgnore]
     [NonSerialized]
     private TexturesManager.TextureData? _aoMapTextureData;
 
-    public MaterialTextured(string name, string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
+    public MaterialTextured(
+        string name,
+        string albedoMap,
+        string normalMap,
+        string metallicMap,
+        string roughnessMap,
+        string aoMap)
     {
         Name = name;
         this._albedoMap = albedoMap;
@@ -107,7 +122,8 @@ public sealed partial class MaterialTextured : IMaterial
             return;
 
         Debug.Assert(
-            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null && _roughnessMapTextureData != null && _aoMapTextureData != null,
+            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null &&
+            _roughnessMapTextureData != null && _aoMapTextureData != null,
             "Material not loaded"
         );
 
