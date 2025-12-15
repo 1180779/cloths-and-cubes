@@ -37,7 +37,7 @@ public sealed class SceneWindow(
     public bool IsHovered => _isHovered;
     public System.Numerics.Vector2 ImageTopLeft { get; private set; }
     public System.Numerics.Vector2 ImageSize { get; private set; }
-    
+
     public void Draw(Vector2i framebufferSize, float dt)
     {
         ImGui.Begin("Game Viewport");
@@ -66,8 +66,9 @@ public sealed class SceneWindow(
             _msaaFrameBuffer.Bind();
             _sceneManager.RenderSceneWindow(fbW, fbH, _msaaFrameBuffer);
             DrawDebug();
+            _sceneManager.RenderSelectedObjectOnTop();
             _msaaFrameBuffer.Unbind();
-            
+
             _msaaFrameBuffer.BlitTo(_sceneRenderWindowFrb);
         }
         else
@@ -75,19 +76,20 @@ public sealed class SceneWindow(
             _sceneRenderWindowFrb.Bind();
             _sceneManager.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
             DrawDebug();
+            _sceneManager.RenderSelectedObjectOnTop();
             _sceneRenderWindowFrb.Unbind();
         }
 
         GL.Viewport(0, 0, framebufferSize.X, framebufferSize.Y);
-        
+
         var cursorPos = ImGui.GetCursorScreenPos();
-        
+
         ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
-        
+
         ImageTopLeft = cursorPos;
         ImageSize = viewportSize;
-        
+
         ImGui.End();
     }
 
@@ -107,7 +109,7 @@ public sealed class SceneWindow(
         if (_disposed)
             return;
         _disposed = true;
-        
+
         _sceneRenderWindowFrb.Dispose();
         _debugBasicShader.Dispose();
         if (_msaaFrameBuffer is not null)
@@ -125,13 +127,14 @@ public sealed class SceneWindow(
     }
 
     private AntialiasingType _antialiasingType = AntialiasingType.None;
+
     public AntialiasingType Antialiasing
     {
         get
         {
             return _antialiasingType;
         }
-        
+
         set
         {
             if (value == _antialiasingType)
@@ -151,7 +154,7 @@ public sealed class SceneWindow(
             {
                 _msaaFrameBuffer.Dispose();
             }
-            
+
             if (samples == 0)
             {
                 _msaaFrameBuffer = null;

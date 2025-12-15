@@ -170,17 +170,21 @@ public abstract class SceneManager : IDisposable
             GL.StencilMask(0xFF);
             GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
             GL.Enable(EnableCap.DepthTest);
-
-            if (SelectionManager.DrawSelectedObjectWithoutDepthTesting &&
-                SelectionManager.SelectedObject is GameObject gameObject)
-            {
-                GL.Clear(ClearBufferMask.DepthBufferBit);
-                gameObject.SetForShader(PbrShader);
-                gameObject.Render(SelectionManager?.DrawInvisibleObjects ?? false);
-            }
         }
 
         GL.Disable(EnableCap.StencilTest);
+    }
+
+    public void RenderSelectedObjectOnTop()
+    {
+        if (SelectionManager is { DrawSelectedObjectWithoutDepthTesting: true, SelectedObject: GameObject gameObject })
+        {
+            GL.Clear(ClearBufferMask.DepthBufferBit);
+            PbrShader.Use();
+            SetSharedPbrUniforms();
+            gameObject.SetForShader(PbrShader);
+            gameObject.Render(SelectionManager.DrawInvisibleObjects);
+        }
     }
 
     private void RenderSkybox()

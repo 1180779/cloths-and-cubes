@@ -237,21 +237,21 @@ public class BoxesDemo : RigidBodyApplication
         }
         set
         {
-            _bhvRebuildOnNoUpdate = true;
+            _forcebvhRebuildOnNoUpdate = true;
             base.AvailableSteps = value;
         }
     }
 
-    protected bool _bhvRebuildOnNoUpdate;
+    protected bool _forcebvhRebuildOnNoUpdate;
 
     protected override void OnNoPhysicsUpdate()
     {
         base.OnNoPhysicsUpdate();
 
-        if (!_bhvRebuildOnNoUpdate)
+        if (_forcebvhRebuildOnNoUpdate)
         {
             BvhRebuild();
-            _bhvRebuildOnNoUpdate = true;
+            _forcebvhRebuildOnNoUpdate = false;
         }
 
         ObjectSelectionHandling();
@@ -449,7 +449,6 @@ public class BoxesDemo : RigidBodyApplication
             cloth.EngineCloth.Update(duration);
         }
 
-        // Update the physics of each box in turn
         foreach (var box in _boxes)
         {
             box.EngineBox.Body.Integrate(duration);
@@ -466,10 +465,12 @@ public class BoxesDemo : RigidBodyApplication
     }
 
     /// <summary>
-    /// Resets the position of all the boxes and primes the explosion.
+    /// Resets the position of all the objects.
     /// </summary>
     protected override void Reset()
     {
+        _forcebvhRebuildOnNoUpdate = true;
+
         _forceRegistry.Clear();
         foreach (Cloth cloth in _cloths)
         {
