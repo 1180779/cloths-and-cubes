@@ -9,7 +9,12 @@ using Visualisation.Core.Inputs;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class CascadingShadowMapsWindow(ImGuiController imGuiController, IInputProvider inputProvider, SceneManager scene, Vector2i size) : IDisposable
+public sealed class CascadingShadowMapsWindow(
+    ImGuiController imGuiController,
+    IInputProvider inputProvider,
+    SceneManager scene,
+    Vector2i size
+) : IDisposable
 {
     private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
     private readonly IInputProvider _inputProvider = inputProvider; /* borrowed */
@@ -19,8 +24,9 @@ public sealed class CascadingShadowMapsWindow(ImGuiController imGuiController, I
     private readonly WindowFrameBuffer _depthMapWindowFrb = new(size.X, size.Y); /* owned */
     private readonly Shader _quadCsmShader = new("depthMapShader.vert", "depthMapShader.frag"); /* owned */
     private readonly QuadMesh _quadMesh = new(); /* owned */
-    
+
     private int _directionalLightLayer;
+
     public int DirectionalLightLayer
     {
         get => _directionalLightLayer;
@@ -29,14 +35,15 @@ public sealed class CascadingShadowMapsWindow(ImGuiController imGuiController, I
             if (_sceneManager.LightsManager.DirectionalLight is null)
                 return;
 
-            _directionalLightLayer = value % (_sceneManager.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
+            _directionalLightLayer =
+                value % (_sceneManager.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
             if (_directionalLightLayer < 0)
             {
                 _directionalLightLayer += (_sceneManager.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
             }
         }
     }
-    
+
     public void Draw()
     {
         ImGui.Begin("Cascading Shadow Maps");
@@ -79,13 +86,14 @@ public sealed class CascadingShadowMapsWindow(ImGuiController imGuiController, I
         if (_disposed)
             return;
         _disposed = true;
-        
+
         _depthMapWindowFrb.Dispose();
         _quadCsmShader.Dispose();
         _quadMesh.Dispose();
     }
 
-    public record State(int DirectionalLightLayer); 
+    public record State(int DirectionalLightLayer);
+
     public State SaveState()
     {
         return new State(DirectionalLightLayer);

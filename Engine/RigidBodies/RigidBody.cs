@@ -16,11 +16,13 @@ public class RigidBody
     /// <summary>
     /// Holds the linear position of the rigid body in world space.
     /// </summary>
-    public Vector3 Position { get; set; } = new();
+    public Vector3 Position = new();
 
 
     private Quaternion orientation = new();
 
+    public ref Quaternion OrientationRef => ref orientation;
+    
     /// <summary>
     /// Holds the angular orientation of the rigid body in world space.
     /// </summary>
@@ -37,13 +39,13 @@ public class RigidBody
     /// <summary>
     /// Holds the linear velocity of the rigid body in world space.
     /// </summary>
-    public Vector3 Velocity { get; set; } = new();
+    public Vector3 Velocity = new();
 
     /// <summary>
     /// Holds the angular velocity, of rotation, of the rigid body
     /// in world space.
     /// </summary>
-    public Vector3 Rotation { get; set; } = new();
+    public Vector3 Rotation = new();
 
     /// <summary>
     /// Holds a transform matrix for converting body space into world
@@ -109,7 +111,7 @@ public class RigidBody
     /// can be used to set acceleration due to gravity (its primary
     /// use) or any other constant acceleration.
     /// </summary>
-    public Vector3 Acceleration { get; set; } = new();
+    public Vector3 Acceleration = new();
 
     /// <summary>
     /// Holds the linear acceleration of the rigid body, for the

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Xml.Serialization;
 
 using OpenTK.Graphics.OpenGL4;
 
@@ -22,22 +23,24 @@ public sealed partial class MaterialTextured : IMaterial
     {
         EnsureLoaded();
         Debug.Assert(
-            AlbedoMap != null && NormalMap != null && MetallicMap != null && RoughnessMap != null && AoMap != null,
+            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null && _roughnessMapTextureData != null && _aoMapTextureData != null,
             "Material not loaded"
         );
         sh.SetBool(IMaterial.UseMaps, true);
 
         sh.SetTexture(IMaterial.AlbedoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture4,
-            AlbedoMap.TextureId);
+            _albedoMapTextureData.TextureId);
         sh.SetTexture(IMaterial.NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5,
-            NormalMap.TextureId);
+            _normalMapTextureData.TextureId);
         sh.SetTexture(IMaterial.MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
-            MetallicMap.TextureId);
+            _metallicMapTextureData.TextureId);
         sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
-            RoughnessMap.TextureId);
-        sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8, AoMap.TextureId);
+            _roughnessMapTextureData.TextureId);
+        sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8, _aoMapTextureData.TextureId);
     }
 
+    [XmlIgnore]
+    [NonSerialized]
     private bool _loaded = false;
     private string _albedoMap;
     private string _normalMap;
@@ -45,11 +48,25 @@ public sealed partial class MaterialTextured : IMaterial
     private string _roughnessMap;
     private string _aoMap;
 
-    private TexturesManager.TextureData? AlbedoMap { get; set; }
-    private TexturesManager.TextureData? NormalMap { get; set; }
-    private TexturesManager.TextureData? MetallicMap { get; set; }
-    private TexturesManager.TextureData? RoughnessMap { get; set; }
-    private TexturesManager.TextureData? AoMap { get; set; }
+    [XmlIgnore]
+    [NonSerialized]
+    private TexturesManager.TextureData? _albedoMapTextureData;
+    
+    [XmlIgnore]
+    [NonSerialized]
+    private TexturesManager.TextureData? _normalMapTextureData;
+    
+    [XmlIgnore]
+    [NonSerialized]
+    private TexturesManager.TextureData? _metallicMapTextureData;
+    
+    [XmlIgnore]
+    [NonSerialized]
+    private TexturesManager.TextureData? _roughnessMapTextureData;
+    
+    [XmlIgnore]
+    [NonSerialized]
+    private TexturesManager.TextureData? _aoMapTextureData;
 
     public MaterialTextured(string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
     {
@@ -65,11 +82,11 @@ public sealed partial class MaterialTextured : IMaterial
         if (_loaded)
             return;
 
-        AlbedoMap = TexturesManager.GetOrLoadTexture(_albedoMap, TextureInit);
-        NormalMap = TexturesManager.GetOrLoadTexture(_normalMap, TextureInit);
-        MetallicMap = TexturesManager.GetOrLoadTexture(_metallicMap, TextureInit);
-        RoughnessMap = TexturesManager.GetOrLoadTexture(_roughnessMap, TextureInit);
-        AoMap = TexturesManager.GetOrLoadTexture(_aoMap, TextureInit);
+        _albedoMapTextureData = TexturesManager.GetOrLoadTexture(_albedoMap, TextureInit);
+        _normalMapTextureData = TexturesManager.GetOrLoadTexture(_normalMap, TextureInit);
+        _metallicMapTextureData = TexturesManager.GetOrLoadTexture(_metallicMap, TextureInit);
+        _roughnessMapTextureData = TexturesManager.GetOrLoadTexture(_roughnessMap, TextureInit);
+        _aoMapTextureData = TexturesManager.GetOrLoadTexture(_aoMap, TextureInit);
         _loaded = true;
         return;
 
@@ -92,14 +109,14 @@ public sealed partial class MaterialTextured : IMaterial
             return;
 
         Debug.Assert(
-            AlbedoMap != null && NormalMap != null && MetallicMap != null && RoughnessMap != null && AoMap != null,
+            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null && _roughnessMapTextureData != null && _aoMapTextureData != null,
             "Material not loaded"
         );
 
-        TexturesManager.FreeTexture(AlbedoMap.TexturePath);
-        TexturesManager.FreeTexture(NormalMap.TexturePath);
-        TexturesManager.FreeTexture(MetallicMap.TexturePath);
-        TexturesManager.FreeTexture(RoughnessMap.TexturePath);
-        TexturesManager.FreeTexture(AoMap.TexturePath);
+        TexturesManager.FreeTexture(_albedoMapTextureData.TexturePath);
+        TexturesManager.FreeTexture(_normalMapTextureData.TexturePath);
+        TexturesManager.FreeTexture(_metallicMapTextureData.TexturePath);
+        TexturesManager.FreeTexture(_roughnessMapTextureData.TexturePath);
+        TexturesManager.FreeTexture(_aoMapTextureData.TexturePath);
     }
 }

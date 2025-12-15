@@ -116,7 +116,7 @@ public abstract class SceneManager : IDisposable
             {
                 gameObject.SetForShader(PbrShader);
             }
-            gameObject.Render();
+            gameObject.Render(SelectionManager?.DrawInvisibleObjects ?? false);
         }
     }
 

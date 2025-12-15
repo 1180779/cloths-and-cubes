@@ -1,14 +1,14 @@
 using Visualisation.Core.Display.Materials;
-using Visualisation.Core.GameObjects;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
 public abstract class GameObject : IIdentifiable, IDisposable
 {
-    public static Matrix4 GenerateModelMatrix(Vector3 position, Vector3 scale, Quaternion rotation) =>
+    protected static Matrix4 GenerateModelMatrix(Vector3 position, Vector3 scale, Quaternion rotation) =>
         Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rotation) *
         Matrix4.CreateTranslation(position);
 
+    public bool Invisible = false;
     protected abstract IMesh Mesh { get; set; }
     public abstract object PhysicsObject { get; }
     public abstract Matrix4 Model { get; }
@@ -28,8 +28,11 @@ public abstract class GameObject : IIdentifiable, IDisposable
 
     protected virtual void PreRender() { }
 
-    public void Render()
+    public void Render(bool drawEvenInvisible = false)
     {
+        if (Invisible && !drawEvenInvisible)
+            return;
+        
         PreRender();
         Mesh.Render();
     }

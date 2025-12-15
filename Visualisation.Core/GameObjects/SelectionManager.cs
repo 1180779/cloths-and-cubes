@@ -1,27 +1,36 @@
+using Engine;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
 
+using ImGuiNET;
+
 using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects;
 
 /// <summary>
-/// Manages object selection via mouse raycasting.
+/// Manages object selection via mouse ray-casting.
 /// Handles converting mouse coordinates to world-space rays and detecting intersections.
 /// </summary>
-public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBase> cameraProvider, Func<BVH> bvhProvider, Func<Ray, int, (bool, Real, object?)> testBvhIndexRayIntersection)
+public sealed class SelectionManager(
+    IInputProvider inputProvider,
+    Func<CameraBase> cameraProvider,
+    Func<BVH> bvhProvider,
+    Func<Ray, int, (bool, Real, object?)> testBvhIndexRayIntersection
+)
 {
     private object? _selectedObject;
     private readonly IInputProvider _inputProvider = inputProvider;
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
     private readonly Func<Ray, int, (bool, Real, object?)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
-    
+
+    private bool _debugRayDraw;
     private Line? _debugRay;
     private bool _debugRayRecreate;
     public Ray? LastRay { get; private set; }
-
     public Real SelectedObjectDistance { get; set; }
     public object? SelectedObject
     {
@@ -40,6 +49,7 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
         }
     }
 
+    public bool DrawInvisibleObjects = false;
 
     /// <summary>
     /// Event raised when the selected object changes.
@@ -68,12 +78,9 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
         vec.Y = 1.0f - 2.0f * mouse.Y / height;
         vec.Z = mouse.Z;
         vec.W = 1.0f;
-
-        // In OpenTK, the combined matrix for view-projection is view * proj
+        
         var viewProj = view * projection;
         var inverse = Matrix4.Invert(viewProj);
-
-        // Use TransformRow for correct row-major vector-matrix multiplication
         vec = Vector4.TransformRow(vec, inverse);
 
         if (vec.W > 1e-6 || vec.W < -1e-6)
@@ -81,6 +88,7 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
             vec.X /= vec.W;
             vec.Y /= vec.W;
             vec.Z /= vec.W;
+            vec.W = 1;
         }
 
         return new Vector3(vec.X, vec.Y, vec.Z);
@@ -93,8 +101,10 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
     {
         var camera = _cameraProvider();
 
-        var near = UnProject(new Vector3(mousePos.X, mousePos.Y, 0.0f), camera.ProjectionMatrix, camera.ViewMatrix, screenWidth, screenHeight);
-        var far = UnProject(new Vector3(mousePos.X, mousePos.Y, 1.0f), camera.ProjectionMatrix, camera.ViewMatrix, screenWidth, screenHeight);
+        var near = UnProject(new Vector3(mousePos.X, mousePos.Y, 0.0f), camera.ProjectionMatrix, camera.ViewMatrix,
+            screenWidth, screenHeight);
+        var far = UnProject(new Vector3(mousePos.X, mousePos.Y, 1.0f), camera.ProjectionMatrix, camera.ViewMatrix,
+            screenWidth, screenHeight);
 
         var engineRayOrigin = new Engine.Vector3(
             (Real)near.X,
@@ -139,18 +149,117 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
         SelectedObject = closestObject;
         SelectedObjectDistance = closestDistance;
     }
-    
-    public void DebugRenderInScene()
+
+    public void DebugRenderInScene(Shader shader)
     {
+        if (!_debugRayDraw)
+            return;
+
         if (LastRay is not null && _debugRayRecreate)
         {
             _debugRayRecreate = false;
             var ray = LastRay.Value;
-            var start = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
-            var end = start + new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z) * SelectedObjectDistance;
+            var rayDirection = new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z);
+            var rayOriginInWorld = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
+            Vector3 end = rayOriginInWorld + rayDirection * (float)SelectedObjectDistance;
+
+            
             _debugRay?.Dispose();
-            _debugRay = new Line(start, end);
+            _debugRay = new Line(rayOriginInWorld, end);
         }
+
+        shader.SetMatrix4("model", Matrix4.Identity);
         _debugRay?.Render();
+    }
+    
+    public void DrawWindow()
+    {
+        ImGui.Begin("Selected Object");
+        ImGui.SeparatorText("Selection ray");
+        ImGui.Checkbox("Draw", ref _debugRayDraw);
+        ImGui.Checkbox("Draw Invisible objects", ref DrawInvisibleObjects);
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        if (_selectedObject is GameObject gameObject)
+        {
+            ImGui.Checkbox("Invisible", ref gameObject.Invisible);
+        }
+        
+        switch (_selectedObject)
+        {
+            case Box box:
+                DrawBox(box);
+                break;
+            case Ball ball:
+                DrawSphere(ball);
+                break;
+            case Particle particle:
+                DrawParticle(particle);
+                break;
+        }
+        ImGui.End();
+    }
+
+    private void DrawVector3(ref Engine.Vector3 vec, String label)
+    {
+        ImGui.SeparatorText($"{label}");
+        
+        ImGui.PushID($"{label} X");
+        ImGui.SliderFloat("X", ref vec.X, -10, 10);
+        ImGui.PopID();
+        
+        ImGui.PushID($"{label} Y");
+        ImGui.SliderFloat("Y", ref vec.Y, -10, 10);
+        ImGui.PopID();
+
+        ImGui.PushID($"{label} Z");
+        ImGui.SliderFloat("Z", ref vec.Z, -10, 10);
+        ImGui.PopID();
+    }
+
+    private void DrawVector4(ref Engine.Quaternion orientation, String label)
+    {
+        ImGui.SeparatorText($"{label}");
+        
+        ImGui.PushID($"{label} I");
+        ImGui.SliderFloat("I", ref orientation.I, -10, 10);
+        ImGui.PopID();
+        
+        ImGui.PushID($"{label} J");
+        ImGui.SliderFloat("J", ref orientation.J, -10, 10);
+        ImGui.PopID();
+        
+        ImGui.PushID($"{label} K");
+        ImGui.SliderFloat("K", ref orientation.K, -10, 10);
+        ImGui.PopID();
+
+        ImGui.PushID($"{label} R");
+        ImGui.SliderFloat("R", ref orientation.R, -10, 10);
+        ImGui.PopID();
+    }
+
+    private void DrawRigidBody(Engine.RigidBodies.RigidBody body)
+    {
+        DrawVector3(ref body.Position, "Position");
+        DrawVector3(ref body.Velocity, "Velocity");
+        DrawVector3(ref body.Rotation, "Rotation");
+        DrawVector3(ref body.Acceleration, "Acceleration");
+        DrawVector4(ref body.OrientationRef, "Orientation");
+    }
+    
+    private void DrawBox(Box box)
+    {
+        DrawRigidBody(box.EngineBox.Body);
+    }
+
+    private void DrawSphere(Ball ball)
+    {
+        DrawRigidBody(ball.EngineBall.Body);
+    }
+
+    private void DrawParticle(Particle particle)
+    {
+        
     }
 }

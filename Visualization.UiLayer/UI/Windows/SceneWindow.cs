@@ -18,14 +18,14 @@ public sealed class SceneWindow(
     Vector2i size
 ) : IDisposable
 {
-    private ImGuiController _imGuiController = imGuiController; /* borrowed */
-    private SceneManager _sceneManager = sceneManagerManager; /* borrowed */
-    private IInputProvider _inputProvider = inputProvider; /* borrowed */
+    private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
+    private readonly SceneManager _sceneManager = sceneManagerManager; /* borrowed */
+    private readonly IInputProvider _inputProvider = inputProvider; /* borrowed */
 
     private bool _disposed;
     private WindowFrameBuffer _sceneRenderWindowFrb = new(size.X, size.Y);
     private MsaaFrameBuffer? _msaaFrameBuffer;
-    private Shader _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
+    private readonly Shader _debugBasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
 
     public delegate void DebugDraw(Shader sh);
 
@@ -63,9 +63,8 @@ public sealed class SceneWindow(
         {
             Debug.Assert(_msaaFrameBuffer is not null);
             _msaaFrameBuffer.Resize(fbW, fbH);
-            _sceneManager.RenderSceneWindow(fbW, fbH, _msaaFrameBuffer);
-
             _msaaFrameBuffer.Bind();
+            _sceneManager.RenderSceneWindow(fbW, fbH, _msaaFrameBuffer);
             DrawDebug();
             _msaaFrameBuffer.Unbind();
             
@@ -73,22 +72,19 @@ public sealed class SceneWindow(
         }
         else
         {
-            _sceneManager.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
-            
             _sceneRenderWindowFrb.Bind();
+            _sceneManager.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
             DrawDebug();
             _sceneRenderWindowFrb.Unbind();
         }
 
         GL.Viewport(0, 0, framebufferSize.X, framebufferSize.Y);
         
-        // Get cursor position before drawing the image
         var cursorPos = ImGui.GetCursorScreenPos();
         
         ImGui.Image(_sceneRenderWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
             new System.Numerics.Vector2(1, 0));
         
-        // Store the image bounds for mouse coordinate calculations
         ImageTopLeft = cursorPos;
         ImageSize = viewportSize;
         

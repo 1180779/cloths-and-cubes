@@ -31,8 +31,6 @@ public class BoxesDemo : RigidBodyApplication
 
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
-    protected SelectedObjectWindow _selectedObjectWindow = null!;
-
     protected BoxesDemoSettingsWindow
         _boxesDemoSettingsWindow = new(1, 0, 1); // the delegates need to be initialized in the constructor
 
@@ -132,7 +130,6 @@ public class BoxesDemo : RigidBodyApplication
                 return (false, 0, null);
             });
 
-        _selectedObjectWindow = new(_selectionManager);
         _sceneManager.SelectionManager = _selectionManager;
 
         /* add cloth to the scene */
@@ -143,10 +140,10 @@ public class BoxesDemo : RigidBodyApplication
 
         /* add ground plane to the scene */
         _plane = new();
+        _sceneManager.AddGameObject(_plane);
 
         /* boxes already added by the boxes demo settings callback on loading of settings; or empty */
         /* the boxes can be added via ui */
-        // _sceneManager.AddGameObject(_plane); // TODO: add not rendered objects; or rendered with wireframe only
 
         /* set everything up */
         Reset();
@@ -156,7 +153,7 @@ public class BoxesDemo : RigidBodyApplication
     {
         base.RenderWindows(dt);
         _collisionParametersWindow.Draw();
-        _selectedObjectWindow.Draw();
+        _selectionManager.DrawWindow();
         _bvhNodesWindow.Draw();
 #if DEBUG
         ContactsInspectorWindow.Draw(_collisionData.ContactList);
@@ -194,7 +191,7 @@ public class BoxesDemo : RigidBodyApplication
 
         BVH bvh = BVH.Build(boxDict);
         _bvhNodesWindow.DebugRenderInScene(sh, bvh);
-        _selectionManager.DebugRenderInScene();
+        _selectionManager.DebugRenderInScene(sh);
     }
 
     protected void BvhRebuild()
@@ -309,10 +306,9 @@ public class BoxesDemo : RigidBodyApplication
             }
         }
         
-
         List<(int, int)> potentialCollisions = new();
         BVH.GetPotentialContacts(ref potentialCollisions, _bvh.root);
-        //
+        
         foreach (var pair in potentialCollisions)
         {
             if (!_collisionData.HasMoreContacts()) return;
