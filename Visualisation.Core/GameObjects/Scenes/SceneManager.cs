@@ -1,5 +1,3 @@
-using System.Security;
-
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core.Display.Cameras;

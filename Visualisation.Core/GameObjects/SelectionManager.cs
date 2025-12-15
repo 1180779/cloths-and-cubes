@@ -1,5 +1,3 @@
-using System.Reflection;
-
 using Engine;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
