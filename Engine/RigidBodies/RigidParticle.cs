@@ -5,11 +5,14 @@ namespace Engine.RigidBodies
 {
     public class RigidParticle : CollisionParticle, IBoxable
     {
-        public Collision.Bounding_Volume_Hierarchy.BoundingBox GetBoundingBox()
+        public const float BoundingBoxHalfSize = 0.1f;
+
+        public BoundingBox GetBoundingBox()
         {
-            return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+            return new BoundingBox(
                 center: this.Body.Position,
-                halfSize: new Vector3(0.001f, 0.001f, 0.001f) // small AABB for particle
+                halfSize: new Vector3(BoundingBoxHalfSize, BoundingBoxHalfSize,
+                    BoundingBoxHalfSize) // small AABB for particle
             );
         }
 

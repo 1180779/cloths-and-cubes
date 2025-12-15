@@ -1,6 +1,6 @@
-using Engine;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
+using Engine.RigidBodies;
 
 using ImGuiNET;
 
@@ -50,7 +50,7 @@ public sealed class SelectionManager(
 
     public bool DrawInvisibleObjects;
     public bool DrawSelectedObjectWithoutDepthTesting = true;
-    
+
     /// <summary>
     /// Event raised when the selected object changes.
     /// </summary>
@@ -117,13 +117,13 @@ public sealed class SelectionManager(
         var ray = new Ray(engineRayOrigin, engineRayDirection);
         LastRay = ray;
         _debugRayRecreate = true;
-        
+
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
         var bvh = _bvhProvider();
         var potentialHits = new List<int>();
         RayIntersection.TraverseBVHForRay(ray, bvh.root, ref potentialHits);
-        
+
         foreach (var hitIndex in potentialHits)
         {
             var (hit, distance, obj) = _testBvhIndexRayIntersection(ray, hitIndex);
@@ -180,14 +180,14 @@ public sealed class SelectionManager(
             case Ball ball:
                 DrawSphere(ball);
                 break;
-            case Particle particle:
+            case RigidParticle particle:
                 DrawParticle(particle);
                 break;
         }
 
         ImGui.End();
     }
-    
+
     private void DrawMaterialSelectors(GameObject gameObject)
     {
         if (ImGui.CollapsingHeader("Constant Materials"))
@@ -240,7 +240,7 @@ public sealed class SelectionManager(
         }
     }
 
-    private void DrawRigidBody(Engine.RigidBodies.RigidBody body)
+    private void DrawRigidBody(RigidBody body)
     {
         DrawVector3(ref body.Position, "Position");
         DrawVector3(ref body.Velocity, "Velocity");
@@ -259,9 +259,11 @@ public sealed class SelectionManager(
         DrawRigidBody(ball.EngineBall.Body);
     }
 
-    private void DrawParticle(Particle particle)
+    private void DrawParticle(RigidParticle particle)
     {
-        // TODO: implement
+        DrawVector3(ref particle.Body.Position, "Position");
+        DrawVector3(ref particle.Body.Velocity, "Velocity");
+        DrawVector3(ref particle.Body.Acceleration, "Acceleration");
     }
 
     public record State(bool DrawInvisibleObjects, bool DrawDebugRay, bool DrawSelectedObjectWithoutDepthTesting);

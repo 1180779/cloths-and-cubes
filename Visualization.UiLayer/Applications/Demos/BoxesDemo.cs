@@ -1,8 +1,8 @@
-using Engine;
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 using Engine.Rays;
+using Engine.RigidBodies;
 
 using ImGuiNET;
 
@@ -11,6 +11,7 @@ using Visualisation.Core.GameObjects;
 
 using Visualization.UiLayer.UI.Windows;
 
+using Box = Visualisation.Core.GameObjects.Box;
 using Cloth = Visualisation.Core.GameObjects.Cloth;
 using Random = Engine.Random;
 
@@ -30,6 +31,7 @@ public class BoxesDemo : RigidBodyApplication
     protected SelectionManager _selectionManager;
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
+
     protected BoxesDemoSettingsWindow
         _boxesDemoSettingsWindow = new(1, 0, 1); // the delegates need to be initialized in the constructor
 
@@ -95,7 +97,7 @@ public class BoxesDemo : RigidBodyApplication
                 _sceneManager.AddGameObject(_cloths[i]);
             }
         };
-        
+
         _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
             (ray, index) =>
             {
@@ -115,7 +117,7 @@ public class BoxesDemo : RigidBodyApplication
                         if (RayIntersection.IntersectRaySphere(ray, ball.EngineBall, out distance))
                             return (true, distance, ball);
                         break;
-                    case Particle particle:
+                    case RigidParticle particle:
                         if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
                             return (true, distance, particle);
                         break;
@@ -179,7 +181,9 @@ public class BoxesDemo : RigidBodyApplication
                     var particle = cloth.EngineCloth.Particles[i, j];
                     if (particle != null && particle.Body != null)
                     {
-                        boxDict[_boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY + j] = particle;
+                        boxDict[
+                            _boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY +
+                            j] = particle;
                     }
                 }
             }
@@ -211,7 +215,9 @@ public class BoxesDemo : RigidBodyApplication
                     var particle = cloth.EngineCloth.Particles[i, j];
                     if (particle != null && particle.Body != null)
                     {
-                        _bvhDictionary[_boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY + j] = particle;
+                        _bvhDictionary[
+                            _boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY +
+                            j] = particle;
                     }
                 }
             }
@@ -304,10 +310,10 @@ public class BoxesDemo : RigidBodyApplication
                 CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
             }
         }
-        
+
         List<(int, int)> potentialCollisions = new();
         BVH.GetPotentialContacts(ref potentialCollisions, _bvh.root);
-        
+
         foreach (var pair in potentialCollisions)
         {
             if (!_collisionData.HasMoreContacts()) return;
@@ -349,8 +355,10 @@ public class BoxesDemo : RigidBodyApplication
                             cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY)
                         {
                             var particle2 = cloth.EngineCloth.Particles[
-                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) / cloth.EngineCloth.SizeY,
-                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) % cloth.EngineCloth.SizeY];
+                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) /
+                                cloth.EngineCloth.SizeY,
+                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) %
+                                cloth.EngineCloth.SizeY];
                             if (particle2 == null || particle2.Body == null) break;
 
                             var contacts = CollisionDetector.BoxAndParticle(box1.EngineBox, particle2, _collisionData);
@@ -361,9 +369,9 @@ public class BoxesDemo : RigidBodyApplication
 
                             break;
                         }
+
                         clothsParticlesPartialSum += cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
                     }
-                    
                 }
             }
             else if (pair.Item1 >= _boxes.Length && pair.Item1 < _boxes.Length + _balls.Length) // sphere and ...
@@ -468,7 +476,7 @@ public class BoxesDemo : RigidBodyApplication
             cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX,
                 _boxesDemoSettingsWindow.SizeY,
                 _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-                _boxesDemoSettingsWindow.ParticleMass);   
+                _boxesDemoSettingsWindow.ParticleMass);
         }
 
         // reset boxes; some in preconfigured positions

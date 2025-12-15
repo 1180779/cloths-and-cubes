@@ -1,3 +1,5 @@
+using Engine.RigidBodies;
+
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core.Display.Cameras;
@@ -44,7 +46,7 @@ public abstract class SceneManager : IDisposable
     public readonly Shader BrdfLutShader = new("depthMapShader.vert", "brdfLUTShader.frag");
     private const string Hdr = "Hdr/symmetrical_garden_02_4k.exr";
     public EnvironmentMap EnvironmentMap { get; set; }
-    private SphereMesh _cube = new();
+    private CubeMesh _cube = new();
 
     public LightsManager LightsManager { get; private set; }
     public CamerasManager CamerasManager { get; private set; }
@@ -153,13 +155,24 @@ public abstract class SceneManager : IDisposable
                         ball.EngineBall.Radius = originalRadius;
                         break;
                     }
+                case RigidParticle particle:
+                    {
+                        var particleScale = RigidParticle.BoundingBoxHalfSize * 2;
+                        var position = particle.GetAxis(3);
+                        SolidColorShader.SetMatrix4("model",
+                            Matrix4.CreateScale(particleScale, particleScale, particleScale) *
+                            Matrix4.CreateTranslation(position.X, position.Y, position.Z));
+                        _cube.Render();
+                        break;
+                    }
             }
 
             GL.StencilMask(0xFF);
             GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
             GL.Enable(EnableCap.DepthTest);
-            
-            if (SelectionManager.DrawSelectedObjectWithoutDepthTesting && SelectionManager.SelectedObject is GameObject gameObject)
+
+            if (SelectionManager.DrawSelectedObjectWithoutDepthTesting &&
+                SelectionManager.SelectedObject is GameObject gameObject)
             {
                 GL.Clear(ClearBufferMask.DepthBufferBit);
                 gameObject.SetForShader(PbrShader);
