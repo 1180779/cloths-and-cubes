@@ -86,12 +86,6 @@ public abstract class SceneManager : IDisposable
         framebuffer.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        // TODO:
-        // environment rendering is commented out for now
-        // for the cases when the environment map is not present
-        // in that case the temporary texture would be displayed instead
-        // which is not desired. The environment map 
-        // will be revisited later to allow for creation of single color environment map from scratch
         /* render environment first */
         GL.DepthFunc(DepthFunction.Lequal);
         SkyboxShader.Use();
