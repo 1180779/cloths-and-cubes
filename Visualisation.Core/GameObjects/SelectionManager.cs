@@ -175,8 +175,7 @@ public sealed class SelectionManager(
     public void DrawWindow()
     {
         ImGui.Begin("Selected Object");
-        ImGui.SeparatorText("Selection ray");
-        ImGui.Checkbox("Draw", ref _debugRayDraw);
+        ImGui.Checkbox("Draw Selection Ray", ref _debugRayDraw);
         ImGui.Checkbox("Draw Invisible objects", ref DrawInvisibleObjects);
         ImGui.Separator();
         ImGui.Spacing();
@@ -201,42 +200,27 @@ public sealed class SelectionManager(
         ImGui.End();
     }
 
-    private void DrawVector3(ref Engine.Vector3 vec, String label)
+    private void DrawVector3(ref Engine.Vector3 vec, String label, float step = 0.1f)
     {
-        ImGui.SeparatorText($"{label}");
-        
-        ImGui.PushID($"{label} X");
-        ImGui.SliderFloat("X", ref vec.X, -10, 10);
-        ImGui.PopID();
-        
-        ImGui.PushID($"{label} Y");
-        ImGui.SliderFloat("Y", ref vec.Y, -10, 10);
-        ImGui.PopID();
-
-        ImGui.PushID($"{label} Z");
-        ImGui.SliderFloat("Z", ref vec.Z, -10, 10);
-        ImGui.PopID();
+        var tempVec = new System.Numerics.Vector3(vec.X, vec.Y, vec.Z);
+        if (ImGui.DragFloat3(label, ref tempVec, step))
+        {
+            vec.X = tempVec.X;
+            vec.Y = tempVec.Y;
+            vec.Z = tempVec.Z;
+        }
     }
 
-    private void DrawVector4(ref Engine.Quaternion orientation, String label)
+    private void DrawVector4(ref Engine.Quaternion qua, String label, float step = 0.1f)
     {
-        ImGui.SeparatorText($"{label}");
-        
-        ImGui.PushID($"{label} I");
-        ImGui.SliderFloat("I", ref orientation.I, -10, 10);
-        ImGui.PopID();
-        
-        ImGui.PushID($"{label} J");
-        ImGui.SliderFloat("J", ref orientation.J, -10, 10);
-        ImGui.PopID();
-        
-        ImGui.PushID($"{label} K");
-        ImGui.SliderFloat("K", ref orientation.K, -10, 10);
-        ImGui.PopID();
-
-        ImGui.PushID($"{label} R");
-        ImGui.SliderFloat("R", ref orientation.R, -10, 10);
-        ImGui.PopID();
+        var tempVec = new System.Numerics.Vector4(qua.I, qua.J, qua.K, qua.R);
+        if (ImGui.DragFloat4(label, ref tempVec, step))
+        {
+            qua.I = tempVec.X;
+            qua.J = tempVec.Y;
+            qua.K = tempVec.Z;
+            qua.R = tempVec.W;
+        }
     }
 
     private void DrawRigidBody(Engine.RigidBodies.RigidBody body)
@@ -245,7 +229,7 @@ public sealed class SelectionManager(
         DrawVector3(ref body.Velocity, "Velocity");
         DrawVector3(ref body.Rotation, "Rotation");
         DrawVector3(ref body.Acceleration, "Acceleration");
-        DrawVector4(ref body.OrientationRef, "Orientation");
+        DrawVector4(ref body.OrientationRef, "Orientation", 0.02f);
     }
     
     private void DrawBox(Box box)
@@ -261,5 +245,18 @@ public sealed class SelectionManager(
     private void DrawParticle(Particle particle)
     {
         
+    }
+
+    public record State(bool DrawInvisibleObjects, bool DrawDebugRay);
+
+    public State SaveState()
+    {
+        return new State(DrawInvisibleObjects, _debugRayDraw);
+    }
+
+    public void RestoreState(State state)
+    {
+        _debugRayDraw = state.DrawDebugRay;
+        DrawInvisibleObjects = state.DrawInvisibleObjects;
     }
 }

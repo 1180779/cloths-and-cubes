@@ -96,12 +96,7 @@ public class BoxesDemo : RigidBodyApplication
                 _sceneManager.AddGameObject(_cloths[i]);
             }
         };
-    }
-
-    protected override void InitializeScene()
-    {
-        base.InitializeScene();
-
+        
         _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
             (ray, index) =>
             {
@@ -129,6 +124,11 @@ public class BoxesDemo : RigidBodyApplication
 
                 return (false, 0, null);
             });
+    }
+
+    protected override void InitializeScene()
+    {
+        base.InitializeScene();
 
         _sceneManager.SelectionManager = _selectionManager;
 
@@ -533,6 +533,7 @@ public class BoxesDemo : RigidBodyApplication
         state.BvhNodes = _bvhNodesWindow.SaveState();
         state.CollisionParameters = _collisionParametersWindow.SaveState();
         state.ClothSettings = _boxesDemoSettingsWindow.SaveState();
+        state.SelectionSettings = _selectionManager.SaveState();
         return state;
     }
 
@@ -552,6 +553,11 @@ public class BoxesDemo : RigidBodyApplication
         if (state.ClothSettings is not null)
         {
             _boxesDemoSettingsWindow.RestoreState(state.ClothSettings);
+        }
+
+        if (state.SelectionSettings is not null)
+        {
+            _selectionManager.RestoreState(state.SelectionSettings);
         }
     }
 }

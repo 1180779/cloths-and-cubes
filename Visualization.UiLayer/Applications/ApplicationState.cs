@@ -1,3 +1,5 @@
+using Visualisation.Core.GameObjects;
+
 using Visualization.UiLayer.UI.Windows;
 
 namespace Visualization.UiLayer.Applications;
@@ -9,4 +11,5 @@ public class ApplicationState
     public BvhNodesWindow.State? BvhNodes { get; set; }
     public CollisionParametersWindow.State? CollisionParameters { get; set; }
     public BoxesDemoSettingsWindow.State? ClothSettings { get; set; }
+    public SelectionManager.State? SelectionSettings { get; set; }
 }
