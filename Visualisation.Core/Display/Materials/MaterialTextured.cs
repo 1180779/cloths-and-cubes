@@ -9,14 +9,11 @@ namespace Visualisation.Core.Display.Materials;
 
 public sealed partial class MaterialTextured : IMaterial
 {
+    public string Name { get; set; }
+
     public override string ToString()
     {
-        return $"{{Material: " +
-            $"AlbedoMap: {_albedoMap}, " +
-            $"NormalMap: {_normalMap}, " +
-            $"MetallicMap: {_metallicMap}, " +
-            $"Roughness: {_roughnessMap}, " +
-            $"Ao: {_aoMap}}}";
+        return Name;
     }
 
     public void SetForShader(Shader sh)
@@ -68,8 +65,9 @@ public sealed partial class MaterialTextured : IMaterial
     [NonSerialized]
     private TexturesManager.TextureData? _aoMapTextureData;
 
-    public MaterialTextured(string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
+    public MaterialTextured(string name, string albedoMap, string normalMap, string metallicMap, string roughnessMap, string aoMap)
     {
+        Name = name;
         this._albedoMap = albedoMap;
         this._normalMap = normalMap;
         this._metallicMap = metallicMap;

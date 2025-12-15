@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Engine;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
@@ -5,6 +7,7 @@ using Engine.Rays;
 using ImGuiNET;
 
 using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
 
@@ -26,19 +29,18 @@ public sealed class SelectionManager(
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
     private readonly Func<Ray, int, (bool, Real, object?)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
-
     private bool _debugRayDraw;
     private Line? _debugRay;
     private bool _debugRayRecreate;
     public Ray? LastRay { get; private set; }
     public Real SelectedObjectDistance { get; set; }
+
     public object? SelectedObject
     {
         get
         {
             return _selectedObject;
         }
-
         private set
         {
             if (_selectedObject != value)
@@ -73,16 +75,14 @@ public sealed class SelectionManager(
     private static Vector3 UnProject(Vector3 mouse, Matrix4 projection, Matrix4 view, float width, float height)
     {
         Vector4 vec;
-
         vec.X = 2.0f * mouse.X / width - 1.0f;
         vec.Y = 1.0f - 2.0f * mouse.Y / height;
         vec.Z = mouse.Z;
         vec.W = 1.0f;
-        
+
         var viewProj = view * projection;
         var inverse = Matrix4.Invert(viewProj);
         vec = Vector4.TransformRow(vec, inverse);
-
         if (vec.W > 1e-6 || vec.W < -1e-6)
         {
             vec.X /= vec.W;
@@ -100,45 +100,35 @@ public sealed class SelectionManager(
     private void PerformSelection(Vector2 mousePos, int screenWidth, int screenHeight)
     {
         var camera = _cameraProvider();
-
         var near = UnProject(new Vector3(mousePos.X, mousePos.Y, 0.0f), camera.ProjectionMatrix, camera.ViewMatrix,
             screenWidth, screenHeight);
         var far = UnProject(new Vector3(mousePos.X, mousePos.Y, 1.0f), camera.ProjectionMatrix, camera.ViewMatrix,
             screenWidth, screenHeight);
-
         var engineRayOrigin = new Engine.Vector3(
             (Real)near.X,
             (Real)near.Y,
             (Real)near.Z
         );
-
         var rayDirection = far - near;
         rayDirection.Normalize();
-
         var engineRayDirection = new Engine.Vector3(
             (Real)rayDirection.X,
             (Real)rayDirection.Y,
             (Real)rayDirection.Z
         );
-
         var ray = new Ray(engineRayOrigin, engineRayDirection);
         LastRay = ray;
         _debugRayRecreate = true;
-
         // Find the closest intersecting object
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
-
         var bvh = _bvhProvider();
-
         var potentialHits = new List<int>();
         RayIntersection.TraverseBVHForRay(ray, bvh.root, ref potentialHits);
-
         // Test detailed intersection with each potential hit
         foreach (var hitIndex in potentialHits)
         {
             var (hit, distance, obj) = _testBvhIndexRayIntersection(ray, hitIndex);
-
             if (hit && distance < closestDistance && distance >= 0)
             {
                 closestDistance = distance;
@@ -154,7 +144,6 @@ public sealed class SelectionManager(
     {
         if (!_debugRayDraw)
             return;
-
         if (LastRay is not null && _debugRayRecreate)
         {
             _debugRayRecreate = false;
@@ -163,7 +152,6 @@ public sealed class SelectionManager(
             var rayOriginInWorld = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
             Vector3 end = rayOriginInWorld + rayDirection * (float)SelectedObjectDistance;
 
-            
             _debugRay?.Dispose();
             _debugRay = new Line(rayOriginInWorld, end);
         }
@@ -171,7 +159,7 @@ public sealed class SelectionManager(
         shader.SetMatrix4("model", Matrix4.Identity);
         _debugRay?.Render();
     }
-    
+
     public void DrawWindow()
     {
         ImGui.Begin("Selected Object");
@@ -179,12 +167,12 @@ public sealed class SelectionManager(
         ImGui.Checkbox("Draw Invisible objects", ref DrawInvisibleObjects);
         ImGui.Separator();
         ImGui.Spacing();
-
         if (_selectedObject is GameObject gameObject)
         {
             ImGui.Checkbox("Invisible", ref gameObject.Invisible);
+            DrawMaterialSelectors(gameObject);
         }
-        
+
         switch (_selectedObject)
         {
             case Box box:
@@ -197,7 +185,35 @@ public sealed class SelectionManager(
                 DrawParticle(particle);
                 break;
         }
+
         ImGui.End();
+    }
+    
+    private void DrawMaterialSelectors(GameObject gameObject)
+    {
+        if (ImGui.CollapsingHeader("Constant Materials"))
+        {
+            var materials = MaterialsHelper.AllConstMaterials;
+            foreach (var material in materials)
+            {
+                if (ImGui.Button(material.Name))
+                {
+                    gameObject.Material = material;
+                }
+            }
+        }
+
+        if (ImGui.CollapsingHeader("Textured Materials"))
+        {
+            var materials = MaterialsHelper.AllTexturedMaterials;
+            foreach (var material in materials)
+            {
+                if (ImGui.Button(material.Name))
+                {
+                    gameObject.Material = material;
+                }
+            }
+        }
     }
 
     private void DrawVector3(ref Engine.Vector3 vec, String label, float step = 0.1f)
@@ -231,7 +247,7 @@ public sealed class SelectionManager(
         DrawVector3(ref body.Acceleration, "Acceleration");
         DrawVector4(ref body.OrientationRef, "Orientation", 0.02f);
     }
-    
+
     private void DrawBox(Box box)
     {
         DrawRigidBody(box.EngineBox.Body);
@@ -244,7 +260,6 @@ public sealed class SelectionManager(
 
     private void DrawParticle(Particle particle)
     {
-        
     }
 
     public record State(bool DrawInvisibleObjects, bool DrawDebugRay);

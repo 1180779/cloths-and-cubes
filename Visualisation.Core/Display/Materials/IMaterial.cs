@@ -2,6 +2,7 @@ namespace Visualisation.Core.Display.Materials;
 
 public interface IMaterial : IDisposable
 {
+    public string Name { get; set; }
     public static readonly string AlbedoMapShaderName = "albedoMap";
     public static readonly string NormalMapShaderName = "normalMap";
     public static readonly string MetallicMapShaderName = "metallicMap";
