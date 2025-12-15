@@ -2,7 +2,7 @@ using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount)
+public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, int clothesCount)
 {
     public delegate void SetObjectCount(int count); // set boxes or spheres count
 
@@ -10,6 +10,8 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount)
     public SetObjectCount? SetBoxesCount { get; set; }
     private int _spheresCount = spheresCount;
     public SetObjectCount? SetSpheresCount { get; set; }
+    private int _clothsCount = clothesCount;
+    public SetObjectCount? SetClothsCount { get; set; }
 
     private int _sizeX = 21;
     public int SizeX => _sizeX;
@@ -215,7 +217,12 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount)
 
         if (ImGui.SliderInt("Spheres", ref _spheresCount, 0, 20))
         {
-            SetSpheresCount?.Invoke(_boxesCount);
+            SetSpheresCount?.Invoke(_spheresCount);
+        }
+        
+        if (ImGui.SliderInt("Cloths", ref _clothsCount, 0, 5))
+        {
+            SetClothsCount?.Invoke(_clothsCount);
         }
     }
 
@@ -232,13 +239,14 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount)
         Real LsctslScale,
         Real LsctslBias,
         int BoxesCount,
-        int SpheresCount
+        int SpheresCount,
+        int ClothsCount
     );
 
     public State SaveState()
     {
         return new State(_sizeX, _sizeY, _springLength, _springConstant, ParticleMass, _lsctpm, _lsctpmScale,
-            _lsctpmBias, _lsctsl, _lsctslScale, _lsctslBias, _boxesCount, _spheresCount);
+            _lsctpmBias, _lsctsl, _lsctslScale, _lsctslBias, _boxesCount, _spheresCount, _clothsCount);
     }
 
     public void RestoreState(State state)
@@ -260,7 +268,9 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount)
 
         _boxesCount = state.BoxesCount;
         _spheresCount = state.SpheresCount;
+        _clothsCount = state.ClothsCount;
         SetBoxesCount?.Invoke(_boxesCount);
         SetSpheresCount?.Invoke(_spheresCount);
+        SetClothsCount?.Invoke(_clothsCount);
     }
 }

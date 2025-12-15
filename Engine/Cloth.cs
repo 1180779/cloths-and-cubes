@@ -14,6 +14,9 @@ namespace Engine
         public float SpringConstant;
         public float ParticleMass;
 
+        private record ParticleSpringAssociation(RigidBody P, Spring S);
+        private readonly List<ParticleSpringAssociation> _particleSpringAssociations = [];
+
         public Cloth(
             ForceRegistry registry,
             int sizeX = 21,
@@ -46,7 +49,7 @@ namespace Engine
                 }
             }
 
-            //Rotate(new Vector3(1, 1, 0));
+            // Rotate(new Vector3(1, 1, 0));
             float diagonalLength = springLength * (float)Math.Sqrt(2.0);
             for (int i = 0; i < sizeX; i++)
             {
@@ -55,37 +58,49 @@ namespace Engine
                     if (i != sizeX - 1)
                     {
                         // Horizontal spring - add for both directions
-                        Registry.Add(Particles[i, j].Body,
-                            new Spring(new Vector3(), Particles[i + 1, j].Body,
-                                new Vector3(), springConstant, springLength));
+                        var spring = new Spring(new Vector3(), Particles[i + 1, j].Body,
+                            new Vector3(), springConstant, springLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
                     }
 
                     if (j != sizeY - 1)
                     {
                         // Vertical spring - add for both directions
-                        Registry.Add(Particles[i, j].Body,
-                            new Spring(new Vector3(), Particles[i, j + 1].Body,
-                                new Vector3(), springConstant, springLength));
+                        var spring = new Spring(new Vector3(), Particles[i, j + 1].Body,
+                            new Vector3(), springConstant, springLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
                     }
 
                     if (i != sizeX - 1 && j != sizeY - 1)
                     {
                         // Diagonal spring has longer rest length: sqrt(2) * springLength
-                        Registry.Add(Particles[i, j].Body,
-                            new Spring(new Vector3(), Particles[i + 1, j + 1].Body,
-                                new Vector3(), springConstant, diagonalLength));
+                        var spring = new Spring(new Vector3(), Particles[i + 1, j + 1].Body,
+                            new Vector3(), springConstant, diagonalLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
                     }
 
                     if (i != 0 && j != sizeY - 1)
                     {
-                        Registry.Add(Particles[i, j].Body,
-                            new Spring(Particles[i - 1, j + 1].Body.Position, Particles[i, j].Body,
-                                Particles[i, j].Body.Position, springConstant, diagonalLength));
+                        var spring = new Spring(Particles[i - 1, j + 1].Body.Position, Particles[i, j].Body,
+                            Particles[i, j].Body.Position, springConstant, diagonalLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
                     }
                 }
             }
         }
 
+        public void RemoveSpringsFromForceRegistry()
+        {
+            foreach (var particleSpringAssociation in _particleSpringAssociations)   
+            {
+                Registry.Remove(particleSpringAssociation.P, particleSpringAssociation.S);
+            }
+        }
+        
         public Vector3[,] Points()
         {
             Vector3[,] points = new Vector3[SizeX, SizeY];

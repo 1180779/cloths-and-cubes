@@ -18,24 +18,23 @@ namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesDemo : RigidBodyApplication
 {
+    protected Plane _plane = null!; // initialized in scene initialization
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
-    protected Plane _plane = null!; // initialized in scene initialization
+    protected Cloth[] _cloths = [];
+    protected ForceRegistry _forceRegistry = new();
+
     protected BVH _bvh = BVH.Build([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
-    
+
     protected SelectionManager _selectionManager = null!;
-    
-    protected ForceRegistry _forceRegistry = new();
-    protected Cloth _cloth = null!; // initialized in scene initialization
 
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
     protected SelectedObjectWindow _selectedObjectWindow = null!;
 
     protected BoxesDemoSettingsWindow
-        _boxesDemoSettingsWindow =
-            new(0, 0); // the delegates need to be initialized in the constructor
+        _boxesDemoSettingsWindow = new(1, 0, 1); // the delegates need to be initialized in the constructor
 
     public BoxesDemo()
     {
@@ -45,37 +44,30 @@ public class BoxesDemo : RigidBodyApplication
         {
             Random random = new();
             int length = _boxes.Length;
-            if (count < length)
+            for (int i = count; i < length; ++i)
             {
-                for (int i = count; i < length; ++i)
-                {
-                    _sceneManager.RemoveGameObject(_boxes[i]);
-                }
+                _sceneManager.RemoveGameObject(_boxes[i]);
+                _boxes[i].Dispose();
             }
 
             Array.Resize(ref _boxes, count);
-            if (count > length)
+            for (int i = length; i < count; ++i)
             {
-                for (int i = length; i < count; ++i)
-                {
-                    _boxes[i] = new Box();
-                    _boxes[i].EngineBox.Random(random);
-                    _sceneManager.AddGameObject(_boxes[i]);
-                }
+                _boxes[i] = new Box();
+                _boxes[i].EngineBox.Random(random);
+                _sceneManager.AddGameObject(_boxes[i]);
             }
         };
         _boxesDemoSettingsWindow.SetSpheresCount = count =>
         {
             Random random = new();
             int length = _balls.Length;
-            if (count < length)
+            for (int i = count; i < length; ++i)
             {
-                for (int i = count; i < length; ++i)
-                {
-                    _sceneManager.RemoveGameObject(_balls[i]);
-                }
+                _sceneManager.RemoveGameObject(_balls[i]);
+                _balls[i].Dispose();
             }
-            
+
             Array.Resize(ref _balls, count);
             if (count > length)
             {
@@ -87,12 +79,31 @@ public class BoxesDemo : RigidBodyApplication
                 }
             }
         };
+        _boxesDemoSettingsWindow.SetClothsCount = count =>
+        {
+            int length = _cloths.Length;
+            for (int i = count; i < length; ++i)
+            {
+                _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
+                _sceneManager.RemoveGameObject(_cloths[i]);
+                _cloths[i].Dispose();
+            }
+
+            Array.Resize(ref _cloths, count);
+            for (int i = length; i < count; ++i)
+            {
+                _cloths[i] = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+                    _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+                    _boxesDemoSettingsWindow.ParticleMass);
+                _sceneManager.AddGameObject(_cloths[i]);
+            }
+        };
     }
 
     protected override void InitializeScene()
     {
         base.InitializeScene();
-        
+
         _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
             (ray, index) =>
             {
@@ -125,18 +136,18 @@ public class BoxesDemo : RigidBodyApplication
         _sceneManager.SelectionManager = _selectionManager;
 
         /* add cloth to the scene */
-        _cloth = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
-            _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-            _boxesDemoSettingsWindow.ParticleMass);
-        _sceneManager.AddGameObject(this._cloth);
-        
+        // _cloth = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+        //     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+        //     _boxesDemoSettingsWindow.ParticleMass);
+        // _sceneManager.AddGameObject(this._cloth);
+
         /* add ground plane to the scene */
         _plane = new();
 
         /* boxes already added by the boxes demo settings callback on loading of settings; or empty */
         /* the boxes can be added via ui */
         // _sceneManager.AddGameObject(_plane); // TODO: add not rendered objects; or rendered with wireframe only
-        
+
         /* set everything up */
         Reset();
     }
@@ -162,16 +173,23 @@ public class BoxesDemo : RigidBodyApplication
             boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
-        for (int i = 0; i < _cloth.EngineCloth.Particles.GetLength(0); i++)
+        int clothsParticlesPartialSum = 0;
+        foreach (var cloth in _cloths)
         {
-            for (int j = 0; j < _cloth.EngineCloth.Particles.GetLength(1); j++)
+            for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
             {
-                var particle = _cloth.EngineCloth.Particles[i, j];
-                if (particle != null && particle.Body != null)
+                for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
                 {
-                    boxDict[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.SizeY + j] = particle;
+                    var particle = cloth.EngineCloth.Particles[i, j];
+                    if (particle != null && particle.Body != null)
+                    {
+                        boxDict[_boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY + j] = particle;
+                    }
                 }
             }
+
+            clothsParticlesPartialSum +=
+                cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
         }
 
         BVH bvh = BVH.Build(boxDict);
@@ -187,19 +205,28 @@ public class BoxesDemo : RigidBodyApplication
             _bvhDictionary[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
         }
 
-        for (int i = 0; i < _cloth.EngineCloth.Particles.GetLength(0); i++)
+        int clothsParticlesPartialSum = 0;
+        foreach (var cloth in _cloths)
         {
-            for (int j = 0; j < _cloth.EngineCloth.Particles.GetLength(1); j++)
+            for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
             {
-                var particle = _cloth.EngineCloth.Particles[i, j];
-                if (particle != null && particle.Body != null)
+                for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
                 {
-                    _bvhDictionary[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.SizeY + j] = particle;
+                    var particle = cloth.EngineCloth.Particles[i, j];
+                    if (particle != null && particle.Body != null)
+                    {
+                        _bvhDictionary[_boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY + j] = particle;
+                    }
                 }
             }
+
+            clothsParticlesPartialSum +=
+                cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
         }
+
+        _bvh = BVH.Build(_bvhDictionary);
     }
-    
+
     protected override long AvailableSteps
     {
         get
@@ -212,8 +239,9 @@ public class BoxesDemo : RigidBodyApplication
             base.AvailableSteps = value;
         }
     }
-    
+
     protected bool _bhvRebuildOnNoUpdate;
+
     protected override void OnNoPhysicsUpdate()
     {
         base.OnNoPhysicsUpdate();
@@ -224,7 +252,6 @@ public class BoxesDemo : RigidBodyApplication
             _bhvRebuildOnNoUpdate = true;
         }
 
-        _bvh = BVH.Build(_bvhDictionary);
         ObjectSelectionHandling();
     }
 
@@ -237,7 +264,7 @@ public class BoxesDemo : RigidBodyApplication
 
             float relativeX = mousePos.X - imageTopLeft.X;
             float relativeY = mousePos.Y - imageTopLeft.Y;
-            
+
             var fbScale = _imGuiController.ScaleFactor;
             float scaledX = relativeX * fbScale.X;
             float scaledY = relativeY * fbScale.Y;
@@ -256,7 +283,7 @@ public class BoxesDemo : RigidBodyApplication
 
         BvhRebuild();
         ObjectSelectionHandling();
-        
+
         // Process box-plane collisions
         foreach (var box in _boxes)
         {
@@ -272,12 +299,16 @@ public class BoxesDemo : RigidBodyApplication
         }
 
         // Process particle-plane collisions
-        foreach (var particle in _cloth.EngineCloth.Particles)
+        foreach (var cloth in _cloths)
         {
-            if (particle == null || particle.Body == null) continue;
-            if (!_collisionData.HasMoreContacts()) return;
-            CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
+            foreach (var particle in cloth.EngineCloth.Particles)
+            {
+                if (particle == null || particle.Body == null) continue;
+                if (!_collisionData.HasMoreContacts()) return;
+                CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
+            }
         }
+        
 
         List<(int, int)> potentialCollisions = new();
         BVH.GetPotentialContacts(ref potentialCollisions, _bvh.root);
@@ -314,16 +345,30 @@ public class BoxesDemo : RigidBodyApplication
                 else // box and particle
                 {
                     var box1 = _boxes[pair.Item1];
-                    var particle2 = _cloth.EngineCloth.Particles[
-                        (pair.Item2 - _boxes.Length - _balls.Length) / _cloth.EngineCloth.SizeY,
-                        (pair.Item2 - _boxes.Length - _balls.Length) % _cloth.EngineCloth.SizeY];
-                    if (particle2 == null || particle2.Body == null) continue;
 
-                    var contacts = CollisionDetector.BoxAndParticle(box1.EngineBox, particle2, _collisionData);
-                    if (contacts > 0)
+                    // TODO: refactor with partial sum array for cloth points count
+                    int clothsParticlesPartialSum = 0;
+                    foreach (var cloth in _cloths)
                     {
-                        box1.EngineBox.IsOverlapping = true;
+                        if (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum <
+                            cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY)
+                        {
+                            var particle2 = cloth.EngineCloth.Particles[
+                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) / cloth.EngineCloth.SizeY,
+                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) % cloth.EngineCloth.SizeY];
+                            if (particle2 == null || particle2.Body == null) break;
+
+                            var contacts = CollisionDetector.BoxAndParticle(box1.EngineBox, particle2, _collisionData);
+                            if (contacts > 0)
+                            {
+                                box1.EngineBox.IsOverlapping = true;
+                            }
+
+                            break;
+                        }
+                        clothsParticlesPartialSum += cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
                     }
+                    
                 }
             }
             else if (pair.Item1 >= _boxes.Length && pair.Item1 < _boxes.Length + _balls.Length) // sphere and ...
@@ -396,7 +441,10 @@ public class BoxesDemo : RigidBodyApplication
     protected override void UpdateObjects(float duration)
     {
         _forceRegistry.updateForces(duration);
-        _cloth.EngineCloth.Update(duration);
+        foreach (Cloth cloth in _cloths)
+        {
+            cloth.EngineCloth.Update(duration);
+        }
 
         // Update the physics of each box in turn
         foreach (var box in _boxes)
@@ -420,10 +468,13 @@ public class BoxesDemo : RigidBodyApplication
     protected override void Reset()
     {
         _forceRegistry.Clear();
-        _cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX,
-            _boxesDemoSettingsWindow.SizeY,
-            _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-            _boxesDemoSettingsWindow.ParticleMass);
+        foreach (Cloth cloth in _cloths)
+        {
+            cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX,
+                _boxesDemoSettingsWindow.SizeY,
+                _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+                _boxesDemoSettingsWindow.ParticleMass);   
+        }
 
         // reset boxes; some in preconfigured positions
         if (_boxes.Length > 0)

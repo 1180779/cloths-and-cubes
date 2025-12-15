@@ -22,6 +22,7 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
     private bool _debugRayRecreate;
     public Ray? LastRay { get; private set; }
 
+    public Real SelectedObjectDistance { get; set; }
     public object? SelectedObject
     {
         get
@@ -136,6 +137,7 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
         }
 
         SelectedObject = closestObject;
+        SelectedObjectDistance = closestDistance;
     }
     
     public void DebugRenderInScene()
@@ -145,7 +147,8 @@ public sealed class SelectionManager(IInputProvider inputProvider, Func<CameraBa
             _debugRayRecreate = false;
             var ray = LastRay.Value;
             var start = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
-            var end = start + new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z) * 100;
+            var end = start + new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z) * SelectedObjectDistance;
+            _debugRay?.Dispose();
             _debugRay = new Line(start, end);
         }
         _debugRay?.Render();

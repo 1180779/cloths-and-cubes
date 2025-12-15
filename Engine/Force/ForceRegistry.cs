@@ -40,9 +40,9 @@ namespace Engine.Force
         * If the pair is not registered, this method will have
         * no effect.
         */
-        void remove(RigidBody body, IForceGenerator fg)
+        public void Remove(RigidBody body, IForceGenerator fg)
         {
-
+            Registry.RemoveAll(r => r.body == body && r.fg == fg);
         }
 
         /**
