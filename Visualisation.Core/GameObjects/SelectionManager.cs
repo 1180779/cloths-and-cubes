@@ -134,6 +134,13 @@ public sealed class SelectionManager(
             }
         }
 
+        var (planeHit, planeDistance, planeObj) = _testBvhIndexRayIntersection(ray, -1);
+        if (planeHit && planeDistance < closestDistance && planeDistance >= 0)
+        {
+            closestDistance = planeDistance;
+            closestObject = planeObj;
+        }
+
         SelectedObject = closestObject;
         SelectedObjectDistance = closestDistance;
     }
@@ -186,6 +193,9 @@ public sealed class SelectionManager(
             case RigidParticle particle:
                 DrawParticle(particle);
                 break;
+            case Plane plane:
+                DrawPlane(plane);
+                break;
         }
 
         ImGui.End();
@@ -217,6 +227,20 @@ public sealed class SelectionManager(
                     gameObject.Material = material.TypedClone();
                 }
             }
+        }
+    }
+
+    private void DrawVector3Property(
+        Func<Engine.Vector3> get,
+        Action<Engine.Vector3> set,
+        String label,
+        float step = 0.1f)
+    {
+        var vec = get();
+        var tempVec = new System.Numerics.Vector3(vec.X, vec.Y, vec.Z);
+        if (ImGui.DragFloat3(label, ref tempVec, step))
+        {
+            set(new Engine.Vector3(tempVec.X, tempVec.Y, tempVec.Z));
         }
     }
 
@@ -272,6 +296,17 @@ public sealed class SelectionManager(
         DrawVector3(ref particle.Body.Position, "Position");
         DrawVector3(ref particle.Body.Velocity, "Velocity");
         DrawVector3(ref particle.Body.Acceleration, "Acceleration");
+    }
+
+    private void DrawPlane(Plane plane)
+    {
+        var collisionPlane = plane.EnginePlane;
+        DrawVector3Property(() => collisionPlane.Direction, v => collisionPlane.Direction = v, "Direction");
+        var offset = (float)collisionPlane.Offset;
+        if (ImGui.DragFloat("Offset", ref offset, 0.1f))
+        {
+            collisionPlane.Offset = offset;
+        }
     }
 
     public record State(bool DrawInvisibleObjects, bool DrawDebugRay, bool DrawSelectedObjectWithoutDepthTesting);

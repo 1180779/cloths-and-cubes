@@ -144,6 +144,27 @@ public static class RayIntersection
         return true;
     }
 
+    public static bool IntersectRayPlane(Ray ray, CollisionPlane plane, out Real distance)
+    {
+        distance = 0;
+        Real denominator = plane.Direction * ray.Direction;
+
+        if (denominator > -1e-6 && denominator < 1e-6)
+        {
+            return false;
+        }
+
+        Real t = (plane.Offset - (plane.Direction * ray.Origin)) / denominator;
+
+        if (t < 0)
+        {
+            return false;
+        }
+
+        distance = t;
+        return true;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool Slab(Real origin, Real dir, Real invDir, Real minVal, Real maxVal, ref Real tMin, ref Real tMax)
     {

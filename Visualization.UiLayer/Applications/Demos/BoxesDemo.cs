@@ -105,6 +105,14 @@ public class BoxesDemo : RigidBodyApplication
             {
                 if (!_bvhDictionary.TryGetValue(index, out var item))
                 {
+                    if (index == -1)
+                    {
+                        if (RayIntersection.IntersectRayPlane(ray, _plane.EnginePlane, out var planeDistance))
+                        {
+                            return (true, planeDistance, _plane);
+                        }
+                    }
+
                     return (false, 0, null);
                 }
 
