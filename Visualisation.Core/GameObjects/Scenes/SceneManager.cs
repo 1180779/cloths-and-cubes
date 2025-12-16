@@ -79,7 +79,7 @@ public abstract class SceneManager : IDisposable
 
     public void ProcessInput(IInputProvider input, float dt)
     {
-        CamerasManager.ProcessInput(input, dt);
+        CamerasManager.ProcessInput(input, dt, SelectionManager?.SelectionEnabled ?? false);
     }
 
     public void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)

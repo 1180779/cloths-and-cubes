@@ -50,11 +50,11 @@ public class CamerasManager
         }
     }
 
-    public void ProcessInput(IInputProvider input, float dt)
+    public void ProcessInput(IInputProvider input, float dt, bool disableMouseClick = false)
     {
         if (!CameraMode)
         {
-            if (input.IsKeyPressed(InputKey.L))
+            if ((input.IsMouseButtonPressed(MouseButton.Left) && !disableMouseClick) || input.IsKeyPressed(InputKey.L))
             {
                 input.SetCursorState(CursorState.Grabbed);
                 CameraMode = true;
