@@ -1,3 +1,5 @@
+using System.Data.SqlTypes;
+
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
 using Engine.RigidBodies;
@@ -44,7 +46,7 @@ public sealed class SelectionManager(
             {
                 _selectedObject = value;
                 OnSelectionChanged?.Invoke(_selectedObject);
-            } else if (Unselect)
+            } else if (Unselect && _selectedObject != null)
             {
                 _selectedObject = null;
                 OnSelectionChanged?.Invoke(_selectedObject);
@@ -55,6 +57,21 @@ public sealed class SelectionManager(
     public bool DrawInvisibleObjects;
     public bool DrawSelectedObjectWithoutDepthTesting = true;
     public bool Unselect = true;
+
+    private bool _selectionEnabled = true;
+
+    public bool SelectionEnabled
+    {
+        get => _selectionEnabled;
+        set
+        {
+            _selectionEnabled = value;
+            if (!value)
+            {
+                SelectedObject = null;
+            }
+        }
+    }
     
     /// <summary>
     /// Event raised when the selected object changes.
@@ -69,6 +86,9 @@ public sealed class SelectionManager(
     /// <param name="viewportHeight">The height of the viewport in framebuffer coordinates.</param>
     public void HandleInput(Vector2 viewportMousePos, int viewportWidth, int viewportHeight)
     {
+        if (!SelectionEnabled)
+            return;
+        
         if (_inputProvider.IsMouseButtonPressed(MouseButton.Left))
         {
             PerformSelection(viewportMousePos, viewportWidth, viewportHeight);
@@ -173,6 +193,11 @@ public sealed class SelectionManager(
     public void DrawWindow()
     {
         ImGui.Begin("Selected Object");
+        bool selection = SelectionEnabled;
+        if (ImGui.Checkbox("Enable selection", ref selection))
+        {
+            SelectionEnabled = selection;
+        }
         ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
         ImGui.Checkbox("Draw invisible objects", ref DrawInvisibleObjects);
         ImGui.Checkbox("Draw selected object even behind other objects", ref DrawSelectedObjectWithoutDepthTesting);
