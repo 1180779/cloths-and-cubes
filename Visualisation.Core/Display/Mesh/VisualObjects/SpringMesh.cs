@@ -1,4 +1,6 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using Engine;
+
+using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects
 {
@@ -52,6 +54,26 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices,
                     BufferUsageHint.StreamDraw);
             }
+        }
+
+        public Triangle[] GetTriangles()
+        {
+            if (_vertices == null)
+            {
+                return [];
+            }
+
+            // TODO: Optimize to use array
+            var triangles = new List<Triangle>();
+            for (int i = 0; i < _vertices.Length; i += 18) // 3 vertices * 6 floats/vertex
+            {
+                var v1 = new Engine.Vector3(_vertices[i], _vertices[i + 1], _vertices[i + 2]);
+                var v2 = new Engine.Vector3(_vertices[i + 6], _vertices[i + 7], _vertices[i + 8]);
+                var v3 = new Engine.Vector3(_vertices[i + 12], _vertices[i + 13], _vertices[i + 14]);
+                triangles.Add(new Triangle(v1, v2, v3));
+            }
+
+            return triangles.ToArray();
         }
 
         private void BuildMesh()

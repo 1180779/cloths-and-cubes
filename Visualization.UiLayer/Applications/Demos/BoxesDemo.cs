@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
@@ -117,6 +119,11 @@ public class BoxesDemo : RigidBodyApplication
                         if (RayIntersection.IntersectRaySphere(ray, ball.EngineBall, out distance))
                             return (true, distance, ball);
                         break;
+                    case Cloth cloth:
+                        var triangles = cloth.VisualCloth.GetTriangles();
+                        if (RayIntersection.IntersectRayCloth(ray, triangles, out distance))
+                            return (true, distance, cloth);
+                        break;
                     case RigidParticle particle:
                         if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
                             return (true, distance, particle);
@@ -165,47 +172,33 @@ public class BoxesDemo : RigidBodyApplication
     protected override void DebugRenderInScene(Shader sh)
     {
         base.DebugRenderInScene(sh);
-        Dictionary<int, IBoxable> boxDict = new();
-        for (int i = 0; i < _boxes.Length + _balls.Length; i++)
-        {
-            boxDict[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
-        }
 
-        int clothsParticlesPartialSum = 0;
-        foreach (var cloth in _cloths)
-        {
-            for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
-            {
-                for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
-                {
-                    var particle = cloth.EngineCloth.Particles[i, j];
-                    if (particle != null && particle.Body != null)
-                    {
-                        boxDict[
-                            _boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY +
-                            j] = particle;
-                    }
-                }
-            }
-
-            clothsParticlesPartialSum +=
-                cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
-        }
-
-        BVH bvh = BVH.Build(boxDict);
-        _bvhNodesWindow.DebugRenderInScene(sh, bvh);
+        // no need to rebuild?
+        // BvhRebuild();
+        _bvhNodesWindow.DebugRenderInScene(sh, _bvh);
         _selectionManager.DebugRenderInScene(sh);
     }
 
     protected void BvhRebuild()
     {
         _bvhDictionary.Clear();
-        for (int i = 0; i < _boxes.Length + _balls.Length; i++)
+        int offset = 0;
+
+        for (int i = 0; i < _boxes.Length; i++)
         {
-            _bvhDictionary[i] = i < _boxes.Length ? _boxes[i] : _balls[i - _boxes.Length];
+            _bvhDictionary[offset++] = _boxes[i];
         }
 
-        int clothsParticlesPartialSum = 0;
+        for (int i = 0; i < _balls.Length; i++)
+        {
+            _bvhDictionary[offset++] = _balls[i];
+        }
+
+        for (int i = 0; i < _cloths.Length; i++)
+        {
+            _bvhDictionary[offset++] = _cloths[i];
+        }
+
         foreach (var cloth in _cloths)
         {
             for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
@@ -215,15 +208,10 @@ public class BoxesDemo : RigidBodyApplication
                     var particle = cloth.EngineCloth.Particles[i, j];
                     if (particle != null && particle.Body != null)
                     {
-                        _bvhDictionary[
-                            _boxes.Length + _balls.Length + clothsParticlesPartialSum + i * cloth.EngineCloth.SizeY +
-                            j] = particle;
+                        _bvhDictionary[offset++] = particle;
                     }
                 }
             }
-
-            clothsParticlesPartialSum +=
-                cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
         }
 
         _bvh = BVH.Build(_bvhDictionary);
@@ -286,6 +274,7 @@ public class BoxesDemo : RigidBodyApplication
         BvhRebuild();
         ObjectSelectionHandling();
 
+
         // Process box-plane collisions
         foreach (var box in _boxes)
         {
@@ -318,124 +307,58 @@ public class BoxesDemo : RigidBodyApplication
         {
             if (!_collisionData.HasMoreContacts()) return;
 
-            // TODO: refactor this check
-            if (pair.Item1 < _boxes.Length) // box and ...
-            {
-                if (pair.Item2 < _boxes.Length) // box and box
-                {
-                    var box1 = _boxes[pair.Item1];
-                    var box2 = _boxes[pair.Item2];
+            var obj1 = _bvhDictionary[pair.Item1];
+            var obj2 = _bvhDictionary[pair.Item2];
 
-                    var contacts = CollisionDetector.BoxAndBox(box1.EngineBox, box2.EngineBox, _collisionData);
+            switch (obj1, obj2)
+            {
+                case (Box b1, Box b2):
+                    var contacts = CollisionDetector.BoxAndBox(b1.EngineBox, b2.EngineBox, _collisionData);
                     if (contacts > 0)
-                    {
-                        box1.EngineBox.IsOverlapping = box2.EngineBox.IsOverlapping = true;
-                    }
-                }
-                else if (pair.Item2 >= _boxes.Length && pair.Item2 < _boxes.Length + _balls.Length) // box and sphere
-                {
-                    var box1 = _boxes[pair.Item1];
-                    var ball2 = _balls[pair.Item2 - _boxes.Length];
+                        b1.EngineBox.IsOverlapping = b2.EngineBox.IsOverlapping = true;
+                    break;
 
-                    var contacts = CollisionDetector.BoxAndSphere(box1.EngineBox, ball2.EngineBall, _collisionData);
-                    if (contacts)
-                    {
-                        box1.EngineBox.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
-                    }
-                }
-                else // box and particle
-                {
-                    var box1 = _boxes[pair.Item1];
+                case (Box b, Ball s):
+                    HandleBoxBall(b, s);
+                    break;
+                case (Ball s, Box b):
+                    HandleBoxBall(b, s);
+                    break;
 
-                    // TODO: refactor with partial sum array for cloth points count
-                    int clothsParticlesPartialSum = 0;
-                    foreach (var cloth in _cloths)
-                    {
-                        if (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum <
-                            cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY)
-                        {
-                            var particle2 = cloth.EngineCloth.Particles[
-                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) /
-                                cloth.EngineCloth.SizeY,
-                                (pair.Item2 - _boxes.Length - _balls.Length - clothsParticlesPartialSum) %
-                                cloth.EngineCloth.SizeY];
-                            if (particle2 == null || particle2.Body == null) break;
+                case (Ball s1, Ball s2):
+                    var hit2 = CollisionDetector.SphereAndSphere(s1.EngineBall, s2.EngineBall, _collisionData);
+                    if (hit2)
+                        s1.EngineBall.IsOverlapping = s2.EngineBall.IsOverlapping = true;
+                    break;
 
-                            var contacts = CollisionDetector.BoxAndParticle(box1.EngineBox, particle2, _collisionData);
-                            if (contacts > 0)
-                            {
-                                box1.EngineBox.IsOverlapping = true;
-                            }
-
-                            break;
-                        }
-
-                        clothsParticlesPartialSum += cloth.EngineCloth.SizeX * cloth.EngineCloth.SizeY;
-                    }
-                }
-            }
-            else if (pair.Item1 >= _boxes.Length && pair.Item1 < _boxes.Length + _balls.Length) // sphere and ...
-            {
-                if (pair.Item2 < _boxes.Length) // sphere and box
-                {
-                    var ball1 = _balls[pair.Item1 - _boxes.Length];
-                    var box2 = _boxes[pair.Item2];
-
-                    var contacts = CollisionDetector.BoxAndSphere(box2.EngineBox, ball1.EngineBall, _collisionData);
-                    if (contacts)
-                    {
-                        box2.EngineBox.IsOverlapping = ball1.EngineBall.IsOverlapping = true;
-                    }
-                }
-                else if (pair.Item2 >= _boxes.Length && pair.Item2 < _boxes.Length + _balls.Length) // sphere and sphere
-                {
-                    var ball1 = _balls[pair.Item1 - _boxes.Length];
-                    var ball2 = _balls[pair.Item2 - _boxes.Length];
-
-                    var contacts =
-                        CollisionDetector.SphereAndSphere(ball1.EngineBall, ball2.EngineBall, _collisionData);
-                    if (contacts)
-                    {
-                        ball1.EngineBall.IsOverlapping = ball2.EngineBall.IsOverlapping = true;
-                    }
-                }
-            }
-            else // particle and ...
-            {
-                //var particle1 = _cloth.EngineCloth.particles[
-                //    (pair.Item1 - _boxes.Length - _balls.Length) / _cloth.EngineCloth.sizeY,
-                //    (pair.Item1 - _boxes.Length - _balls.Length) % _cloth.EngineCloth.sizeY];
-                //if (particle1 == null || particle1.Body == null) continue;
+                case (Box b, RigidParticle p):
+                    HandleBoxParticle(b, p);
+                    break;
+                case (RigidParticle p, Box b):
+                    HandleBoxParticle(b, p);
+                    break;
             }
         }
 
-        // cloth contacts
-        //var engCloth = _cloth.EngineCloth;
-        //for (int x = 0; x < engCloth.sizeX; x++)
-        //{
-        //    for (int y = 0; y < engCloth.sizeY; y++)
-        //    {
-        //        if (!_collisionData.HasMoreContacts()) return;
+        return;
 
-        //        var rigidParticle = engCloth.particles[x, y];
-        //        if (rigidParticle == null || rigidParticle.Body == null) continue;
+        // helper handling functions to remove code duplication
 
-        //        var collParticle = new CollisionParticle();
-        //        collParticle.Body = rigidParticle.Body;
-        //        collParticle.CalculateInternals();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void HandleBoxBall(Box b, Ball s)
+        {
+            var hit = CollisionDetector.BoxAndSphere(b.EngineBox, s.EngineBall, _collisionData);
+            if (hit)
+                b.EngineBox.IsOverlapping = s.EngineBall.IsOverlapping = true;
+        }
 
-
-        //        if (!_collisionData.HasMoreContacts()) return;
-        //        CollisionDetector.ParticleAndHalfSpace(collParticle, _plane.EnginePlane, _collisionData);
-
-
-        //        for (var b = 0; b < _boxes.Length; b++)
-        //        {
-        //            if (!_collisionData.HasMoreContacts()) return;
-        //            CollisionDetector.BoxAndParticle(_boxes[b].EngineBox, collParticle, _collisionData);
-        //        }
-        //    }
-        //}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void HandleBoxParticle(Box b, RigidParticle p)
+        {
+            var contacts = CollisionDetector.BoxAndParticle(b.EngineBox, p, _collisionData);
+            if (contacts > 0)
+                b.EngineBox.IsOverlapping = true;
+        }
     }
 
     /// <summary>

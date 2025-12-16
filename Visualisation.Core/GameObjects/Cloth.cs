@@ -1,4 +1,5 @@
-﻿using Engine.Force;
+﻿using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.Force;
 
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
@@ -6,7 +7,7 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cloth : GameObject
+public sealed class Cloth : GameObject, IBoxable
 {
     public Engine.Cloth EngineCloth { get; set; }
     public SpringMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
@@ -44,6 +45,28 @@ public sealed class Cloth : GameObject
     {
         var pts = ConvertToOpenTk(EngineCloth.Points());
         VisualCloth.UpdatePoints(pts);
+    }
+
+    public BoundingBox GetBoundingBox()
+    {
+        var min = new Engine.Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        var max = new Engine.Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+        foreach (var particle in EngineCloth.Particles)
+        {
+            if (particle == null || particle.Body == null) continue;
+            var pos = particle.Body.Position;
+            min.X = Math.Min(min.X, pos.X);
+            min.Y = Math.Min(min.Y, pos.Y);
+            min.Z = Math.Min(min.Z, pos.Z);
+            max.X = Math.Max(max.X, pos.X);
+            max.Y = Math.Max(max.Y, pos.Y);
+            max.Z = Math.Max(max.Z, pos.Z);
+        }
+
+        var center = new Engine.Vector3((min.X + max.X) / 2, (min.Y + max.Y) / 2, (min.Z + max.Z) / 2);
+        var halfSize = new Engine.Vector3((max.X - min.X) / 2, (max.Y - min.Y) / 2, (max.Z - min.Z) / 2);
+        return new BoundingBox(center, halfSize);
     }
 
     public override Vector3 Position =>

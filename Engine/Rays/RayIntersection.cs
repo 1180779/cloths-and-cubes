@@ -83,7 +83,7 @@ public static class RayIntersection
 
         // Ray intersects the sphere. We want the smallest non-negative root, which is the nearest intersection point.
         // The smaller root is t0 = -b - sqrt(discr).
-        
+
         Real t;
         Real sqrtDiscr = (Real)Math.Sqrt(discr);
         if (b < 0)
@@ -102,7 +102,7 @@ public static class RayIntersection
         return true;
     }
 
-     /// <summary>
+    /// <summary>
     /// Tests if a ray intersects with an oriented bounding box.
     /// This is more expensive than AABB intersection but handles rotated boxes.
     /// </summary>
@@ -164,7 +164,7 @@ public static class RayIntersection
 
         return tMin <= tMax;
     }
-    
+
     /// <summary>
     /// Traverses a BVH to find all potential ray intersections.
     /// Returns the IDs of objects that potentially intersect with the ray.
@@ -202,5 +202,65 @@ public static class RayIntersection
                 stack.Push(inter.right);
             }
         }
+    }
+
+    public static bool IntersectRayTriangle(Ray ray, Triangle triangle, out Real distance)
+    {
+        Vector3 v0 = triangle.Vertex1;
+        Vector3 v1 = triangle.Vertex2;
+        Vector3 v2 = triangle.Vertex3;
+        distance = 0;
+
+        Vector3 edge1 = v1 - v0;
+        Vector3 edge2 = v2 - v0;
+
+        Vector3 h = Vector3.CrossProduct(ray.Direction, edge2);
+        Real a = edge1 * h;
+
+        Real eps = Core.Epsilon;
+        if (a > -eps && a < eps)
+            return false; // Ray is parallel to triangle
+
+        Real f = 1.0f / a;
+        Vector3 s = ray.Origin - v0;
+        Real u = f * (s * h);
+        if (u < 0.0f || u > 1.0f)
+            return false;
+
+        Vector3 q = Vector3.CrossProduct(s, edge1);
+        Real v = f * (ray.Direction * q);
+        if (v < 0.0f || u + v > 1.0f)
+            return false;
+
+        // Compute t to find an intersection point
+        Real t = f * (edge2 * q);
+        if (t > eps) // Ray intersection
+        {
+            distance = t;
+            return true;
+        }
+
+        // Line intersection but not a ray intersection
+        return false;
+    }
+
+    public static bool IntersectRayCloth(Ray ray, Triangle[] triangles, out Real distance)
+    {
+        distance = Real.MaxValue;
+        bool hit = false;
+
+        foreach (var triangle in triangles)
+        {
+            if (IntersectRayTriangle(ray, triangle, out Real triDistance))
+            {
+                if (triDistance < distance)
+                {
+                    distance = triDistance;
+                    hit = true;
+                }
+            }
+        }
+
+        return hit;
     }
 }
