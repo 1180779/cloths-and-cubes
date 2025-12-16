@@ -70,14 +70,11 @@ public class BoxesDemo : RigidBodyApplication
             }
 
             Array.Resize(ref _balls, count);
-            if (count > length)
+            for (int i = length; i < count; ++i)
             {
-                for (int i = length; i < count; ++i)
-                {
-                    _balls[i] = new Ball();
-                    _balls[i].EngineBall.Random(random);
-                    _sceneManager.AddGameObject(_balls[i]);
-                }
+                _balls[i] = new Ball();
+                _balls[i].EngineBall.Random(random);
+                _sceneManager.AddGameObject(_balls[i]);
             }
         };
         _boxesDemoSettingsWindow.SetClothsCount = count =>
@@ -148,19 +145,10 @@ public class BoxesDemo : RigidBodyApplication
 
         _sceneManager.SelectionManager = _selectionManager;
 
-        /* add cloth to the scene */
-        // _cloth = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
-        //     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-        //     _boxesDemoSettingsWindow.ParticleMass);
-        // _sceneManager.AddGameObject(this._cloth);
-
         /* add ground plane to the scene */
         _plane = new();
         _plane.Invisible = true; // start invisible by default
         _sceneManager.AddGameObject(_plane);
-
-        /* boxes already added by the boxes demo settings callback on loading of settings; or empty */
-        /* the boxes can be added via ui */
 
         /* set everything up */
         Reset();
