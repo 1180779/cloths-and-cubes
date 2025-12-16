@@ -73,7 +73,7 @@ public class RigidBody
     /// User-controlled bodies, for example, should always be
     /// awake.
     /// </summary>
-    public bool CanSleep { get; private set; }
+    public bool CanSleep { get; set; }
 
     /// <summary>
     /// Holds a transform matrix for converting body space into
@@ -159,7 +159,8 @@ public class RigidBody
 
     public void CalculateDerivedData()
     {
-        Orientation.Normalise();
+        orientation.Normalise();
+        // Orientation.Normalise(); // should be normalized all the time
 
         // Calculate the transform matrix for the body.
         CalculateTransformMatrix(TransformMatrix, Position, Orientation);
@@ -266,8 +267,9 @@ public class RigidBody
         Position += Velocity * duration;
 
         // Update angular position.
-        Orientation.AddScaledVector(Rotation, duration);
-
+        orientation.AddScaledVector(Rotation, duration);
+        orientation.Normalise();
+        
         // Normalize the orientation and update the matrices with the new
         // position and orientation
         CalculateDerivedData();

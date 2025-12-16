@@ -110,7 +110,7 @@ public struct Quaternion
 
     public void AddScaledVector(Vector3 vector, Real scale)
     {
-        Quaternion q = new Quaternion(0,
+        Quaternion q = new(0,
             vector.X * scale,
             vector.Y * scale,
             vector.Z * scale);
