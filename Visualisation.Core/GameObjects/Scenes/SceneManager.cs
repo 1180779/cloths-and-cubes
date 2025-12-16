@@ -32,8 +32,12 @@ public abstract class SceneManager : IDisposable
         CamerasManager.AddCamera(camera);
     }
 
+    public const float OutlineSize = 0.05f;
+    public const float OutlineFactor = 1f + OutlineSize;
+
     public readonly Shader PbrShader = new("scenePBRShader.vert", "scenePBRShader.frag");
     public readonly Shader SolidColorShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
+    public readonly Shader OutlineShader = new("outline.vert", "sceneBasicShader.frag");
 
     public readonly Shader EquirectangularToCubemapShader =
         new("cubemap.vert", "equirectangularToCubemapShader.frag");
@@ -136,7 +140,7 @@ public abstract class SceneManager : IDisposable
                 case Box box:
                     {
                         var originalHalfSize = box.EngineBox.HalfSize;
-                        box.EngineBox.HalfSize *= 1.05f;
+                        box.EngineBox.HalfSize *= OutlineFactor;
 
                         box.SetForShaderNoMaterial(SolidColorShader);
                         box.Render(SelectionManager.DrawInvisibleObjects);
@@ -147,12 +151,24 @@ public abstract class SceneManager : IDisposable
                 case Ball ball:
                     {
                         var originalRadius = ball.EngineBall.Radius;
-                        ball.EngineBall.Radius *= 1.05f;
+                        ball.EngineBall.Radius *= OutlineFactor;
 
                         ball.SetForShaderNoMaterial(SolidColorShader);
                         ball.Render(SelectionManager.DrawInvisibleObjects);
 
                         ball.EngineBall.Radius = originalRadius;
+                        break;
+                    }
+                case Cloth cloth:
+                    {
+                        GL.CullFace(TriangleFace.Front);
+                        OutlineShader.Use();
+                        CamerasManager.CurrentCamera.SetForSimpleShader(OutlineShader);
+                        OutlineShader.SetFloat("outline_size", OutlineSize);
+                        OutlineShader.SetVector3("color", SelectionColor);
+                        cloth.SetForShaderNoMaterial(OutlineShader);
+                        cloth.Render(SelectionManager.DrawInvisibleObjects);
+                        GL.CullFace(TriangleFace.Back);
                         break;
                     }
                 case RigidParticle particle:
@@ -198,6 +214,7 @@ public abstract class SceneManager : IDisposable
         GL.DepthFunc(DepthFunction.Less); // Reset
     }
 
+
     private void SetSharedPbrUniforms()
     {
         EnvironmentMap.SetForPbrShader(PbrShader);
@@ -211,6 +228,7 @@ public abstract class SceneManager : IDisposable
         _cube.Dispose();
         PbrShader.Dispose();
         SolidColorShader.Dispose();
+        OutlineShader.Dispose();
         SkyboxShader.Dispose();
         EquirectangularToCubemapShader.Dispose();
 

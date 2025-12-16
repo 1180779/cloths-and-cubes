@@ -180,6 +180,9 @@ public sealed class SelectionManager(
             case Ball ball:
                 DrawSphere(ball);
                 break;
+            case Cloth cloth:
+                DrawCloth(cloth);
+                break;
             case RigidParticle particle:
                 DrawParticle(particle);
                 break;
@@ -257,6 +260,11 @@ public sealed class SelectionManager(
     private void DrawSphere(Ball ball)
     {
         DrawRigidBody(ball.EngineBall.Body);
+    }
+
+    private void DrawCloth(Cloth cloth)
+    {
+        // TODO: cloth-specific UI
     }
 
     private void DrawParticle(RigidParticle particle)
