@@ -156,6 +156,7 @@ public class BoxesDemo : RigidBodyApplication
 
         /* add ground plane to the scene */
         _plane = new();
+        _plane.Invisible = true; // start invisible by default
         _sceneManager.AddGameObject(_plane);
 
         /* boxes already added by the boxes demo settings callback on loading of settings; or empty */
@@ -410,6 +411,10 @@ public class BoxesDemo : RigidBodyApplication
                 _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                 _boxesDemoSettingsWindow.ParticleMass);
         }
+
+        // reset plane
+        _plane.EnginePlane.Direction = Engine.Vector3.Up;
+        _plane.EnginePlane.Offset = 0f;
 
         // reset boxes; some in preconfigured positions
         if (_boxes.Length > 0)
