@@ -34,7 +34,7 @@
 
     public class BVH
     {
-        public BVHNode root;
+        public BVHNode? root;
 
         public BVH(BVHNode root)
         {
@@ -43,6 +43,12 @@
 
         public static BVH Build(Dictionary<int, IBoxable> bodies)
         {
+            if (bodies.Count == 0)
+            {
+                return new BVH(null);
+            }
+
+
             Vector3 minV = new(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 maxV = new(float.MinValue, float.MinValue, float.MinValue);
 
@@ -54,8 +60,8 @@
 
             foreach (var box in bodyDict.Values)
             {
-                var boxMin = box.center - box.halfSize;
-                var boxMax = box.center + box.halfSize;
+                var boxMin = box.Center - box.HalfSize;
+                var boxMax = box.Center + box.HalfSize;
                 minV.X = Math.Min(minV.X, boxMin.X);
                 minV.Y = Math.Min(minV.Y, boxMin.Y);
                 minV.Z = Math.Min(minV.Z, boxMin.Z);
@@ -69,7 +75,7 @@
 
             foreach (var kvp in bodyDict)
             {
-                var code = MortonCodes.Encode(kvp.Value.center, minV, maxV);
+                var code = MortonCodes.Encode(kvp.Value.Center, minV, maxV);
                 mortonCodes.Add(code);
                 leaves.Add(new BVHLeaf(kvp.Value, kvp.Key));
             }
@@ -130,6 +136,7 @@
 
         private static int CountZeros(uint x)
         {
+            if (x == 0) return 32;
             // Keep shifting x by one until
             // the leftmost bit does not become 1.
             int total_bits = sizeof(uint) * 8;

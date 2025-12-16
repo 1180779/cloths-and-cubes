@@ -16,32 +16,32 @@ public class CollisionData
     /// Index of the next free contact slot
     /// (Acts like the 'contacts' pointer in C++ code)
     /// </summary>
-    public int NextContactIndex { get; set; } = 0;
+    public int NextContactIndex;
 
     /// <summary>
     /// The number of empty contacts left in the array
     /// </summary>
-    public int ContactsLeft { get; set; } = 0;
+    public int ContactsLeft;
 
     /// <summary>
     /// Number of contacts found so far.
     /// </summary>
-    public uint ContactCount { get; set; } = 0;
+    public uint ContactCount;
 
     /// <summary>
     /// Friction value to write into any collisions.
     /// </summary>
-    public Real Friction { get; set; }
+    public Real Friction;
 
     /// <summary>
     /// Restitution value to write into any collisions.
     /// </summary>
-    public Real Restitution { get; set; }
+    public Real Restitution;
 
     /// <summary>
     /// Collision tolerance — even uncolliding objects this close should have collisions generated.
     /// </summary>
-    public Real Tolerance { get; set; }
+    public Real Tolerance;
 
     /// <summary>
     /// Checks if there are more contacts available.
@@ -56,6 +56,11 @@ public class CollisionData
     /// </summary>
     public void Reset(uint maxContacts)
     {
+        for (int i = 0; i < ContactCount; i++)
+        {
+            ContactList[i] = new Contact();
+        }
+
         ContactsLeft = (int)maxContacts;
         ContactCount = 0;
         NextContactIndex = 0;

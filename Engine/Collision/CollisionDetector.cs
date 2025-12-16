@@ -83,8 +83,8 @@ public static class CollisionDetector
         // Go through each combination of + and - for each half-size
         Real[,] mults =
         {
-            { 1, 1, 1 }, { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, 1 },
-            { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 }, { -1, -1, -1 }
+            { 1, 1, 1 }, { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, 1 }, { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 },
+            { -1, -1, -1 }
         };
 
         uint contactsUsed = 0;
@@ -370,6 +370,82 @@ public static class CollisionDetector
         return 1;
     }
 
+    public static uint BoxAndParticle(CollisionBox box, CollisionParticle particle, CollisionData data)
+    {
+        Vector3 point = new Vector3(particle.Body.Position);
+        // Transform the point into box coordinates
+        Vector3 relPt = box.Transform.TransformInverse(point);
+
+        // Check each axis, looking for the axis on which the
+        // penetration is the least deep.
+        Real minDepth = box.HalfSize.X - (Real)Math.Abs(relPt.X);
+        if (minDepth < 0) return 0;
+        var normal = box.GetAxis(0) * ((relPt.X < 0) ? -1 : 1);
+
+        Real depth = box.HalfSize.Y - (Real)Math.Abs(relPt.Y);
+        if (depth < 0) return 0;
+        if (depth < minDepth)
+        {
+            minDepth = depth;
+            normal = box.GetAxis(1) * ((relPt.Y < 0) ? -1 : 1);
+        }
+
+        depth = box.HalfSize.Z - (Real)Math.Abs(relPt.Z);
+        if (depth < 0) return 0;
+        if (depth < minDepth)
+        {
+            minDepth = depth;
+            normal = box.GetAxis(2) * ((relPt.Z < 0) ? -1 : 1);
+        }
+
+        // Compile the contact
+        Contact contact = data.ContactList[data.NextContactIndex];
+        contact.ContactNormal = normal * -1;
+        contact.ContactPoint = point;
+        contact.Penetration = minDepth;
+
+        // Note that we don't know what rigid body the point
+        // belongs to, so we just use NULL. Where this is called,
+        // this value can be left or filled in.
+        contact.SetBodyData(box.Body, particle.Body,
+            data.Friction, data.Restitution);
+
+        data.NextContactIndex++;
+        data.AddContacts(1);
+        return 1;
+    }
+
+    public static uint ParticleAndHalfSpace(CollisionParticle particle, CollisionPlane plane, CollisionData data)
+    {
+        if (data.ContactsLeft <= 0) return 0;
+
+
+        Vector3 point = particle.Body.Position;
+
+
+        Real particleDistance = point * plane.Direction;
+
+
+        if (particleDistance <= plane.Offset)
+        {
+            Contact contact = data.ContactList[data.NextContactIndex];
+
+            contact.ContactPoint = plane.Direction;
+            contact.ContactPoint *= (particleDistance - plane.Offset);
+            contact.ContactPoint += point;
+            contact.ContactNormal = plane.Direction;
+            contact.Penetration = plane.Offset - particleDistance;
+
+            contact.SetBodyData(particle.Body, null, data.Friction, data.Restitution);
+
+            data.NextContactIndex++;
+            data.AddContacts(1);
+            return 1;
+        }
+
+        return 0;
+    }
+
     /// <summary>
     /// A helper method for box-box collisions that generates contact data for a vertex-face collision.
     /// It identifies the colliding vertex on one box and the face on the other and fills the contact details.
@@ -456,7 +532,7 @@ public static class CollisionDetector
         // Zero denominator indicates parallel lines
         if ((Real)Math.Abs(denom) < (Real)0.0001)
         {
-            return useOne ? (Vector3)pOne.Clone() : (Vector3)pTwo.Clone();
+            return useOne ? pOne : pTwo;
         }
 
         mua = (dpOneTwo * dpStaTwo - smTwo * dpStaOne) / denom;
@@ -471,7 +547,7 @@ public static class CollisionDetector
             mub > twoSize ||
             mub < -twoSize)
         {
-            return useOne ? (Vector3)pOne.Clone() : (Vector3)pTwo.Clone();
+            return useOne ? pOne : pTwo;
         }
 
         cOne = pOne + dOne * mua;

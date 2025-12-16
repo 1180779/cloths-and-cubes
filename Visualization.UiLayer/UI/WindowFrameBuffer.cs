@@ -13,6 +13,9 @@ public class WindowFrameBuffer : IDisposable, IBindable
     private int _width;
     private int _height;
 
+    public int Width => _width;
+    public int Height => _height;
+
     public WindowFrameBuffer(int width, int height)
     {
         this._width = width;
@@ -75,7 +78,7 @@ public class WindowFrameBuffer : IDisposable, IBindable
     public void Bind()
     {
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, FboId);
-        GL.Viewport(0, 0, _width, _height); // Set viewport to FBO size
+        GL.Viewport(0, 0, _width, _height);
     }
 
     public void Unbind()

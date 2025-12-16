@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Engine;
 
-public class Quaternion : ICloneable
+public struct Quaternion
 {
     public Real I, J, K, R;
 
@@ -13,19 +13,19 @@ public class Quaternion : ICloneable
         Debug.Assert(!Real.IsNaN(J));
         Debug.Assert(!Real.IsNaN(K));
         Debug.Assert(!Real.IsNaN(R));
-        
+
         Debug.Assert(!Real.IsInfinity(I));
         Debug.Assert(!Real.IsInfinity(J));
         Debug.Assert(!Real.IsInfinity(K));
         Debug.Assert(!Real.IsInfinity(R));
     }
-    
+
     public Quaternion(Real r, Real i, Real j, Real k)
     {
-        this.R = r;
-        this.I = i;
-        this.J = j;
-        this.K = k;
+        R = r;
+        I = i;
+        J = j;
+        K = k;
     }
 
     public Quaternion()
@@ -62,7 +62,7 @@ public class Quaternion : ICloneable
             }
         }
     }
-    
+
     public void Normalise()
     {
         Real d = R * R + I * I + J * J + K * K;
@@ -75,7 +75,7 @@ public class Quaternion : ICloneable
             return;
         }
 
-        d = (Real)(1.0) / (Real)Math.Sqrt(d);
+        d = (Real)1.0 / (Real)Math.Sqrt(d);
         R *= d;
         I *= d;
         J *= d;
@@ -84,26 +84,17 @@ public class Quaternion : ICloneable
 
     public static Quaternion operator *(Quaternion q, Real s) => new Quaternion()
     {
-        R = q.R * s,
-        I = q.I * s,
-        J = q.J * s,
-        K = q.K * s
+        R = q.R * s, I = q.I * s, J = q.J * s, K = q.K * s
     };
-    
+
     public static Quaternion operator +(Quaternion q, Vector3 v)
     {
-        Quaternion t = new()
-        {
-            R = 0,
-            I = v.X,
-            J = v.Y,
-            K = v.Z
-        };
+        Quaternion t = new() { R = 0, I = v.X, J = v.Y, K = v.Z };
         t *= q;
         t *= 0.5f;
         return t;
     }
-    
+
     public static Quaternion operator *(Quaternion q, Quaternion multiplier) =>
         new()
         {
@@ -119,7 +110,7 @@ public class Quaternion : ICloneable
 
     public void AddScaledVector(Vector3 vector, Real scale)
     {
-        Quaternion q = new Quaternion(0,
+        Quaternion q = new(0,
             vector.X * scale,
             vector.Y * scale,
             vector.Z * scale);
@@ -140,10 +131,5 @@ public class Quaternion : ICloneable
         J = p.J;
         K = p.K;
         I = p.I;
-    }
-
-    public object Clone()
-    {
-        return new Quaternion(R, I, J, K);
     }
 }

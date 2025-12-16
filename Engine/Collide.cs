@@ -2,12 +2,6 @@ using Engine.RigidBodies;
 
 namespace Engine;
 
-struct BoundingBox
-{
-    private Vector3 center;
-    private Vector3 halfSize;
-};
-
 /// <summary>
 /// Stores a potential contact to check later.
 /// </summary>

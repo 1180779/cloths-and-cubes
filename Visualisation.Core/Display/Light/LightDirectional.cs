@@ -8,7 +8,7 @@
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Display.Mesh.VisualObjects;
+using Visualisation.Core.GameObjects;
 
 namespace Visualisation.Core.Display.Light;
 
@@ -89,7 +89,7 @@ public class LightDirectional : LightPoint
         var corners = ProjectionHelper.GetFrustumCornersWorldSpace(
             Matrix4.CreatePerspectiveFieldOfView(
                 camera.FovRadians,
-                camera.AspectRatio,
+                CameraBase.AspectRatio,
                 nearPlane,
                 farPlane),
             camera.ViewMatrix);

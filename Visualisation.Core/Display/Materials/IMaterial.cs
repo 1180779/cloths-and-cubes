@@ -1,7 +1,8 @@
 namespace Visualisation.Core.Display.Materials;
 
-public interface IMaterial : IDisposable
+public interface IMaterial : IDisposable, ICloneable
 {
+    public string Name { get; set; }
     public static readonly string AlbedoMapShaderName = "albedoMap";
     public static readonly string NormalMapShaderName = "normalMap";
     public static readonly string MetallicMapShaderName = "metallicMap";
@@ -15,6 +16,12 @@ public interface IMaterial : IDisposable
     public static readonly string RoughnessValue = "roughnessValue";
     public static readonly string AoValue = "aoValue";
 
-    public void SetForShader(Shader sh);
+    object ICloneable.Clone()
+    {
+        return TypedClone();
+    }
+
+    public IMaterial TypedClone();
+    public void SetForPbrShader(Shader sh);
     public void EnsureLoaded();
 }

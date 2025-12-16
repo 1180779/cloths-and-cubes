@@ -389,7 +389,7 @@ public class Contact
 
                 // To avoid angular projections that are too great (when mass is large
                 // but inertia tensor is small) limit the angular move.
-                Vector3 projection = (Vector3)RelativeContactPosition[i].Clone();
+                Vector3 projection = RelativeContactPosition[i];
                 projection.AddScaledVector(
                     ContactNormal,
                     -RelativeContactPosition[i].ScalarProduct(ContactNormal)
@@ -437,12 +437,12 @@ public class Contact
 
                 // Now we can start to apply the values we've calculated.
                 // Apply the linear movement
-                Vector3 pos = (Vector3)Body[i].Position.Clone();
+                Vector3 pos = Body[i].Position;
                 pos.AddScaledVector(ContactNormal, linearMove[i]);
                 Body[i].Position = pos;
 
                 // And the change in orientation
-                Quaternion q = (Quaternion)Body[i].Orientation.Clone();
+                Quaternion q = Body[i].Orientation;
                 q.AddScaledVector(angularChange[i], (Real)1.0);
                 Body[i].Orientation = q;
 

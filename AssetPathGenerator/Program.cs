@@ -116,7 +116,8 @@ public static class Program
 
             var materialMaps = GetMaterialPaths(materialDir, rootPath);
 
-            sb.AppendLine($"{indent}public static Material {materialName} {{ get; }} = new(");
+            sb.AppendLine($"{indent}public static Materials.MaterialTextured {materialName} {{ get; }} = new(");
+            sb.AppendLine($"{indent}    \"{ToSentenceCase(materialName)}\",");
             sb.AppendLine($"{indent}    \"{materialMaps["albedo"]}\",");
             sb.AppendLine($"{indent}    \"{materialMaps["normal"]}\",");
             sb.AppendLine($"{indent}    \"{materialMaps["metallic"]}\",");
@@ -212,5 +213,10 @@ public static class Program
         if (string.IsNullOrWhiteSpace(finalIdentifier)) return "_";
         if (char.IsDigit(finalIdentifier[0])) return "_" + finalIdentifier;
         return finalIdentifier;
+    }
+
+    private static string ToSentenceCase(string pascalCase)
+    {
+        return Regex.Replace(pascalCase, "[a-z][A-Z]", m => $"{m.Value[0]} {m.Value[1]}");
     }
 }

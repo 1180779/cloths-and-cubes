@@ -6,6 +6,7 @@ public class CameraBase
 {
     protected const float CameraSpeed = 15f;
     protected const float Sensitivity = 0.2f;
+    public static float AspectRatio { get; set; }
 
     protected Vector3 _front = -Vector3.UnitZ;
     protected Vector3 _up = Vector3.UnitY;
@@ -15,19 +16,16 @@ public class CameraBase
     protected float _yaw = -MathHelper.PiOver2;
     protected float _fov = MathHelper.PiOver2;
 
-    public CameraBase(float aspectRatio)
+    public CameraBase()
     {
-        AspectRatio = aspectRatio;
     }
 
-    public CameraBase(Vector3 position, float aspectRatio)
+    public CameraBase(Vector3 position)
     {
         Position = position;
-        AspectRatio = aspectRatio;
     }
 
     public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
-    public float AspectRatio { get; set; }
 
     public Vector3 Front => _front;
     public Vector3 Up => _up;
@@ -97,11 +95,17 @@ public class CameraBase
         _up = Vector3.Normalize(Vector3.Cross(_right, _front));
     }
 
-    public void SetForShader(Shader sh)
+    public void SetForPbrShader(Shader sh)
     {
         sh.SetVector3("viewPos", Position);
         sh.SetMatrix4("view", ViewMatrix);
         sh.SetMatrix4("projection", ProjectionMatrix);
         sh.SetFloat("farPlane", FarPlane);
+    }
+
+    public void SetForSimpleShader(Shader sh)
+    {
+        sh.SetMatrix4("view", ViewMatrix);
+        sh.SetMatrix4("projection", ProjectionMatrix);
     }
 }

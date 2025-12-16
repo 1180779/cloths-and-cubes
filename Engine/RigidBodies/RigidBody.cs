@@ -16,10 +16,13 @@ public class RigidBody
     /// <summary>
     /// Holds the linear position of the rigid body in world space.
     /// </summary>
-    public Vector3 Position { get; set; } = new();
+    public Vector3 Position = new();
 
-    
+
     private Quaternion orientation = new();
+
+    public ref Quaternion OrientationRef => ref orientation;
+    
     /// <summary>
     /// Holds the angular orientation of the rigid body in world space.
     /// </summary>
@@ -36,13 +39,13 @@ public class RigidBody
     /// <summary>
     /// Holds the linear velocity of the rigid body in world space.
     /// </summary>
-    public Vector3 Velocity { get; set; } = new();
+    public Vector3 Velocity = new();
 
     /// <summary>
     /// Holds the angular velocity, of rotation, of the rigid body
     /// in world space.
     /// </summary>
-    public Vector3 Rotation { get; set; } = new();
+    public Vector3 Rotation = new();
 
     /// <summary>
     /// Holds a transform matrix for converting body space into world
@@ -70,7 +73,7 @@ public class RigidBody
     /// User-controlled bodies, for example, should always be
     /// awake.
     /// </summary>
-    public bool CanSleep { get; private set; }
+    public bool CanSleep { get; set; }
 
     /// <summary>
     /// Holds a transform matrix for converting body space into
@@ -91,7 +94,6 @@ public class RigidBody
      * simulation step. At the simulation step, the accelerations
      * are calculated and stored to be applied to the rigid body.
      */
-
     /// <summary>
     /// Holds the accumulated force to be applied at the next
     /// integration step.
@@ -109,7 +111,7 @@ public class RigidBody
     /// can be used to set acceleration due to gravity (its primary
     /// use) or any other constant acceleration.
     /// </summary>
-    public Vector3 Acceleration { get; set; } = new();
+    public Vector3 Acceleration = new();
 
     /// <summary>
     /// Holds the linear acceleration of the rigid body, for the
@@ -124,9 +126,9 @@ public class RigidBody
     /// motion.  Damping is required to remove energy added
     /// through numerical instability in the integrator.
     /// </summary>
-    public Real LinearDamping = 0.0f;
+    public Real LinearDamping = 0.001f;
 
-    public Matrix3 InverseInertiaTensor { get; set; }= new();
+    public Matrix3 InverseInertiaTensor { get; set; } = new();
 
     static void CalculateTransformMatrix(Matrix4 transformMatrix, Vector3 position, Quaternion orientation)
     {
@@ -157,11 +159,12 @@ public class RigidBody
 
     public void CalculateDerivedData()
     {
-        Orientation.Normalise();
-        
+        orientation.Normalise();
+        // Orientation.Normalise(); // should be normalized all the time
+
         // Calculate the transform matrix for the body.
         CalculateTransformMatrix(TransformMatrix, Position, Orientation);
-        
+
         // Calculate the inertiaTensor in world space.
         TransformInertiaTensor(InverseInertiaTensorWorld, Orientation, InverseInertiaTensor, TransformMatrix);
     }
@@ -264,8 +267,9 @@ public class RigidBody
         Position += Velocity * duration;
 
         // Update angular position.
-        Orientation.AddScaledVector(Rotation, duration);
-
+        orientation.AddScaledVector(Rotation, duration);
+        orientation.Normalise();
+        
         // Normalize the orientation and update the matrices with the new
         // position and orientation
         CalculateDerivedData();
@@ -275,7 +279,8 @@ public class RigidBody
 
         // Update the kinetic energy store and possibly put the body to
         // sleep.
-        if (CanSleep) {
+        if (CanSleep)
+        {
             Real currentMotion = Velocity.SqMagnitude +
                 Rotation.SqMagnitude;
 

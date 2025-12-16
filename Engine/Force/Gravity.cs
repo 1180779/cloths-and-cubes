@@ -15,7 +15,7 @@ public class Gravity : IForceGenerator
     public void UpdateForce(RigidBody body, Real duration)
     {
         // Check that we do not have infinite mass
-        if (body.InverseMass > 0) return;
+        if (body.InverseMass == 0) return;
 
         // Apply the mass-scaled force to the body
         body.AddForce(gravity * body.Mass);

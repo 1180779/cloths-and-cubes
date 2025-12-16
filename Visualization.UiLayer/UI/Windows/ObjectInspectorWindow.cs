@@ -4,23 +4,92 @@ using System.Runtime.CompilerServices;
 
 using ImGuiNET;
 
+using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.GameObjects.Scenes;
+
 namespace Visualization.UiLayer.UI.Windows;
 
-public static class ObjectInspectorWindow
+public sealed class ObjectInspectorWindow(SceneManager sceneManager)
 {
-    public static void Draw(object?[] objects)
+    private readonly SceneManager _sceneManager = sceneManager;
+    
+    private static readonly System.Numerics.Vector4 HeaderColor = new(0.2f, 0.5f, 0.8f, 1.0f);
+    private static readonly System.Numerics.Vector4 SeparatorColor = new(0.5f, 0.5f, 0.5f, 0.5f);
+    
+    public void Draw()
     {
-        ImGui.Begin("Object Inspector");
+        if (_sceneManager.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
+        {
+            var o = _sceneManager.GameObjects.First(g => g == followingCamera.TargetObject);
+            DrawInternal([o.PhysicsObject]);
+        }
+        else
+        {
+            DrawInternal(_sceneManager.GameObjects.Select(g => g.PhysicsObject).ToArray());
+        }
+    }
+
+    private void DrawInternal(object?[] objects, String windowName = "Scene Objects Inspector")
+    {
+        ImGui.Begin(windowName);
+
+        ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+            $"Total Objects: {objects.Length}".ToString());
+        ImGui.Separator();
+        ImGui.Spacing();
 
         // Use per-root visited sets to avoid infinite loops on cyclic graphs
         for (int i = 0; i < objects.Length; i++)
         {
-            if (objects[i] is null) continue;
+            if (objects[i] is null)
+            {
+                ImGui.PushID(i);
+                ImGui.TextDisabled($"[{i}]: null");
+                ImGui.PopID();
+
+                if (i < objects.Length - 1)
+                {
+                    ImGui.Spacing();
+                    ImGui.Separator();
+                    ImGui.Spacing();
+                }
+
+                continue;
+            }
+
             var obj = objects[i];
             ImGui.PushID(i);
-            DrawNode($"{RuntimeHelpers.GetHashCode(obj),10}: {obj?.GetType().Name ?? "null"}", obj,
-                new HashSet<object>(ReferenceEqualityComparer.Instance));
+
+            // Draw a collapsible header for each top-level object with visual styling
+            var typeName = obj?.GetType().Name ?? "null";
+            var hashCode = RuntimeHelpers.GetHashCode(obj);
+
+            ImGui.PushStyleColor(ImGuiCol.Header, HeaderColor);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0.3f, 0.6f, 0.9f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0.25f, 0.55f, 0.85f, 1.0f));
+
+            var isOpen = ImGui.CollapsingHeader($"[{i}] {typeName} (ID: {hashCode})", ImGuiTreeNodeFlags.DefaultOpen);
+
+            ImGui.PopStyleColor(3);
+
+            if (isOpen)
+            {
+                ImGui.Indent();
+                DrawNode(null, obj, new HashSet<object>(ReferenceEqualityComparer.Instance), 0);
+                ImGui.Unindent();
+            }
+
             ImGui.PopID();
+
+            // Add visual separator between objects
+            if (i < objects.Length - 1)
+            {
+                ImGui.Spacing();
+                ImGui.PushStyleColor(ImGuiCol.Separator, SeparatorColor);
+                ImGui.Separator();
+                ImGui.PopStyleColor();
+                ImGui.Spacing();
+            }
         }
 
         ImGui.End();
@@ -32,39 +101,79 @@ public static class ObjectInspectorWindow
     /// <param name="label"></param>
     /// <param name="value"></param>
     /// <param name="visited"></param>
-    private static void DrawNode(string label, object? value, HashSet<object> visited)
+    /// <param name="depth"></param>
+    internal static void DrawNode(string? label, object? value, HashSet<object> visited, int depth)
     {
         // null or simple types: render inline
         if (value is null)
         {
-            ImGui.Text($"{label}: null");
+            if (label != null)
+                ImGui.TextDisabled($"{label}: null");
+            else
+                ImGui.TextDisabled("null");
             return;
         }
 
         var type = value.GetType();
         if (IsLeaf(type))
         {
+            var prefix = label != null ? $"{label}: " : "";
+
             if (value is double d)
-                ImGui.Text($"{label}: {(d >= 0 ? " " : "")}{d:F2}");
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(0.4f, 0.8f, 0.4f, 1.0f),
+                    $"{prefix}{(d >= 0 ? " " : "")}{d:F2}");
+            }
             else if (value is float f)
-                ImGui.Text($"{label}: {(f >= 0 ? " " : "")}{f:F2}");
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(0.4f, 0.8f, 0.4f, 1.0f),
+                    $"{prefix}{(f >= 0 ? " " : "")}{f:F2}");
+            }
+            else if (value is int or long or short or byte)
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(0.6f, 0.9f, 0.6f, 1.0f),
+                    $"{prefix}{ToInlineString(value)}");
+            }
+            else if (value is bool)
+            {
+                var boolColor = (bool)value
+                    ? new System.Numerics.Vector4(0.3f, 0.9f, 0.3f, 1.0f)
+                    : new System.Numerics.Vector4(0.9f, 0.3f, 0.3f, 1.0f);
+                ImGui.TextColored(boolColor, $"{prefix}{ToInlineString(value)}");
+            }
+            else if (value is string)
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(0.9f, 0.7f, 0.4f, 1.0f),
+                    $"{prefix}\"{ToInlineString(value)}\"");
+            }
             else
-                ImGui.Text($"{label}: {ToInlineString(value)}");
+            {
+                ImGui.Text($"{prefix}{ToInlineString(value)}");
+            }
+
             return;
         }
 
         // Handle IEnumerable (but not string, already handled as leaf)
         if (value is IEnumerable enumerable)
         {
-            if (ImGui.TreeNode($"{label} (IEnumerable<{type.Name}>)"))
+            var displayLabel = label ?? "Collection";
+            var nodeLabel = $"{displayLabel} ({type.Name})";
+
+            if (ImGui.TreeNode(nodeLabel))
             {
                 int idx = 0;
                 foreach (var item in enumerable)
                 {
                     ImGui.PushID(idx);
-                    DrawNode($"[{idx}]", item, visited);
+                    DrawNode($"[{idx}]", item, visited, depth + 1);
                     ImGui.PopID();
                     idx++;
+                }
+
+                if (idx == 0)
+                {
+                    ImGui.TextDisabled("  (empty)");
                 }
 
                 ImGui.TreePop();
@@ -78,50 +187,81 @@ public static class ObjectInspectorWindow
         {
             if (!visited.Add(value))
             {
-                ImGui.Text($"{label}: <cyclic reference>");
+                var displayLabel = label ?? "Object";
+                ImGui.TextColored(new System.Numerics.Vector4(0.9f, 0.5f, 0.2f, 1.0f),
+                    $"{displayLabel}: <cyclic reference>");
                 return;
             }
         }
 
         // Complex object: show a collapsible node and recurse over public properties and fields
-        if (ImGui.TreeNode($"{label} <{type.Name}>"))
+        var objectLabel = label != null ? $"{label} ({type.Name})" : type.Name;
+
+        if (ImGui.TreeNode(objectLabel))
         {
+            var properties = SafeGetProperties(type).ToList();
+            var fields = SafeGetFields(type).ToList();
+
             // Properties
-            foreach (var prop in SafeGetProperties(type))
+            if (properties.Count > 0)
             {
-                if (prop.GetIndexParameters().Length > 0) continue; // skip indexers
+                ImGui.TextColored(new System.Numerics.Vector4(0.6f, 0.6f, 0.9f, 1.0f), "Properties:");
+                ImGui.Indent(10);
 
-                object? propVal;
-                try
+                foreach (var prop in properties)
                 {
-                    propVal = prop.GetValue(value);
-                }
-                catch
-                {
-                    continue; // skip properties that throw
+                    if (prop.GetIndexParameters().Length > 0) continue; // skip indexers
+
+                    object? propVal;
+                    try
+                    {
+                        propVal = prop.GetValue(value);
+                    }
+                    catch
+                    {
+                        continue; // skip properties that throw
+                    }
+
+                    ImGui.PushID(prop.Name);
+                    DrawNode(prop.Name, propVal, visited, depth + 1);
+                    ImGui.PopID();
                 }
 
-                ImGui.PushID(prop.Name);
-                DrawNode(prop.Name, propVal, visited);
-                ImGui.PopID();
+                ImGui.Unindent(10);
             }
 
             // Fields
-            foreach (var field in SafeGetFields(type))
+            if (fields.Count > 0)
             {
-                object? fieldVal;
-                try
+                if (properties.Count > 0)
+                    ImGui.Spacing();
+
+                ImGui.TextColored(new System.Numerics.Vector4(0.9f, 0.6f, 0.6f, 1.0f), "Fields:");
+                ImGui.Indent(10);
+
+                foreach (var field in fields)
                 {
-                    fieldVal = field.GetValue(value);
-                }
-                catch
-                {
-                    continue; // skip fields that throw
+                    object? fieldVal;
+                    try
+                    {
+                        fieldVal = field.GetValue(value);
+                    }
+                    catch
+                    {
+                        continue; // skip fields that throw
+                    }
+
+                    ImGui.PushID(field.Name);
+                    DrawNode(field.Name, fieldVal, visited, depth + 1);
+                    ImGui.PopID();
                 }
 
-                ImGui.PushID(field.Name);
-                DrawNode(field.Name, fieldVal, visited);
-                ImGui.PopID();
+                ImGui.Unindent(10);
+            }
+
+            if (properties.Count == 0 && fields.Count == 0)
+            {
+                ImGui.TextDisabled("  (no public members)");
             }
 
             ImGui.TreePop();
@@ -181,7 +321,7 @@ public static class ObjectInspectorWindow
         }
     }
 
-    private sealed class ReferenceEqualityComparer : IEqualityComparer<object>
+    internal sealed class ReferenceEqualityComparer : IEqualityComparer<object>
     {
         public static readonly ReferenceEqualityComparer Instance = new();
 

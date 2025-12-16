@@ -1,4 +1,4 @@
-using Visualisation.Core.Display.Mesh.VisualObjects;
+using Visualisation.Core.GameObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.Display.Cameras;
@@ -25,11 +25,11 @@ public class FollowingCamera : CameraBase
     public Vector3 Target { get; set; } = Vector3.Zero;
     public float Distance { get; set; } = 5f;
 
-    public FollowingCamera(float aspectRatio) : base(aspectRatio)
+    public FollowingCamera() : base()
     {
     }
 
-    public FollowingCamera(Vector3 position, float aspectRatio) : base(position, aspectRatio)
+    public FollowingCamera(Vector3 position) : base(position)
     {
     }
 

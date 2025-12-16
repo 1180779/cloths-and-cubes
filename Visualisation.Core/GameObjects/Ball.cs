@@ -8,7 +8,7 @@ using Sphere = Engine.RigidBodies.Sphere;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Ball : GameObject, IBoxable
+public sealed class Ball : GameObjectRigidBody, IBoxable
 {
     public Sphere EngineBall { get; private set; } = new();
     public override RigidBody PhysicsObject => EngineBall.Body;
@@ -40,4 +40,6 @@ public sealed class Ball : GameObject, IBoxable
     {
         return EngineBall.GetBoundingBox();
     }
+
+    public override RigidBody EngineRigidBody => EngineBall.Body;
 }

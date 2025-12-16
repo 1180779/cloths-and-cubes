@@ -1,14 +1,21 @@
 using System.Reflection;
 
-using Visualisation.Core.Display.Materials;
-
-namespace Visualization.UiLayer.Applications.Demos;
+namespace Visualisation.Core.Display.Materials;
 
 public static class MaterialsHelper
 {
+    static MaterialsHelper()
+    {
+        AllConstMaterials = GetConstMaterials();
+        AllTexturedMaterials = GetTexturedMaterials();
+    }
+    
     private static readonly Type ConstMaterialsSource = typeof(MaterialConstant);
 
-    public static IMaterial[] GetConstMaterials(int n)
+    public static IMaterial[] AllConstMaterials;
+    public static IMaterial[] AllTexturedMaterials;
+    
+    public static IMaterial[] GetConstMaterials(int? n = null)
     {
         var topLevelMaterials = ConstMaterialsSource
             .GetProperties(BindingFlags.Public | BindingFlags.Static)
@@ -24,13 +31,16 @@ public static class MaterialsHelper
             .ToArray();
 
         IMaterial[] materials = [..topLevelMaterials, ..nestedMaterials];
-        materials = materials.Take(n).ToArray();
+        if (n is not null)
+        {
+            materials = materials.Take(n.Value).ToArray();
+        }
         return materials;
     }
 
     private static readonly Type TexturedMaterialsSource = typeof(MaterialTextured.Metals);
 
-    public static IMaterial[] GetTexturedMaterials(int n)
+    public static IMaterial[] GetTexturedMaterials(int? n = null)
     {
         var topLevelMaterials = TexturedMaterialsSource
             .GetProperties(BindingFlags.Public | BindingFlags.Static)
@@ -46,7 +56,10 @@ public static class MaterialsHelper
             .ToArray();
 
         IMaterial[] materials = [..topLevelMaterials, ..nestedMaterials];
-        materials = materials.Take(n).ToArray();
+        if (n is not null)
+        {
+            materials = materials.Take(n.Value).ToArray();
+        }
         return materials;
     }
 }

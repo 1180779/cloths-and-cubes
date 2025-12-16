@@ -9,8 +9,13 @@ namespace Visualization.UiLayer.Applications;
 
 public abstract class RigidBodyApplication : Application
 {
-    protected static uint MaxContacts => 1024;
-    protected CollisionData _collisionData = new();
+    private static bool s_fpsCappedTo60;
+    protected static uint MaxContacts => 2 * 1024;
+
+    protected CollisionData _collisionData = new()
+    {
+        Friction = (Real)0.9, Restitution = (Real)0.6, Tolerance = (Real)0.1,
+    };
 
     protected ContactResolver _contactResolver = new(MaxContacts * 8);
 
@@ -18,23 +23,30 @@ public abstract class RigidBodyApplication : Application
     protected abstract void UpdateObjects(float duration);
     protected abstract void Reset();
 
+    protected virtual void OnNoPhysicsUpdate() { }
+
     protected override void Update(float deltaTime)
     {
         if (!DoUpdate)
-            return;
-
-        if (deltaTime <= 0.0f)
-            return;
-        if (deltaTime > 0.05f)
         {
-            deltaTime = 0.05f;
+            OnNoPhysicsUpdate();
+            return;
+        }
+
+        switch (deltaTime)
+        {
+            case <= 0.0f:
+                return;
+            case > 0.05f:
+                deltaTime = 0.05f;
+                break;
         }
 
         UpdateObjects(deltaTime);
 
         // Perform the contact generation
         GenerateContacts();
-
+        
         // Resolve detected contacts
         _contactResolver.ResolveContacts(
             _collisionData.ContactList,
@@ -42,6 +54,7 @@ public abstract class RigidBodyApplication : Application
             deltaTime
         );
 #if DEBUG
+
 #if FRAMESAVER
         FrameSaver.SaveFrame(Scene);
 #endif
@@ -113,6 +126,18 @@ public abstract class RigidBodyApplication : Application
         {
             Reset();
         }
+
+        // cap/uncap fps
+        if (_inputProvider.IsKeyPressed(InputKey.X))
+        {
+            UpdateFrequency = UpdateFrequency switch
+            {
+                0.0 => 60.0,
+                _ => 0.0
+            };
+
+            s_fpsCappedTo60 = !s_fpsCappedTo60;
+        }
     }
 
     public RigidBodyApplication(
@@ -120,5 +145,6 @@ public abstract class RigidBodyApplication : Application
         int height = DefaultHeight,
         string title = DefaultTitle) : base(width, height, title)
     {
+        if (s_fpsCappedTo60) UpdateFrequency = 60.0;
     }
 }

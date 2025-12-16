@@ -12,9 +12,9 @@ public class Particle : IBoxable
     public Real damping;
     public Real inverseMass { get; private set; }
 
-    Collision.Bounding_Volume_Hierarchy.BoundingBox IBoxable.GetBoundingBox()
+    public BoundingBox GetBoundingBox()
     {
-        return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+        return new BoundingBox(
             center: this.position,
             halfSize: new Vector3(0.1f, 0.1f, 0.1f) // small AABB for particle
         );
@@ -90,12 +90,12 @@ public class Particle : IBoxable
 
     public void ClearAccumulator()
     {
-        forceAccum.X = forceAccum.Y = forceAccum.Z = (Real)0;
+        forceAccum.X = forceAccum.Y = forceAccum.Z = 0;
     }
 
     public void AddForce(Vector3 force)
     {
         forceAccum += force;
-        if (Core.Debug) Console.WriteLine($"[DEBUG]: Adding force {force} to particle at {this.position}");
+        if (Core.Debug) Console.WriteLine($"[DEBUG]: Adding force {force} to particle at {position}");
     }
 }

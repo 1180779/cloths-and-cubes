@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace Engine;
 
-public class Matrix3 : ICloneable
+public struct Matrix3 : ICloneable
 {
     public Real[] Data;
     public const int ExpectedSize = 9;
@@ -15,7 +15,7 @@ public class Matrix3 : ICloneable
     public Matrix3(Real[] data)
     {
         Debug.Assert(data.Length == ExpectedSize);
-        this.Data = data;
+        Data = data;
     }
 
     public Matrix3(
@@ -74,11 +74,11 @@ public class Matrix3 : ICloneable
                 left.Data[0] * o.Data[0] + left.Data[1] * o.Data[3] + left.Data[2] * o.Data[6],
                 left.Data[0] * o.Data[1] + left.Data[1] * o.Data[4] + left.Data[2] * o.Data[7],
                 left.Data[0] * o.Data[2] + left.Data[1] * o.Data[5] + left.Data[2] * o.Data[8],
-                
+
                 left.Data[3] * o.Data[0] + left.Data[4] * o.Data[3] + left.Data[5] * o.Data[6],
                 left.Data[3] * o.Data[1] + left.Data[4] * o.Data[4] + left.Data[5] * o.Data[7],
                 left.Data[3] * o.Data[2] + left.Data[4] * o.Data[5] + left.Data[5] * o.Data[8],
-                
+
                 left.Data[6] * o.Data[0] + left.Data[7] * o.Data[3] + left.Data[8] * o.Data[6],
                 left.Data[6] * o.Data[1] + left.Data[7] * o.Data[4] + left.Data[8] * o.Data[7],
                 left.Data[6] * o.Data[2] + left.Data[7] * o.Data[5] + left.Data[8] * o.Data[8]
@@ -91,15 +91,15 @@ public class Matrix3 : ICloneable
         Vector3 compTwo,
         Vector3 compThree)
     {
-        this.Data[0] = compOne.X;
-        this.Data[1] = compTwo.X;
-        this.Data[2] = compThree.X;
-        this.Data[3] = compOne.Y;
-        this.Data[4] = compTwo.Y;
-        this.Data[5] = compThree.Y;
-        this.Data[6] = compOne.Z;
-        this.Data[7] = compTwo.Z;
-        this.Data[8] = compThree.Z;
+        Data[0] = compOne.X;
+        Data[1] = compTwo.X;
+        Data[2] = compThree.X;
+        Data[3] = compOne.Y;
+        Data[4] = compTwo.Y;
+        Data[5] = compThree.Y;
+        Data[6] = compOne.Z;
+        Data[7] = compTwo.Z;
+        Data[8] = compThree.Z;
     }
 
     public void SetInverse(Matrix3 m)
@@ -112,8 +112,8 @@ public class Matrix3 : ICloneable
         Real t14 = m.Data[2] * m.Data[6];
 
         // Calculate the determinant
-        Real t16 = (t4 * m.Data[8] - t6 * m.Data[7] - t8 * m.Data[8] +
-            t10 * m.Data[7] + t12 * m.Data[5] - t14 * m.Data[4]);
+        Real t16 = t4 * m.Data[8] - t6 * m.Data[7] - t8 * m.Data[8] +
+            t10 * m.Data[7] + t12 * m.Data[5] - t14 * m.Data[4];
 
         // Make sure the determinant is non-zero.
         if (t16 == (Real)0.0f) return;
@@ -232,12 +232,12 @@ public class Matrix3 : ICloneable
         Real ixz = 0,
         Real iyz = 0)
     {
-        this.Data[0] = ix;
-        this.Data[1] = this.Data[3] = -ixy;
-        this.Data[2] = this.Data[6] = -ixz;
-        this.Data[4] = iy;
-        this.Data[5] = this.Data[7] = -iyz;
-        this.Data[8] = iz;
+        Data[0] = ix;
+        Data[1] = Data[3] = -ixy;
+        Data[2] = Data[6] = -ixz;
+        Data[4] = iy;
+        Data[5] = Data[7] = -iyz;
+        Data[8] = iz;
     }
 
     /// <summary>
@@ -261,6 +261,6 @@ public class Matrix3 : ICloneable
 
     public object Clone()
     {
-        return new Matrix3((Real[])Data.Clone());   
+        return new Matrix3((Real[])Data.Clone());
     }
 }

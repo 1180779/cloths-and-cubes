@@ -22,7 +22,7 @@ class Spring : IForceGenerator
     /** Holds the rest length of the spring. */
     float restLength;
 
-    Spring(
+    public Spring(
         Vector3 localConnectionPt,
         RigidBody othe,
         Vector3 otherConnectionPt,
@@ -45,8 +45,9 @@ class Spring : IForceGenerator
         Vector3 force = lws - ows;
         // Calculate the magnitude of the force.
         Real magnitude = force.Magnitude;
-        magnitude = Real.Abs(magnitude - restLength);
+        magnitude = Math.Abs(magnitude - restLength);
         magnitude *= springConstant;
+        //magnitude = Math.Clamp(magnitude, -5f, 5f);
         // Calculate the final force and apply it.
         force.Normalise();
         force *= -magnitude;

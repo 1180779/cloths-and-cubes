@@ -50,11 +50,11 @@ public class CamerasManager
         }
     }
 
-    public void ProcessInput(IInputProvider input, float dt)
+    public void ProcessInput(IInputProvider input, float dt, bool disableMouseClick = false)
     {
         if (!CameraMode)
         {
-            if (input.IsMouseButtonPressed(MouseButton.Left))
+            if ((input.IsMouseButtonPressed(MouseButton.Left) && !disableMouseClick) || input.IsKeyPressed(InputKey.L))
             {
                 input.SetCursorState(CursorState.Grabbed);
                 CameraMode = true;
@@ -63,7 +63,7 @@ public class CamerasManager
             return;
         }
 
-        if (input.IsKeyPressed(InputKey.Escape))
+        if (input.IsKeyPressed(InputKey.L) || input.IsKeyPressed(InputKey.Escape))
         {
             input.SetCursorState(CursorState.Normal);
             CameraMode = false;
