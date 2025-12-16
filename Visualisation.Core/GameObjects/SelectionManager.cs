@@ -44,13 +44,18 @@ public sealed class SelectionManager(
             {
                 _selectedObject = value;
                 OnSelectionChanged?.Invoke(_selectedObject);
+            } else if (Unselect)
+            {
+                _selectedObject = null;
+                OnSelectionChanged?.Invoke(_selectedObject);
             }
         }
     }
 
     public bool DrawInvisibleObjects;
     public bool DrawSelectedObjectWithoutDepthTesting = true;
-
+    public bool Unselect = true;
+    
     /// <summary>
     /// Event raised when the selected object changes.
     /// </summary>
@@ -171,6 +176,7 @@ public sealed class SelectionManager(
         ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
         ImGui.Checkbox("Draw invisible objects", ref DrawInvisibleObjects);
         ImGui.Checkbox("Draw selected object even behind other objects", ref DrawSelectedObjectWithoutDepthTesting);
+        ImGui.Checkbox("Unselect objects", ref Unselect);
         ImGui.Separator();
         ImGui.Spacing();
         if (_selectedObject is GameObject gameObject)
