@@ -362,10 +362,11 @@ void main()
         N = normal;
     }
 
-    if (!gl_FrontFacing)
-    {
-        N = -N;
-    }
+    // TODO: apply only for cloth
+    //    if (!gl_FrontFacing)
+    //    {
+    //        N = -N;
+    //    }
 
     PbrMaterial material = PbrMaterial(
     albedo,
