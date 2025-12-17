@@ -10,7 +10,7 @@ public sealed class GraphicsSettingsWindow(
     Func<LightDirectional?> getDirectionalLight,
     SceneManager sceneManager,
     SceneWindow sceneWindow
-)
+) : IWindow
 {
     private SceneManager _sceneManager = sceneManager; /* borrowed */
     private SceneWindow _sceneWindow = sceneWindow; /* borrowed */
@@ -21,19 +21,22 @@ public sealed class GraphicsSettingsWindow(
     private float _shadowBiasModifier;
     private float _zMult;
 
-    public void Render()
+    public string Name => "Graphics Settings";
+
+    public void Draw(ref bool isOpen)
     {
-        // ImGui.SetNextWindowSize(new System.Numerics.Vector2(250f, 160f), ImGuiCond.Always);
-        ImGui.Begin("Graphics Settings");
+        if (!isOpen) return;
 
-        DrawShadowMapSettings();
-        ImGui.Separator();
-        ImGui.Spacing();
-        DrawEnvironmentMap();
-        ImGui.Separator();
-        ImGui.Spacing();
-        DrawSceneWindow();
-
+        if (ImGui.Begin(Name, ref isOpen))
+        {
+            DrawShadowMapSettings();
+            ImGui.Separator();
+            ImGui.Spacing();
+            DrawEnvironmentMap();
+            ImGui.Separator();
+            ImGui.Spacing();
+            DrawSceneWindow();
+        }
         ImGui.End();
     }
 

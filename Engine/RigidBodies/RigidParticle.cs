@@ -5,7 +5,7 @@ namespace Engine.RigidBodies
 {
     public class RigidParticle : CollisionParticle, IBoxable
     {
-        public const float BoundingBoxHalfSize = 0.1f;
+        public const float BoundingBoxHalfSize = 0.04f;
 
         public BoundingBox GetBoundingBox()
         {

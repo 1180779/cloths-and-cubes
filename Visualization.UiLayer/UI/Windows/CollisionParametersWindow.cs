@@ -4,18 +4,9 @@ using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class CollisionParametersWindow(CollisionData collisionData)
+public sealed class CollisionParametersWindow(CollisionData collisionData) : IWindow
 {
     private CollisionData _collisionData = collisionData; /* borrowed */
-    
-    public void Draw()
-    {
-        ImGui.Begin("Collision Data");
-        ImGui.SliderFloat("Friction", ref _collisionData.Friction, 0.0f, 1.0f);
-        ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
-        ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
-        ImGui.End();
-    }
 
     public record State(Real Friction, Real Restitution, Real Tolerance);
 
@@ -29,5 +20,17 @@ public sealed class CollisionParametersWindow(CollisionData collisionData)
         _collisionData.Friction = state.Friction;
         _collisionData.Restitution = state.Restitution;
         _collisionData.Tolerance = state.Tolerance;
+    }
+
+    public string Name => "Collision Parameters";
+    public void Draw(ref bool isOpen)
+    {
+        if (ImGui.Begin("Collision Data", ref isOpen))
+        {
+            ImGui.SliderFloat("Friction", ref _collisionData.Friction, 0.0f, 1.0f);
+            ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
+            ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
+        }
+        ImGui.End();
     }
 }

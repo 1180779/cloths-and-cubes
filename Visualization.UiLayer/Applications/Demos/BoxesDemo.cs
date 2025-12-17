@@ -31,15 +31,24 @@ public class BoxesDemo : RigidBodyApplication
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
 
     protected SelectionManager _selectionManager;
+    protected SelectionManagerWindow _selectionManagerWindow;
+
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
+    protected ContactsInspectorWindow _contactsInspectorWindow;
 
     protected BoxesDemoSettingsWindow
         _boxesDemoSettingsWindow = new(1, 0, 1); // the delegates need to be initialized in the constructor
 
     public BoxesDemo()
     {
+        _windowsManager.Add(_bvhNodesWindow);
+
         _collisionParametersWindow = new(_collisionData);
+        _windowsManager.Add(_collisionParametersWindow);
+
+        _contactsInspectorWindow = new(() => _collisionData.ContactList);
+        _windowsManager.Add(_contactsInspectorWindow);
 
         _boxesDemoSettingsWindow.SetBoxesCount = count =>
         {
@@ -96,6 +105,8 @@ public class BoxesDemo : RigidBodyApplication
                 _sceneManager.AddGameObject(_cloths[i]);
             }
         };
+        _windowsManager.Add(_boxesDemoSettingsWindow);
+
 
         _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
             (ray, index) =>
@@ -137,6 +148,9 @@ public class BoxesDemo : RigidBodyApplication
 
                 return (false, 0, null);
             });
+
+        _selectionManagerWindow = new(_selectionManager);
+        _windowsManager.Add(_selectionManagerWindow);
     }
 
     protected override void InitializeScene()
@@ -154,18 +168,6 @@ public class BoxesDemo : RigidBodyApplication
         Reset();
     }
 
-    protected override void RenderWindows(double dt)
-    {
-        base.RenderWindows(dt);
-        _collisionParametersWindow.Draw();
-        _selectionManager.DrawWindow();
-        _bvhNodesWindow.Draw();
-#if DEBUG
-        ContactsInspectorWindow.Draw(_collisionData.ContactList);
-#endif
-        _boxesDemoSettingsWindow.Draw();
-    }
-
     protected override void DebugRenderInScene(Shader sh)
     {
         base.DebugRenderInScene(sh);
@@ -173,7 +175,7 @@ public class BoxesDemo : RigidBodyApplication
         // no need to rebuild?
         // BvhRebuild();
         _bvhNodesWindow.DebugRenderInScene(sh, _bvh);
-        _selectionManager.DebugRenderInScene(sh);
+        _selectionManagerWindow.DebugRenderInScene(sh);
     }
 
     protected void BvhRebuild()
@@ -181,19 +183,19 @@ public class BoxesDemo : RigidBodyApplication
         _bvhDictionary.Clear();
         int offset = 0;
 
-        for (int i = 0; i < _boxes.Length; i++)
+        foreach (var t in _boxes)
         {
-            _bvhDictionary[offset++] = _boxes[i];
+            _bvhDictionary[offset++] = t;
         }
 
-        for (int i = 0; i < _balls.Length; i++)
+        foreach (var t in _balls)
         {
-            _bvhDictionary[offset++] = _balls[i];
+            _bvhDictionary[offset++] = t;
         }
 
-        for (int i = 0; i < _cloths.Length; i++)
+        foreach (var t in _cloths)
         {
-            _bvhDictionary[offset++] = _cloths[i];
+            _bvhDictionary[offset++] = t;
         }
 
         foreach (var cloth in _cloths)
@@ -465,7 +467,7 @@ public class BoxesDemo : RigidBodyApplication
         state.BvhNodes = _bvhNodesWindow.SaveState();
         state.CollisionParameters = _collisionParametersWindow.SaveState();
         state.ClothSettings = _boxesDemoSettingsWindow.SaveState();
-        state.SelectionSettings = _selectionManager.SaveState();
+        state.SelectionSettings = _selectionManagerWindow.SaveState();
         return state;
     }
 
@@ -489,7 +491,7 @@ public class BoxesDemo : RigidBodyApplication
 
         if (state.SelectionSettings is not null)
         {
-            _selectionManager.RestoreState(state.SelectionSettings);
+            _selectionManagerWindow.RestoreState(state.SelectionSettings);
         }
     }
 }

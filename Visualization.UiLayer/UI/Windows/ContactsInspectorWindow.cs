@@ -8,25 +8,34 @@ namespace Visualization.UiLayer.UI.Windows;
 /// Specialized inspector window for Contact arrays that filters and displays only valid contacts
 /// (where both Body elements are not null)
 /// </summary>
-public static class ContactsInspectorWindow
+public sealed class ContactsInspectorWindow(Func<Contact[]> contactProvider) : IWindow
 {
+    private Func<Contact[]> _contactProvider = contactProvider;
+
     private static readonly System.Numerics.Vector4 ValidContactColor = new(0.3f, 0.9f, 0.3f, 1.0f);
     private static readonly System.Numerics.Vector4 InvalidContactColor = new(0.9f, 0.3f, 0.3f, 1.0f);
     private static readonly System.Numerics.Vector4 InfoColor = new(0.7f, 0.7f, 0.9f, 1.0f);
+
+
+    public void Draw(ref bool isOpen)
+    {
+        if (ImGui.Begin("Contacts Inspector", ref isOpen))
+        {
+            DrawWindowContent(_contactProvider(), false);
+        }
+
+        ImGui.End();
+    }
 
     /// <summary>
     /// Draws the contacts inspector window, showing only contacts where both bodies are not null
     /// </summary>
     /// <param name="contacts">Array of contacts to inspect</param>
-    /// <param name="windowName">Name of the window</param>
     /// <param name="showInvalidContacts">If true, also displays contacts with null bodies (grayed out)</param>
-    public static void Draw(
+    private static void DrawWindowContent(
         Contact[]? contacts,
-        string windowName = "Contacts Inspector",
         bool showInvalidContacts = false)
     {
-        ImGui.Begin(windowName);
-
         if (contacts == null || contacts.Length == 0)
         {
             ImGui.TextDisabled("No contacts available");
@@ -98,8 +107,6 @@ public static class ContactsInspectorWindow
             DrawContactsSection(invalidContacts);
             ImGui.PopStyleVar();
         }
-
-        ImGui.End();
     }
 
     /// <summary>
@@ -234,4 +241,6 @@ public static class ContactsInspectorWindow
 
         ImGui.Unindent(10);
     }
+
+    public string Name => "Collisions Inspector";
 }

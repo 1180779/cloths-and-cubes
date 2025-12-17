@@ -1,4 +1,6 @@
-﻿using Engine;
+﻿using System.Runtime.InteropServices;
+
+using Engine;
 
 using OpenTK.Graphics.OpenGL4;
 
@@ -10,8 +12,8 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         private MeshManager.MeshData? _meshData;
         private readonly string _meshName;
 
-        private float[]? _vertices;
-        private int _triangleCount;
+        private VertexData[]? _vertices;
+        private int _vertexCount;
 
         public SpringMesh(Vector3[,] points, string? meshName = null)
         {
@@ -22,36 +24,76 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
 
         public void UpdatePoints(Vector3[,] newPoints)
         {
-            // Update local points reference
             int width = newPoints.GetLength(0);
             int height = newPoints.GetLength(1);
 
-            // Rebuild vertices array
-            List<float> vertexData = new();
+            var vertices = new VertexData[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    vertices[x, y].Position = newPoints[x, y];
+                    vertices[x, y].TexCoords = new Vector2((float)x / (width - 1), (float)y / (height - 1));
+                }
+            }
 
             for (int y = 0; y < height - 1; y++)
             {
                 for (int x = 0; x < width - 1; x++)
                 {
-                    Vector3 p00 = newPoints[x, y];
-                    Vector3 p10 = newPoints[x + 1, y];
-                    Vector3 p01 = newPoints[x, y + 1];
-                    Vector3 p11 = newPoints[x + 1, y + 1];
+                    var v00 = vertices[x, y];
+                    var v10 = vertices[x + 1, y];
+                    var v01 = vertices[x, y + 1];
+                    var v11 = vertices[x + 1, y + 1];
 
-                    AddTriangle(vertexData, p00, p10, p01);
-                    AddTriangle(vertexData, p10, p11, p01);
+                    var n1 = Vector3.Cross(v10.Position - v00.Position, v01.Position - v00.Position);
+                    var n2 = Vector3.Cross(v11.Position - v10.Position, v01.Position - v10.Position);
+
+                    vertices[x, y].Normal += n1;
+                    vertices[x + 1, y].Normal += n1 + n2;
+                    vertices[x, y + 1].Normal += n1 + n2;
+                    vertices[x + 1, y + 1].Normal += n2;
+                }
+            }
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    vertices[x, y].Normal.Normalize();
+                }
+            }
+
+            List<VertexData> vertexData = new();
+            for (int y = 0; y < height - 1; y++)
+            {
+                for (int x = 0; x < width - 1; x++)
+                {
+                    var v00 = vertices[x, y];
+                    var v10 = vertices[x + 1, y];
+                    var v01 = vertices[x, y + 1];
+                    var v11 = vertices[x + 1, y + 1];
+
+                    VertexData.CalculateTangentBitangent(ref v00, ref v10, ref v01);
+                    VertexData.CalculateTangentBitangent(ref v10, ref v11, ref v01);
+
+                    vertexData.Add(v00);
+                    vertexData.Add(v10);
+                    vertexData.Add(v01);
+                    vertexData.Add(v10);
+                    vertexData.Add(v11);
+                    vertexData.Add(v01);
                 }
             }
 
             _vertices = vertexData.ToArray();
-            _triangleCount = _vertices.Length / 6;
+            _vertexCount = _vertices.Length;
 
             if (_meshData != null)
             {
-                // Update GPU buffer
                 GL.BindBuffer(BufferTarget.ArrayBuffer, _meshData.Vbo);
-                // Use BufferSubData for updates if size is same, or BufferData to re-allocate
-                GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices,
+                GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * Marshal.SizeOf<VertexData>(), _vertices,
                     BufferUsageHint.StreamDraw);
             }
         }
@@ -63,13 +105,14 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 return [];
             }
 
-            // TODO: Optimize to use array
             var triangles = new List<Triangle>();
-            for (int i = 0; i < _vertices.Length; i += 18) // 3 vertices * 6 floats/vertex
+            for (int i = 0; i < _vertices.Length; i += 3)
             {
-                var v1 = new Engine.Vector3(_vertices[i], _vertices[i + 1], _vertices[i + 2]);
-                var v2 = new Engine.Vector3(_vertices[i + 6], _vertices[i + 7], _vertices[i + 8]);
-                var v3 = new Engine.Vector3(_vertices[i + 12], _vertices[i + 13], _vertices[i + 14]);
+                var v1 = new Engine.Vector3(_vertices[i].Position.X, _vertices[i].Position.Y, _vertices[i].Position.Z);
+                var v2 = new Engine.Vector3(_vertices[i + 1].Position.X, _vertices[i + 1].Position.Y,
+                    _vertices[i + 1].Position.Z);
+                var v3 = new Engine.Vector3(_vertices[i + 2].Position.X, _vertices[i + 2].Position.Y,
+                    _vertices[i + 2].Position.Z);
                 triangles.Add(new Triangle(v1, v2, v3));
             }
 
@@ -81,45 +124,68 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             int width = _points.GetLength(0);
             int height = _points.GetLength(1);
 
-            List<float> vertexData = new();
+            var vertices = new VertexData[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    vertices[x, y].Position = _points[x, y];
+                    vertices[x, y].TexCoords = new Vector2((float)x / (width - 1), (float)y / (height - 1));
+                }
+            }
 
             for (int y = 0; y < height - 1; y++)
             {
                 for (int x = 0; x < width - 1; x++)
                 {
-                    Vector3 p00 = _points[x, y];
-                    Vector3 p10 = _points[x + 1, y];
-                    Vector3 p01 = _points[x, y + 1];
-                    Vector3 p11 = _points[x + 1, y + 1];
+                    var v00 = vertices[x, y];
+                    var v10 = vertices[x + 1, y];
+                    var v01 = vertices[x, y + 1];
+                    var v11 = vertices[x + 1, y + 1];
 
-                    AddTriangle(vertexData, p00, p10, p01);
+                    var n1 = Vector3.Cross(v10.Position - v00.Position, v01.Position - v00.Position);
+                    var n2 = Vector3.Cross(v11.Position - v10.Position, v01.Position - v10.Position);
 
-                    AddTriangle(vertexData, p10, p11, p01);
+                    vertices[x, y].Normal += n1;
+                    vertices[x + 1, y].Normal += n1 + n2;
+                    vertices[x, y + 1].Normal += n1 + n2;
+                    vertices[x + 1, y + 1].Normal += n2;
+                }
+            }
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    vertices[x, y].Normal.Normalize();
+                }
+            }
+
+            List<VertexData> vertexData = new();
+            for (int y = 0; y < height - 1; y++)
+            {
+                for (int x = 0; x < width - 1; x++)
+                {
+                    var v00 = vertices[x, y];
+                    var v10 = vertices[x + 1, y];
+                    var v01 = vertices[x, y + 1];
+                    var v11 = vertices[x + 1, y + 1];
+
+                    VertexData.CalculateTangentBitangent(ref v00, ref v10, ref v01);
+                    VertexData.CalculateTangentBitangent(ref v10, ref v11, ref v01);
+
+                    vertexData.Add(v00);
+                    vertexData.Add(v10);
+                    vertexData.Add(v01);
+                    vertexData.Add(v10);
+                    vertexData.Add(v11);
+                    vertexData.Add(v01);
                 }
             }
 
             _vertices = vertexData.ToArray();
-            _triangleCount = _vertices.Length / 6;
-        }
-
-        private void AddTriangle(List<float> data, Vector3 a, Vector3 b, Vector3 c)
-        {
-            // Flat normal from triangle
-            Vector3 normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
-
-            void AddVertex(Vector3 v)
-            {
-                data.Add(v.X);
-                data.Add(v.Y);
-                data.Add(v.Z);
-                data.Add(normal.X);
-                data.Add(normal.Y);
-                data.Add(normal.Z);
-            }
-
-            AddVertex(a);
-            AddVertex(b);
-            AddVertex(c);
+            _vertexCount = _vertices.Length;
         }
 
         private void Init()
@@ -133,20 +199,13 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             {
                 int vbo = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-                GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices,
+                GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * Marshal.SizeOf<VertexData>(), _vertices,
                     BufferUsageHint.StaticDraw);
 
                 int vao = GL.GenVertexArray();
                 GL.BindVertexArray(vao);
 
-                // Position
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-                GL.EnableVertexAttribArray(0);
-
-                // Normal
-                GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float),
-                    3 * sizeof(float));
-                GL.EnableVertexAttribArray(1);
+                VertexData.VertexAttribPositionNormalTexCoordsTangentBitangent();
 
                 return new MeshManager.MeshData { MeshName = _meshName, Vbo = vbo, Vao = vao };
             });
@@ -168,7 +227,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 throw new MeshDataEmptyException();
 
             GL.BindVertexArray(_meshData.Vao);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, _triangleCount);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, _vertexCount);
         }
     }
 }

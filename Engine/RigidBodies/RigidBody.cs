@@ -22,7 +22,7 @@ public class RigidBody
     private Quaternion orientation = new();
 
     public ref Quaternion OrientationRef => ref orientation;
-    
+
     /// <summary>
     /// Holds the angular orientation of the rigid body in world space.
     /// </summary>
@@ -73,7 +73,7 @@ public class RigidBody
     /// User-controlled bodies, for example, should always be
     /// awake.
     /// </summary>
-    public bool CanSleep { get; set; }
+    public bool CanSleep = true;
 
     /// <summary>
     /// Holds a transform matrix for converting body space into
@@ -237,6 +237,7 @@ public class RigidBody
     public void AddForce(Vector3 force)
     {
         forceAccum += force;
+        SetAwake();
     }
 
     public void Integrate(Real duration)
@@ -269,7 +270,7 @@ public class RigidBody
         // Update angular position.
         orientation.AddScaledVector(Rotation, duration);
         orientation.Normalise();
-        
+
         // Normalize the orientation and update the matrices with the new
         // position and orientation
         CalculateDerivedData();
@@ -321,7 +322,7 @@ public class RigidBody
         forceAccum += force;
         torqueAccum += pt % force;
 
-        IsAwake = true;
+        SetAwake();
     }
 
     public void SetAwake(bool awake = true)

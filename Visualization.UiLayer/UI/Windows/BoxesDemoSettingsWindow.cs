@@ -2,7 +2,7 @@ using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, int clothesCount)
+public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, int clothesCount) : IWindow
 {
     public delegate void SetObjectCount(int count); // set boxes or spheres count
 
@@ -35,14 +35,17 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
     private Real _lsctslScale = (Real)1.0;
     private Real _lsctslBias = (Real)0.0;
 
-    public void Draw()
+    public void Draw(ref bool isOpen)
     {
-        ImGui.Begin("Boxes Demo Settings");
-        DrawClothGeneral();
-        DrawClothLsctpm();
-        DrawClothLsctsl();
+        if (ImGui.Begin("Boxes Demo Settings", ref isOpen))
+        {
+            DrawClothGeneral();
+            DrawClothLsctpm();
+            DrawClothLsctsl();
 
-        DrawCounts();
+            DrawCounts();
+        }
+
         ImGui.End();
     }
 
@@ -53,7 +56,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
         ImGui.SliderInt("Size X", ref _sizeX, 1, 100);
         ImGui.SliderInt("Size Y", ref _sizeY, 1, 100);
 
-        if (ImGui.SliderFloat("Spring Length", ref _springLength, 0.01f, 1.0f))
+        if (ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f))
         {
             if (_lsctsl)
             {
@@ -61,7 +64,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
             }
         }
 
-        if (ImGui.SliderFloat("Spring Constant", ref _springConstant, 0.0f, 10.0f))
+        if (ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 100.0f))
         {
             if (_lsctpm)
             {
@@ -73,7 +76,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
             }
         }
 
-        if (ImGui.SliderFloat("Particle Mass", ref _particleMass, 0.01f, 10.0f) && _lsctpm)
+        if (ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f) && _lsctpm)
         {
             _springConstant = _particleMass * _lsctpmScale + _lsctpmBias;
         }
@@ -102,7 +105,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
         }
 
         ImGui.PushID("Scale (particle mass)");
-        if (ImGui.SliderFloat("Scale", ref _lsctpmScale, 0.0f, 10.0f))
+        if (ImGui.DragFloat("Scale", ref _lsctpmScale, 0.5f, 0.0f, 100.0f))
         {
             _springConstant = _lsctpmScale * _particleMass + _lsctpmBias;
         }
@@ -111,7 +114,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
 
 
         ImGui.PushID("Bias (particle mass)");
-        if (ImGui.SliderFloat("Bias", ref _lsctpmBias, 0.0f, 10.0f))
+        if (ImGui.DragFloat("Bias", ref _lsctpmBias, 0.5f, 0.0f, 100.0f))
         {
             _springConstant = _lsctpmScale * _particleMass + _lsctpmBias;
         }
@@ -166,7 +169,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
         }
 
         ImGui.PushID("Scale (spring length)");
-        if (ImGui.SliderFloat("Scale", ref _lsctslScale, 0.0f, 10.0f))
+        if (ImGui.DragFloat("Scale", ref _lsctslScale, 0.5f, 0.0f, 100.0f))
         {
             _springConstant = _lsctslScale * _springLength + _lsctslBias;
         }
@@ -175,7 +178,7 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
 
 
         ImGui.PushID("Bias (spring length)");
-        if (ImGui.SliderFloat("Bias", ref _lsctslBias, 0.0f, 10.0f))
+        if (ImGui.DragFloat("Bias", ref _lsctslBias, 0.5f, 0.0f, 100.0f))
         {
             _springConstant = _lsctslScale * _springLength + _lsctslBias;
         }
@@ -210,16 +213,16 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
     private void DrawCounts()
     {
         ImGui.SeparatorText("Object counts");
-        if (ImGui.SliderInt("Boxes", ref _boxesCount, 0, 20))
+        if (ImGui.DragInt("Boxes", ref _boxesCount, 0.1f, 0, 200))
         {
             SetBoxesCount?.Invoke(_boxesCount);
         }
 
-        if (ImGui.SliderInt("Spheres", ref _spheresCount, 0, 20))
+        if (ImGui.DragInt("Spheres", ref _spheresCount, 0.1f, 0, 200))
         {
             SetSpheresCount?.Invoke(_spheresCount);
         }
-        
+
         if (ImGui.SliderInt("Cloths", ref _clothsCount, 0, 5))
         {
             SetClothsCount?.Invoke(_clothsCount);
@@ -273,4 +276,6 @@ public sealed class BoxesDemoSettingsWindow(int boxesCount, int spheresCount, in
         SetSpheresCount?.Invoke(_spheresCount);
         SetClothsCount?.Invoke(_clothsCount);
     }
+
+    public string Name => "Boxes Demo Settings";
 }

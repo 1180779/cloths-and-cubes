@@ -28,9 +28,6 @@ public sealed class SelectionManager(
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
     private readonly Func<Ray, int, (bool, Real, object?)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
-    private bool _debugRayDraw;
-    private Line? _debugRay;
-    private bool _debugRayRecreate;
     public Ray? LastRay { get; private set; }
     public Real SelectedObjectDistance { get; set; }
 
@@ -53,11 +50,8 @@ public sealed class SelectionManager(
             }
         }
     }
-
-    public bool DrawInvisibleObjects;
-    public bool DrawSelectedObjectWithoutDepthTesting = true;
+    
     public bool Unselect = true;
-
     private bool _selectionEnabled = true;
 
     public bool SelectionEnabled
@@ -72,6 +66,9 @@ public sealed class SelectionManager(
             }
         }
     }
+
+    public bool DrawInvisibleObjects;
+    public bool DrawSelectedObjectWithoutDepthTesting = true;
     
     /// <summary>
     /// Event raised when the selected object changes.
@@ -141,7 +138,6 @@ public sealed class SelectionManager(
         );
         var ray = new Ray(engineRayOrigin, engineRayDirection);
         LastRay = ray;
-        _debugRayRecreate = true;
 
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
@@ -168,189 +164,5 @@ public sealed class SelectionManager(
 
         SelectedObject = closestObject;
         SelectedObjectDistance = closestDistance;
-    }
-
-    public void DebugRenderInScene(Shader shader)
-    {
-        if (!_debugRayDraw)
-            return;
-        if (LastRay is not null && _debugRayRecreate)
-        {
-            _debugRayRecreate = false;
-            var ray = LastRay.Value;
-            var rayDirection = new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z);
-            var rayOriginInWorld = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
-            Vector3 end = rayOriginInWorld + rayDirection * (float)SelectedObjectDistance;
-
-            _debugRay?.Dispose();
-            _debugRay = new Line(rayOriginInWorld, end);
-        }
-
-        shader.SetMatrix4("model", Matrix4.Identity);
-        _debugRay?.Render();
-    }
-
-    public void DrawWindow()
-    {
-        ImGui.Begin("Selected Object");
-        bool selection = SelectionEnabled;
-        if (ImGui.Checkbox("Enable selection", ref selection))
-        {
-            SelectionEnabled = selection;
-        }
-        ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
-        ImGui.Checkbox("Draw invisible objects", ref DrawInvisibleObjects);
-        ImGui.Checkbox("Draw selected object even behind other objects", ref DrawSelectedObjectWithoutDepthTesting);
-        ImGui.Checkbox("Unselect objects", ref Unselect);
-        ImGui.Separator();
-        ImGui.Spacing();
-        if (_selectedObject is GameObject gameObject)
-        {
-            ImGui.Checkbox("Invisible", ref gameObject.Invisible);
-            DrawMaterialSelectors(gameObject);
-        }
-
-        switch (_selectedObject)
-        {
-            case Box box:
-                DrawBox(box);
-                break;
-            case Ball ball:
-                DrawSphere(ball);
-                break;
-            case Cloth cloth:
-                DrawCloth(cloth);
-                break;
-            case RigidParticle particle:
-                DrawParticle(particle);
-                break;
-            case Plane plane:
-                DrawPlane(plane);
-                break;
-        }
-
-        ImGui.End();
-    }
-
-    private void DrawMaterialSelectors(GameObject gameObject)
-    {
-        if (ImGui.CollapsingHeader("Constant Materials"))
-        {
-            var materials = MaterialsHelper.AllConstMaterials;
-            foreach (var material in materials)
-            {
-                if (ImGui.Button(material.Name))
-                {
-                    gameObject.Material.Dispose();
-                    gameObject.Material = material.TypedClone();
-                }
-            }
-        }
-
-        if (ImGui.CollapsingHeader("Textured Materials"))
-        {
-            var materials = MaterialsHelper.AllTexturedMaterials;
-            foreach (var material in materials)
-            {
-                if (ImGui.Button(material.Name))
-                {
-                    gameObject.Material.Dispose();
-                    gameObject.Material = material.TypedClone();
-                }
-            }
-        }
-    }
-
-    private void DrawVector3Property(
-        Func<Engine.Vector3> get,
-        Action<Engine.Vector3> set,
-        String label,
-        float step = 0.1f)
-    {
-        var vec = get();
-        var tempVec = new System.Numerics.Vector3(vec.X, vec.Y, vec.Z);
-        if (ImGui.DragFloat3(label, ref tempVec, step))
-        {
-            set(new Engine.Vector3(tempVec.X, tempVec.Y, tempVec.Z));
-        }
-    }
-
-    private void DrawVector3(ref Engine.Vector3 vec, String label, float step = 0.1f)
-    {
-        var tempVec = new System.Numerics.Vector3(vec.X, vec.Y, vec.Z);
-        if (ImGui.DragFloat3(label, ref tempVec, step))
-        {
-            vec.X = tempVec.X;
-            vec.Y = tempVec.Y;
-            vec.Z = tempVec.Z;
-        }
-    }
-
-    private void DrawVector4(ref Engine.Quaternion qua, String label, float step = 0.1f)
-    {
-        var tempVec = new System.Numerics.Vector4(qua.I, qua.J, qua.K, qua.R);
-        if (ImGui.DragFloat4(label, ref tempVec, step))
-        {
-            qua.I = tempVec.X;
-            qua.J = tempVec.Y;
-            qua.K = tempVec.Z;
-            qua.R = tempVec.W;
-        }
-    }
-
-    private void DrawRigidBody(RigidBody body)
-    {
-        DrawVector3(ref body.Position, "Position");
-        DrawVector3(ref body.Velocity, "Velocity");
-        DrawVector3(ref body.Rotation, "Rotation");
-        DrawVector3(ref body.Acceleration, "Acceleration");
-        DrawVector4(ref body.OrientationRef, "Orientation", 0.02f);
-    }
-
-    private void DrawBox(Box box)
-    {
-        DrawRigidBody(box.EngineBox.Body);
-    }
-
-    private void DrawSphere(Ball ball)
-    {
-        DrawRigidBody(ball.EngineBall.Body);
-    }
-
-    private void DrawCloth(Cloth cloth)
-    {
-        // TODO: cloth-specific UI
-    }
-
-    private void DrawParticle(RigidParticle particle)
-    {
-        DrawVector3(ref particle.Body.Position, "Position");
-        DrawVector3(ref particle.Body.Velocity, "Velocity");
-        DrawVector3(ref particle.Body.Acceleration, "Acceleration");
-    }
-
-    private void DrawPlane(Plane plane)
-    {
-        var collisionPlane = plane.EnginePlane;
-        DrawVector3Property(() => collisionPlane.Direction, v => collisionPlane.Direction = v, "Direction");
-        var offset = (float)collisionPlane.Offset;
-        if (ImGui.DragFloat("Offset", ref offset, 0.1f))
-        {
-            collisionPlane.Offset = offset;
-        }
-    }
-
-    public record State(bool DrawInvisibleObjects, bool DrawDebugRay, bool DrawSelectedObjectWithoutDepthTesting);
-
-    public State SaveState()
-    {
-        return new State(DrawInvisibleObjects, _debugRayDraw, DrawSelectedObjectWithoutDepthTesting);
-    }
-
-    public void RestoreState(State state)
-    {
-        _debugRayDraw = state.DrawDebugRay;
-        DrawInvisibleObjects = state.DrawInvisibleObjects;
-        DrawSelectedObjectWithoutDepthTesting = state.DrawSelectedObjectWithoutDepthTesting;
     }
 }

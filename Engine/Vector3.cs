@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Engine;
 
-public struct Vector3
+public struct Vector3 : IEquatable<Vector3>
 {
     public static Vector3 Gravity = new Vector3(0, (Real)(-9.81), 0);
     public static Vector3 HighGravity = new Vector3(0, (Real)(-19.62), 0);
@@ -66,11 +67,13 @@ public struct Vector3
         Z /= mag;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 operator *(Vector3 v, Real scalar)
     {
         return new Vector3(v.X * scalar, v.Y * scalar, v.Z * scalar);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Real operator *(Vector3 v, Vector3 u)
     {
         return v.X * u.X + v.Y * u.Y + v.Z * u.Z;
@@ -82,11 +85,13 @@ public struct Vector3
         return $"[{X:F2}, {Y:F2}, {Z:F2}]";
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Real ScalarProduct(Vector3 v1, Vector3 v2)
     {
         return v1.X * v2.X + v1.Y * v2.Y + v1.Z * v2.Z;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Real ScalarProduct(Vector3 v) => ScalarProduct(this, v);
 
 
@@ -111,9 +116,20 @@ public struct Vector3
         Z *= v.Z;
     }
 
-    public static Vector3 operator +(Vector3 v, Vector3 u) => new Vector3(v.X + u.X, v.Y + u.Y, v.Z + u.Z);
-    public static Vector3 operator -(Vector3 v, Vector3 u) => new Vector3(v.X - u.X, v.Y - u.Y, v.Z - u.Z);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3 operator +(Vector3 v, Vector3 u) => new(v.X + u.X, v.Y + u.Y, v.Z + u.Z);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3 operator -(Vector3 v, Vector3 u) => new(v.X - u.X, v.Y - u.Y, v.Z - u.Z);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 operator %(Vector3 v, Vector3 u) => CrossProduct(v, u);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3 operator /(Vector3 v, Real d) => new(v.X / d, v.Y / d, v.Z / d);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3 operator -(Vector3 v) => new(-v.X, -v.Y, -v.Z);
 
     public static (Vector3 v1, Vector3 v2, Vector3? v3) GetOrthogonalBasis(Vector3 u, Vector3 v)
     {
@@ -178,6 +194,7 @@ public struct Vector3
         return this;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddScaledVector(Vector3 vector, Real scale)
     {
         X += vector.X * scale;
@@ -190,6 +207,7 @@ public struct Vector3
         return X * X + Y * Y + Z * Z;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 VectorProduct(Vector3 o, Vector3 vector)
     {
         return new Vector3(o.Y * vector.Z - o.Z * vector.Y,
@@ -197,6 +215,7 @@ public struct Vector3
             o.X * vector.Y - o.Y * vector.X);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3 VectorProduct(Vector3 v) => VectorProduct(this, v);
 
     private Real GetValue<TKey>(TKey key) where TKey : IBinaryInteger<TKey>
@@ -243,5 +262,20 @@ public struct Vector3
     {
         get => GetValue(key);
         set => SetValue(key, value);
+    }
+
+    public bool Equals(Vector3 other)
+    {
+        return X.Equals(other.X) && Y.Equals(other.Y) && Z.Equals(other.Z);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Vector3 other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y, Z);
     }
 }

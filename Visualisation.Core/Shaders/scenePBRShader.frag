@@ -362,6 +362,11 @@ void main()
         N = normal;
     }
 
+    if (!gl_FrontFacing)
+    {
+        N = -N;
+    }
+
     PbrMaterial material = PbrMaterial(
     albedo,
     normal,

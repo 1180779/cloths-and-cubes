@@ -4,7 +4,7 @@ namespace Engine.Rays;
 /// Represents a ray in 3D space with an origin and a direction.
 /// Used for ray-casting operations in collision detection and selection.
 /// </summary>
-public struct Ray
+public struct Ray : IEquatable<Ray>
 {
     /// <summary>
     /// The origin point of the ray.
@@ -48,4 +48,23 @@ public struct Ray
         _invDirection = default;
         Direction = direction;
     }
+
+    public bool Equals(Ray other)
+    {
+        return Origin.Equals(other.Origin) && _direction.Equals(other._direction) && _invDirection.Equals(other._invDirection);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Ray other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Origin, _direction, _invDirection);
+    }
+
+    public static bool operator ==(Ray left, Ray right) => left.Equals(right);
+
+    public static bool operator !=(Ray left, Ray right) => !(left == right);
 }

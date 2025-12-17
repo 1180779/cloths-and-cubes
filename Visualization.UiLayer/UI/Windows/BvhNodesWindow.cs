@@ -7,7 +7,7 @@ using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class BvhNodesWindow
+public sealed class BvhNodesWindow : IWindow
 {
     private readonly bool[] _bvhLevelsToRender = Enumerable.Repeat(false, 20).ToArray();
     private readonly Vector3[] _levelColors =
@@ -22,34 +22,37 @@ public sealed class BvhNodesWindow
     
     private bool _bvhLeafsRender;
     private readonly Vector3 _leafColor = new(0.5f, 0.5f, 1);
+
+    public string Name => "BVH Nodes";
     
-    public void Draw()
+    public void Draw(ref bool isOpen)
     {
-        ImGui.Begin("Bvh Nodes to render");
-        if (ImGui.Button("Select All"))
+        if (ImGui.Begin("Bvh Nodes to render", ref isOpen))
         {
-            for (int i = 0; i < _bvhLevelsToRender.Length; i++)
-                _bvhLevelsToRender[i] = true;
+            if (ImGui.Button("Select All"))
+            {
+                for (int i = 0; i < _bvhLevelsToRender.Length; i++)
+                    _bvhLevelsToRender[i] = true;
+            }
+
+            ImGui.SameLine();
+            if (ImGui.Button("Deselect All"))
+            {
+                for (int i = 0; i < _bvhLevelsToRender.Length; i++)
+                    _bvhLevelsToRender[i] = false;
+            }
+
+            ImGui.Checkbox("Leafs", ref _bvhLeafsRender);
+
+            for (var i = 0; i < _bvhLevelsToRender.Length; i++)
+            {
+                var color = _levelColors[i % _levelColors.Length];
+                ImGui.PushStyleColor(ImGuiCol.Text,
+                    new System.Numerics.Vector4(new System.Numerics.Vector3(color.X, color.Y, color.Z), 1.0f));
+                ImGui.Checkbox($"Level {i}", ref _bvhLevelsToRender[i]);
+                ImGui.PopStyleColor();
+            }
         }
-
-        ImGui.SameLine();
-        if (ImGui.Button("Deselect All"))
-        {
-            for (int i = 0; i < _bvhLevelsToRender.Length; i++)
-                _bvhLevelsToRender[i] = false;
-        }
-
-        ImGui.Checkbox("Leafs", ref _bvhLeafsRender);
-
-        for (var i = 0; i < _bvhLevelsToRender.Length; i++)
-        {
-            var color = _levelColors[i % _levelColors.Length];
-            ImGui.PushStyleColor(ImGuiCol.Text,
-                new System.Numerics.Vector4(new System.Numerics.Vector3(color.X, color.Y, color.Z), 1.0f));
-            ImGui.Checkbox($"Level {i}", ref _bvhLevelsToRender[i]);
-            ImGui.PopStyleColor();
-        }
-
         ImGui.End();
     }
 
