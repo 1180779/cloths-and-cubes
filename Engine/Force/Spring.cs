@@ -43,14 +43,13 @@ class Spring : IForceGenerator
         Vector3 ows = other.GetPointInWorldSpace(otherConnectionPoint);
         // Calculate the vector of the spring.
         Vector3 force = lws - ows;
-        // Calculate the magnitude of the force.
-        Real magnitude = force.Magnitude;
-        magnitude = Math.Abs(magnitude - restLength);
-        magnitude *= springConstant;
-        //magnitude = Math.Clamp(magnitude, -5f, 5f);
-        // Calculate the final force and apply it.
+        Real currentLength = force.Magnitude;
+        //if (currentLength < (Real)1e-6) return; 
+  
+        Real magnitude = (currentLength - restLength) * springConstant;
         force.Normalise();
         force *= -magnitude;
-        body.AddForceAtPoint(force, lws);
+        body.AddForce(force);
+        other.AddForce(force * -1);
     }
 }
