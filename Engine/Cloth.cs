@@ -19,8 +19,8 @@ namespace Engine
 
         public Cloth(
             ForceRegistry registry,
-            int sizeX = 21,
-            int sizeY = 21,
+            int sizeX = 6,
+            int sizeY = 6,
             float springLength = 0.25f,
             float springConstant = 1.0f,
             float particleMass = 0.1f,
@@ -84,8 +84,8 @@ namespace Engine
 
                     if (i != 0 && j != sizeY - 1)
                     {
-                        var spring = new Spring(Particles[i - 1, j + 1].Body.Position, Particles[i, j].Body,
-                            Particles[i, j].Body.Position, springConstant, diagonalLength);
+                        var spring = new Spring(new Vector3(), Particles[i, j].Body,
+                            new Vector3(), springConstant, diagonalLength);
                         _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
                         Registry.Add(Particles[i, j].Body, spring);
                     }

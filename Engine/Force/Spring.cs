@@ -45,12 +45,13 @@ class Spring : IForceGenerator
         Vector3 force = lws - ows;
         // Calculate the magnitude of the force.
         Real magnitude = force.Magnitude;
-        magnitude = Math.Abs(magnitude - restLength);
+        magnitude = MathF.Abs(magnitude - restLength);
         magnitude *= springConstant;
-        //magnitude = Math.Clamp(magnitude, -5f, 5f);
+        //magnitude = Math.Clamp(magnitude, -1f, 1f);
         // Calculate the final force and apply it.
         force.Normalise();
         force *= -magnitude;
-        body.AddForceAtPoint(force, lws);
+        body.AddForce(force);
+        other.AddForce(force * -1);
     }
 }
