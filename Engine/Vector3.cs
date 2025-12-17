@@ -6,6 +6,7 @@ namespace Engine;
 
 public struct Vector3 : IEquatable<Vector3>
 {
+    public static Vector3 Zero = new Vector3(0, 0, 0);
     public static Vector3 Gravity = new Vector3(0, (Real)(-9.81), 0);
     public static Vector3 HighGravity = new Vector3(0, (Real)(-19.62), 0);
     public static Vector3 Up = new Vector3(0, 1, 0);

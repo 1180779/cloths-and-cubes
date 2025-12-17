@@ -225,6 +225,14 @@ public static class RayIntersection
         }
     }
 
+    /// <summary>
+    /// Tests if a ray intersects with a triangle in 3D space.
+    /// Uses the Möller–Trumbore intersection algorithm.
+    /// </summary>
+    /// <param name="ray">The ray to test against the triangle.</param>
+    /// <param name="triangle">The triangle to test for intersection.</param>
+    /// <param name="distance">The distance from the ray origin to the intersection point, if an intersection occurs.</param>
+    /// <returns>True if the ray intersects the triangle, false otherwise.</returns>
     public static bool IntersectRayTriangle(Ray ray, Triangle triangle, out Real distance)
     {
         Vector3 v0 = triangle.Vertex1;
@@ -232,32 +240,42 @@ public static class RayIntersection
         Vector3 v2 = triangle.Vertex3;
         distance = 0;
 
+        // Find vectors for two edges sharing v0
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
 
-        Vector3 h = Vector3.CrossProduct(ray.Direction, edge2);
-        Real a = edge1 * h;
+        // Begin calculating determinant - also used to calculate u parameter
+        Vector3 crossRayDirEdge2 = Vector3.CrossProduct(ray.Direction, edge2);
+        Real det = edge1 * crossRayDirEdge2; 
 
+        // if the determinant is near zero, ray lies in plane of triangle
         Real eps = Core.Epsilon;
-        if (a > -eps && a < eps)
-            return false; // Ray is parallel to triangle
-
-        Real f = 1.0f / a;
-        Vector3 s = ray.Origin - v0;
-        Real u = f * (s * h);
-        if (u < 0.0f || u > 1.0f)
+        if (det > -eps && det < eps)
+            return false;
+        
+        Real invDet = 1.0f / det;
+        
+        // Calculate distances from v0 to ray origin
+        Vector3 originMinusV0 = ray.Origin - v0;
+        
+        // Calculate u parameter and test bounds
+        Real baryU = invDet * (originMinusV0 * crossRayDirEdge2);
+        if (baryU < 0.0f || baryU > 1.0f)
             return false;
 
-        Vector3 q = Vector3.CrossProduct(s, edge1);
-        Real v = f * (ray.Direction * q);
-        if (v < 0.0f || u + v > 1.0f)
+        // Prepare to test V parameter
+        Vector3 crossOrigMinusV0 = Vector3.CrossProduct(originMinusV0, edge1);
+        
+        // Calculate V parameter and test bounds
+        Real baryV = (ray.Direction * crossOrigMinusV0) * invDet;
+        if (baryV < 0.0f || baryU + baryV > 1.0f)
             return false;
 
-        // Compute t to find an intersection point
-        Real t = f * (edge2 * q);
-        if (t > eps) // Ray intersection
+        // Calculate V parameter and test bounds
+        Real rayT = (edge2 * crossOrigMinusV0) * invDet;
+        if (rayT >= 0)
         {
-            distance = t;
+            distance = rayT;
             return true;
         }
 
