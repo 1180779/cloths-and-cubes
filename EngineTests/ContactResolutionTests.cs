@@ -84,9 +84,13 @@ public class ContactResolutionTests
         Assert.That(initialPenetration, Is.GreaterThan(0.0f),
             $"Initial penetration should be positive (initialPenetration = {initialPenetration}).");
 
+        // Resolve contacts
         var resolver = new ContactResolver(10, positionEpsilon: PositionEpsilon);
         resolver.ResolveContacts(data.ContactList, data.ContactCount, 0.016f);
 
+        box.Body.CalculateDerivedData();
+
+        // Check that the contact is resolved
         var resolvedData = CreateCollisionData(16);
         var resolvedWritten = CollisionDetector.BoxAndHalfSpace(box, plane, resolvedData);
 
@@ -182,9 +186,13 @@ public class ContactResolutionTests
         Assert.That(initialPenetration, Is.GreaterThan(0.0f),
             $"Initial penetration should be positive (initialPenetration = {initialPenetration}).");
 
+        // Resolve contacts
         var resolver = new ContactResolver(10, positionEpsilon: PositionEpsilon);
         resolver.ResolveContacts(data.ContactList, data.ContactCount, 0.016f);
 
+        particle.Body.CalculateDerivedData();
+
+        // Check that the contact is resolved
         var resolvedData = CreateCollisionData(1);
         var resolvedWritten = CollisionDetector.ParticleAndHalfSpace(particle, plane, resolvedData);
 
@@ -260,9 +268,14 @@ public class ContactResolutionTests
         Assert.That(initialPenetration, Is.GreaterThan(0.0f),
             $"Initial penetration should be positive (initialPenetration = {initialPenetration}).");
 
+        // Resolve contacts
         var resolver = new ContactResolver(10, positionEpsilon: PositionEpsilon);
         resolver.ResolveContacts(data.ContactList, data.ContactCount, 0.016f);
 
+        box.Body.CalculateDerivedData();
+        particle.Body.CalculateDerivedData();
+
+        // Check that the contact is resolved
         var resolvedData = CreateCollisionData(1);
         var resolvedWritten = CollisionDetector.BoxAndParticle(box, particle, resolvedData);
 
