@@ -42,68 +42,6 @@ public class ContactResolutionTests
         return data;
     }
 
-    private static IEnumerable<TestCaseData> BoxContactResolutionTestCases()
-    {
-        yield return new TestCaseData(
-            new Vector3(0, 2, 0), new Vector3(0.5f, 0.5f, 0.5f), new Quaternion(),
-            new Vector3(0, 1, 0), 0f,
-            0u,
-            "No penetration"
-        ).SetName("NoAdjustmentNeeded_NoPenetration");
-
-        // The following test case is set up to balance the cube on a single vertex
-        // The rotation axis is perpendicular to the cube's diagonal and the world's Y-axis
-        // The angle is calculated accordingly
-        var rotationToBalance =
-            Quaternion.FromAxisAngle(Vector3.CrossProduct(new Vector3(1, 1, 1), new Vector3(0, 1, 0)),
-                Vector3.ScalarProduct(new Vector3(1, 1, 1).Normalise(), new Vector3(0, 1, 0).Normalise()) * 180 /
-                MathF.PI);
-        yield return new TestCaseData(
-            new Vector3(0, MathF.Sqrt(3) - 0.1f, 0), new Vector3(1, 1, 1), rotationToBalance,
-            new Vector3(0, 1, 0), 0f,
-            1u,
-            "Single vertex contact"
-        ).SetName("SingleVertexContact_ResolvesCorrectly");
-
-        yield return new TestCaseData(
-            new Vector3(0, 0.5f, 0), new Vector3(1, 1, 1), Quaternion.FromAxisAngle(new Vector3(0, 0, 1), 45.0f),
-            new Vector3(0, 1, 0), 0f,
-            2u,
-            "Two vertex contact"
-        ).SetName("TwoVertexContact_ResolvesCorrectly");
-
-        yield return new TestCaseData(
-            new Vector3(0, 0.4f, 0), new Vector3(0.5f, 0.5f, 0.5f), new Quaternion(),
-            new Vector3(0, 1, 0), 0f,
-            4u,
-            "Face-on penetration"
-        ).SetName("FaceContact_ResolvesCorrectly");
-    }
-
-    private static IEnumerable<TestCaseData> ParticleContactResolutionTestCases()
-    {
-        yield return new TestCaseData(
-            new Vector3(0, 2, 0),
-            new Vector3(0, 1, 0), 0f,
-            0u,
-            "No penetration"
-        ).SetName("Particle_NoPenetration");
-
-        yield return new TestCaseData(
-            new Vector3(0, -0.5f, 0),
-            new Vector3(0, 1, 0), 0f,
-            1u,
-            "Direct penetration"
-        ).SetName("Particle_DirectPenetration");
-
-        yield return new TestCaseData(
-            new Vector3(0.5f, -0.5f, 0.5f),
-            new Vector3(0, 1, 0), 0f,
-            1u,
-            "Angled penetration"
-        ).SetName("Particle_AngledPenetration");
-    }
-
     [Test]
     [TestCaseSource(nameof(BoxContactResolutionTestCases))]
     public void BoxContactResolver_ResolvesPenetrationCorrectly(
@@ -162,12 +100,46 @@ public class ContactResolutionTests
             }
 
             Assert.That(maxPenetration, Is.LessThanOrEqualTo(PositionEpsilon),
-                $"Penetration not resolved for '{description}'. (maxPenetration = {maxPenetration})");
+                $"Penetration not resolved for '{description}' (maxPenetration = {maxPenetration})");
         }
-        else
-        {
-            Assert.That(resolvedWritten, Is.EqualTo(0u), $"Contacts should be resolved for '{description}'.");
-        }
+    }
+
+    private static IEnumerable<TestCaseData> BoxContactResolutionTestCases()
+    {
+        yield return new TestCaseData(
+            new Vector3(0, 2, 0), new Vector3(0.5f, 0.5f, 0.5f), new Quaternion(),
+            new Vector3(0, 1, 0), 0f,
+            0u,
+            "No penetration"
+        ).SetName("NoAdjustmentNeeded_NoPenetration");
+
+        // The following test case is set up to balance the cube on a single vertex
+        // The rotation axis is perpendicular to the cube's diagonal and the world's Y-axis
+        // The angle is calculated accordingly
+        var rotationToBalance =
+            Quaternion.FromAxisAngle(Vector3.CrossProduct(new Vector3(1, 1, 1), new Vector3(0, 1, 0)),
+                Vector3.ScalarProduct(new Vector3(1, 1, 1).Normalise(), new Vector3(0, 1, 0).Normalise()) * 180 /
+                MathF.PI);
+        yield return new TestCaseData(
+            new Vector3(0, MathF.Sqrt(3) - 0.1f, 0), new Vector3(1, 1, 1), rotationToBalance,
+            new Vector3(0, 1, 0), 0f,
+            1u,
+            "Single vertex contact"
+        ).SetName("SingleVertexContact_ResolvesCorrectly");
+
+        yield return new TestCaseData(
+            new Vector3(0, 0.5f, 0), new Vector3(1, 1, 1), Quaternion.FromAxisAngle(new Vector3(0, 0, 1), 45.0f),
+            new Vector3(0, 1, 0), 0f,
+            2u,
+            "Two vertex contact"
+        ).SetName("TwoVertexContact_ResolvesCorrectly");
+
+        yield return new TestCaseData(
+            new Vector3(0, 0.4f, 0), new Vector3(0.5f, 0.5f, 0.5f), new Quaternion(),
+            new Vector3(0, 1, 0), 0f,
+            4u,
+            "Face-on penetration"
+        ).SetName("FaceContact_ResolvesCorrectly");
     }
 
     [Test]
@@ -228,9 +200,121 @@ public class ContactResolutionTests
             Assert.That(maxPenetration, Is.LessThanOrEqualTo(PositionEpsilon),
                 $"Penetration not resolved for '{description}'.");
         }
-        else
+    }
+
+    private static IEnumerable<TestCaseData> ParticleContactResolutionTestCases()
+    {
+        yield return new TestCaseData(
+            new Vector3(0, 2, 0),
+            new Vector3(0, 1, 0), 0f,
+            0u,
+            "No penetration"
+        ).SetName("Particle_NoPenetration");
+
+        yield return new TestCaseData(
+            new Vector3(0, -0.5f, 0),
+            new Vector3(0, 1, 0), 0f,
+            1u,
+            "Direct penetration"
+        ).SetName("Particle_DirectPenetration");
+
+        yield return new TestCaseData(
+            new Vector3(0.5f, -0.5f, 0.5f),
+            new Vector3(0, 1, 0), 0f,
+            1u,
+            "Angled penetration"
+        ).SetName("Particle_AngledPenetration");
+    }
+
+    [Test]
+    [TestCaseSource(nameof(BoxParticleContactResolutionTestCases))]
+    public void BoxParticleContactResolver_ResolvesPenetrationCorrectly(
+        Vector3 boxCenter,
+        Vector3 boxHalfSize,
+        Quaternion boxOrientation,
+        Vector3 particleCenter,
+        uint expectedContacts,
+        string description)
+    {
+        var box = CreateBox(boxCenter, boxHalfSize, boxOrientation);
+        var particle = CreateParticle(particleCenter);
+
+        var data = CreateCollisionData(1, tolerance: PositionEpsilon);
+        var written = CollisionDetector.BoxAndParticle(box, particle, data);
+        Assert.That(written, Is.EqualTo(expectedContacts),
+            $"Initial contact count for '{description}' should be {expectedContacts}.");
+
+        if (written == 0)
         {
-            Assert.That(resolvedWritten, Is.EqualTo(0u), $"Contacts should be resolved for '{description}'.");
+            Assert.Pass("No contacts generated initially, nothing to resolve.");
+            return;
         }
+
+        float initialPenetration = 0;
+        for (int i = 0; i < written; i++)
+        {
+            if (data.ContactList[i].Penetration > initialPenetration)
+                initialPenetration = data.ContactList[i].Penetration;
+        }
+
+        Assert.That(initialPenetration, Is.GreaterThan(0.0f),
+            $"Initial penetration should be positive (initialPenetration = {initialPenetration}).");
+
+        var resolver = new ContactResolver(10, positionEpsilon: PositionEpsilon);
+        resolver.ResolveContacts(data.ContactList, data.ContactCount, 0.016f);
+
+        var resolvedData = CreateCollisionData(1);
+        var resolvedWritten = CollisionDetector.BoxAndParticle(box, particle, resolvedData);
+
+        if (resolvedWritten > 0)
+        {
+            float maxPenetration = 0;
+            for (int i = 0; i < resolvedWritten; i++)
+            {
+                if (resolvedData.ContactList[i].Penetration > maxPenetration)
+                    maxPenetration = resolvedData.ContactList[i].Penetration;
+            }
+
+            Assert.That(maxPenetration, Is.LessThanOrEqualTo(PositionEpsilon),
+                $"Penetration not resolved for '{description}' (maxPenetration = {maxPenetration})");
+        }
+    }
+
+    private static IEnumerable<TestCaseData> BoxParticleContactResolutionTestCases()
+    {
+        yield return new TestCaseData(
+            new Vector3(0, 2, 0), new Vector3(0.5f, 0.5f, 0.5f), new Quaternion(),
+            new Vector3(0, 1, 0),
+            0u,
+            "No penetration"
+        ).SetName("BoxParticle_NoPenetration");
+
+        yield return new TestCaseData(
+            new Vector3(0, 0, 0), new Vector3(1, 1, 1), new Quaternion(),
+            new Vector3(0, 0.5f, 0),
+            1u,
+            "Particle inside box"
+        ).SetName("BoxParticle_ParticleInside");
+
+        yield return new TestCaseData(
+            new Vector3(0, 0, 0), new Vector3(1, 1, 1), new Quaternion(),
+            new Vector3(1.1f, 0.5f, 0),
+            0u,
+            "Particle outside box"
+        ).SetName("BoxParticle_ParticleOutside");
+
+        yield return new TestCaseData(
+            new Vector3(0, 0, 0), new Vector3(1, 1, 1), new Quaternion(),
+            new Vector3(0.9f, 0, 0),
+            1u,
+            "Particle penetrating face"
+        ).SetName("BoxParticle_FacePenetration");
+
+        yield return new TestCaseData(
+            new Vector3(0, 0, 0), new Vector3(1, 1, 1), new Quaternion(),
+            new Vector3(1.05f, 0, 0),
+            0u,
+            "Particle just outside box "
+        ).SetName("BoxParticle_OutsideFaceNoPenetration");
     }
 }
