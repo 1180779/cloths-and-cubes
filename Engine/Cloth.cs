@@ -28,7 +28,7 @@ namespace Engine
         {
             if (particle0Pos == null)
             {
-                particle0Pos = new Vector3(-2f, 10f, -2f);
+                particle0Pos = new Vector3(-2f, 4f, -2f);
             }
 
             Registry = registry;
@@ -84,7 +84,7 @@ namespace Engine
 
                     if (i != 0 && j != sizeY - 1)
                     {
-                        var spring = new Spring(new Vector3(), Particles[i, j].Body,
+                        var spring = new Spring(new Vector3(), Particles[i-1, j+1].Body,
                             new Vector3(), springConstant, diagonalLength);
                         _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
                         Registry.Add(Particles[i, j].Body, spring);
