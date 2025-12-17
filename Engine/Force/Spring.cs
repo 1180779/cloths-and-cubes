@@ -44,7 +44,7 @@ class Spring : IForceGenerator
         // Calculate the vector of the spring.
         Vector3 force = lws - ows;
         Real currentLength = force.Magnitude;
-        if (currentLength < (Real)1e-6) return; 
+        //if (currentLength < (Real)1e-6) return; 
   
         Real magnitude = (currentLength - restLength) * springConstant;
         force.Normalise();
