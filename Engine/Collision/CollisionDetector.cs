@@ -108,7 +108,7 @@ public static class CollisionDetector
                 // distance and add the vertex location.
                 Contact contact = data.ContactList[data.NextContactIndex];
                 contact.ContactPoint = plane.Direction;
-                contact.ContactPoint *= (vertexDistance - plane.Offset);
+                contact.ContactPoint *= (plane.Offset - vertexDistance);
                 contact.ContactPoint += vertexPos;
                 contact.ContactNormal = plane.Direction;
                 contact.Penetration = plane.Offset - vertexDistance;
