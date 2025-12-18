@@ -21,6 +21,15 @@ public class IntersectionTests
         return box;
     }
 
+    private static CollisionParticle CreateCollisionParticle(Vector3 position)
+    {
+        var particle = new CollisionParticle();
+        particle.Body.Position = position;
+
+        particle.CalculateInternals();
+        return particle;
+    }
+
     private static CollisionPlane CreatePlane(Vector3 normal, float offset)
     {
         // normal should be normalized for most collision code
@@ -136,6 +145,200 @@ public class IntersectionTests
         var data = CreateCollisionData(0);
 
         uint written = CollisionDetector.BoxAndHalfSpace(box, plane, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.EqualTo(0u), "No contacts should be written if there is no budget.");
+            Assert.That(data.ContactCount, Is.EqualTo(0));
+            Assert.That(data.ContactsLeft, Is.EqualTo(0));
+        });
+    }
+
+
+
+    [Test]
+    public void ParticleAbovePlane_NoCollision_ReturnsZeroContacts()
+    {
+        // Plane: y = 0 (normal up)
+        var plane = CreatePlane(new Vector3(0, 1, 0), 0f);
+        // Particle at y = 2 (clearly above)
+        var particle = CreateCollisionParticle(new Vector3(0, 2f, 0));
+
+        var data = CreateCollisionData(16);
+
+        uint written = CollisionDetector.ParticleAndHalfSpace(particle, plane, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.EqualTo(0u), "No contact should be generated when particle is clearly above the plane.");
+            Assert.That(data.ContactCount, Is.EqualTo(0));
+            Assert.That(data.ContactsLeft, Is.EqualTo(16));
+        });
+    }
+
+    [Test]
+    public void ParticleIntersectingPlane_GeneratesAContact()
+    {
+        // Plane: y = 0
+        var plane = CreatePlane(new Vector3(0, 1, 0), 0f);
+        // Particle slightly below plane (should generate contact)
+        var particle = CreateCollisionParticle(new Vector3(0, -0.1f, 0));
+
+        var data = CreateCollisionData(16);
+
+        uint written = CollisionDetector.ParticleAndHalfSpace(particle, plane, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.GreaterThan(0u), "A contact is expected when particle is at or below the plane.");
+            Assert.That(data.ContactCount, Is.EqualTo(written));
+            Assert.That(data.ContactsLeft, Is.EqualTo(16 - (int)written));
+        });
+    }
+
+    [Test]
+    public void ParticleFullyBelowPlane_GeneratesContact()
+    {
+        // Plane: y = 0
+        var plane = CreatePlane(new Vector3(0, 1, 0), 0f);
+        // Particle at y = -2 (well behind plane)
+        var particle = CreateCollisionParticle(new Vector3(0, -2f, 0));
+
+        var data = CreateCollisionData(16);
+
+        uint written = CollisionDetector.ParticleAndHalfSpace(particle, plane, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.GreaterThan(0u), "Contact is expected when particle lies behind the plane.");
+            Assert.That(data.ContactCount, Is.EqualTo(written));
+            Assert.That(data.ContactsLeft, Is.EqualTo(16 - (int)written));
+        });
+    }
+
+    [Test]
+    public void ParticleContactBudget_IsRespected_WhenLimitedToOne()
+    {
+        // Plane: y = 0
+        var plane = CreatePlane(new Vector3(0, 1, 0), 0f);
+        var particle = CreateCollisionParticle(new Vector3(0, -0.1f, 0));
+
+        var data = CreateCollisionData(1);
+
+        uint written = CollisionDetector.ParticleAndHalfSpace(particle, plane, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.LessThanOrEqualTo(1u));
+            Assert.That(data.ContactCount, Is.EqualTo(written));
+            Assert.That(data.ContactsLeft, Is.EqualTo(1 - (int)written),
+                "ContactsLeft should be reduced by the number actually written.");
+        });
+    }
+
+    [Test]
+    public void Particle_NoContactsWritten_WhenNoBudgetLeft()
+    {
+        // Plane: y = 0
+        var plane = CreatePlane(new Vector3(0, 1, 0), 0f);
+        var particle = CreateCollisionParticle(new Vector3(0, -0.1f, 0));
+
+        var data = CreateCollisionData(0);
+
+        uint written = CollisionDetector.ParticleAndHalfSpace(particle, plane, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.EqualTo(0u), "No contacts should be written if there is no budget.");
+            Assert.That(data.ContactCount, Is.EqualTo(0));
+            Assert.That(data.ContactsLeft, Is.EqualTo(0));
+        });
+    }
+
+
+
+    [Test]
+    public void ParticleOutsideBox_NoContact_ReturnsZeroContacts()
+    {
+        // Box at origin with half-size 0.5
+        var box = CreateBox(new Vector3(0f, 0f, 0f), new Vector3(0.5f, 0.5f, 0.5f));
+        // Particle clearly outside the box
+        var particle = CreateCollisionParticle(new Vector3(2f, 0f, 0f));
+
+        var data = CreateCollisionData(16);
+
+        uint written = CollisionDetector.BoxAndParticle(box, particle, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.EqualTo(0u), "No contact should be generated when particle is outside the box.");
+            Assert.That(data.ContactCount, Is.EqualTo(0));
+            Assert.That(data.ContactsLeft, Is.EqualTo(16));
+        });
+    }
+
+    [Test]
+    public void ParticleInsideBox_GeneratesContact()
+    {
+        // Box at origin with half-size 0.5
+        var box = CreateBox(new Vector3(0f, 0f, 0f), new Vector3(0.5f, 0.5f, 0.5f));
+        // Particle inside the box
+        var particle = CreateCollisionParticle(new Vector3(0.0f, 0.0f, 0.0f));
+
+        var data = CreateCollisionData(16);
+
+        uint written = CollisionDetector.BoxAndParticle(box, particle, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.GreaterThan(0u), "Contact is expected when particle is inside the box.");
+            Assert.That(data.ContactCount, Is.EqualTo(written));
+            Assert.That(data.ContactsLeft, Is.EqualTo(16 - (int)written));
+        });
+    }
+
+    [Test]
+    public void ParticleNearFace_GeneratesContact()
+    {
+        // Box at origin with half-size 0.5
+        var box = CreateBox(new Vector3(0f, 0f, 0f), new Vector3(0.5f, 0.5f, 0.5f));
+        // Particle close to face but inside
+        var particle = CreateCollisionParticle(new Vector3(0.4f, 0f, 0f));
+
+        var data = CreateCollisionData(16);
+
+        uint written = CollisionDetector.BoxAndParticle(box, particle, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.GreaterThan(0u), "Contact expected for particle near box face (inside extents).");
+            Assert.That(data.ContactCount, Is.EqualTo(written));
+            Assert.That(data.ContactsLeft, Is.EqualTo(16 - (int)written));
+        });
+    }
+
+    [Test]
+    public void ParticleBoxContactBudget_IsRespected_WhenLimitedToOne()
+    {
+        // Box at origin with half-size 0.5
+        var box = CreateBox(new Vector3(0f, 0f, 0f), new Vector3(0.5f, 0.5f, 0.5f));
+        // Particle inside the box
+        var particle = CreateCollisionParticle(new Vector3(0.0f, 0.0f, 0.0f));
+
+        var data = CreateCollisionData(1);
+
+        uint written = CollisionDetector.BoxAndParticle(box, particle, data);
+        Assert.Multiple(() =>
+        {
+            Assert.That(written, Is.LessThanOrEqualTo(1u));
+            Assert.That(data.ContactCount, Is.EqualTo(written));
+            Assert.That(data.ContactsLeft, Is.EqualTo(1 - (int)written),
+                "ContactsLeft should be reduced by the number actually written.");
+        });
+    }
+
+    [Test]
+    public void ParticleBox_NoContactsWritten_WhenNoBudgetLeft()
+    {
+        // Box at origin with half-size 0.5
+        var box = CreateBox(new Vector3(0f, 0f, 0f), new Vector3(0.5f, 0.5f, 0.5f));
+        // Particle inside the box
+        var particle = CreateCollisionParticle(new Vector3(0.0f, 0.0f, 0.0f));
+
+        var data = CreateCollisionData(0);
+
+        uint written = CollisionDetector.BoxAndParticle(box, particle, data);
         Assert.Multiple(() =>
         {
             Assert.That(written, Is.EqualTo(0u), "No contacts should be written if there is no budget.");
