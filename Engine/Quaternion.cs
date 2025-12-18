@@ -36,6 +36,26 @@ public struct Quaternion
         K = 0;
     }
 
+    /// <summary>
+    /// Creates a quaternion representing a rotation around a given axis by a given angle.
+    /// </summary>
+    /// <param name="axis">The axis of rotation.</param>
+    /// <param name="angleDegrees">The angle of rotation in degrees.</param>
+    /// <returns>A new quaternion representing the rotation.</returns>
+    public static Quaternion FromAxisAngle(Vector3 axis, Real angleDegrees)
+    {
+        Real angleRad = angleDegrees * Real.Pi / 180.0f;
+        Real halfAngle = angleRad * 0.5f;
+        Real sinHalfAngle = Real.Sin(halfAngle);
+
+        return new Quaternion(
+            Real.Cos(halfAngle),
+            axis.X * sinHalfAngle,
+            axis.Y * sinHalfAngle,
+            axis.Z * sinHalfAngle
+        );
+    }
+
     public Real this[uint key]
     {
         get
