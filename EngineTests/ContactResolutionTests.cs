@@ -89,6 +89,7 @@ public class ContactResolutionTests
         resolver.ResolveContacts(data.ContactList, data.ContactCount, 0.016f);
 
         box.Body.CalculateDerivedData();
+        box.CalculateInternals();
 
         // Check that the contact is resolved
         var resolvedData = CreateCollisionData(16);
@@ -273,6 +274,7 @@ public class ContactResolutionTests
         resolver.ResolveContacts(data.ContactList, data.ContactCount, 0.016f);
 
         box.Body.CalculateDerivedData();
+        box.CalculateInternals();
         particle.Body.CalculateDerivedData();
 
         // Check that the contact is resolved
