@@ -21,6 +21,7 @@ public sealed class BvhNodesWindow : IWindow
     ];
     
     private bool _bvhLeafsRender;
+    private bool _parallelizeBuilding = false;
     private readonly Vector3 _leafColor = new(0.5f, 0.5f, 1);
 
     public string Name => "BVH Nodes";
@@ -53,6 +54,28 @@ public sealed class BvhNodesWindow : IWindow
                 ImGui.PopStyleColor();
             }
         }
+
+        ImGui.SameLine();
+        if (ImGui.Button("Deselect All"))
+        {
+            for (int i = 0; i < _bvhLevelsToRender.Length; i++)
+                _bvhLevelsToRender[i] = false;
+        }
+
+        ImGui.Checkbox("Leafs", ref _bvhLeafsRender);
+
+        for (var i = 0; i < _bvhLevelsToRender.Length; i++)
+        {
+            var color = _levelColors[i % _levelColors.Length];
+            ImGui.PushStyleColor(ImGuiCol.Text,
+                new System.Numerics.Vector4(new System.Numerics.Vector3(color.X, color.Y, color.Z), 1.0f));
+            ImGui.Checkbox($"Level {i}", ref _bvhLevelsToRender[i]);
+            ImGui.PopStyleColor();
+        }
+
+        ImGui.Separator();
+        ImGui.Checkbox("Parallelize BVH Building", ref _parallelizeBuilding);
+
         ImGui.End();
     }
 
@@ -72,11 +95,11 @@ public sealed class BvhNodesWindow : IWindow
         bvhWireframe.Render(sh);
     }
 
-    public record State(bool[] BvhLevelsToRender, bool BvhLeafsRender);
+    public record State(bool[] BvhLevelsToRender, bool BvhLeafsRender, bool ParallelizeBuilding);
 
     public State SaveState()
     {
-        return new State(_bvhLevelsToRender, _bvhLeafsRender);
+        return new State(_bvhLevelsToRender, _bvhLeafsRender, _parallelizeBuilding);
     }
 
     public void RestoreState(State state)
@@ -84,5 +107,6 @@ public sealed class BvhNodesWindow : IWindow
         _bvhLeafsRender = state.BvhLeafsRender;
         for (int i = 0; i < _bvhLevelsToRender.Length; i++)
             _bvhLevelsToRender[i] = state.BvhLevelsToRender[i];
+        _parallelizeBuilding = state.ParallelizeBuilding;
     }
 }

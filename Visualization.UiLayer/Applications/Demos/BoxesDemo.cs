@@ -273,6 +273,20 @@ public class BoxesDemo : RigidBodyApplication
         BvhRebuild();
         ObjectSelectionHandling();
 
+        for (int i = 0; i < _cloth.EngineCloth.Particles.GetLength(0); i++)
+        {
+            for (int j = 0; j < _cloth.EngineCloth.Particles.GetLength(1); j++)
+            {
+                var particle = _cloth.EngineCloth.Particles[i, j];
+                if (particle != null && particle.Body != null)
+                {
+                    boxDict[_boxes.Length + _balls.Length + i * _cloth.EngineCloth.SizeY + j] = particle;
+                }
+            }
+        }
+
+        
+        BVH bvh = SaveState().BvhNodes == null || SaveState().BvhNodes!.ParallelizeBuilding ? BVH.Build(boxDict) : BVH.BuildSynchronous(boxDict);
 
         // Process box-plane collisions
         foreach (var box in _boxes)
