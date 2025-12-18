@@ -98,7 +98,8 @@ public class BoxesDemo : RigidBodyApplication
             }
         }
 
-        BVH bvh = BVH.Build(boxDict);
+        
+        BVH bvh = SaveState().BvhNodes == null || SaveState().BvhNodes!.ParallelizeBuilding ? BVH.Build(boxDict) : BVH.BuildSynchronous(boxDict);
 
         // Process box-plane collisions
         foreach (var box in _boxes)

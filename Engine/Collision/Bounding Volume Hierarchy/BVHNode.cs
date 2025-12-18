@@ -1,4 +1,6 @@
-﻿namespace Engine.Collision.Bounding_Volume_Hierarchy
+﻿using System.Collections.Concurrent;
+
+namespace Engine.Collision.Bounding_Volume_Hierarchy
 {
     public class BVHNode
     {
@@ -52,14 +54,79 @@
             Vector3 minV = new(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 maxV = new(float.MinValue, float.MinValue, float.MinValue);
 
-            Dictionary<int, BoundingBox> bodyDict = new Dictionary<int, BoundingBox>();
-            foreach (var b in bodies)
+            var lockObject = new object();
+            ConcurrentDictionary<int, BoundingBox> concurrentBodyDict = new ConcurrentDictionary<int, BoundingBox>();
+            Parallel.ForEach(bodies, body =>
             {
-                bodyDict[b.Key] = b.Value.GetBoundingBox();
+                concurrentBodyDict[body.Key] = body.Value.GetBoundingBox();
+            });
+
+            int partitionCount = Environment.ProcessorCount;
+            Vector3[] minVpartitions = new Vector3[partitionCount];
+            Vector3[] maxVpartitions = new Vector3[partitionCount];
+            Parallel.For(0, partitionCount, partitionIndex =>
+            {
+                Vector3 localMinV = new(float.MaxValue, float.MaxValue, float.MaxValue);
+                Vector3 localMaxV = new(float.MinValue, float.MinValue, float.MinValue);
+                int count = 0;
+                foreach (var body in concurrentBodyDict)
+                {
+                    if (count % partitionCount == partitionIndex)
+                    {
+                        var box = body.Value;
+                        var boxMin = box.center - box.halfSize;
+                        var boxMax = box.center + box.halfSize;
+                        localMinV.X = Math.Min(localMinV.X, boxMin.X);
+                        localMinV.Y = Math.Min(localMinV.Y, boxMin.Y);
+                        localMinV.Z = Math.Min(localMinV.Z, boxMin.Z);
+                        localMaxV.X = Math.Max(localMaxV.X, boxMax.X);
+                        localMaxV.Y = Math.Max(localMaxV.Y, boxMax.Y);
+                        localMaxV.Z = Math.Max(localMaxV.Z, boxMax.Z);
+                    }
+                    count++;
+                }
+                minVpartitions[partitionIndex] = localMinV;
+                maxVpartitions[partitionIndex] = localMaxV;
+            });
+            for (int i = 0; i < partitionCount; i++)
+            {
+                minV.X = Math.Min(minV.X, minVpartitions[i].X);
+                minV.Y = Math.Min(minV.Y, minVpartitions[i].Y);
+                minV.Z = Math.Min(minV.Z, minVpartitions[i].Z);
+                maxV.X = Math.Max(maxV.X, maxVpartitions[i].X);
+                maxV.Y = Math.Max(maxV.Y, maxVpartitions[i].Y);
+                maxV.Z = Math.Max(maxV.Z, maxVpartitions[i].Z);
             }
 
-            foreach (var box in bodyDict.Values)
+
+            ConcurrentDictionary<ulong, BVHLeaf> leafCodes = new ConcurrentDictionary<ulong, BVHLeaf>();
+            Parallel.ForEach(concurrentBodyDict, kvp =>
             {
+                var code = MortonCodes.Encode(kvp.Value.center, minV, maxV);
+                leafCodes[code] = new BVHLeaf(kvp.Value, kvp.Key);
+            });
+
+            var sortedLeaves = leafCodes.OrderBy(x => x.Key).Select(x => x.Value).ToList();
+            var sortedMortonCodes = leafCodes.Keys.OrderBy(x => x).ToList();
+            BVHNode root = GenerateHierarchy(sortedMortonCodes, sortedLeaves, 0, (uint)(sortedLeaves.Count - 1));
+            return new BVH(root);
+        }
+
+        public static BVH BuildSynchronous(Dictionary<int, IBoxable> bodies)
+        {
+            if (bodies == null) return new BVH(null);
+
+            Vector3 minV = new(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 maxV = new(float.MinValue, float.MinValue, float.MinValue);
+
+            Dictionary<int, BoundingBox> bodyDict = new Dictionary<int, BoundingBox>();
+            foreach (var body in bodies)
+            {
+                bodyDict[body.Key] = body.Value.GetBoundingBox();
+            }
+            foreach (var body in bodyDict)
+            {
+                var box = body.Value;
                 var boxMin = box.center - box.halfSize;
                 var boxMax = box.center + box.halfSize;
                 minV.X = Math.Min(minV.X, boxMin.X);
@@ -69,24 +136,15 @@
                 maxV.Y = Math.Max(maxV.Y, boxMax.Y);
                 maxV.Z = Math.Max(maxV.Z, boxMax.Z);
             }
-
-            List<BVHLeaf> leaves = new();
-            List<ulong> mortonCodes = new();
-
+            Dictionary<ulong, BVHLeaf> leafCodes = new Dictionary<ulong, BVHLeaf>();
             foreach (var kvp in bodyDict)
             {
                 var code = MortonCodes.Encode(kvp.Value.center, minV, maxV);
-                mortonCodes.Add(code);
-                leaves.Add(new BVHLeaf(kvp.Value, kvp.Key));
+                leafCodes[code] = new BVHLeaf(kvp.Value, kvp.Key);
             }
-
-            var sortedLeaves = leaves.Zip(mortonCodes, (leaf, code) => (leaf, code))
-                .OrderBy(x => x.code)
-                .Select(x => x.leaf)
-                .ToList();
-            mortonCodes.Sort();
-
-            BVHNode root = GenerateHierarchy(mortonCodes, sortedLeaves, 0, (uint)(sortedLeaves.Count - 1));
+            var sortedLeaves = leafCodes.OrderBy(x => x.Key).Select(x => x.Value).ToList();
+            var sortedMortonCodes = leafCodes.Keys.OrderBy(x => x).ToList();
+            BVHNode root = GenerateHierarchy(sortedMortonCodes, sortedLeaves, 0, (uint)(sortedLeaves.Count - 1));
             return new BVH(root);
         }
 
