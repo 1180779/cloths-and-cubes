@@ -201,10 +201,10 @@ public sealed class GraphicsSettingsWindow(
 
     public sealed record ShadowState
     {
-        public float ShadowBiasMin;
-        public float ShadowBiasMax;
-        public float ShadowBiasModifier;
-        public float ZMult;
+        public float ShadowBiasMin { get; init; }
+        public float ShadowBiasMax { get; init; }
+        public float ShadowBiasModifier { get; init; }
+        public float ZMult { get; init; }
     }
 
     public sealed record State
