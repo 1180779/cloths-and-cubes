@@ -12,11 +12,11 @@ namespace Visualisation.Core.Display.Gizmos;
 
 public abstract class GizmoBase(Shader shader)
 {
-    public event IGizmo.GizmoTargetChangedByGizmoHandler GizmoTargetChangedByGizmo = delegate { };
+    public event IGizmo.TargetChangedEventHandler TargetChangedEvent = delegate { };
 
     protected void InvokeGizmoTargetChangedByGizmo(GameObjectCollisionPrimitive collisionPrimitive)
     {
-        GizmoTargetChangedByGizmo.Invoke(collisionPrimitive);
+        TargetChangedEvent.Invoke(collisionPrimitive);
     }
 
     protected GizmoAxis _selectedAxis = GizmoAxis.None;

@@ -22,9 +22,9 @@ public enum GizmoAxis
 
 public interface IGizmo : IDisposable
 {
-    public delegate void GizmoTargetChangedByGizmoHandler(GameObjectCollisionPrimitive collisionPrimitive);
+    public delegate void TargetChangedEventHandler(GameObjectCollisionPrimitive collisionPrimitive);
 
-    public event GizmoTargetChangedByGizmoHandler GizmoTargetChangedByGizmo;
+    public event TargetChangedEventHandler TargetChangedEvent;
 
     public float DefaultTransparency { get; set; }
     public Vector4 SelectionColor { get; set; }

@@ -188,15 +188,15 @@ public sealed class GraphicsSettingsWindow(
 
     public sealed record EnvironmentMapState
     {
-        public EnvironmentMap.EnvironmentMapDisplayType EnvironmentMapDisplayType =
+        public EnvironmentMap.EnvironmentMapDisplayType EnvironmentMapDisplayType { get; init; } =
             EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap;
 
-        public float PrefilterMapValue = 1.0f;
+        public float PrefilterMapValue { get; init; } = 1.0f;
     }
 
     public sealed record SceneWindowState
     {
-        public SceneWindow.AntialiasingType Antialiasing = SceneWindow.AntialiasingType.None;
+        public SceneWindow.AntialiasingType Antialiasing { get; init; } = SceneWindow.AntialiasingType.None;
     }
 
     public sealed record ShadowState
