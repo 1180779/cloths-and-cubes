@@ -102,7 +102,7 @@ public class LightsManager : IDisposable
         {
             if (DirectionalLight is not null)
             {
-                DirectionalLight.SetForShader(sh, $"lightD");
+                DirectionalLight.SetForShader(sh, "lightD");
                 sh.SetInt("lightDCount", 1);
             }
         }

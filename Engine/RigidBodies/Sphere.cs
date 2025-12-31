@@ -5,7 +5,7 @@ namespace Engine.RigidBodies;
 
 public class Sphere : CollisionSphere, IBoxable
 {
-    public bool IsOverlapping { get; set; } = false; // previously used for some rendering (???)
+    public bool IsOverlapping { get; set; } // previously used for some rendering (???)
 
     static readonly Vector3 MinPos = new(-15, 5, -15);
     static readonly Vector3 MaxPos = new(15, 20, 15);
@@ -42,12 +42,8 @@ public class Sphere : CollisionSphere, IBoxable
 
         Radius = radius;
 
-        float mass = (float)(Math.PI * Radius * Radius * Radius * 4.0f / 3.0f);
-        Body.Mass = mass;
-
-        Matrix3 tensor = new();
-        tensor.SetSphereInertiaTensor(Radius, mass);
-        Body.SetInertiaTensor(tensor);
+        SetAutoMass();
+        RecalculateInertiaTensor();
 
         Body.LinearDamping = 0.95f;
         Body.AngularDamping = 0.8f;
@@ -59,9 +55,37 @@ public class Sphere : CollisionSphere, IBoxable
         Body.CalculateDerivedData();
     }
 
-    public Collision.Bounding_Volume_Hierarchy.BoundingBox GetBoundingBox()
+    /// <summary>
+    /// Refreshes the physics state of the box by recalculating the inertia tensor,
+    /// adjusting damping values, updating the awake status, and calculating the derived physics data.
+    /// This method ensures that the physics body reflects its current state and properties accurately.
+    /// </summary>
+    public void RefreshPhysicsState()
     {
-        return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+        RecalculateInertiaTensor();
+        Body.LinearDamping = 0.95f;
+        Body.AngularDamping = 0.8f;
+        Body.SetAwake();
+        Body.CalculateDerivedData();
+        CalculateInternals();
+    }
+
+    public void SetAutoMass()
+    {
+        float mass = (float)(Math.PI * Radius * Radius * Radius * 4.0f / 3.0f);
+        Body.Mass = mass;
+    }
+
+    public void RecalculateInertiaTensor()
+    {
+        Matrix3 tensor = new();
+        tensor.SetSphereInertiaTensor(Radius, Body.Mass);
+        Body.SetInertiaTensor(tensor);
+    }
+
+    public BoundingBox GetBoundingBox()
+    {
+        return new BoundingBox(
             center: this.Body.Position,
             halfSize: new Vector3(Radius, Radius, Radius));
     }

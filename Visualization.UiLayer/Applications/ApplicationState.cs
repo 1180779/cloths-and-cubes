@@ -1,16 +1,17 @@
-using Visualisation.Core.GameObjects;
-
 using Visualization.UiLayer.UI.Windows;
 
 namespace Visualization.UiLayer.Applications;
 
-public class ApplicationState
+public sealed record ApplicationState
 {
-    public GraphicsSettingsWindow.State? GraphicsSettings { get; set; }
-    public CascadingShadowMapsWindow.State? CascadingShadowMaps { get; set; }
-    public BvhNodesWindow.State? BvhNodes { get; set; }
-    public CollisionParametersWindow.State? CollisionParameters { get; set; }
-    public BoxesDemoSettingsWindow.State? ClothSettings { get; set; }
-    public SelectionManagerWindow.State? SelectionSettings { get; set; }
-    public WindowsManager.State? WindowsState { get; set; }
+    public GraphicsSettingsWindow.State? GraphicsSettings;
+    public CascadingShadowMapsWindow.State? CascadingShadowMaps;
+    public BvhNodesWindow.State? BvhNodes;
+    public CollisionParametersWindow.State? CollisionParameters;
+    public BoxesDemoSettingsWindow.State? ClothSettings;
+    public SelectionManagerWindow.State? SelectionSettings;
+    public WindowsManager.State? WindowsState;
+    public GizmoSettingsWindow.State? GizmoSettings;
+    public PhysicsControlWindow.State? PhysicsControl;
+    public SceneManagementWindow.State? SceneManagement;
 }

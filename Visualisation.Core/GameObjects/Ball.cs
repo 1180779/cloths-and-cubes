@@ -10,7 +10,7 @@ namespace Visualisation.Core.GameObjects;
 
 public sealed class Ball : GameObjectRigidBody, IBoxable
 {
-    public Sphere EngineBall { get; private set; } = new();
+    public Sphere EngineBall { get; init; } = new();
     public override RigidBody PhysicsObject => EngineBall.Body;
     protected override IMesh Mesh { get; set; } = new SphereMesh();
 

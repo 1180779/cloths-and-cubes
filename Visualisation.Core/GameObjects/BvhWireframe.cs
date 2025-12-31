@@ -6,7 +6,7 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public class BvhWireframe
+public sealed class BvhWireframe
 {
     public BvhWireframe(BVH bvh)
     {

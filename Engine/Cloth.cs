@@ -141,7 +141,19 @@ namespace Engine
 
         public void Move(Vector3 move)
         {
-            //TODO
+            for (int i = 0; i < SizeX; i++)
+            {
+                for (int j = 0; j < SizeY; j++)
+                {
+                    var body = Particles[i, j].Body;
+                    body.Position += move;
+                    body.CalculateDerivedData();
+                    body.SetAwake();
+                }
+            }
+            
+            // Update the reference position
+            Particle0Pos += move;
         }
 
         public void Rotate(Vector3 rot)
@@ -185,6 +197,79 @@ namespace Engine
                     // ensure derived data and wake body
                     body.CalculateDerivedData();
                     body.SetAwake();
+                }
+            }
+        }
+
+        public void RegenerateGrid(int newSizeX, int newSizeY, float newSpringLength, float newSpringConstant, float newParticleMass)
+        {
+            // Remove old springs from force registry
+            RemoveSpringsFromForceRegistry();
+            _particleSpringAssociations.Clear();
+            
+            // Update parameters
+            SizeX = newSizeX;
+            SizeY = newSizeY;
+            SpringLength = newSpringLength;
+            SpringConstant = newSpringConstant;
+            ParticleMass = newParticleMass;
+            
+            // Recreate particle grid
+            Particles = new RigidParticle[SizeX, SizeY];
+            for (int i = 0; i < SizeX; i++)
+            {
+                for (int j = 0; j < SizeY; j++)
+                {
+                    Particles[i, j] = new RigidParticle();
+                    Particles[i, j].SetState(
+                        Particle0Pos + new Vector3(SpringLength * i, 0, SpringLength * j), 
+                        0,
+                        new Vector3(), 
+                        ParticleMass);
+                }
+            }
+            
+            // Recreate springs
+            float diagonalLength = SpringLength * (float)Math.Sqrt(2.0);
+            for (int i = 0; i < SizeX; i++)
+            {
+                for (int j = 0; j < SizeY; j++)
+                {
+                    if (i != SizeX - 1)
+                    {
+                        // Horizontal spring
+                        var spring = new Spring(new Vector3(), Particles[i + 1, j].Body,
+                            new Vector3(), SpringConstant, SpringLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
+                    }
+
+                    if (j != SizeY - 1)
+                    {
+                        // Vertical spring
+                        var spring = new Spring(new Vector3(), Particles[i, j + 1].Body,
+                            new Vector3(), SpringConstant, SpringLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
+                    }
+
+                    if (i != SizeX - 1 && j != SizeY - 1)
+                    {
+                        // Diagonal spring (down-right)
+                        var spring = new Spring(new Vector3(), Particles[i + 1, j + 1].Body,
+                            new Vector3(), SpringConstant, diagonalLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
+                    }
+
+                    if (i != 0 && j != SizeY - 1)
+                    {
+                        // Diagonal spring (down-left)
+                        var spring = new Spring(new Vector3(), Particles[i - 1, j + 1].Body,
+                            new Vector3(), SpringConstant, diagonalLength);
+                        _particleSpringAssociations.Add(new (Particles[i, j].Body, spring));
+                        Registry.Add(Particles[i, j].Body, spring);
+                    }
                 }
             }
         }

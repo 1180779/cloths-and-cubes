@@ -14,7 +14,7 @@ public class CamerasManager
 
     private readonly List<CameraBase> _cameras = [];
 
-    private int _currentCameraIndex = 0;
+    private int _currentCameraIndex;
 
     public int CurrentCameraIndex
     {

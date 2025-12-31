@@ -1,13 +1,9 @@
-using System.Data.SqlTypes;
-
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
-using Engine.RigidBodies;
 
-using ImGuiNET;
+using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects;
@@ -43,14 +39,15 @@ public sealed class SelectionManager(
             {
                 _selectedObject = value;
                 OnSelectionChanged?.Invoke(_selectedObject);
-            } else if (Unselect && _selectedObject != null)
+            }
+            else if (Unselect && _selectedObject != null)
             {
                 _selectedObject = null;
                 OnSelectionChanged?.Invoke(_selectedObject);
             }
         }
     }
-    
+
     public bool Unselect = true;
     private bool _selectionEnabled = true;
 
@@ -69,7 +66,7 @@ public sealed class SelectionManager(
 
     public bool DrawInvisibleObjects;
     public bool DrawSelectedObjectWithoutDepthTesting = true;
-    
+
     /// <summary>
     /// Event raised when the selected object changes.
     /// </summary>
@@ -79,64 +76,62 @@ public sealed class SelectionManager(
     /// Updates selection based on mouse input. 
     /// </summary>
     /// <param name="viewportMousePos">The mouse position relative to the viewport.</param>
-    /// <param name="viewportWidth">The width of the viewport in framebuffer coordinates.</param>
-    /// <param name="viewportHeight">The height of the viewport in framebuffer coordinates.</param>
-    public void HandleInput(Vector2 viewportMousePos, int viewportWidth, int viewportHeight)
+    /// <param name="screenSize">The dimensions of the viewport in framebuffer coordinates</param>
+    public void HandleInput(Vector2 viewportMousePos, Vector2i screenSize)
     {
         if (!SelectionEnabled)
             return;
-        
+
         if (_inputProvider.IsMouseButtonPressed(MouseButton.Left))
         {
-            PerformSelection(viewportMousePos, viewportWidth, viewportHeight);
+            PerformSelection(viewportMousePos, screenSize);
         }
     }
 
-    private static Vector3 UnProject(Vector3 mouse, Matrix4 projection, Matrix4 view, float width, float height)
+    /// <summary>
+    /// Creates a ray in world space based on the supplied mouse position, camera view, and screen dimensions.
+    /// The ray originates from the camera and points in the direction corresponding to the mouse position.
+    /// The ray direction is calculated based on an assumption that the ray passes though the near and far planes
+    /// of the camera's view frustum. 
+    /// </summary>
+    /// <param name="mousePos">
+    /// A <c>Vector2</c> that is the position of the mouse on the screen, where the X and Y
+    /// values correspond to the pixel coordinates of the mouse.
+    /// </param>
+    /// <param name="camera">
+    /// A <c>CameraBase</c> used for the calculation. Provides the camera's view matrix and projection matrix,
+    /// necessary for conversions.
+    /// </param>
+    /// <param name="screenSize">
+    /// A <c>Vector2i</c> with dimensions of the viewport or screen in pixels.
+    /// </param>
+    /// <returns>
+    /// <c>Ray</c> representing the calculated ray in world space. The ray has an origin and a
+    /// direction vector that can be used for intersection tests in 3D space.
+    /// </returns>
+    public static Ray GetRayFromMouse(Vector2 mousePos, CameraBase camera, Vector2i screenSize)
     {
-        Vector4 vec;
-        vec.X = 2.0f * mouse.X / width - 1.0f;
-        vec.Y = 1.0f - 2.0f * mouse.Y / height;
-        vec.Z = mouse.Z;
-        vec.W = 1.0f;
+        // Correct the Y mouse coordinate for openGL
+        mousePos.Y = screenSize.Y - mousePos.Y;
 
-        var viewProj = view * projection;
-        var inverse = Matrix4.Invert(viewProj);
-        vec = Vector4.TransformRow(vec, inverse);
-        if (vec.W > 1e-6 || vec.W < -1e-6)
-        {
-            vec.X /= vec.W;
-            vec.Y /= vec.W;
-            vec.Z /= vec.W;
-            vec.W = 1;
-        }
+        var inverse = Matrix4.Invert(camera.ViewMatrix * camera.ProjectionMatrix);
+        Vector3 near = Vector3.Unproject(new Vector3(mousePos.X, mousePos.Y, 0.0f), 0, 0, screenSize.X, screenSize.Y,
+            0.0f, 1.0f, inverse);
+        Vector3 far = Vector3.Unproject(new Vector3(mousePos.X, mousePos.Y, 1.0f), 0, 0, screenSize.X, screenSize.Y,
+            0.0f, 1.0f, inverse);
 
-        return new Vector3(vec.X, vec.Y, vec.Z);
+        var dir = far - near;
+        dir.Normalize();
+
+        return new Ray(near.ToEngine(), dir.ToEngine());
     }
 
     /// <summary>
     /// Performs ray casting from the mouse position to detect object selection.
     /// </summary>
-    private void PerformSelection(Vector2 mousePos, int screenWidth, int screenHeight)
+    private void PerformSelection(Vector2 mousePos, Vector2i screenSize)
     {
-        var camera = _cameraProvider();
-        var near = UnProject(new Vector3(mousePos.X, mousePos.Y, 0.0f), camera.ProjectionMatrix, camera.ViewMatrix,
-            screenWidth, screenHeight);
-        var far = UnProject(new Vector3(mousePos.X, mousePos.Y, 1.0f), camera.ProjectionMatrix, camera.ViewMatrix,
-            screenWidth, screenHeight);
-        var engineRayOrigin = new Engine.Vector3(
-            (Real)near.X,
-            (Real)near.Y,
-            (Real)near.Z
-        );
-        var rayDirection = far - near;
-        rayDirection.Normalize();
-        var engineRayDirection = new Engine.Vector3(
-            (Real)rayDirection.X,
-            (Real)rayDirection.Y,
-            (Real)rayDirection.Z
-        );
-        var ray = new Ray(engineRayOrigin, engineRayDirection);
+        var ray = GetRayFromMouse(mousePos, _cameraProvider(), screenSize);
         LastRay = ray;
 
         object? closestObject = null;
@@ -164,5 +159,15 @@ public sealed class SelectionManager(
 
         SelectedObject = closestObject;
         SelectedObjectDistance = closestDistance;
+    }
+
+    /// <summary>
+    /// Clears the current selection and resets the selection state.
+    /// </summary>
+    public void ClearSelection()
+    {
+        SelectedObject = null;
+        LastRay = null;
+        SelectedObjectDistance = 0;
     }
 }

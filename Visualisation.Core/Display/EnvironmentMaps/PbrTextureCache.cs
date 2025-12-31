@@ -37,7 +37,7 @@ public static class PbrTextureCache
 
         using var writer = new BinaryWriter(File.Create(path));
 
-        writer.Write((int)0x20534444);
+        writer.Write(0x20534444);
         writer.Write(size);
         writer.Write(mipmaps);
 

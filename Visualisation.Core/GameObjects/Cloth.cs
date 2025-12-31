@@ -10,7 +10,7 @@ namespace Visualisation.Core.GameObjects;
 public sealed class Cloth : GameObject, IBoxable
 {
     public Engine.Cloth EngineCloth { get; set; }
-    public SpringMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
+    public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
 
     public Cloth(ForceRegistry registry)
@@ -18,7 +18,7 @@ public sealed class Cloth : GameObject, IBoxable
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry);
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth = new SpringMesh(pts);
+        VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
         Material = MaterialConstant.BlueRubber;
@@ -35,7 +35,7 @@ public sealed class Cloth : GameObject, IBoxable
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry, sizeX, sizeY, springLength, springConstant, particleMass);
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth = new SpringMesh(pts);
+        VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
         Material = MaterialConstant.BlueRubber;
@@ -88,10 +88,29 @@ public sealed class Cloth : GameObject, IBoxable
             for (int y = 0; y < sy; y++)
             {
                 var e = enginePoints[x, y];
-                result[x, y] = new Vector3((float)e.X, (float)e.Y, (float)e.Z);
+                result[x, y] = new Vector3(e.X, e.Y, e.Z);
             }
         }
 
         return result;
+    }
+
+    public void RegenerateCloth(
+        int newSizeX,
+        int newSizeY,
+        float newSpringLength,
+        float newSpringConstant,
+        float newParticleMass)
+    {
+        // Regenerate the engine cloth
+        EngineCloth.RegenerateGrid(newSizeX, newSizeY, newSpringLength, newSpringConstant, newParticleMass);
+
+        // Dispose old visual mesh
+        VisualCloth.Dispose();
+
+        // Create new visual mesh
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+        VisualCloth = new ClothMesh(pts);
+        Mesh = VisualCloth;
     }
 }

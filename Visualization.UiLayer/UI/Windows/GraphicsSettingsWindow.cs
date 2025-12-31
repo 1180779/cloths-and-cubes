@@ -25,8 +25,6 @@ public sealed class GraphicsSettingsWindow(
 
     public void Draw(ref bool isOpen)
     {
-        if (!isOpen) return;
-
         if (ImGui.Begin(Name, ref isOpen))
         {
             DrawShadowMapSettings();
@@ -37,6 +35,7 @@ public sealed class GraphicsSettingsWindow(
             ImGui.Spacing();
             DrawSceneWindow();
         }
+
         ImGui.End();
     }
 
@@ -187,24 +186,52 @@ public sealed class GraphicsSettingsWindow(
         _sceneWindow.Antialiasing = (SceneWindow.AntialiasingType)antialiasing;
     }
 
-    public record EnvironmentMapState(
-        EnvironmentMap.EnvironmentMapDisplayType EnvironmentMapDisplayType,
-        float PrefilterMapValue
-    );
+    public sealed record EnvironmentMapState
+    {
+        public EnvironmentMap.EnvironmentMapDisplayType EnvironmentMapDisplayType =
+            EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap;
 
-    public record SceneWindowState(SceneWindow.AntialiasingType Antialiasing);
+        public float PrefilterMapValue = 1.0f;
+    }
 
-    public record ShadowState(float ShadowBiasMin, float ShadowBiasMax, float ShadowBiasModifier, float ZMult);
+    public sealed record SceneWindowState
+    {
+        public SceneWindow.AntialiasingType Antialiasing = SceneWindow.AntialiasingType.None;
+    }
 
-    public record State(ShadowState? Shadows, EnvironmentMapState? EnvironmentMap, SceneWindowState? SceneWindow);
+    public sealed record ShadowState
+    {
+        public float ShadowBiasMin;
+        public float ShadowBiasMax;
+        public float ShadowBiasModifier;
+        public float ZMult;
+    }
+
+    public sealed record State
+    {
+        public ShadowState? Shadows;
+        public EnvironmentMapState? EnvironmentMap;
+        public SceneWindowState? SceneWindow;
+    }
 
     public State SaveState()
     {
-        return new State(
-            new ShadowState(_shadowBiasMin, _shadowBiasMax, _shadowBiasModifier, _zMult),
-            new EnvironmentMapState(_sceneManager.EnvironmentMap.DisplayType,
-                _sceneManager.EnvironmentMap.PrefilterMapValue),
-            new SceneWindowState(_sceneWindow.Antialiasing));
+        return new State
+        {
+            Shadows = new ShadowState
+            {
+                ShadowBiasMin = _shadowBiasMin,
+                ShadowBiasMax = _shadowBiasMax,
+                ShadowBiasModifier = _shadowBiasModifier,
+                ZMult = _zMult,
+            },
+            EnvironmentMap = new EnvironmentMapState
+            {
+                EnvironmentMapDisplayType = _sceneManager.EnvironmentMap.DisplayType,
+                PrefilterMapValue = _sceneManager.EnvironmentMap.PrefilterMapValue,
+            },
+            SceneWindow = new SceneWindowState { Antialiasing = _sceneWindow.Antialiasing }
+        };
     }
 
     public void RestoreState(State state)

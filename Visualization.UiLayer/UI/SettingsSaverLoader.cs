@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Visualization.UiLayer.Applications;
 
 namespace Visualization.UiLayer.UI;
@@ -9,7 +10,8 @@ public sealed class SettingsSaverLoader
 
     public void Save(ApplicationState state)
     {
-        var json = JsonSerializer.Serialize(state);
+        var options = new JsonSerializerOptions { IncludeFields = true };
+        var json = JsonSerializer.Serialize(state, options);
         File.WriteAllText(SettingsFileName, json);
     }
 
@@ -21,6 +23,7 @@ public sealed class SettingsSaverLoader
         }
 
         var json = File.ReadAllText(SettingsFileName);
-        return JsonSerializer.Deserialize<ApplicationState>(json);
+        var options = new JsonSerializerOptions { IncludeFields = true };
+        return JsonSerializer.Deserialize<ApplicationState>(json, options);
     }
 }

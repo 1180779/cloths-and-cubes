@@ -1,6 +1,8 @@
+using Engine.RigidBodies;
+
 namespace Visualisation.Core.GameObjects;
 
 public abstract class GameObjectRigidBody : GameObject
 {
-    public abstract Engine.RigidBodies.RigidBody EngineRigidBody { get; }
+    public abstract RigidBody EngineRigidBody { get; }
 }

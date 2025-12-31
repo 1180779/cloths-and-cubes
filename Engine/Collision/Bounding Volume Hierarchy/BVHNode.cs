@@ -74,8 +74,8 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
                     if (count % partitionCount == partitionIndex)
                     {
                         var box = body.Value;
-                        var boxMin = box.center - box.halfSize;
-                        var boxMax = box.center + box.halfSize;
+                        var boxMin = box.Center - box.HalfSize;
+                        var boxMax = box.Center + box.HalfSize;
                         localMinV.X = Math.Min(localMinV.X, boxMin.X);
                         localMinV.Y = Math.Min(localMinV.Y, boxMin.Y);
                         localMinV.Z = Math.Min(localMinV.Z, boxMin.Z);
@@ -102,7 +102,7 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             ConcurrentDictionary<ulong, BVHLeaf> leafCodes = new ConcurrentDictionary<ulong, BVHLeaf>();
             Parallel.ForEach(concurrentBodyDict, kvp =>
             {
-                var code = MortonCodes.Encode(kvp.Value.center, minV, maxV);
+                var code = MortonCodes.Encode(kvp.Value.Center, minV, maxV);
                 leafCodes[code] = new BVHLeaf(kvp.Value, kvp.Key);
             });
 
@@ -127,8 +127,8 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             foreach (var body in bodyDict)
             {
                 var box = body.Value;
-                var boxMin = box.center - box.halfSize;
-                var boxMax = box.center + box.halfSize;
+                var boxMin = box.Center - box.HalfSize;
+                var boxMax = box.Center + box.HalfSize;
                 minV.X = Math.Min(minV.X, boxMin.X);
                 minV.Y = Math.Min(minV.Y, boxMin.Y);
                 minV.Z = Math.Min(minV.Z, boxMin.Z);
@@ -139,7 +139,7 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             Dictionary<ulong, BVHLeaf> leafCodes = new Dictionary<ulong, BVHLeaf>();
             foreach (var kvp in bodyDict)
             {
-                var code = MortonCodes.Encode(kvp.Value.center, minV, maxV);
+                var code = MortonCodes.Encode(kvp.Value.Center, minV, maxV);
                 leafCodes[code] = new BVHLeaf(kvp.Value, kvp.Key);
             }
             var sortedLeaves = leafCodes.OrderBy(x => x.Key).Select(x => x.Value).ToList();

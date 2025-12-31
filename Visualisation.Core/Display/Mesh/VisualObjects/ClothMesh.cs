@@ -6,20 +6,25 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core.Display.Mesh.VisualObjects
 {
-    public class SpringMesh : IMesh
+    /// <summary>
+    /// Represents a 3D mesh that simulates a cloth-like structure, allowing for visualization
+    /// and manipulation of its points, vertices, and associated data.
+    ///
+    /// This mesh is unique in comparison to other meshes in that each of the instances holds the vertex data
+    /// as there are directly tied to the points in the world.
+    /// </summary>
+    public class ClothMesh : IMesh
     {
-        private readonly Vector3[,] _points;
         private MeshManager.MeshData? _meshData;
         private readonly string _meshName;
 
         private VertexData[]? _vertices;
         private int _vertexCount;
 
-        public SpringMesh(Vector3[,] points, string? meshName = null)
+        public ClothMesh(Vector3[,] points)
         {
-            _points = points ?? throw new ArgumentNullException(nameof(points));
-            _meshName = meshName ?? Guid.NewGuid().ToString();
-            Init();
+            _meshName = Guid.NewGuid().ToString();
+            Init(points);
         }
 
         public void UpdatePoints(Vector3[,] newPoints)
@@ -119,10 +124,10 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             return triangles.ToArray();
         }
 
-        private void BuildMesh()
+        private void BuildMesh(Vector3[,] points)
         {
-            int width = _points.GetLength(0);
-            int height = _points.GetLength(1);
+            int width = points.GetLength(0);
+            int height = points.GetLength(1);
 
             var vertices = new VertexData[width, height];
 
@@ -130,7 +135,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             {
                 for (int x = 0; x < width; x++)
                 {
-                    vertices[x, y].Position = _points[x, y];
+                    vertices[x, y].Position = points[x, y];
                     vertices[x, y].TexCoords = new Vector2((float)x / (width - 1), (float)y / (height - 1));
                 }
             }
@@ -188,9 +193,9 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             _vertexCount = _vertices.Length;
         }
 
-        private void Init()
+        private void Init(Vector3[,] points)
         {
-            BuildMesh();
+            BuildMesh(points);
 
             if (_vertices == null)
                 throw new InvalidOperationException("Mesh not built.");
@@ -213,7 +218,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
 
         public void Dispose()
         {
-            MeshManager.FreeMesh(_meshName, (data) =>
+            MeshManager.FreeMesh(_meshName, data =>
             {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
                 GL.DeleteBuffer(data.Vbo);

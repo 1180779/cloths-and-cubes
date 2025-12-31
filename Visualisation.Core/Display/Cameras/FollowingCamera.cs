@@ -5,19 +5,27 @@ namespace Visualisation.Core.Display.Cameras;
 
 public class FollowingCamera : CameraBase
 {
-    private GameObject[] _targetObjects = [];
     private int _currentTargetIndex;
+    public Func<GameObject[]> GetTargetObjects { get; set; }
 
-    public GameObject? TargetObject => _targetObjects.Length != 0 ? _targetObjects[_currentTargetIndex] : null;
+    public GameObject? TargetObject
+    {
+        get
+        {
+            var targetObjects = GetTargetObjects();
+            return targetObjects.Length != 0 ? GetTargetObjects()[_currentTargetIndex] : null;
+        }
+    }
 
     public int CurrentTargetIndex
     {
         get => _currentTargetIndex;
         set
         {
-            _currentTargetIndex = value % _targetObjects.Length;
+            var targetObjectsLength = GetTargetObjects().Length;
+            _currentTargetIndex = value % targetObjectsLength;
             if (_currentTargetIndex < 0)
-                _currentTargetIndex += _targetObjects.Length;
+                _currentTargetIndex += targetObjectsLength;
         }
     }
 
@@ -25,30 +33,30 @@ public class FollowingCamera : CameraBase
     public Vector3 Target { get; set; } = Vector3.Zero;
     public float Distance { get; set; } = 5f;
 
-    public FollowingCamera() : base()
+    public FollowingCamera(Func<GameObject[]> getTargetObjects) : base()
     {
-    }
-
-    public FollowingCamera(Vector3 position) : base(position)
-    {
-    }
-
-    public void AttachTo(GameObject target)
-    {
-        _targetObjects = [target];
+        GetTargetObjects = getTargetObjects;
         UpdatePositionFromTarget();
     }
 
-    public void AttachTo(GameObject[] targets)
+    public FollowingCamera(Func<GameObject[]> getTargetObjects, Vector3 position) : base(position)
     {
-        _targetObjects = targets;
+        GetTargetObjects = getTargetObjects;
+        UpdatePositionFromTarget();
     }
 
-    private Vector3 CurrentTarget => _targetObjects.Length != 0 ? _targetObjects[CurrentTargetIndex].Position : Target;
+    private Vector3 CurrentTarget
+    {
+        get
+        {
+            var targetObjects = GetTargetObjects();
+            return targetObjects.Length != 0 ? targetObjects[CurrentTargetIndex].Position : Target;
+        }
+    }
+
 
     private void UpdatePositionFromTarget()
     {
-        // Keep looking at the target: Position is target - front * distance
         Position = CurrentTarget - Front * Distance;
     }
 

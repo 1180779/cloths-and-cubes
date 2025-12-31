@@ -31,7 +31,7 @@ public sealed class Plane : GameObject
                 rotation = Quaternion.FromAxisAngle(axis, angle);
             }
 
-            var position = normal * (float)EnginePlane.Offset;
+            var position = normal * EnginePlane.Offset;
             var scale = new Vector3(1000.0f, 1000.0f, 1000.0f);
 
             return GenerateModelMatrix(position, scale, rotation);

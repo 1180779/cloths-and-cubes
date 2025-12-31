@@ -8,11 +8,21 @@ public sealed class CollisionParametersWindow(CollisionData collisionData) : IWi
 {
     private CollisionData _collisionData = collisionData; /* borrowed */
 
-    public record State(Real Friction, Real Restitution, Real Tolerance);
+    public sealed record State
+    {
+        public Real Friction;
+        public Real Restitution;
+        public Real Tolerance;
+    }
 
     public State SaveState()
     {
-        return new State(_collisionData.Friction, _collisionData.Restitution, _collisionData.Tolerance);
+        return new State
+        {
+            Friction = _collisionData.Friction,
+            Restitution = _collisionData.Restitution,
+            Tolerance = _collisionData.Tolerance
+        };
     }
 
     public void RestoreState(State state)
@@ -23,6 +33,7 @@ public sealed class CollisionParametersWindow(CollisionData collisionData) : IWi
     }
 
     public string Name => "Collision Parameters";
+
     public void Draw(ref bool isOpen)
     {
         if (ImGui.Begin("Collision Data", ref isOpen))
@@ -31,6 +42,7 @@ public sealed class CollisionParametersWindow(CollisionData collisionData) : IWi
             ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
             ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
         }
+
         ImGui.End();
     }
 }

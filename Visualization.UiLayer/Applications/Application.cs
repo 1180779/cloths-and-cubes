@@ -24,10 +24,10 @@ public class Application : GameWindow
     protected readonly WindowsManager _windowsManager;
 
     protected readonly SceneWindow _sceneWindow;
-    
+
 #if DEBUG
     protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
-    
+
 #if FRAMESAVER
     protected readonly FrameSaver FrameSaver = new(0);
 #endif
@@ -46,21 +46,22 @@ public class Application : GameWindow
 
         _imGuiController = new ImGuiController(this);
         _imGuiController.HookToWindow(this);
-        _inputProvider = new ImGuiInputProvider(this, _imGuiController);
+        _inputProvider = new OpenTKWithImGuiInputProvider(this, _imGuiController);
 
         _sceneManager = new SceneLightningOnly(Size.X / (float)Size.Y, _inputProvider);
         _sceneWindow = new SceneWindow(_imGuiController, _sceneManager, _inputProvider, Size);
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
-        
+
         _settingsSaverLoader = new SettingsSaverLoader();
-        
+
         _windowsManager = new WindowsManager();
         _windowsManager.Add(new StatsWindow(_sceneManager));
         _windowsManager.Add(new HelpWindow());
 #if DEBUG
         _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _sceneManager, Size);
         _windowsManager.Add(new ObjectInspectorWindow(_sceneManager));
-        _windowsManager.Add(new GraphicsSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight, _sceneManager, _sceneWindow));
+        _windowsManager.Add(new GraphicsSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight,
+            _sceneManager, _sceneWindow));
         _windowsManager.Add(_cascadingShadowMapsWindow);
 #endif
 
@@ -70,10 +71,10 @@ public class Application : GameWindow
         GL.Enable(EnableCap.TextureCubeMapSeamless); /* for low mip levels of pre-filter convolution map */
     }
 
-    protected bool StepsLimit { get; set; }
+    public bool StepsLimit { get; set; }
     protected long AvailableStepsInternal { get; set; }
 
-    protected virtual long AvailableSteps
+    public virtual long AvailableSteps
     {
         get
         {
@@ -112,7 +113,7 @@ public class Application : GameWindow
         // {
         //     return;
         // }
-        
+
 #if DEBUG
         _cascadingShadowMapsWindow.HandleInput();
 #endif
@@ -135,7 +136,7 @@ public class Application : GameWindow
         {
             LoadState(state);
         }
-        
+
         InitializeScene();
 
         // set up internal scene objects after the scene is initialized
@@ -197,7 +198,7 @@ public class Application : GameWindow
     {
         var state = SaveState();
         _settingsSaverLoader.Save(state);
-        
+
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
         GL.UseProgram(0);
@@ -232,13 +233,12 @@ public class Application : GameWindow
     protected virtual void RenderWindows(double dt)
     {
         _windowsManager.Draw();
-        
+
         _sceneWindow.Draw(FramebufferSize, (float)dt);
     }
 
     protected virtual void DebugRenderInScene(Shader sh)
     {
-
     }
 
     protected virtual ApplicationState SaveState()
@@ -246,8 +246,8 @@ public class Application : GameWindow
         return new ApplicationState
         {
             WindowsState = _windowsManager.SaveState(),
+            GraphicsSettings = ((GraphicsSettingsWindow)_windowsManager.GetWindow("Graphics Settings")).SaveState(),
 #if DEBUG
-            GraphicsSettings = ((GraphicsSettingsWindow) _windowsManager.GetWindow("Graphics Settings")).SaveState(),
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState()
 #endif
         };
@@ -259,12 +259,14 @@ public class Application : GameWindow
         {
             _windowsManager.RestoreState(state.WindowsState);
         }
-#if DEBUG
+
         if (state.GraphicsSettings is not null)
         {
-            ((GraphicsSettingsWindow) _windowsManager.GetWindow("Graphics Settings")).RestoreState(state.GraphicsSettings);
+            ((GraphicsSettingsWindow)_windowsManager.GetWindow("Graphics Settings")).RestoreState(
+                state.GraphicsSettings);
         }
 
+#if DEBUG
         if (state.CascadingShadowMaps is not null)
         {
             _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);

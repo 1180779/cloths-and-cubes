@@ -5,7 +5,7 @@ using ImGuiNET;
 namespace Visualization.UiLayer.UI.Windows;
 
 /// <summary>
-/// Specialized inspector window for Contact arrays that filters and displays only valid contacts
+/// A specialized inspector window for Contact arrays that filters and displays only valid contacts
 /// (where both Body elements are not null)
 /// </summary>
 public sealed class ContactsInspectorWindow(Func<Contact[]> contactProvider) : IWindow
@@ -39,7 +39,6 @@ public sealed class ContactsInspectorWindow(Func<Contact[]> contactProvider) : I
         if (contacts == null || contacts.Length == 0)
         {
             ImGui.TextDisabled("No contacts available");
-            ImGui.End();
             return;
         }
 

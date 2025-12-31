@@ -4,6 +4,8 @@ namespace Engine;
 
 public struct Quaternion
 {
+    public static readonly Quaternion Identity = new Quaternion(1, 0, 0, 0);
+    
     public Real I, J, K, R;
 
     [Conditional("DEBUG")]

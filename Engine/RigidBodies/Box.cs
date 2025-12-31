@@ -5,7 +5,7 @@ namespace Engine.RigidBodies;
 
 public class Box : CollisionBox, IBoxable
 {
-    public bool IsOverlapping { get; set; } = false; // previously used for some rendering (???)
+    public bool IsOverlapping { get; set; } // previously used for some rendering (???)
     static readonly Vector3 MinPos = new(-15, 5, -15);
     static readonly Vector3 MaxPos = new(15, 10, 15);
     static readonly Vector3 MinSize = new(0.5f, 0.5f, 0.5f);
@@ -41,12 +41,8 @@ public class Box : CollisionBox, IBoxable
 
         HalfSize = extents;
 
-        float mass = (float)(HalfSize.X * HalfSize.Y * HalfSize.Z * 8.0f);
-        Body.Mass = mass;
-
-        Matrix3 tensor = new();
-        tensor.SetBlockInertiaTensor(HalfSize, mass);
-        Body.SetInertiaTensor(tensor);
+        SetAutoMass();
+        RecalculateInertiaTensor();
 
         Body.LinearDamping = 0.95f;
         Body.AngularDamping = 0.8f;
@@ -58,9 +54,37 @@ public class Box : CollisionBox, IBoxable
         Body.CalculateDerivedData();
     }
 
-    public Collision.Bounding_Volume_Hierarchy.BoundingBox GetBoundingBox()
+    /// <summary>
+    /// Refreshes the physics state of the box by recalculating the inertia tensor,
+    /// adjusting damping values, updating the awake status, and calculating the derived physics data.
+    /// This method ensures that the physics body reflects its current state and properties accurately.
+    /// </summary>
+    public void RefreshPhysicsState()
     {
-        // Update the transform to ensure we have current rotation/position
+        RecalculateInertiaTensor();
+        Body.LinearDamping = 0.95f;
+        Body.AngularDamping = 0.8f;
+        Body.SetAwake();
+        Body.CalculateDerivedData();
+        CalculateInternals();
+    }
+
+    public void SetAutoMass()
+    {
+        float mass = (float)(HalfSize.X * HalfSize.Y * HalfSize.Z * 8.0f);
+        Body.Mass = mass;
+    }
+
+    public void RecalculateInertiaTensor()
+    {
+        Matrix3 tensor = new();
+        tensor.SetBlockInertiaTensor(HalfSize, Body.Mass);
+        Body.SetInertiaTensor(tensor);
+    }
+
+    public BoundingBox GetBoundingBox()
+    {
+        // Update the transform to ensure we have the current rotation/position
         CalculateInternals();
 
         // Get the rotation matrix (3x3 part of the transform)
@@ -77,7 +101,7 @@ public class Box : CollisionBox, IBoxable
             MathF.Abs(rotation.Data[8] * HalfSize.Z)
         );
 
-        return new Collision.Bounding_Volume_Hierarchy.BoundingBox(
+        return new BoundingBox(
             center: Body.Position,
             halfSize: worldHalfSize);
     }

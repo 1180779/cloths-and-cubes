@@ -22,11 +22,7 @@ public sealed class Line : IMesh
 
     private void Init()
     {
-        float[] vertices =
-        {
-            _start.X, _start.Y, _start.Z,
-            _end.X, _end.Y, _end.Z
-        };
+        float[] vertices = { _start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z };
 
         _meshData = MeshManager.GetOrLoadMesh(_meshName, () =>
         {
@@ -47,7 +43,7 @@ public sealed class Line : IMesh
 
     public void Dispose()
     {
-        MeshManager.FreeMesh(_meshName, (data) =>
+        MeshManager.FreeMesh(_meshName, data =>
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.DeleteBuffer(data.Vbo);
@@ -59,7 +55,7 @@ public sealed class Line : IMesh
     {
         if (_meshData is null)
             throw new MeshDataEmptyException();
-        
+
         GL.BindVertexArray(_meshData.Vao);
         GL.DrawArrays(PrimitiveType.Lines, 0, 2);
     }

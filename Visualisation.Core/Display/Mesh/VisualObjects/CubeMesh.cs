@@ -6,6 +6,11 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects;
 
 public sealed class CubeMesh : IMesh
 {
+    static CubeMesh()
+    {
+        Vertices.CalculateTangentBitangent();
+    }
+
     public CubeMesh()
     {
         Init();
@@ -64,8 +69,6 @@ public sealed class CubeMesh : IMesh
     {
         s_meshData = MeshManager.GetOrLoadMesh(MeshName, () =>
         {
-            Vertices.CalculateTangentBitangent();
-
             int vbo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * Marshal.SizeOf(Vertices[0]), Vertices,
@@ -81,11 +84,13 @@ public sealed class CubeMesh : IMesh
 
     public void Dispose()
     {
-        MeshManager.FreeMesh(MeshName, (data) =>
+        MeshManager.FreeMesh(MeshName, data =>
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.DeleteBuffer(data.Vbo);
             GL.DeleteVertexArray(data.Vao);
+
+            s_meshData = null;
         });
     }
 

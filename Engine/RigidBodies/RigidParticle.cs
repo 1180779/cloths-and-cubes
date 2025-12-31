@@ -28,7 +28,6 @@ namespace Engine.RigidBodies
             Body.Mass = mass;
 
             Matrix3 tensor = new();
-
             Body.SetInertiaTensor(tensor);
 
             Body.LinearDamping = 0.95f;
@@ -38,6 +37,19 @@ namespace Engine.RigidBodies
 
             Body.SetAwake();
             Body.CalculateDerivedData();
+        }
+
+        public void RefreshPhysicsState()
+        {
+            Matrix3 tensor = new();
+            Body.SetInertiaTensor(tensor);
+
+            Body.LinearDamping = 0.95f;
+            Body.AngularDamping = 0.8f;
+
+            Body.SetAwake();
+            Body.CalculateDerivedData();
+            CalculateInternals();
         }
     }
 }

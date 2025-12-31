@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
@@ -15,13 +17,34 @@ public abstract class GameObject : IIdentifiable, IDisposable
     public abstract object PhysicsObject { get; }
     public abstract Matrix4 Model { get; }
     public virtual Vector3 Position => Vector3.Zero;
-    public IMaterial Material { get; set; } = MaterialConstant.RedPlastic;
+
+    private IMaterial? _material;
+
+    public IMaterial Material
+    {
+        get
+        {
+            _material ??= MaterialConstant.RedPlastic;
+            return _material;
+        }
+        set
+        {
+            var oldMaterial = _material;
+            value.EnsureLoaded();
+            _material = value;
+            oldMaterial?.Dispose();
+        }
+    }
+
     public Guid Id { get; set; } = Guid.NewGuid();
+
+    private bool _isDisposed;
 
     public void SetForShaderNoMaterial(Shader sh)
     {
         sh.SetMatrix4("model", Model);
     }
+
     public void SetForShader(Shader sh)
     {
         sh.SetMatrix4("model", Model);
@@ -34,14 +57,25 @@ public abstract class GameObject : IIdentifiable, IDisposable
     {
         if (Invisible && !drawEvenInvisible)
             return;
-        
+
         PreRender();
         Mesh.Render();
     }
 
+    ~GameObject()
+    {
+        Debug.Assert(_isDisposed, "GameObject was not disposed before finalization.");
+    }
+
     public void Dispose()
     {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
         Mesh.Dispose();
+        Material.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     public string DisplayName => $"{GetType().Name} ({Id.ToString().Substring(0, 8)})";

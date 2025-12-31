@@ -46,9 +46,10 @@ public class WindowsManager
                         _areOpen[i] = isOpen;
                     }
                 }
-                
+
                 ImGui.EndMenu();
             }
+
             ImGui.EndMainMenuBar();
         }
     }
@@ -58,7 +59,10 @@ public class WindowsManager
         return _windows.First(w => w.Name == name);
     }
 
-    public record State(Dictionary<string, bool> AreOpen);
+    public sealed record State
+    {
+        public Dictionary<string, bool> AreOpen = [];
+    }
 
     public State SaveState()
     {
@@ -67,7 +71,8 @@ public class WindowsManager
         {
             dict.Add(_windows[i].Name, _areOpen[i]);
         }
-        return new State(dict);
+
+        return new State { AreOpen = dict };
     }
 
     public void RestoreState(State state)

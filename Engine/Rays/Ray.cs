@@ -67,4 +67,5 @@ public struct Ray : IEquatable<Ray>
     public static bool operator ==(Ray left, Ray right) => left.Equals(right);
 
     public static bool operator !=(Ray left, Ray right) => !(left == right);
+    public static Ray operator *(Matrix4 t, Ray r) => new Ray(t * r.Origin, t * r.Direction);
 }

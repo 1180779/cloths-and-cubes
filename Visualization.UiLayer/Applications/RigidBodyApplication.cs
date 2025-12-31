@@ -9,7 +9,7 @@ namespace Visualization.UiLayer.Applications;
 
 public abstract class RigidBodyApplication : Application
 {
-    private static bool s_fpsCappedTo60;
+    private static bool s_fpsCappedTo60 = true;
     protected static uint MaxContacts => 2 * 1024;
 
     protected CollisionData _collisionData = new()
@@ -21,7 +21,7 @@ public abstract class RigidBodyApplication : Application
 
     protected abstract void GenerateContacts();
     protected abstract void UpdateObjects(float duration);
-    protected abstract void Reset();
+    public abstract void Reset();
 
     protected virtual void OnNoPhysicsUpdate() { }
 
