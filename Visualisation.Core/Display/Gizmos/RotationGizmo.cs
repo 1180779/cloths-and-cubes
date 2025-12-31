@@ -13,6 +13,10 @@ namespace Visualisation.Core.Display.Gizmos;
 /// </summary>
 public sealed class RotationGizmo : GizmoBase, IGizmo
 {
+    public delegate void TargetRotatedEventHandler(Quaternion oldRotation, Quaternion newRotation);
+
+    public event TargetRotatedEventHandler TargetRotatedEvent = delegate { };
+
     private readonly GizmoRing _ring = new();
 
     public RotationGizmo(Shader shader) : base(shader) { }
@@ -61,7 +65,11 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
             Vector3 rotationAxis = _initialRotationAxis;
 
             float deltaAngle = GetScreenSpaceAxisDelta(_dragStartMouse, mousePos, rotationAxis, camera, Sensitivity);
-            UpdateTargetRotation(_target, rotationAxis, deltaAngle);
+
+            var newRotation = GetNewRotation(rotationAxis, deltaAngle);
+            ApplyNewRotation(_target, newRotation);
+            InvokeGizmoTargetChangedByGizmo(_target);
+            TargetRotatedEvent(_initialRotation, newRotation);
 
             return true;
         }
@@ -83,18 +91,20 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
     }
 
 
-    private void UpdateTargetRotation(GameObject target, Vector3 axis, float angle)
+    private Quaternion GetNewRotation(Vector3 axis, float angle)
     {
         Quaternion deltaRotation = Quaternion.FromAxisAngle(axis, angle);
         Quaternion newRotation = deltaRotation * _initialRotation;
         newRotation.Normalize();
+        return newRotation;
+    }
 
-        if (target is GameObjectRigidBody rb)
-        {
-            rb.EngineRigidBody.Orientation = newRotation.ToEngine();
-            rb.EngineRigidBody.SetAwake();
-            rb.EngineRigidBody.CalculateDerivedData();
-        }
+    public void ApplyNewRotation(GameObjectCollisionPrimitive target, Quaternion newRotation)
+    {
+        target.EngineCollisionPrimitive.Body.Orientation = newRotation.ToEngine();
+        target.EngineCollisionPrimitive.Body.SetAwake();
+        target.EngineCollisionPrimitive.Body.CalculateDerivedData();
+        target.EngineCollisionPrimitive.CalculateInternals();
     }
 
     public void Dispose()

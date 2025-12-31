@@ -31,16 +31,40 @@ public sealed partial class MaterialTextured : IMaterial
         );
         sh.SetBool(IMaterial.UseMaps, true);
 
-        sh.SetTexture(IMaterial.AlbedoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture4,
-            _albedoMapTextureData.TextureId);
-        sh.SetTexture(IMaterial.NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5,
-            _normalMapTextureData.TextureId);
-        sh.SetTexture(IMaterial.MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
-            _metallicMapTextureData.TextureId);
-        sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
-            _roughnessMapTextureData.TextureId);
-        sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8,
-            _aoMapTextureData.TextureId);
+        // Uncomment this block to use placeholder textures while any of the textures is still loading
+
+        // if (TexturesManager.IsPlaceholderTexture(_albedoMapTextureData) ||
+        //     TexturesManager.IsPlaceholderTexture(_normalMapTextureData) ||
+        //     TexturesManager.IsPlaceholderTexture(_metallicMapTextureData) ||
+        //     TexturesManager.IsPlaceholderTexture(_roughnessMapTextureData) ||
+        //     TexturesManager.IsPlaceholderTexture(_aoMapTextureData))
+        // {
+        //     TexturesManager.ProcessPendingUploads();
+        //     var placeholderId = TexturesManager.PlaceholderTextureId;
+        //     sh.SetTexture(IMaterial.AlbedoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture4,
+        //         placeholderId);
+        //     sh.SetTexture(IMaterial.NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5,
+        //         placeholderId);
+        //     sh.SetTexture(IMaterial.MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
+        //         placeholderId);
+        //     sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
+        //         placeholderId);
+        //     sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8,
+        //         placeholderId);
+        // }
+        // else
+        {
+            sh.SetTexture(IMaterial.AlbedoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture4,
+                _albedoMapTextureData.TextureId);
+            sh.SetTexture(IMaterial.NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5,
+                _normalMapTextureData.TextureId);
+            sh.SetTexture(IMaterial.MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
+                _metallicMapTextureData.TextureId);
+            sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
+                _roughnessMapTextureData.TextureId);
+            sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8,
+                _aoMapTextureData.TextureId);
+        }
     }
 
     bool _isDisposed;

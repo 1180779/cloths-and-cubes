@@ -325,21 +325,27 @@ public sealed class SceneManagementWindow : IWindow
         _statusMessageTimer = 5f; // Show for 5 seconds
     }
 
-    public record State(
-        string NewSceneName,
-        string SceneDescription,
-        bool IncludeParticleStates
-    );
+    public sealed record State
+    {
+        public string? NewSceneName { get; init; }
+        public string? SceneDescription { get; init; }
+        public bool IncludeParticleStates { get; init; }
+    }
 
     public State SaveState()
     {
-        return new State(_newSceneName, _sceneDescription, _includeParticleStates);
+        return new State
+        {
+            NewSceneName = _newSceneName,
+            SceneDescription = _sceneDescription,
+            IncludeParticleStates = _includeParticleStates
+        };
     }
 
     public void RestoreState(State state)
     {
-        _newSceneName = state.NewSceneName;
-        _sceneDescription = state.SceneDescription;
+        _newSceneName = state.NewSceneName ?? "New Scene";
+        _sceneDescription = state.SceneDescription ?? "";
         _includeParticleStates = state.IncludeParticleStates;
     }
 }

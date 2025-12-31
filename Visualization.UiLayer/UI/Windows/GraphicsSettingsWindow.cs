@@ -209,9 +209,9 @@ public sealed class GraphicsSettingsWindow(
 
     public sealed record State
     {
-        public ShadowState? Shadows;
-        public EnvironmentMapState? EnvironmentMap;
-        public SceneWindowState? SceneWindow;
+        public ShadowState? Shadows { get; init; }
+        public EnvironmentMapState? EnvironmentMap { get; init; }
+        public SceneWindowState? SceneWindow { get; init; }
     }
 
     public State SaveState()

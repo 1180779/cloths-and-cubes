@@ -66,7 +66,7 @@ public sealed class MaterialConstant : IMaterial
         };
     }
 
-    public static MaterialConstant RedPlastic => new MaterialConstant
+    public static MaterialConstant RedPlastic => new()
     {
         Name = "Red Plastic",
         Albedo = new Vector3(0.8f, 0.1f, 0.1f),
@@ -75,7 +75,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant BlueRubber => new MaterialConstant
+    public static MaterialConstant BlueRubber => new()
     {
         Name = "Blue Rubber",
         Albedo = new Vector3(0.1f, 0.1f, 0.8f),
@@ -84,7 +84,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Gold => new MaterialConstant
+    public static MaterialConstant Gold => new()
     {
         Name = "Gold",
         Albedo = new Vector3(1.0f, 0.766f, 0.336f),
@@ -93,7 +93,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Silver => new MaterialConstant
+    public static MaterialConstant Silver => new()
     {
         Name = "Silver",
         Albedo = new Vector3(0.972f, 0.960f, 0.915f),
@@ -102,7 +102,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Wood => new MaterialConstant
+    public static MaterialConstant Wood => new()
     {
         Name = "Wood",
         Albedo = new Vector3(0.5f, 0.3f, 0.1f),
@@ -111,7 +111,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Bronze => new MaterialConstant
+    public static MaterialConstant Bronze => new()
     {
         Name = "Bronze",
         Albedo = new Vector3(0.714f, 0.428f, 0.181f),
@@ -120,7 +120,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Copper => new MaterialConstant
+    public static MaterialConstant Copper => new()
     {
         Name = "Copper",
         Albedo = new Vector3(0.955f, 0.637f, 0.538f),
@@ -129,7 +129,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Brass => new MaterialConstant
+    public static MaterialConstant Brass => new()
     {
         Name = "Brass",
         Albedo = new Vector3(0.71f, 0.65f, 0.26f),
@@ -138,7 +138,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Chrome => new MaterialConstant
+    public static MaterialConstant Chrome => new()
     {
         Name = "Chrome",
         Albedo = new Vector3(0.95f, 0.93f, 0.88f),
@@ -147,7 +147,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant WhitePlastic => new MaterialConstant
+    public static MaterialConstant WhitePlastic => new()
     {
         Name = "White Plastic",
         Albedo = new Vector3(0.9f, 0.9f, 0.9f),
@@ -156,7 +156,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant GreenPlastic => new MaterialConstant
+    public static MaterialConstant GreenPlastic => new()
     {
         Name = "Green Plastic",
         Albedo = new Vector3(0.0f, 0.6f, 0.1f),
@@ -165,7 +165,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Obsidian => new MaterialConstant
+    public static MaterialConstant Obsidian => new()
     {
         Name = "Obsidian",
         Albedo = new Vector3(0.053f, 0.05f, 0.066f),
@@ -174,7 +174,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Marble => new MaterialConstant
+    public static MaterialConstant Marble => new()
     {
         Name = "Marble",
         Albedo = new Vector3(0.86f, 0.86f, 0.86f),
@@ -183,7 +183,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Concrete => new MaterialConstant
+    public static MaterialConstant Concrete => new()
     {
         Name = "Concrete",
         Albedo = new Vector3(0.5f, 0.5f, 0.5f),
@@ -192,7 +192,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Fabric => new MaterialConstant
+    public static MaterialConstant Fabric => new()
     {
         Name = "Fabric",
         Albedo = new Vector3(0.4f, 0.1f, 0.1f),
@@ -201,7 +201,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Leather => new MaterialConstant
+    public static MaterialConstant Leather => new()
     {
         Name = "Leather",
         Albedo = new Vector3(0.36f, 0.25f, 0.2f),
@@ -210,7 +210,7 @@ public sealed class MaterialConstant : IMaterial
         Ao = 1.0f
     };
 
-    public static MaterialConstant Porcelain => new MaterialConstant
+    public static MaterialConstant Porcelain => new()
     {
         Name = "Porcelain",
         Albedo = new Vector3(0.98f, 0.97f, 0.95f),

@@ -17,6 +17,10 @@ namespace Visualisation.Core.Display.Gizmos;
 
 public sealed class ScaleGizmo : GizmoBase, IGizmo
 {
+    public delegate void TargetScaledEventHandler(Vector3 oldScale, Vector3 newScale);
+
+    public event TargetScaledEventHandler TargetScaledEvent = delegate { };
+
     private readonly GizmoBoxArrow _boxArrow;
 
     private Vector3 _initialScale;
@@ -116,7 +120,10 @@ public sealed class ScaleGizmo : GizmoBase, IGizmo
             float factor = 1.0f + scaleChange;
             if (factor < 0.1f) factor = 0.1f;
 
-            UpdateTargetScale(_target, factor, _selectedAxis);
+            var newScale = GetTargetScale(_target, factor, _selectedAxis);
+            ApplyNewScale(_target, newScale);
+            InvokeGizmoTargetChangedByGizmo(_target);
+            TargetScaledEvent.Invoke(_initialScale, newScale);
 
             return true;
         }
@@ -159,53 +166,89 @@ public sealed class ScaleGizmo : GizmoBase, IGizmo
         }
     }
 
-    private void UpdateTargetScale(GameObject target, float factor, GizmoAxis axis)
+    public void ApplyNewScale(GameObjectCollisionPrimitive target, Vector3 newScale)
     {
-        if (target is Box box)
+        switch (target)
         {
-            var newHalfSize = _initialScale;
-            if (axis == GizmoAxis.X) newHalfSize.X *= factor;
-            if (axis == GizmoAxis.Y) newHalfSize.Y *= factor;
-            if (axis == GizmoAxis.Z) newHalfSize.Z *= factor;
+            case Box box:
+                box.EngineBox.HalfSize = newScale.ToEngine();
+                box.EngineBox.Body.SetAwake();
+                box.EngineBox.Body.CalculateDerivedData();
+                break;
+            case Ball ball:
+                ball.EngineBall.Radius = newScale.X;
+                ball.EngineBall.Body.SetAwake();
+                ball.EngineBall.Body.CalculateDerivedData();
+                break;
+            case Cylinder cylinder:
+                cylinder.EngineCylinder.Height = newScale.Z;
+                cylinder.EngineCylinder.Radius = newScale.X;
+                cylinder.EngineCylinder.Body.SetAwake();
+                cylinder.EngineCylinder.Body.CalculateDerivedData();
+                break;
+            case Cone cone:
+                cone.EngineCone.Height = newScale.Z;
+                cone.EngineCone.Radius = newScale.X;
+                break;
+        }
 
-            box.EngineBox.HalfSize = newHalfSize.ToEngine();
-            box.EngineBox.Body.SetAwake();
-            box.EngineBox.Body.CalculateDerivedData();
-        }
-        else if (target is Ball ball)
-        {
-            ball.EngineBall.Radius = _initialScale.X * factor;
-            ball.EngineBall.Body.SetAwake();
-            ball.EngineBall.Body.CalculateDerivedData();
-        }
-        else if (target is Cylinder cylinder)
-        {
-            if (axis == GizmoAxis.Z)
-            {
-                cylinder.EngineCylinder.Height = _initialScale.Z * factor;
-            }
-            else
-            {
-                cylinder.EngineCylinder.Radius = _initialScale.X * factor;
-            }
+        target.EngineCollisionPrimitive.Body.SetAwake();
+        target.EngineCollisionPrimitive.Body.CalculateDerivedData();
+        target.EngineCollisionPrimitive.CalculateInternals();
+    }
 
-            cylinder.EngineCylinder.Body.SetAwake();
-            cylinder.EngineCylinder.Body.CalculateDerivedData();
-        }
-        else if (target is Cone cone)
+    private Vector3 GetTargetScale(GameObjectCollisionPrimitive target, float factor, GizmoAxis axis)
+    {
+        Vector3 newScale = _initialScale;
+        switch (target)
         {
-            if (axis == GizmoAxis.Z)
-            {
-                cone.EngineCone.Height = _initialScale.Z * factor;
-            }
-            else
-            {
-                cone.EngineCone.Radius = _initialScale.X * factor;
-            }
+            case Box box:
+                switch (axis)
+                {
+                    case GizmoAxis.X:
+                        newScale.X *= factor;
+                        break;
+                    case GizmoAxis.Y:
+                        newScale.Y *= factor;
+                        break;
+                    case GizmoAxis.Z:
+                        newScale.Z *= factor;
+                        break;
+                }
 
-            cone.EngineCone.Body.SetAwake();
-            cone.EngineCone.Body.CalculateDerivedData();
+                break;
+            case Ball ball:
+                newScale.X *= factor;
+                break;
+            case Cylinder cylinder:
+                {
+                    if (axis == GizmoAxis.Z)
+                    {
+                        newScale.Z *= factor;
+                    }
+                    else
+                    {
+                        newScale.X *= factor;
+                    }
+
+                    break;
+                }
+            case Cone cone:
+                {
+                    if (axis == GizmoAxis.Z)
+                    {
+                        newScale.Z *= factor;
+                    }
+                    else
+                    {
+                        newScale.X *= factor;
+                    }
+
+                    break;
+                }
         }
+
+        return newScale;
     }
 
     protected override void BeforeCheckIntersection()

@@ -61,7 +61,7 @@ public class WindowsManager
 
     public sealed record State
     {
-        public Dictionary<string, bool> AreOpen = [];
+        public Dictionary<string, bool> AreOpen { get; init; } = [];
     }
 
     public State SaveState()

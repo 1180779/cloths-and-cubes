@@ -12,14 +12,21 @@ namespace Visualisation.Core.Display.Gizmos;
 
 public abstract class GizmoBase(Shader shader)
 {
+    public event IGizmo.GizmoTargetChangedByGizmoHandler GizmoTargetChangedByGizmo = delegate { };
+
+    protected void InvokeGizmoTargetChangedByGizmo(GameObjectCollisionPrimitive collisionPrimitive)
+    {
+        GizmoTargetChangedByGizmo.Invoke(collisionPrimitive);
+    }
+
     protected GizmoAxis _selectedAxis = GizmoAxis.None;
     protected GizmoAxis _hoveredAxis = GizmoAxis.None;
 
     protected abstract IGizmoArrow Arrow { get; }
-    protected GameObjectRigidBody? _target;
+    protected GameObjectCollisionPrimitive? _target;
     protected readonly Shader _shader = shader;
 
-    public GameObjectRigidBody? Target
+    public GameObjectCollisionPrimitive? Target
     {
         get => _target;
         set => _target = value;
@@ -352,8 +359,8 @@ public abstract class GizmoBase(Shader shader)
 
     protected static Quaternion GetObjectRotation(GameObject? target)
     {
-        if (target is GameObjectRigidBody rb)
-            return rb.EngineRigidBody.Orientation.ToOpenTK();
+        if (target is GameObjectCollisionPrimitive rb)
+            return rb.EngineCollisionPrimitive.Body.Orientation.ToOpenTK();
 
         return Quaternion.Identity;
     }

@@ -145,8 +145,8 @@ public sealed class PhysicsControlWindow(RigidBodyApplication application) : IWi
 
     public sealed record State
     {
-        public bool IsPaused;
-        public int StepCount;
+        public bool IsPaused { get; init; }
+        public int StepCount { get; init; }
     }
 
     public State SaveState()

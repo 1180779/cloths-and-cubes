@@ -101,7 +101,7 @@ public sealed class CascadingShadowMapsWindow(
 
     public sealed record State
     {
-        public int DirectionalLightLayer;
+        public int DirectionalLightLayer { get; init; }
     }
 
     public State SaveState()

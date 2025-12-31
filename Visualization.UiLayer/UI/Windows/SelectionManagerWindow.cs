@@ -382,11 +382,11 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
 
     public sealed record State
     {
-        public bool DrawInvisibleObjects;
-        public bool DrawDebugRay;
-        public bool DrawSelectedObjectWithoutDepthTesting;
-        public bool Unselect;
-        public bool SelectionEnabled;
+        public bool DrawInvisibleObjects { get; init; }
+        public bool DrawDebugRay { get; init; }
+        public bool DrawSelectedObjectWithoutDepthTesting { get; init; }
+        public bool Unselect { get; init; }
+        public bool SelectionEnabled { get; init; }
     }
 
     public State SaveState()

@@ -22,6 +22,10 @@ public enum GizmoAxis
 
 public interface IGizmo : IDisposable
 {
+    public delegate void GizmoTargetChangedByGizmoHandler(GameObjectCollisionPrimitive collisionPrimitive);
+
+    public event GizmoTargetChangedByGizmoHandler GizmoTargetChangedByGizmo;
+
     public float DefaultTransparency { get; set; }
     public Vector4 SelectionColor { get; set; }
     public Vector4 HoverColor { get; set; }
@@ -30,7 +34,7 @@ public interface IGizmo : IDisposable
     bool ConstantScreenSize { get; set; }
     public float HandleSize { get; set; }
 
-    public GameObjectRigidBody? Target { get; set; }
+    public GameObjectCollisionPrimitive? Target { get; set; }
 
     public void Render(CameraBase camera);
     public bool HandleInput(IInputProvider input, Vector2 mousePos, CameraBase camera, Vector2i screenSize);

@@ -25,7 +25,7 @@ public class CameraBase
         Position = position;
     }
 
-    public Vector3 Position { get; set; } = new Vector3(0, 0, 0);
+    public Vector3 Position { get; set; } = new(0, 0, 0);
 
     public Vector3 Front => _front;
     public Vector3 Up => _up;

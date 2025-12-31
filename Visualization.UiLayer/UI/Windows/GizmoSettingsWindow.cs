@@ -159,22 +159,22 @@ public sealed class GizmoSettingsWindow : IWindow
 
     public record GizmoState
     {
-        public float HandleSize;
-        public GizmoSpace Space;
-        public bool ConstantScreenSize;
+        public float HandleSize { get; init; }
+        public GizmoSpace Space { get; init; }
+        public bool ConstantScreenSize { get; init; }
     }
 
     public sealed record RotationGizmoState : GizmoState
     {
-        public float Sensitivity;
+        public float Sensitivity { get; init; }
     }
 
     public sealed class State
     {
-        public GizmoType SelectedGizmoType = GizmoType.None;
-        public GizmoState? TranslationGizmoState;
-        public GizmoState? ScaleGizmoState;
-        public RotationGizmoState? RotationGizmoState;
+        public GizmoType SelectedGizmoType { get; init; } = GizmoType.None;
+        public GizmoState? TranslationGizmoState { get; init; }
+        public GizmoState? ScaleGizmoState { get; init; }
+        public RotationGizmoState? RotationGizmoState { get; init; }
     }
 
     public State SaveState()

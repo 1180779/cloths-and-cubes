@@ -1,12 +1,12 @@
+using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
-using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Box : GameObjectRigidBody, IBoxable
+public sealed class Box : GameObjectCollisionPrimitive, IBoxable
 {
     public Engine.RigidBodies.Box EngineBox { get; init; } = new();
     protected override IMesh Mesh { get; set; } = new CubeMesh();
@@ -48,5 +48,5 @@ public sealed class Box : GameObjectRigidBody, IBoxable
         return EngineBox.GetBoundingBox();
     }
 
-    public override RigidBody EngineRigidBody => EngineBox.Body;
+    public override CollisionPrimitive EngineCollisionPrimitive => EngineBox;
 }

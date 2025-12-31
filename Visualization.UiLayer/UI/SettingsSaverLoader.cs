@@ -10,8 +10,7 @@ public sealed class SettingsSaverLoader
 
     public void Save(ApplicationState state)
     {
-        var options = new JsonSerializerOptions { IncludeFields = true };
-        var json = JsonSerializer.Serialize(state, options);
+        var json = JsonSerializer.Serialize(state);
         File.WriteAllText(SettingsFileName, json);
     }
 
@@ -23,7 +22,6 @@ public sealed class SettingsSaverLoader
         }
 
         var json = File.ReadAllText(SettingsFileName);
-        var options = new JsonSerializerOptions { IncludeFields = true };
-        return JsonSerializer.Deserialize<ApplicationState>(json, options);
+        return JsonSerializer.Deserialize<ApplicationState>(json);
     }
 }

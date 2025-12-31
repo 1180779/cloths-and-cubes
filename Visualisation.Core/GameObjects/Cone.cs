@@ -1,5 +1,5 @@
+using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
-using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
@@ -7,7 +7,7 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cone : GameObjectRigidBody, IBoxable
+public sealed class Cone : GameObjectCollisionPrimitive, IBoxable
 {
     public Cone()
     {
@@ -20,7 +20,7 @@ public sealed class Cone : GameObjectRigidBody, IBoxable
 
     public Engine.RigidBodies.Cone EngineCone = new();
     protected override IMesh Mesh { get; set; } = new ConeMesh();
-    public override object PhysicsObject => new object();
+    public override object PhysicsObject => new();
 
     public override Matrix4 Model
     {
@@ -37,12 +37,14 @@ public sealed class Cone : GameObjectRigidBody, IBoxable
 
             return GenerateModelMatrix(position, scale, q);
         }
-    }    
+    }
+
     public override Vector3 Position => EngineCone.Body.Position.ToOpenTK();
+
     public BoundingBox GetBoundingBox()
     {
         return EngineCone.GetBoundingBox();
     }
 
-    public override RigidBody EngineRigidBody => EngineCone.Body;
+    public override CollisionPrimitive EngineCollisionPrimitive => EngineCone;
 }

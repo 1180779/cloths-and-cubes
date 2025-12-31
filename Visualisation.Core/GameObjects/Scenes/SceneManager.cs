@@ -99,7 +99,7 @@ public abstract class SceneManager : IDisposable
     {
         if (ActiveGizmo is not null)
         {
-            if (obj is GameObjectRigidBody rigidBody)
+            if (obj is GameObjectCollisionPrimitive rigidBody)
                 ActiveGizmo.Target = rigidBody;
             else
                 ActiveGizmo.Target = null;
@@ -361,7 +361,7 @@ public abstract class SceneManager : IDisposable
             _ => null
         };
 
-        if (_activeGizmo is not null && SelectionManager?.SelectedObject is GameObjectRigidBody rigidBody)
+        if (_activeGizmo is not null && SelectionManager?.SelectedObject is GameObjectCollisionPrimitive rigidBody)
         {
             _activeGizmo.Target = rigidBody;
         }

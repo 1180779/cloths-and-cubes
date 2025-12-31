@@ -77,9 +77,9 @@ public sealed class BvhNodesWindow : IWindow
 
     public sealed record State
     {
-        public bool[] BvhLevelsToRender = [];
-        public bool BvhLeafsRender;
-        public bool ParallelizeBuilding;
+        public bool[] BvhLevelsToRender { get; init; } = [];
+        public bool BvhLeafsRender { get; init; }
+        public bool ParallelizeBuilding { get; init; }
     }
 
     public State SaveState()

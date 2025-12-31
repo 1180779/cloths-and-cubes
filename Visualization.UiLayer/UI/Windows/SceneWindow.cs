@@ -154,20 +154,10 @@ public sealed class SceneWindow(
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            if (_msaaFrameBuffer is not null)
-            {
-                _msaaFrameBuffer.Dispose();
-            }
-
-            if (samples == 0)
-            {
-                _msaaFrameBuffer = null;
-            }
-            else
-            {
-                _msaaFrameBuffer =
-                    new MsaaFrameBuffer(_sceneRenderWindowFrb.Width, _sceneRenderWindowFrb.Height, samples);
-            }
+            _msaaFrameBuffer?.Dispose();
+            _msaaFrameBuffer = samples == 0
+                ? null
+                : new MsaaFrameBuffer(_sceneRenderWindowFrb.Width, _sceneRenderWindowFrb.Height, samples);
         }
     }
 }

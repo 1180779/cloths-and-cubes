@@ -10,9 +10,9 @@ public sealed class CollisionParametersWindow(CollisionData collisionData) : IWi
 
     public sealed record State
     {
-        public Real Friction;
-        public Real Restitution;
-        public Real Tolerance;
+        public Real Friction { get; init; }
+        public Real Restitution { get; init; }
+        public Real Tolerance { get; init; }
     }
 
     public State SaveState()

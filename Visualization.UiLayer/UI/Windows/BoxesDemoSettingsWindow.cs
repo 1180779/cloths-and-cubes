@@ -12,7 +12,7 @@ public sealed class BoxesDemoSettingsWindow(
     public Func<int> GetSpheresCount { get; set; } = getSpheresCount;
     public Func<int> GetClothsCount { get; set; } = getClothsCount;
 
-    public delegate void SetObjectCount(int count); // set boxes or spheres count
+    public delegate void SetObjectCount(int count);
 
     public SetObjectCount? SetBoxesCount { get; set; }
     public SetObjectCount? SetSpheresCount { get; set; }
@@ -239,20 +239,20 @@ public sealed class BoxesDemoSettingsWindow(
 
     public sealed record State
     {
-        public int SizeX;
-        public int SizeY;
-        public Real SpringLength;
-        public Real SpringConstant;
-        public Real ParticleMass;
-        public bool Lsctpm;
-        public Real LsctpmScale;
-        public Real LsctpmBias;
-        public bool Lsctsl;
-        public Real LsctslScale;
-        public Real LsctslBias;
-        public int BoxesCount;
-        public int SpheresCount;
-        public int ClothsCount;
+        public int SizeX { get; init; }
+        public int SizeY { get; init; }
+        public Real SpringLength { get; init; }
+        public Real SpringConstant { get; init; }
+        public Real ParticleMass { get; init; }
+        public bool Lsctpm { get; init; }
+        public Real LsctpmScale { get; init; }
+        public Real LsctpmBias { get; init; }
+        public bool Lsctsl { get; init; }
+        public Real LsctslScale { get; init; }
+        public Real LsctslBias { get; init; }
+        public int BoxesCount { get; init; }
+        public int SpheresCount { get; init; }
+        public int ClothsCount { get; init; }
     }
 
     public State SaveState()

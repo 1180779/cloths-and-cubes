@@ -86,6 +86,8 @@ public class BoxesDemo : RigidBodyApplication
                     _boxes[i].EngineBox.Random(random);
                     _sceneManager.AddGameObject(_boxes[i]);
                 }
+
+                _forcebvhRebuildOnNoUpdate = true;
             },
             SetSpheresCount = count =>
             {
@@ -104,6 +106,8 @@ public class BoxesDemo : RigidBodyApplication
                     _balls[i].EngineBall.Random(random);
                     _sceneManager.AddGameObject(_balls[i]);
                 }
+
+                _forcebvhRebuildOnNoUpdate = true;
             }
         };
         _boxesDemoSettingsWindow.SetClothsCount = count =>
@@ -124,6 +128,8 @@ public class BoxesDemo : RigidBodyApplication
                     _boxesDemoSettingsWindow.ParticleMass);
                 _sceneManager.AddGameObject(_cloths[i]);
             }
+
+            _forcebvhRebuildOnNoUpdate = true;
         };
         _windowsManager.Add(_boxesDemoSettingsWindow);
 

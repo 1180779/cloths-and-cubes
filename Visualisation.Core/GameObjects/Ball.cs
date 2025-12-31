@@ -1,4 +1,5 @@
-﻿using Engine.Collision.Bounding_Volume_Hierarchy;
+﻿using Engine.Collision;
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Mesh;
@@ -8,7 +9,7 @@ using Sphere = Engine.RigidBodies.Sphere;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Ball : GameObjectRigidBody, IBoxable
+public sealed class Ball : GameObjectCollisionPrimitive, IBoxable
 {
     public Sphere EngineBall { get; init; } = new();
     public override RigidBody PhysicsObject => EngineBall.Body;
@@ -41,5 +42,5 @@ public sealed class Ball : GameObjectRigidBody, IBoxable
         return EngineBall.GetBoundingBox();
     }
 
-    public override RigidBody EngineRigidBody => EngineBall.Body;
+    public override CollisionPrimitive EngineCollisionPrimitive => EngineBall;
 }

@@ -9,6 +9,10 @@ namespace Visualisation.Core.Display.Gizmos;
 
 public sealed class TranslationGizmo : GizmoBase, IGizmo
 {
+    public delegate void TargetMovedEventHandler(Vector3 oldPosition, Vector3 newPosition);
+
+    public event TargetMovedEventHandler TargetMovedEvent = delegate { };
+
     private readonly GizmoArrow _arrow;
 
     private Vector3 _dragStartPoint;
@@ -60,7 +64,10 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
                 _initialPosition, moveDir, _dragStartPoint, camera);
             var projectedDelta = projectedMovement * moveDir;
 
-            UpdateTargetPosition(_target, _initialPosition + projectedDelta);
+            var newPosition = _initialPosition + projectedDelta;
+            ApplyPositionChange(_target, newPosition);
+            InvokeGizmoTargetChangedByGizmo(_target);
+            TargetMovedEvent.Invoke(_initialPosition, newPosition);
 
             return true;
         }
@@ -81,17 +88,13 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
         return false;
     }
 
-    private void UpdateTargetPosition(GameObject target, Vector3 newPosition)
+    public void ApplyPositionChange(GameObjectCollisionPrimitive target, Vector3 newPosition)
     {
-        if (target is GameObjectRigidBody rb)
-        {
-            rb.EngineRigidBody.Position = new Engine.Vector3(newPosition.X, newPosition.Y, newPosition.Z);
-            rb.EngineRigidBody.Velocity = new(); // zero the velocity to avoid it accumulating
-            rb.EngineRigidBody.SetAwake();
-            rb.EngineRigidBody.CalculateDerivedData();
-        }
-
-        // TODO: schedule the BVH recalculation if simulation is not running
+        target.EngineCollisionPrimitive.Body.Position = newPosition.ToEngine();
+        target.EngineCollisionPrimitive.Body.Velocity = new(); // zero the velocity to avoid it accumulating
+        target.EngineCollisionPrimitive.Body.SetAwake();
+        target.EngineCollisionPrimitive.Body.CalculateDerivedData();
+        target.EngineCollisionPrimitive.CalculateInternals();
     }
 
     public void Dispose()
