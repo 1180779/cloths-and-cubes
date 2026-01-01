@@ -3,6 +3,7 @@ using System.Diagnostics;
 using ImGuiNET;
 
 using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Rotation;
 using Visualisation.Core.GameObjects.Scenes;
 
 namespace Visualization.UiLayer.UI.Windows;

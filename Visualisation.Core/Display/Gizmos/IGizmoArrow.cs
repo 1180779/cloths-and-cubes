@@ -1,6 +1,6 @@
 using Engine.Rays;
 
-namespace Visualisation.Core.Display.Gizmos.Controls;
+namespace Visualisation.Core.Display.Gizmos;
 
 public interface IGizmoArrow
 {

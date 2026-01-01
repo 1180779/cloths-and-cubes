@@ -5,31 +5,34 @@ using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
-namespace Visualisation.Core.Display.Gizmos.Controls;
+namespace Visualisation.Core.Display.Gizmos.Translation;
 
 /// <summary>
-/// Represents a 3D arrow gizmo component consisting of a cylinder shaft and a box tip.
+/// Represents a 3D arrow gizmo component consisting of a cylinder shaft and a cone tip.
 /// </summary>
-public sealed class GizmoBoxArrow : IGizmoArrow, IDisposable
+public sealed class GizmoArrow : IGizmoArrow, IDisposable
 {
-    private readonly CubeMesh _cubeMesh;
     private readonly CylinderMesh _cylinderMesh;
+    private readonly ConeMesh _coneMesh;
 
     public float ShaftLength;
     public float ShaftRadius;
-    public float BoxSize;
+    public float TipHeight;
+    public float TipRadius;
 
-    public GizmoBoxArrow(
+    public GizmoArrow(
         float shaftLength = 1.0f,
         float shaftRadius = 0.05f,
-        float boxSize = 0.2f)
+        float tipHeight = 0.2f,
+        float tipRadius = 0.1f)
     {
-        _cubeMesh = new CubeMesh();
         _cylinderMesh = new CylinderMesh();
+        _coneMesh = new ConeMesh();
 
         ShaftLength = shaftLength;
         ShaftRadius = shaftRadius;
-        this.BoxSize = boxSize;
+        this.TipHeight = tipHeight;
+        TipRadius = tipRadius;
     }
 
     /// <summary>
@@ -63,15 +66,15 @@ public sealed class GizmoBoxArrow : IGizmoArrow, IDisposable
         shader.SetFloat("alpha", color.W);
         _cylinderMesh.Render();
 
-        // Render box tip
-        var coneModel = Matrix4.CreateScale(BoxSize * scaleFactor, BoxSize * scaleFactor,
-                BoxSize * scaleFactor) *
+        // Render cone tip
+        var coneModel = Matrix4.CreateScale(TipRadius * scaleFactor, TipRadius * scaleFactor,
+                TipHeight * scaleFactor) *
             Matrix4.CreateFromQuaternion(rotation) *
             Matrix4.CreateTranslation(origin +
-                direction * (ShaftLength * scaleFactor + (BoxSize * scaleFactor) / 2));
+                direction * (ShaftLength * scaleFactor + (TipHeight * scaleFactor) / 2));
 
         shader.SetMatrix4("model", coneModel);
-        _cubeMesh.Render();
+        _coneMesh.Render();
     }
 
     /// <summary>
@@ -88,33 +91,34 @@ public sealed class GizmoBoxArrow : IGizmoArrow, IDisposable
     {
         distance = float.MaxValue;
 
+        // Apply distance-based scaling to maintain a consistent on-screen size
         float scaledShaftLength = ShaftLength * handleSize;
         float scaledShaftRadius = ShaftRadius * handleSize;
-        float scaledBoxSize = BoxSize * handleSize;
+        float scaledTipHeight = TipHeight * handleSize;
+        float scaledTipRadius = TipRadius * handleSize;
 
-        float totalLength = scaledShaftLength + scaledBoxSize;
+        float totalLength = scaledShaftLength + scaledTipHeight;
 
         // Broad phase: Create AABB encompassing the entire arrow
         Vector3 arrowEnd = origin + direction * totalLength;
         Vector3 bboxMin = Vector3.ComponentMin(origin, arrowEnd);
         Vector3 bboxMax = Vector3.ComponentMax(origin, arrowEnd);
 
-        // Expand bbox by maximum radius to ensure it contains the entire box arrow
-        // Technically, the scaledBoxSize would be a root at the diagonal, but this is close enough for broad-phase
-        float maxRadius = Math.Max(scaledShaftRadius, scaledBoxSize);
+        // Expand bbox by maximum radius to ensure it contains the entire arrow
+        float maxRadius = Math.Max(scaledShaftRadius, scaledTipRadius);
         bboxMin -= new Vector3(maxRadius);
         bboxMax += new Vector3(maxRadius);
 
         var bbox = new BoundingBox(
             center: new Engine.Vector3(
-                (bboxMin.X + bboxMax.X) / 2.0f,
-                (bboxMin.Y + bboxMax.Y) / 2.0f,
-                (bboxMin.Z + bboxMax.Z) / 2.0f
+                (bboxMin.X + bboxMax.X) / 2,
+                (bboxMin.Y + bboxMax.Y) / 2,
+                (bboxMin.Z + bboxMax.Z) / 2
             ),
             halfSize: new Engine.Vector3(
-                (bboxMax.X - bboxMin.X) / 2.0f,
-                (bboxMax.Y - bboxMin.Y) / 2.0f,
-                (bboxMax.Z - bboxMin.Z) / 2.0f
+                (bboxMax.X - bboxMin.X) / 2,
+                (bboxMax.Y - bboxMin.Y) / 2,
+                (bboxMax.Z - bboxMin.Z) / 2
             )
         );
 
@@ -139,26 +143,22 @@ public sealed class GizmoBoxArrow : IGizmoArrow, IDisposable
             distance = Math.Min(distance, cylinderDist);
         }
 
-        // Narrow phase: Test against box tip
-        var scaledBoxHalfSize = scaledBoxSize / 2.0f;
-        var box = new CollisionBox
-        {
-            HalfSize = new Engine.Vector3(scaledBoxHalfSize, scaledBoxHalfSize, scaledBoxHalfSize),
-        };
+        // Narrow phase: Test against cone tip
+        var cone = new CollisionCone { Radius = scaledTipRadius, Height = scaledTipHeight };
 
-        Vector3 boxCenter = origin + direction * (scaledShaftLength + scaledBoxHalfSize);
+        Vector3 coneCenter = origin + direction * (scaledShaftLength + scaledTipHeight / 2.0f);
 
-        box.Body = new RigidBody { Position = boxCenter.ToEngine(), Orientation = rotation.ToEngine() };
-        box.Body.CalculateDerivedData();
-        box.CalculateInternals();
+        cone.Body = new RigidBody { Position = coneCenter.ToEngine(), Orientation = rotation.ToEngine() };
+        cone.Body.CalculateDerivedData();
+        cone.CalculateInternals();
 
-        bool hitBox = RayIntersection.IntersectRayOBB(ray, box, out float coneDist);
-        if (hitBox)
+        bool hitCone = RayIntersection.IntersectionRayCone(ray, cone, out float coneDist);
+        if (hitCone)
         {
             distance = Math.Min(distance, coneDist);
         }
 
-        return hitCylinder || hitBox;
+        return hitCylinder || hitCone;
     }
 
     private static Quaternion GetRotationFromDirection(Vector3 direction)
@@ -184,7 +184,7 @@ public sealed class GizmoBoxArrow : IGizmoArrow, IDisposable
 
     public void Dispose()
     {
-        _cubeMesh.Dispose();
         _cylinderMesh.Dispose();
+        _coneMesh.Dispose();
     }
 }

@@ -92,14 +92,30 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 }
             }
 
-            _vertices = vertexData.ToArray();
-            _vertexCount = _vertices.Length;
+            var newVertices = vertexData.ToArray();
+            int newVertexCount = newVertices.Length;
+
+            // Check if vertex count changed
+            bool sizeChanged = newVertexCount != _vertexCount;
+
+            _vertices = newVertices;
+            _vertexCount = newVertexCount;
 
             if (_meshData != null)
             {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, _meshData.Vbo);
-                GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * Marshal.SizeOf<VertexData>(), _vertices,
-                    BufferUsageHint.StreamDraw);
+
+                // If size changed, reallocate the buffer; otherwise just update data
+                if (sizeChanged)
+                {
+                    GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * Marshal.SizeOf<VertexData>(), _vertices,
+                        BufferUsageHint.StreamDraw);
+                }
+                else
+                {
+                    GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero,
+                        _vertices.Length * Marshal.SizeOf<VertexData>(), _vertices);
+                }
             }
         }
 

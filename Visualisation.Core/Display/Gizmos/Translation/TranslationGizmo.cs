@@ -1,13 +1,12 @@
 using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Display.Gizmos.Controls;
 using Visualisation.Core.GameObjects;
 using Visualisation.Core.Inputs;
 
-namespace Visualisation.Core.Display.Gizmos;
+namespace Visualisation.Core.Display.Gizmos.Translation;
 
-public sealed class TranslationGizmo : GizmoBase, IGizmo
+public sealed class TranslationGizmo : GizmoBase, IGizmo<ITranslationGizmoTarget>
 {
     public delegate void TargetMovedEventHandler(Vector3 oldPosition, Vector3 newPosition);
 
@@ -26,10 +25,26 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
     }
 
     protected override IGizmoArrow Arrow => _arrow;
+    private ITranslationGizmoTarget? _target;
+
+    public override IGizmoTarget? Target
+    {
+        get => _target;
+        set
+        {
+            if (value is ITranslationGizmoTarget target)
+            {
+                _target = target;
+                return;
+            }
+
+            _target = null;
+        }
+    }
 
     public bool HandleInput(IInputProvider input, Vector2 mousePos, CameraBase camera, Vector2i screenSize)
     {
-        if (_target == null) return false;
+        if (_target is null) return false;
 
         var ray = SelectionManager.GetRayFromMouse(mousePos, camera, screenSize);
         bool isMouseDown = input.IsMouseButtonDown(MouseButton.Left);
@@ -38,12 +53,12 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
         if (isMouseDown && !_wasMouseDown)
         {
             _dragStartMouse = mousePos;
-            _selectedAxis = CheckIntersection(ray, _target.Position, camera);
+            _selectedAxis = CheckIntersection(ray, _target.AxisPosition, camera);
             if (_selectedAxis != GizmoAxis.None)
             {
-                _initialPosition = _target.Position;
+                _initialPosition = _target.AxisPosition;
 
-                var rotation = Space == GizmoSpace.Local ? GetObjectRotation(_target) : Quaternion.Identity;
+                var rotation = AxisRotation;
                 Vector3 axisDir = GetAxisDirection(_selectedAxis, rotation);
                 _useScreenSpaceFallback = ShouldUseScreenSpaceFallback(ray, _initialPosition, axisDir);
 
@@ -57,7 +72,7 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
         // Handle dragging
         else if (isMouseDown && _wasMouseDown && _selectedAxis != GizmoAxis.None)
         {
-            var rotation = Space == GizmoSpace.Local ? GetObjectRotation(_target) : Quaternion.Identity;
+            var rotation = AxisRotation;
             Vector3 moveDir = GetAxisDirection(_selectedAxis, rotation);
 
             float projectedMovement = GetProjectedMovementOnAxis(ray, _dragStartMouse, mousePos,
@@ -65,7 +80,7 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
             var projectedDelta = projectedMovement * moveDir;
 
             var newPosition = _initialPosition + projectedDelta;
-            ApplyPositionChange(_target, newPosition);
+            _target.Position = newPosition;
             InvokeGizmoTargetChangedByGizmo(_target);
             TargetMovedEvent.Invoke(_initialPosition, newPosition);
 
@@ -80,21 +95,12 @@ public sealed class TranslationGizmo : GizmoBase, IGizmo
         // No selection happening; handle hover
         else
         {
-            _hoveredAxis = CheckIntersection(ray, _target.Position, camera);
+            _hoveredAxis = CheckIntersection(ray, _target.AxisPosition, camera);
             if (_hoveredAxis != GizmoAxis.None)
                 return true;
         }
 
         return false;
-    }
-
-    public void ApplyPositionChange(GameObjectCollisionPrimitive target, Vector3 newPosition)
-    {
-        target.EngineCollisionPrimitive.Body.Position = newPosition.ToEngine();
-        target.EngineCollisionPrimitive.Body.Velocity = new(); // zero the velocity to avoid it accumulating
-        target.EngineCollisionPrimitive.Body.SetAwake();
-        target.EngineCollisionPrimitive.Body.CalculateDerivedData();
-        target.EngineCollisionPrimitive.CalculateInternals();
     }
 
     public void Dispose()

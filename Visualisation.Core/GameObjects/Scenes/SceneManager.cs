@@ -6,6 +6,9 @@ using OpenTK.Mathematics;
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Rotation;
+using Visualisation.Core.Display.Gizmos.Scale;
+using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Light;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
@@ -75,9 +78,9 @@ public abstract class SceneManager : IDisposable
         {
             return ActiveGizmo switch
             {
-                Display.Gizmos.TranslationGizmo => GizmoType.Translation,
-                Display.Gizmos.RotationGizmo => GizmoType.Rotation,
-                Display.Gizmos.ScaleGizmo => GizmoType.Scale,
+                Display.Gizmos.Translation.TranslationGizmo => GizmoType.Translation,
+                Display.Gizmos.Rotation.RotationGizmo => GizmoType.Rotation,
+                Display.Gizmos.Scale.ScaleGizmo => GizmoType.Scale,
                 _ => GizmoType.None
             };
         }
@@ -99,8 +102,8 @@ public abstract class SceneManager : IDisposable
     {
         if (ActiveGizmo is not null)
         {
-            if (obj is GameObjectCollisionPrimitive rigidBody)
-                ActiveGizmo.Target = rigidBody;
+            if (obj is IGizmoTarget gizmoTarget)
+                ActiveGizmo.Target = gizmoTarget;
             else
                 ActiveGizmo.Target = null;
         }
@@ -361,9 +364,9 @@ public abstract class SceneManager : IDisposable
             _ => null
         };
 
-        if (_activeGizmo is not null && SelectionManager?.SelectedObject is GameObjectCollisionPrimitive rigidBody)
+        if (_activeGizmo is not null && SelectionManager?.SelectedObject is IGizmoTarget gizmoTarget)
         {
-            _activeGizmo.Target = rigidBody;
+            _activeGizmo.Target = gizmoTarget;
         }
     }
 

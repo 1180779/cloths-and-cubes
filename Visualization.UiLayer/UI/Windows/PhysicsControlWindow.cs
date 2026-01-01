@@ -113,10 +113,7 @@ public sealed class PhysicsControlWindow(RigidBodyApplication application) : IWi
                 _application.Reset();
             }
 
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
-            }
+            UiCommon.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
 
             ImGui.Spacing();
             ImGui.Separator();

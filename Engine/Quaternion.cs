@@ -5,7 +5,7 @@ namespace Engine;
 public struct Quaternion
 {
     public static readonly Quaternion Identity = new Quaternion(1, 0, 0, 0);
-    
+
     public Real I, J, K, R;
 
     [Conditional("DEBUG")]
@@ -108,14 +108,6 @@ public struct Quaternion
     {
         R = q.R * s, I = q.I * s, J = q.J * s, K = q.K * s
     };
-
-    public static Quaternion operator +(Quaternion q, Vector3 v)
-    {
-        Quaternion t = new() { R = 0, I = v.X, J = v.Y, K = v.Z };
-        t *= q;
-        t *= 0.5f;
-        return t;
-    }
 
     public static Quaternion operator *(Quaternion q, Quaternion multiplier) =>
         new()

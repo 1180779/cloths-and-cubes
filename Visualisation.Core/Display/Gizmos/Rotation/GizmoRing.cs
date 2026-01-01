@@ -3,7 +3,7 @@ using Engine.Rays;
 
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
-namespace Visualisation.Core.Display.Gizmos.Controls;
+namespace Visualisation.Core.Display.Gizmos.Rotation;
 
 public sealed class GizmoRing : IGizmoArrow, IDisposable
 {

@@ -57,7 +57,6 @@ public sealed class SceneManagementWindow : IWindow
             ImGui.TextColored(color, _statusMessage);
             ImGui.Separator();
 
-            // Save Scene Section
             if (ImGui.CollapsingHeader("Save Current Scene", ImGuiTreeNodeFlags.DefaultOpen))
             {
                 ImGui.InputText("Scene Name", ref _newSceneName, 256);
@@ -66,16 +65,14 @@ public sealed class SceneManagementWindow : IWindow
 
                 ImGui.Checkbox("Include Particle States", ref _includeParticleStates);
 
-                if (ImGui.IsItemHovered())
-                {
-                    ImGui.SetTooltip("Saves exact positions/velocities of all cloth particles.\n" +
-                        "Unchecked: Only saves cloth parameters.\n" +
-                        "Checked: Saves full particle state.");
-                }
+                UiCommon.SetTooltip("Saves exact positions/velocities of all cloth particles.\n" +
+                    "Unchecked: Only saves cloth parameters.\n" +
+                    "Checked: Saves full particle state.");
 
                 ImGui.Spacing();
 
-                if (ImGui.Button("Save Scene", new System.Numerics.Vector2(120, 30)))
+                const string saveSceneText = "Save Scene";
+                if (ImGui.Button(saveSceneText, Style.ButtonSizes.Medium(saveSceneText)))
                 {
                     SaveCurrentScene();
                 }
@@ -88,9 +85,10 @@ public sealed class SceneManagementWindow : IWindow
             ImGui.Separator();
             ImGui.Spacing();
 
-            if (ImGui.CollapsingHeader("Load#Scene#Collapsing#Header", ImGuiTreeNodeFlags.DefaultOpen))
+            if (ImGui.CollapsingHeader("Load Scene", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                if (ImGui.Button("Refresh List"))
+                const string refreshText = "Refresh List";
+                if (ImGui.Button(refreshText, Style.ButtonSizes.Small(refreshText)))
                 {
                     RefreshSceneList();
                 }
@@ -131,42 +129,51 @@ public sealed class SceneManagementWindow : IWindow
                     ImGui.TextDisabled("Double-click to load, or select and use buttons below");
 
                     // Scene preview
-                    if (_previewData != null)
+                    if (_previewData is null)
                     {
-                        ImGui.Spacing();
-                        ImGui.SeparatorText("Scene Preview");
-
-                        ImGui.Text($"Name: {_previewData.Metadata.Name}");
-                        if (!string.IsNullOrEmpty(_previewData.Metadata.Description))
-                        {
-                            ImGui.TextWrapped($"Description: {_previewData.Metadata.Description}");
-                        }
-
-                        ImGui.Text($"Created: {_previewData.Metadata.CreatedDate.ToLocalTime()}");
-
-                        ImGui.Spacing();
-                        ImGui.Text("Objects:");
-                        ImGui.BulletText($"Boxes: {_previewData.Boxes.Count}");
-                        ImGui.BulletText($"Balls: {_previewData.Balls.Count}");
-                        ImGui.BulletText($"Cloths: {_previewData.Cloths.Count}");
+                        ImGui.BeginDisabled();
                     }
+
+                    ImGui.Spacing();
+                    ImGui.SeparatorText("Scene Preview");
+
+                    ImGui.Text("Name: " + (_previewData is not null ? _previewData.Metadata.Name : "N/A"));
+                    ImGui.TextWrapped("Description: " + (_previewData is not null
+                        ? (string.IsNullOrEmpty(_previewData.Metadata.Description)
+                            ? "<empty>"
+                            : _previewData.Metadata.Description)
+                        : "N/A"));
+
+                    ImGui.Text($"Created: " + (_previewData is not null
+                        ? _previewData.Metadata.CreatedDate.ToLocalTime()
+                        : "N/A"));
+
+                    ImGui.Spacing();
+                    ImGui.Text("Objects:");
+                    ImGui.BulletText("Boxes: " + (_previewData is not null ? _previewData.Boxes.Count : "N/A"));
+                    ImGui.BulletText("Balls: " + (_previewData is not null ? _previewData.Balls.Count : "N/A"));
+                    ImGui.BulletText("Cloths: " + (_previewData is not null ? _previewData.Cloths.Count : "N/A"));
 
                     ImGui.Spacing();
 
                     // Action buttons
-                    if (_selectedScene != null)
+                    const string loadSceneText = "Load Scene";
+                    if (ImGui.Button(loadSceneText, Style.ButtonSizes.Small(loadSceneText)))
                     {
-                        if (ImGui.Button("Load Scene", new System.Numerics.Vector2(120, 30)))
-                        {
-                            LoadScene(_selectedScene);
-                        }
+                        // when the button is enabled, _selectedScene is not null
+                        LoadScene(_selectedScene!);
+                    }
 
-                        ImGui.SameLine();
+                    ImGui.SameLine();
+                    const string deleteSceneText = "Delete Scene";
+                    if (ImGui.Button("Delete Scene", Style.ButtonSizes.Small(deleteSceneText)))
+                    {
+                        ImGui.OpenPopup("DeleteConfirmation");
+                    }
 
-                        if (ImGui.Button("Delete Scene", new System.Numerics.Vector2(120, 30)))
-                        {
-                            ImGui.OpenPopup("DeleteConfirmation");
-                        }
+                    if (_selectedScene is null)
+                    {
+                        ImGui.EndDisabled();
                     }
                 }
 
@@ -175,22 +182,23 @@ public sealed class SceneManagementWindow : IWindow
                 {
                     if (_selectedScene != null)
                     {
-                        ImGui.Text($"Are you sure you want to delete:");
+                        ImGui.Text($"Are you sure you want to delete: {_selectedScene}");
                         ImGui.TextColored(new System.Numerics.Vector4(1, 1, 0, 1),
                             Path.GetFileNameWithoutExtension(_selectedScene));
                         ImGui.Text("This action cannot be undone!");
 
                         ImGui.Spacing();
 
-                        if (ImGui.Button("Yes, Delete", new System.Numerics.Vector2(120, 0)))
+                        const string deleteText = "Delete";
+                        if (ImGui.Button(deleteText, Style.ButtonSizes.Small(deleteText)))
                         {
                             DeleteScene(_selectedScene);
                             ImGui.CloseCurrentPopup();
                         }
 
                         ImGui.SameLine();
-
-                        if (ImGui.Button("Cancel", new System.Numerics.Vector2(120, 0)))
+                        const string cancelText = "Cancel";
+                        if (ImGui.Button(cancelText, Style.ButtonSizes.Small(cancelText)))
                         {
                             ImGui.CloseCurrentPopup();
                         }
@@ -198,24 +206,6 @@ public sealed class SceneManagementWindow : IWindow
 
                     ImGui.EndPopup();
                 }
-            }
-
-            ImGui.Spacing();
-            ImGui.Separator();
-            ImGui.Spacing();
-
-            if (ImGui.CollapsingHeader("Information"))
-            {
-                ImGui.TextWrapped("Scene files are saved in JSON format and include:");
-                ImGui.BulletText("All object positions, orientations, and velocities");
-                ImGui.BulletText("Physics parameters (mass, friction, etc.)");
-                ImGui.BulletText("Material assignments");
-                ImGui.BulletText("Cloth grid dimensions and spring parameters");
-
-                ImGui.Spacing();
-                ImGui.TextWrapped("Notes:");
-                ImGui.BulletText("Loading a scene will clear current objects");
-                ImGui.BulletText("Scene files can be edited manually (JSON format)");
             }
         }
 

@@ -1,7 +1,6 @@
 using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.GameObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.Display.Gizmos;
@@ -20,10 +19,10 @@ public enum GizmoAxis
     Z = 2
 }
 
+public delegate void TargetChangedEventHandler(IGizmoTarget collisionPrimitive);
+
 public interface IGizmo : IDisposable
 {
-    public delegate void TargetChangedEventHandler(GameObjectCollisionPrimitive collisionPrimitive);
-
     public event TargetChangedEventHandler TargetChangedEvent;
 
     public float DefaultTransparency { get; set; }
@@ -34,8 +33,10 @@ public interface IGizmo : IDisposable
     bool ConstantScreenSize { get; set; }
     public float HandleSize { get; set; }
 
-    public GameObjectCollisionPrimitive? Target { get; set; }
+    public IGizmoTarget? Target { get; set; }
 
     public void Render(CameraBase camera);
     public bool HandleInput(IInputProvider input, Vector2 mousePos, CameraBase camera, Vector2i screenSize);
 }
+
+public interface IGizmo<in TTarget> : IDisposable, IGizmo where TTarget : IGizmoTarget;

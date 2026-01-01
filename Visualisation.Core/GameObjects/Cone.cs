@@ -1,13 +1,16 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 
+using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Scale;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cone : GameObjectCollisionPrimitive, IBoxable
+// TODO: implement cone interactions on the engine side
+public sealed class Cone : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTarget
 {
     public Cone()
     {
@@ -47,4 +50,33 @@ public sealed class Cone : GameObjectCollisionPrimitive, IBoxable
     }
 
     public override CollisionPrimitive EngineCollisionPrimitive => EngineCone;
+
+    public Vector3 Scale
+    {
+        get => new Vector3(EngineCone.Radius, EngineCone.Radius, EngineCone.Height);
+        set
+        {
+            EngineCone.Height = value.Z;
+            EngineCone.Radius = value.X;
+            EngineCone.Body.SetAwake();
+            EngineCone.Body.CalculateDerivedData();
+            EngineCone.CalculateInternals();
+        }
+    }
+
+    public Vector3 Offset => new Vector3(EngineCone.Radius, EngineCone.Radius, EngineCone.Height / 2.0f);
+
+    public Vector3 GetTargetScale(Vector3 scale, float factor, GizmoAxis axis)
+    {
+        if (axis == GizmoAxis.Z)
+        {
+            scale.Z *= factor;
+        }
+        else
+        {
+            scale.X *= factor;
+        }
+
+        return scale;
+    }
 }

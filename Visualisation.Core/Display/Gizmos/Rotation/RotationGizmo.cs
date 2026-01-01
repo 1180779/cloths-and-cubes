@@ -1,17 +1,16 @@
 using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Display.Gizmos.Controls;
 using Visualisation.Core.GameObjects;
 using Visualisation.Core.Inputs;
 
-namespace Visualisation.Core.Display.Gizmos;
+namespace Visualisation.Core.Display.Gizmos.Rotation;
 
 /// <summary>
 /// A rotation gizmo that allows rotating objects around X, Y, or Z axes.
 /// Uses torus rings for each axis.
 /// </summary>
-public sealed class RotationGizmo : GizmoBase, IGizmo
+public sealed class RotationGizmo : GizmoBase, IGizmo<IRotationGizmoTarget>
 {
     public delegate void TargetRotatedEventHandler(Quaternion oldRotation, Quaternion newRotation);
 
@@ -26,11 +25,28 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
     /// </summary>
     public float Sensitivity = 0.01f;
 
+    private IRotationGizmoTarget? _target;
     private Quaternion _initialRotation;
     private Vector3 _initialRotationAxis;
     private bool _wasMouseDown;
 
     protected override IGizmoArrow Arrow => _ring;
+
+    public override IGizmoTarget? Target
+    {
+        get => _target;
+        set
+        {
+            if (value is IRotationGizmoTarget target)
+            {
+                _target = target;
+                return;
+            }
+
+            _target = null;
+        }
+    }
+
 
     public bool HandleInput(
         IInputProvider input,
@@ -38,7 +54,7 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
         CameraBase camera,
         Vector2i screenSize)
     {
-        if (_target == null) return false;
+        if (_target is null) return false;
 
         var ray = SelectionManager.GetRayFromMouse(mousePos, camera, screenSize);
         bool isMouseDown = input.IsMouseButtonDown(MouseButton.Left);
@@ -46,11 +62,11 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
         // Detect mouse button press (transition from up to down)
         if (isMouseDown && !_wasMouseDown)
         {
-            _selectedAxis = CheckIntersection(ray, _target.Position, camera);
+            _selectedAxis = CheckIntersection(ray, _target.AxisPosition, camera);
             if (_selectedAxis != GizmoAxis.None)
             {
                 _dragStartMouse = mousePos;
-                _initialRotation = GetObjectRotation(_target);
+                _initialRotation = _target.Orientation;
 
                 var rotation = Space == GizmoSpace.Local ? _initialRotation : Quaternion.Identity;
                 _initialRotationAxis = GetAxisDirection(_selectedAxis, rotation);
@@ -67,7 +83,7 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
             float deltaAngle = GetScreenSpaceAxisDelta(_dragStartMouse, mousePos, rotationAxis, camera, Sensitivity);
 
             var newRotation = GetNewRotation(rotationAxis, deltaAngle);
-            ApplyNewRotation(_target, newRotation);
+            _target.Orientation = newRotation;
             InvokeGizmoTargetChangedByGizmo(_target);
             TargetRotatedEvent(_initialRotation, newRotation);
 
@@ -82,7 +98,7 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
         // No selection happening; handle hover
         else
         {
-            _hoveredAxis = CheckIntersection(ray, _target.Position, camera);
+            _hoveredAxis = CheckIntersection(ray, _target.AxisPosition, camera);
             if (_hoveredAxis != GizmoAxis.None)
                 return true;
         }
@@ -97,14 +113,6 @@ public sealed class RotationGizmo : GizmoBase, IGizmo
         Quaternion newRotation = deltaRotation * _initialRotation;
         newRotation.Normalize();
         return newRotation;
-    }
-
-    public void ApplyNewRotation(GameObjectCollisionPrimitive target, Quaternion newRotation)
-    {
-        target.EngineCollisionPrimitive.Body.Orientation = newRotation.ToEngine();
-        target.EngineCollisionPrimitive.Body.SetAwake();
-        target.EngineCollisionPrimitive.Body.CalculateDerivedData();
-        target.EngineCollisionPrimitive.CalculateInternals();
     }
 
     public void Dispose()

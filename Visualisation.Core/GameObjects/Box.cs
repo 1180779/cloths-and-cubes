@@ -1,12 +1,14 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 
+using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Scale;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Box : GameObjectCollisionPrimitive, IBoxable
+public sealed class Box : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTarget
 {
     public Engine.RigidBodies.Box EngineBox { get; init; } = new();
     protected override IMesh Mesh { get; set; } = new CubeMesh();
@@ -49,4 +51,33 @@ public sealed class Box : GameObjectCollisionPrimitive, IBoxable
     }
 
     public override CollisionPrimitive EngineCollisionPrimitive => EngineBox;
+
+    public Vector3 Scale
+    {
+        get => EngineBox.HalfSize.ToOpenTK();
+        set
+        {
+            EngineBox.HalfSize = value.ToEngine();
+        }
+    }
+
+    public Vector3 Offset => EngineBox.HalfSize.ToOpenTK();
+
+    public Vector3 GetTargetScale(Vector3 scale, float factor, GizmoAxis axis)
+    {
+        switch (axis)
+        {
+            case GizmoAxis.X:
+                scale.X *= factor;
+                break;
+            case GizmoAxis.Y:
+                scale.Y *= factor;
+                break;
+            case GizmoAxis.Z:
+                scale.Z *= factor;
+                break;
+        }
+
+        return scale;
+    }
 }

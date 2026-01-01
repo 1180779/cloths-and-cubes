@@ -21,8 +21,6 @@ public class RigidBody
 
     private Quaternion orientation = new();
 
-    public ref Quaternion OrientationRef => ref orientation;
-
     /// <summary>
     /// Holds the angular orientation of the rigid body in world space.
     /// </summary>

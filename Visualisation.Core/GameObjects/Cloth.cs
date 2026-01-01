@@ -1,13 +1,15 @@
 ﻿using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 
+using Visualisation.Core.Display.Gizmos.Rotation;
+using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cloth : GameObject, IBoxable
+public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRotationGizmoTarget
 {
     public Engine.Cloth EngineCloth { get; set; }
     public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
@@ -95,22 +97,51 @@ public sealed class Cloth : GameObject, IBoxable
         return result;
     }
 
-    public void RegenerateCloth(
+    public void RegenerateClothPreservingTheCenter(
         int newSizeX,
         int newSizeY,
         float newSpringLength,
         float newSpringConstant,
         float newParticleMass)
     {
-        // Regenerate the engine cloth
-        EngineCloth.RegenerateGrid(newSizeX, newSizeY, newSpringLength, newSpringConstant, newParticleMass);
+        EngineCloth.RegenerateGridPreservingTheCenter(newSizeX, newSizeY, newSpringLength, newSpringConstant,
+            newParticleMass);
 
-        // Dispose old visual mesh
-        VisualCloth.Dispose();
+        // Update the mesh
+        var pts = ConvertToOpenTk(EngineCloth.Points());
+        VisualCloth.UpdatePoints(pts);
+    }
 
-        // Create new visual mesh
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth = new ClothMesh(pts);
-        Mesh = VisualCloth;
+    public Vector3 AxisPosition => EngineCloth.Center.ToOpenTK();
+    public Quaternion AxisOrientation => Quaternion.Identity;
+
+    Vector3 ITranslationGizmoTarget.Position
+    {
+        get => EngineCloth.Center.ToOpenTK();
+        set
+        {
+            EngineCloth.Center = value.ToEngine();
+        }
+    }
+
+    private Quaternion _previousOrientation = Quaternion.Identity;
+
+    public Quaternion Orientation
+    {
+        get => _previousOrientation;
+        set
+        {
+            var deltaRotation = value * Quaternion.Invert(_previousOrientation);
+            _previousOrientation = value;
+
+            var axisAngle = deltaRotation.ToAxisAngle();
+            var axis = axisAngle.Xyz;
+            var angle = axisAngle.W;
+
+            // Convert axis-angle to a rotation vector (scaled axis)
+            var rotationVector = axis * angle;
+
+            EngineCloth.RotateAroundCenter(rotationVector.ToEngine());
+        }
     }
 }

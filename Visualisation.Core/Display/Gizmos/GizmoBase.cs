@@ -5,32 +5,24 @@ using Engine.Rays;
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Display.Gizmos.Controls;
-using Visualisation.Core.GameObjects;
 
 namespace Visualisation.Core.Display.Gizmos;
 
 public abstract class GizmoBase(Shader shader)
 {
-    public event IGizmo.TargetChangedEventHandler TargetChangedEvent = delegate { };
+    public event TargetChangedEventHandler TargetChangedEvent = delegate { };
 
-    protected void InvokeGizmoTargetChangedByGizmo(GameObjectCollisionPrimitive collisionPrimitive)
+    protected void InvokeGizmoTargetChangedByGizmo(IGizmoTarget gizmoTarget)
     {
-        TargetChangedEvent.Invoke(collisionPrimitive);
+        TargetChangedEvent.Invoke(gizmoTarget);
     }
 
     protected GizmoAxis _selectedAxis = GizmoAxis.None;
     protected GizmoAxis _hoveredAxis = GizmoAxis.None;
 
     protected abstract IGizmoArrow Arrow { get; }
-    protected GameObjectCollisionPrimitive? _target;
     protected readonly Shader _shader = shader;
 
-    public GameObjectCollisionPrimitive? Target
-    {
-        get => _target;
-        set => _target = value;
-    }
 
     public float DefaultTransparency { get; set; } = 0.5f;
     public Vector4 SelectionColor { get; set; } = new(1.0f, 1.0f, 0, 0.5f);
@@ -42,6 +34,7 @@ public abstract class GizmoBase(Shader shader)
 
     protected Vector2 _dragStartMouse;
     protected bool _useScreenSpaceFallback;
+    public abstract IGizmoTarget? Target { get; set; }
 
     protected virtual void BeforeCheckIntersection() { }
 
@@ -65,6 +58,10 @@ public abstract class GizmoBase(Shader shader)
         }
     }
 
+    protected Quaternion AxisRotation => Space == GizmoSpace.Local
+        ? Target?.AxisOrientation ?? Quaternion.Identity
+        : Quaternion.Identity;
+
     protected GizmoAxis CheckIntersection(Ray ray, Vector3 position, CameraBase camera)
     {
         BeforeCheckIntersection();
@@ -72,10 +69,9 @@ public abstract class GizmoBase(Shader shader)
         float closestDist = float.MaxValue;
         GizmoAxis hitAxis = GizmoAxis.None;
 
-        var rotation = Space == GizmoSpace.Local ? GetObjectRotation(_target) : Quaternion.Identity;
 
         float handleScale = ConstantScreenSize ? GetGizmoScale(position, camera) : HandleSize;
-
+        var rotation = AxisRotation;
         CheckArrowIntersection(ray, position, rotation, GizmoAxis.X, handleScale, ref hitAxis, ref closestDist);
         CheckArrowIntersection(ray, position, rotation, GizmoAxis.Y, handleScale, ref hitAxis, ref closestDist);
         CheckArrowIntersection(ray, position, rotation, GizmoAxis.Z, handleScale, ref hitAxis, ref closestDist);
@@ -85,7 +81,7 @@ public abstract class GizmoBase(Shader shader)
 
     public void Render(CameraBase camera)
     {
-        if (_target == null) return;
+        if (Target is null) return;
         BeforeRender();
 
         _shader.Use();
@@ -95,10 +91,10 @@ public abstract class GizmoBase(Shader shader)
         GL.Enable(EnableCap.Blend);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-        var position = _target.Position;
-        var rotation = Space == GizmoSpace.Local ? GetObjectRotation(_target) : Quaternion.Identity;
+        var position = Target.AxisPosition;
 
         float finalHandleSize = ConstantScreenSize ? GetGizmoScale(position, camera) : HandleSize;
+        var rotation = AxisRotation;
 
         // X Axis Ring (Red) - rotates around X axis
         RenderAxis(GizmoAxis.X, position, rotation, new Vector4(1, 0, 0, DefaultTransparency), finalHandleSize);
@@ -355,14 +351,6 @@ public abstract class GizmoBase(Shader shader)
         float delta = (mouseDelta.X * rightComponent - mouseDelta.Y * upComponent) * sensitivity;
 
         return delta;
-    }
-
-    protected static Quaternion GetObjectRotation(GameObject? target)
-    {
-        if (target is GameObjectCollisionPrimitive rb)
-            return rb.EngineCollisionPrimitive.Body.Orientation.ToOpenTK();
-
-        return Quaternion.Identity;
     }
 
     /// <summary>

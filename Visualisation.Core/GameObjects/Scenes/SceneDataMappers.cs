@@ -367,7 +367,7 @@ public static class SceneDataMappers
             cloth.EngineCloth.RemoveSpringsFromForceRegistry();
 
             // Regenerate cloth with new dimensions
-            cloth.RegenerateCloth(
+            cloth.RegenerateClothPreservingTheCenter(
                 data.EngineCloth.SizeX,
                 data.EngineCloth.SizeY,
                 data.EngineCloth.SpringLength,
