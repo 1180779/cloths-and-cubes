@@ -65,14 +65,14 @@ public sealed class SceneManagementWindow : IWindow
 
                 ImGui.Checkbox("Include Particle States", ref _includeParticleStates);
 
-                UiCommon.SetTooltip("Saves exact positions/velocities of all cloth particles.\n" +
+                UiControls.SetTooltip("Saves exact positions/velocities of all cloth particles.\n" +
                     "Unchecked: Only saves cloth parameters.\n" +
                     "Checked: Saves full particle state.");
 
                 ImGui.Spacing();
 
                 const string saveSceneText = "Save Scene";
-                if (ImGui.Button(saveSceneText, Style.ButtonSizes.Medium(saveSceneText)))
+                if (ImGui.Button(saveSceneText, UiControls.Style.ButtonSizes.Medium(saveSceneText)))
                 {
                     SaveCurrentScene();
                 }
@@ -88,7 +88,7 @@ public sealed class SceneManagementWindow : IWindow
             if (ImGui.CollapsingHeader("Load Scene", ImGuiTreeNodeFlags.DefaultOpen))
             {
                 const string refreshText = "Refresh List";
-                if (ImGui.Button(refreshText, Style.ButtonSizes.Small(refreshText)))
+                if (ImGui.Button(refreshText, UiControls.Style.ButtonSizes.Small(refreshText)))
                 {
                     RefreshSceneList();
                 }
@@ -158,7 +158,7 @@ public sealed class SceneManagementWindow : IWindow
 
                     // Action buttons
                     const string loadSceneText = "Load Scene";
-                    if (ImGui.Button(loadSceneText, Style.ButtonSizes.Small(loadSceneText)))
+                    if (ImGui.Button(loadSceneText, UiControls.Style.ButtonSizes.Small(loadSceneText)))
                     {
                         // when the button is enabled, _selectedScene is not null
                         LoadScene(_selectedScene!);
@@ -166,7 +166,7 @@ public sealed class SceneManagementWindow : IWindow
 
                     ImGui.SameLine();
                     const string deleteSceneText = "Delete Scene";
-                    if (ImGui.Button("Delete Scene", Style.ButtonSizes.Small(deleteSceneText)))
+                    if (ImGui.Button("Delete Scene", UiControls.Style.ButtonSizes.Small(deleteSceneText)))
                     {
                         ImGui.OpenPopup("DeleteConfirmation");
                     }
@@ -190,7 +190,7 @@ public sealed class SceneManagementWindow : IWindow
                         ImGui.Spacing();
 
                         const string deleteText = "Delete";
-                        if (ImGui.Button(deleteText, Style.ButtonSizes.Small(deleteText)))
+                        if (ImGui.Button(deleteText, UiControls.Style.ButtonSizes.Small(deleteText)))
                         {
                             DeleteScene(_selectedScene);
                             ImGui.CloseCurrentPopup();
@@ -198,7 +198,7 @@ public sealed class SceneManagementWindow : IWindow
 
                         ImGui.SameLine();
                         const string cancelText = "Cancel";
-                        if (ImGui.Button(cancelText, Style.ButtonSizes.Small(cancelText)))
+                        if (ImGui.Button(cancelText, UiControls.Style.ButtonSizes.Small(cancelText)))
                         {
                             ImGui.CloseCurrentPopup();
                         }

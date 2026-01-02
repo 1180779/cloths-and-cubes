@@ -113,7 +113,7 @@ public sealed class PhysicsControlWindow(RigidBodyApplication application) : IWi
                 _application.Reset();
             }
 
-            UiCommon.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
+            UiControls.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
 
             ImGui.Spacing();
             ImGui.Separator();

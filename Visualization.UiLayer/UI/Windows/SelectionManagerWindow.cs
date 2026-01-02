@@ -168,23 +168,6 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         }
     }
 
-    private bool DrawFloatPropertyPositive(
-        Func<float> get,
-        Action<float> set,
-        String label,
-        float step = 0.1f,
-        float minValue = 0.0f)
-    {
-        var value = get();
-        if (ImGui.DragFloat(label, ref value, step, minValue, float.PositiveInfinity))
-        {
-            set(value);
-            return true;
-        }
-
-        return false;
-    }
-
     private bool DrawVector3Property(
         Func<Engine.Vector3> get,
         Action<Engine.Vector3> set,
@@ -274,7 +257,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
             }
 
             const string zeroVelocityText = "Reset Rotation";
-            if (ImGui.Button(zeroVelocityText, Style.ButtonSizes.Small(zeroVelocityText)))
+            if (ImGui.Button(zeroVelocityText, UiControls.Style.ButtonSizes.Small(zeroVelocityText)))
             {
                 body.Velocity = Engine.Vector3.Zero;
                 body.Rotation = Engine.Vector3.Zero;
@@ -314,7 +297,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
     private void DrawSphere(Ball ball)
     {
         DrawRigidBody(ball.EngineBall.Body);
-        DrawFloatPropertyPositive(() => ball.EngineBall.Radius, r => ball.EngineBall.Radius = r, "Radius",
+        UiControls.DragFloatPropertyPositive(() => ball.EngineBall.Radius, r => ball.EngineBall.Radius = r, "Radius",
             minValue: 0.05f);
     }
 
@@ -350,10 +333,10 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
                 cloth.EngineCloth.RotateAroundCenter(rotationChange.ToEngine());
             }
 
-            UiCommon.SetTooltip("Rotates cloth around its center. Displays cumulative rotation.");
+            UiControls.SetTooltip("Rotates cloth around its center. Displays cumulative rotation.");
 
             const string zeroVelocityText = "Reset velocity";
-            if (ImGui.Button(zeroVelocityText, Style.ButtonSizes.Small(zeroVelocityText)))
+            if (ImGui.Button(zeroVelocityText, UiControls.Style.ButtonSizes.Small(zeroVelocityText)))
             {
                 foreach (RigidParticle clothParticle in cloth.EngineCloth.Particles)
                 {

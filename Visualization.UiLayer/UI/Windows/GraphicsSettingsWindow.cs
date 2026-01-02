@@ -1,8 +1,11 @@
 using ImGuiNET;
 
+using Visualisation.Core;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Light;
 using Visualisation.Core.GameObjects.Scenes;
+
+using Visualization.UiLayer.UI.Controls;
 
 namespace Visualization.UiLayer.UI.Windows;
 
@@ -10,16 +13,14 @@ public sealed class GraphicsSettingsWindow(
     Func<LightDirectional?> getDirectionalLight,
     SceneManager sceneManager,
     SceneWindow sceneWindow
-) : IWindow
+) : IWindow, IDisposable
 {
     private SceneManager _sceneManager = sceneManager; /* borrowed */
     private SceneWindow _sceneWindow = sceneWindow; /* borrowed */
     private Func<LightDirectional?> _getDirectionalLight = getDirectionalLight;
 
-    private float _shadowBiasMin;
-    private float _shadowBiasMax;
-    private float _shadowBiasModifier;
-    private float _zMult;
+    private DirectionArrowControl? _arrowControl;
+    private bool _disposed;
 
     public string Name => "Graphics Settings";
 
@@ -27,163 +28,116 @@ public sealed class GraphicsSettingsWindow(
     {
         if (ImGui.Begin(Name, ref isOpen))
         {
-            DrawShadowMapSettings();
-            ImGui.Separator();
-            ImGui.Spacing();
-            DrawEnvironmentMap();
-            ImGui.Separator();
-            ImGui.Spacing();
-            DrawSceneWindow();
+            var light = this._getDirectionalLight();
+            if (light is not null)
+            {
+                var direction = light.Direction.ToNumerics();
+                DrawLightDirectionControls(ref direction, light);
+                DrawShadowBiasControls(light);
+            }
+
+            DrawEnvironmentMapControls();
+            RenderAntialiasingControls();
         }
 
         ImGui.End();
     }
 
-    private void DrawShadowMapSettings()
+    private void DrawShadowBiasControls(LightDirectional light)
     {
-        ImGui.SeparatorText("Shadow Map");
-
-        var light = this._getDirectionalLight();
-        if (light is not null)
+        if (ImGui.CollapsingHeader("Shadow Bias Parameters"))
         {
-            _shadowBiasMin = light.ShadowBiasMin;
-            _shadowBiasMax = light.ShadowBiasMax;
-            _shadowBiasModifier = light.ShadowBiasModifier;
-            _zMult = light.ZMult;
-
-            // ========================================
-            // min bias
-            if (ImGui.SmallButton("-##minBias"))
+            ImGui.Indent();
+            UiControls.DragFloatPropertyPositive(() => light.ShadowBiasMin, v => light.ShadowBiasMin = v, "min bias",
+                0.001f);
+            UiControls.DragFloatPropertyPositive(() => light.ShadowBiasMax, v => light.ShadowBiasMax = v, "max bias",
+                0.001f);
+            UiControls.DragFloatPropertyPositive(() => light.ShadowBiasModifier, v => light.ShadowBiasModifier = v,
+                "bias modifier",
+                0.001f);
+            UiControls.DragFloatPropertyPositive(() => light.ZMult, v => light.ZMult = v, "z mult",
+                0.001f);
+            const string resetButtonText = "Reset to defaults";
+            if (ImGui.Button(resetButtonText, UiControls.Style.ButtonSizes.Medium(resetButtonText)))
             {
-                _shadowBiasMin -= 0.01f;
-                light.ShadowBiasMin = _shadowBiasMin;
+                light.ResetShadowBiasToDefault();
             }
 
-            ImGui.SameLine();
-            if (ImGui.SmallButton("+##minBias"))
-            {
-                _shadowBiasMin += 0.01f;
-                light.ShadowBiasMin = _shadowBiasMin;
-            }
+            ImGui.Unindent();
+        }
+    }
 
-            ImGui.SameLine();
-            ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("min bias", ref _shadowBiasMin))
-            {
-                light.ShadowBiasMin = _shadowBiasMin;
-            }
 
-            // ========================================
-            // max bias
-            if (ImGui.SmallButton("-##maxBias"))
-            {
-                _shadowBiasMax -= 0.01f;
-                light.ShadowBiasMax = _shadowBiasMax;
-            }
-
-            ImGui.SameLine();
-            if (ImGui.SmallButton("+##maxBias"))
-            {
-                _shadowBiasMax += 0.01f;
-                light.ShadowBiasMax = _shadowBiasMax;
-            }
-
-            ImGui.SameLine();
-            ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("max bias", ref _shadowBiasMax))
-            {
-                light.ShadowBiasMax = _shadowBiasMax;
-            }
-
-            // ========================================
-            // bias modifier
-            if (ImGui.SmallButton("-##biasModifier"))
-            {
-                _shadowBiasModifier -= 0.01f;
-                light.ShadowBiasModifier = _shadowBiasModifier;
-            }
-
-            ImGui.SameLine();
-            if (ImGui.SmallButton("+##biasModifier"))
-            {
-                _shadowBiasModifier += 0.01f;
-                light.ShadowBiasModifier = _shadowBiasModifier;
-            }
-
-            ImGui.SameLine();
-            ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("bias modifier", ref _shadowBiasModifier))
-            {
-                light.ShadowBiasModifier = _shadowBiasModifier;
-            }
-
-            // ========================================
-            // zMult
-            if (ImGui.SmallButton("-##zMult"))
-            {
-                _zMult -= 0.5f;
-                light.ZMult = _zMult;
-            }
-
-            ImGui.SameLine();
-            if (ImGui.SmallButton("+##zMult"))
-            {
-                _zMult += 0.5f;
-                light.ZMult = _zMult;
-            }
-
-            ImGui.SameLine();
-            ImGui.SetNextItemWidth(60f);
-            if (ImGui.InputFloat("z Mult", ref _zMult))
-            {
-                light.ZMult = _zMult;
-            }
+    private void DrawLightDirectionControls(ref System.Numerics.Vector3 direction, LightDirectional light)
+    {
+        if (ImGui.CollapsingHeader("Light direction control"))
+        {
+            ImGui.Indent();
+            _arrowControl ??= new DirectionArrowControl(_sceneManager.BasicShader);
+            _arrowControl.Draw(ref direction, light);
+            UiControls.SetTooltip("Use the arrows to visually adjust the light direction. "
+                + "The arrows represent the X (red), Y (green), and Z (blue) axes.");
 
             ImGui.Spacing();
+            if (ImGui.DragFloat3("Direction", ref direction, 0.01f))
+            {
+                light.Direction = direction.ToOpenTK();
+            }
+
+            ImGui.Unindent();
         }
     }
 
-    private void DrawEnvironmentMap()
+    private void DrawEnvironmentMapControls()
     {
-        ImGui.SeparatorText("Environment Map Settings");
-        int currentDisplayType = (int)_sceneManager.EnvironmentMap.DisplayType;
-        ImGui.Text("Display Type:");
-        ImGui.RadioButton("Skybox", ref currentDisplayType,
-            (int)EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap);
-        ImGui.SameLine();
-        ImGui.RadioButton("Irradiance Map", ref currentDisplayType,
-            (int)EnvironmentMap.EnvironmentMapDisplayType.IrradianceMap);
-        ImGui.SameLine();
-        ImGui.RadioButton("Prefiltered Map", ref currentDisplayType,
-            (int)EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap);
-        _sceneManager.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
-
-        if (_sceneManager.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
+        if (ImGui.CollapsingHeader("Environment Map Settings"))
         {
-            ImGui.BeginDisabled();
-        }
+            ImGui.Indent();
+            int currentDisplayType = (int)_sceneManager.EnvironmentMap.DisplayType;
+            ImGui.Text("Display Type:");
+            ImGui.RadioButton("Skybox", ref currentDisplayType,
+                (int)EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap);
+            ImGui.SameLine();
+            ImGui.RadioButton("Irradiance Map", ref currentDisplayType,
+                (int)EnvironmentMap.EnvironmentMapDisplayType.IrradianceMap);
+            ImGui.SameLine();
+            ImGui.RadioButton("Prefiltered Map", ref currentDisplayType,
+                (int)EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap);
+            _sceneManager.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
 
-        float roughness = _sceneManager.EnvironmentMap.PrefilterMapValue;
-        if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
-        {
-            _sceneManager.EnvironmentMap.PrefilterMapValue = roughness;
-        }
+            if (_sceneManager.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
+            {
+                ImGui.BeginDisabled();
+            }
 
-        if (_sceneManager.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
-        {
-            ImGui.EndDisabled();
+            float roughness = _sceneManager.EnvironmentMap.PrefilterMapValue;
+            if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
+            {
+                _sceneManager.EnvironmentMap.PrefilterMapValue = roughness;
+            }
+
+            if (_sceneManager.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
+            {
+                ImGui.EndDisabled();
+            }
+
+            ImGui.Unindent();
         }
     }
 
-    private void DrawSceneWindow()
+    private void RenderAntialiasingControls()
     {
-        ImGui.SeparatorText("Antialiasing");
-        int antialiasing = (int)_sceneWindow.Antialiasing;
-        ImGui.RadioButton("None", ref antialiasing, (int)SceneWindow.AntialiasingType.None);
-        ImGui.RadioButton("MSAA2", ref antialiasing, (int)SceneWindow.AntialiasingType.MSAA2);
-        ImGui.RadioButton("MSAA4", ref antialiasing, (int)SceneWindow.AntialiasingType.MSAA4);
-        ImGui.RadioButton("MSAA8", ref antialiasing, (int)SceneWindow.AntialiasingType.MSAA8);
-        _sceneWindow.Antialiasing = (SceneWindow.AntialiasingType)antialiasing;
+        if (ImGui.CollapsingHeader("Antialiasing"))
+        {
+            ImGui.Indent();
+            int antialiasing = (int)_sceneWindow.Antialiasing;
+            ImGui.RadioButton("None", ref antialiasing, (int)SceneWindow.AntialiasingType.None);
+            ImGui.RadioButton("MSAA2", ref antialiasing, (int)SceneWindow.AntialiasingType.MSAA2);
+            ImGui.RadioButton("MSAA4", ref antialiasing, (int)SceneWindow.AntialiasingType.MSAA4);
+            ImGui.RadioButton("MSAA8", ref antialiasing, (int)SceneWindow.AntialiasingType.MSAA8);
+            _sceneWindow.Antialiasing = (SceneWindow.AntialiasingType)antialiasing;
+            ImGui.Unindent();
+        }
     }
 
     public sealed record EnvironmentMapState
@@ -205,6 +159,7 @@ public sealed class GraphicsSettingsWindow(
         public float ShadowBiasMax { get; init; }
         public float ShadowBiasModifier { get; init; }
         public float ZMult { get; init; }
+        public System.Numerics.Vector3 Direction { get; init; }
     }
 
     public sealed record State
@@ -216,15 +171,19 @@ public sealed class GraphicsSettingsWindow(
 
     public State SaveState()
     {
+        var light = this._getDirectionalLight();
         return new State
         {
-            Shadows = new ShadowState
-            {
-                ShadowBiasMin = _shadowBiasMin,
-                ShadowBiasMax = _shadowBiasMax,
-                ShadowBiasModifier = _shadowBiasModifier,
-                ZMult = _zMult,
-            },
+            Shadows = light is not null
+                ? new ShadowState
+                {
+                    ShadowBiasMin = light.ShadowBiasMin,
+                    ShadowBiasMax = light.ShadowBiasMin,
+                    ShadowBiasModifier = light.ShadowBiasModifier,
+                    ZMult = light.ZMult,
+                    Direction = light.Direction.ToNumerics(),
+                }
+                : null,
             EnvironmentMap = new EnvironmentMapState
             {
                 EnvironmentMapDisplayType = _sceneManager.EnvironmentMap.DisplayType,
@@ -236,21 +195,14 @@ public sealed class GraphicsSettingsWindow(
 
     public void RestoreState(State state)
     {
-        if (state.Shadows is not null)
+        var light = this._getDirectionalLight();
+        if (light is not null && state.Shadows is not null)
         {
-            _shadowBiasMin = state.Shadows.ShadowBiasMin;
-            _shadowBiasMax = state.Shadows.ShadowBiasMax;
-            _shadowBiasModifier = state.Shadows.ShadowBiasModifier;
-            _zMult = state.Shadows.ZMult;
-
-            var light = this._getDirectionalLight();
-            if (light is not null)
-            {
-                light.ShadowBiasMin = _shadowBiasMin;
-                light.ShadowBiasMax = _shadowBiasMax;
-                light.ShadowBiasModifier = _shadowBiasModifier;
-                light.ZMult = _zMult;
-            }
+            light.ShadowBiasMin = state.Shadows.ShadowBiasMin;
+            light.ShadowBiasMax = state.Shadows.ShadowBiasMax;
+            light.ShadowBiasModifier = state.Shadows.ShadowBiasModifier;
+            light.ZMult = state.Shadows.ZMult;
+            light.Direction = state.Shadows.Direction.ToOpenTK();
         }
 
         if (state.EnvironmentMap is not null)
@@ -263,5 +215,13 @@ public sealed class GraphicsSettingsWindow(
         {
             _sceneWindow.Antialiasing = state.SceneWindow.Antialiasing;
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _arrowControl?.Dispose();
     }
 }

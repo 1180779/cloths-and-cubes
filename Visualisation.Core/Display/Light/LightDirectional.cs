@@ -50,6 +50,14 @@ public class LightDirectional : LightPoint
     private float _shadowBiasModifier = 0.31f;
     private bool _shadowsBiasChanged = true;
 
+    public void ResetShadowBiasToDefault()
+    {
+        ShadowBiasMin = 0.005f;
+        ShadowBiasMax = 0.05f;
+        ShadowBiasModifier = 0.31f;
+        ZMult = 10.0f;
+    }
+
     public float ShadowBiasMin
     {
         get => _shadowBiasMin;
@@ -102,10 +110,16 @@ public class LightDirectional : LightPoint
 
         center /= corners.Count;
 
+        var up = Vector3.UnitY;
+        if (Math.Abs(Vector3.Dot(Direction, Vector3.UnitY)) > 0.9f)
+        {
+            up = Vector3.UnitZ;
+        }
+
         var lightView = Matrix4.LookAt(
             center - Direction, // always place parallel to what the camera sees
             center,
-            Vector3.UnitY);
+            up);
 
         float minX, minY, minZ;
         minX = minY = minZ = float.MaxValue;
@@ -301,8 +315,17 @@ public class LightDirectional : LightPoint
         get => _direction;
         set
         {
-            var normalized = value.Normalized();
-            _direction = normalized;
+            if (float.IsNaN(value.X) || float.IsNaN(value.Y) || float.IsNaN(value.Z))
+                return;
+
+            var max = Math.Max(Math.Abs(value.X), Math.Max(Math.Abs(value.Y), Math.Abs(value.Z)));
+            if (max > 1e10f)
+                value /= max;
+
+            if (value.LengthSquared <= 1e-6f)
+                return;
+
+            _direction = value.Normalized();
         }
     }
 
