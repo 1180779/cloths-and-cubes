@@ -14,6 +14,13 @@ public struct VertexData
     public Vector3 Tangent;
     public Vector3 Bitangent;
 
+    public VertexData(Vector3 position, Vector3 normal, Vector2 texCoords)
+    {
+        Position = position;
+        Normal = normal;
+        TexCoords = texCoords;
+    }
+
     public VertexData(float px, float py, float pz, float nx, float ny, float nz, float u, float v)
     {
         Position = new Vector3(px, py, pz);

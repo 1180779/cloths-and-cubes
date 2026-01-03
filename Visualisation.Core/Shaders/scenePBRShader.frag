@@ -362,11 +362,11 @@ void main()
         N = normal;
     }
 
-    // TODO: apply only for cloth
-    //    if (!gl_FrontFacing)
-    //    {
-    //        N = -N;
-    //    }
+    // Two-sided rendering: flip normal for back faces
+    if (!gl_FrontFacing)
+    {
+        N = -N;
+    }
 
     PbrMaterial material = PbrMaterial(
     albedo,

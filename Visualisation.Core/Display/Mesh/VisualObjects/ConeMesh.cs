@@ -101,8 +101,8 @@ public sealed class ConeMesh : IMesh
                 var nextJ = (uint)(j + 1);
 
                 indices.Add(k1 + (uint)j);
-                indices.Add(k1 + nextJ);
                 indices.Add(k2 + (uint)j);
+                indices.Add(k1 + nextJ);
 
                 // For the last stack, the top vertices (k2) are all at the same position (the tip).
                 // The second triangle (k2+j, k2+nextJ, k1+nextJ) becomes degenerate (zero area)
@@ -185,8 +185,7 @@ public sealed class ConeMesh : IMesh
                 }
 
                 var textureUv = new Vector2(u, t);
-                vertices.Add(new VertexData(position.X, position.Y, position.Z, normal.X, normal.Y, normal.Z,
-                    textureUv.X, textureUv.Y));
+                vertices.Add(new VertexData(position, normal, textureUv));
             }
         }
 
@@ -201,7 +200,7 @@ public sealed class ConeMesh : IMesh
         const float nz = -1.0f;
 
         // center point
-        vertices.Add(new VertexData(0, 0, h, 0, 0, nz, 0.5f, 0.5f));
+        vertices.Add(new VertexData(new(0, 0, h), new(0, 0, nz), new(0.5f, 0.5f)));
         for (var j = 0; j < SectorCount; ++j)
         {
             var position = new Vector3(unitCircleVertices[j].X, unitCircleVertices[j].Y, h);
@@ -209,8 +208,7 @@ public sealed class ConeMesh : IMesh
             var textureUV = new Vector2(-unitCircleVertices[j].X * 0.5f + 0.5f,
                 -unitCircleVertices[j].Y * 0.5f + 0.5f);
 
-            vertices.Add(new VertexData(position.X, position.Y, position.Z, normal.X, normal.Y, normal.Z,
-                textureUV.X, textureUV.Y));
+            vertices.Add(new VertexData(position, normal, textureUV));
         }
 
         return vertices.ToArray();

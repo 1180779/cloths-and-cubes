@@ -34,18 +34,18 @@ public sealed class SphereMesh : IMesh
                 double lon = 2 * Math.PI * (j == Precision ? 0 : j) / Precision; // longitude
                 double sinLon = Math.Sin(lon);
                 double cosLon = Math.Cos(lon);
-                double x = cosLon * cosLat;
-                double y = sinLat;
-                double z = sinLon * cosLat;
 
-                var u = (float)j / Precision;
-                var v = (float)i / Precision;
+                Vector3 positionAndNormal = new Vector3(
+                    (float)(cosLon * cosLat),
+                    (float)(sinLat),
+                    (float)(sinLon * cosLat)
+                );
+                Vector2 texCoords = new Vector2(
+                    (float)j / Precision,
+                    (float)i / Precision
+                );
 
-                vertices.Add(new VertexData(
-                    (float)x, (float)y, (float)z, // Position
-                    (float)x, (float)y, (float)z, // Normal
-                    u, v // TexCoords
-                ));
+                vertices.Add(new VertexData(positionAndNormal, positionAndNormal, texCoords));
             }
         }
 

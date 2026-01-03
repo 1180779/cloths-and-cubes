@@ -21,48 +21,53 @@ public sealed class CubeMesh : IMesh
 
     private static readonly VertexData[] Vertices =
     [
-        // Positions          // Normals           // Texture coords
-        new(-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
-        new(0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f),
-        new(0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f),
-        new(0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f),
-        new(-0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f),
-        new(-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f),
+        // Back face (Z = -0.5, normal pointing -Z)
+        new(new(-0.5f, -0.5f, -0.5f), -Vector3.UnitZ, new(0.0f, 0.0f)),
+        new(new(-0.5f, 0.5f, -0.5f), -Vector3.UnitZ, new(0.0f, 1.0f)),
+        new(new(0.5f, 0.5f, -0.5f), -Vector3.UnitZ, new(1.0f, 1.0f)),
+        new(new(0.5f, 0.5f, -0.5f), -Vector3.UnitZ, new(1.0f, 1.0f)),
+        new(new(0.5f, -0.5f, -0.5f), -Vector3.UnitZ, new(1.0f, 0.0f)),
+        new(new(-0.5f, -0.5f, -0.5f), -Vector3.UnitZ, new(0.0f, 0.0f)),
 
-        new(-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f),
-        new(0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f),
-        new(0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f),
-        new(0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f),
-        new(-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f),
-        new(-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f),
+        // Front face (Z = +0.5, normal pointing +Z)
+        new(new(-0.5f, -0.5f, 0.5f), Vector3.UnitZ, new(0.0f, 0.0f)),
+        new(new(0.5f, -0.5f, 0.5f), Vector3.UnitZ, new(1.0f, 0.0f)),
+        new(new(0.5f, 0.5f, 0.5f), Vector3.UnitZ, new(1.0f, 1.0f)),
+        new(new(0.5f, 0.5f, 0.5f), Vector3.UnitZ, new(1.0f, 1.0f)),
+        new(new(-0.5f, 0.5f, 0.5f), Vector3.UnitZ, new(0.0f, 1.0f)),
+        new(new(-0.5f, -0.5f, 0.5f), Vector3.UnitZ, new(0.0f, 0.0f)),
 
-        new(-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f),
-        new(-0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f),
-        new(-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f),
-        new(-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f),
-        new(-0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f),
-        new(-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f),
+        // Left face (X = -0.5, normal pointing -X)
+        new(new(-0.5f, -0.5f, -0.5f), -Vector3.UnitX, new(0.0f, 0.0f)),
+        new(new(-0.5f, -0.5f, 0.5f), -Vector3.UnitX, new(1.0f, 0.0f)),
+        new(new(-0.5f, 0.5f, 0.5f), -Vector3.UnitX, new(1.0f, 1.0f)),
+        new(new(-0.5f, 0.5f, 0.5f), -Vector3.UnitX, new(1.0f, 1.0f)),
+        new(new(-0.5f, 0.5f, -0.5f), -Vector3.UnitX, new(0.0f, 1.0f)),
+        new(new(-0.5f, -0.5f, -0.5f), -Vector3.UnitX, new(0.0f, 0.0f)),
 
-        new(0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f),
-        new(0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f),
-        new(0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f),
-        new(0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f),
-        new(0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f),
-        new(0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f),
+        // Right face (X = +0.5, normal pointing +X)
+        new(new(0.5f, -0.5f, -0.5f), Vector3.UnitX, new(0.0f, 0.0f)),
+        new(new(0.5f, 0.5f, -0.5f), Vector3.UnitX, new(0.0f, 1.0f)),
+        new(new(0.5f, 0.5f, 0.5f), Vector3.UnitX, new(1.0f, 1.0f)),
+        new(new(0.5f, 0.5f, 0.5f), Vector3.UnitX, new(1.0f, 1.0f)),
+        new(new(0.5f, -0.5f, 0.5f), Vector3.UnitX, new(1.0f, 0.0f)),
+        new(new(0.5f, -0.5f, -0.5f), Vector3.UnitX, new(0.0f, 0.0f)),
 
-        new(-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f),
-        new(0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f),
-        new(0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f),
-        new(0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f),
-        new(-0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f),
-        new(-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f),
+        // Bottom face (Y = -0.5, normal pointing -Y)
+        new(new(-0.5f, -0.5f, -0.5f), -Vector3.UnitY, new(0.0f, 0.0f)),
+        new(new(0.5f, -0.5f, -0.5f), -Vector3.UnitY, new(1.0f, 0.0f)),
+        new(new(0.5f, -0.5f, 0.5f), -Vector3.UnitY, new(1.0f, 1.0f)),
+        new(new(0.5f, -0.5f, 0.5f), -Vector3.UnitY, new(1.0f, 1.0f)),
+        new(new(-0.5f, -0.5f, 0.5f), -Vector3.UnitY, new(0.0f, 1.0f)),
+        new(new(-0.5f, -0.5f, -0.5f), -Vector3.UnitY, new(0.0f, 0.0f)),
 
-        new(-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f),
-        new(0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f),
-        new(0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f),
-        new(0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f),
-        new(-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f),
-        new(-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f)
+        // Top face (Y = +0.5, normal pointing +Y)
+        new(new(-0.5f, 0.5f, -0.5f), Vector3.UnitY, new(0.0f, 1.0f)),
+        new(new(-0.5f, 0.5f, 0.5f), Vector3.UnitY, new(0.0f, 0.0f)),
+        new(new(0.5f, 0.5f, 0.5f), Vector3.UnitY, new(1.0f, 0.0f)),
+        new(new(0.5f, 0.5f, 0.5f), Vector3.UnitY, new(1.0f, 0.0f)),
+        new(new(0.5f, 0.5f, -0.5f), Vector3.UnitY, new(1.0f, 1.0f)),
+        new(new(-0.5f, 0.5f, -0.5f), Vector3.UnitY, new(0.0f, 1.0f))
     ];
 
     private void Init()

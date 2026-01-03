@@ -105,7 +105,9 @@ public sealed class SceneWindow(
         _debugBasicShader.Use();
         _debugBasicShader.SetMatrix4("view", _sceneManager.CamerasManager.CurrentCamera.ViewMatrix);
         _debugBasicShader.SetMatrix4("projection", _sceneManager.CamerasManager.CurrentCamera.ProjectionMatrix);
+        GL.Disable(EnableCap.CullFace);
         DebugRenderInScene(_debugBasicShader);
+        GL.Enable(EnableCap.CullFace);
     }
 
     public void Dispose()

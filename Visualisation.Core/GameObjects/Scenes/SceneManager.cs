@@ -202,8 +202,20 @@ public abstract class SceneManager : IDisposable
                 GL.StencilMask(0x00);
             }
 
+            // Disable backface culling for cloth to enable two-sided rendering
+            if (gameObject is Cloth)
+            {
+                GL.Disable(EnableCap.CullFace);
+            }
+
             gameObject.SetForShader(PbrShader);
             gameObject.Render(SelectionManager?.DrawInvisibleObjects ?? false);
+
+            // Re-enable backface culling after rendering cloth
+            if (gameObject is Cloth)
+            {
+                GL.Enable(EnableCap.CullFace);
+            }
 
             if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)
             {
@@ -253,14 +265,18 @@ public abstract class SceneManager : IDisposable
                     }
                 case Cloth cloth:
                     {
-                        GL.CullFace(TriangleFace.Front);
+                        // Disable culling for two-sided rendering
+                        GL.Disable(EnableCap.CullFace);
+
                         OutlineShader.Use();
                         CamerasManager.CurrentCamera.SetForSimpleShader(OutlineShader);
                         OutlineShader.SetFloat("outline_size", OutlineSize);
                         OutlineShader.SetVector3("color", SelectionColor.Xyz);
                         cloth.SetForShaderNoMaterial(OutlineShader);
                         cloth.Render(SelectionManager.DrawInvisibleObjects);
-                        GL.CullFace(TriangleFace.Back);
+
+                        // Re-enable culling
+                        GL.Enable(EnableCap.CullFace);
                         break;
                     }
                 case RigidParticle particle:
@@ -333,13 +349,15 @@ public abstract class SceneManager : IDisposable
 
     private void RenderSkybox()
     {
-        GL.DepthFunc(DepthFunction.Lequal);
         SkyboxShader.Use();
         SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
         SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
         EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
+        GL.DepthFunc(DepthFunction.Lequal);
+        GL.CullFace(TriangleFace.Front);
         _cube.Render();
-        GL.DepthFunc(DepthFunction.Less); // Reset
+        GL.CullFace(TriangleFace.Back);
+        GL.DepthFunc(DepthFunction.Less);
     }
 
 

@@ -67,8 +67,11 @@ public class Application : GameWindow
 
         // GL
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
+        GL.Enable(EnableCap.CullFace);
+        // GL.CullFace(TriangleFace.Back); // back faces are culled by default
         GL.Enable(EnableCap.DepthTest);
-        GL.Enable(EnableCap.TextureCubeMapSeamless); /* for low mip levels of pre-filter convolution map */
+        GL.FrontFace(FrontFaceDirection.Ccw); // counter-clock-wise wound triangles are considered front-facing
+        GL.Enable(EnableCap.TextureCubeMapSeamless); // for low mip levels of pre-filter convolution map
     }
 
     public bool StepsLimit { get; set; }

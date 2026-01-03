@@ -103,8 +103,8 @@ public sealed class CylinderMesh : IMesh
                 var nextJ = (uint)(j + 1);
 
                 indices.Add(k1 + (uint)j);
-                indices.Add(k1 + nextJ);
                 indices.Add(k2 + (uint)j);
+                indices.Add(k1 + nextJ);
 
                 indices.Add(k2 + (uint)j);
                 indices.Add(k2 + nextJ);
@@ -121,8 +121,8 @@ public sealed class CylinderMesh : IMesh
         {
             var nextI = (uint)((i + 1) % SectorCount);
             indices.Add(bottomCenterIndex);
-            indices.Add(bottomRingStartIndex + (uint)i);
             indices.Add(bottomRingStartIndex + nextI);
+            indices.Add(bottomRingStartIndex + (uint)i);
         }
 
         // Top cap indices (h=0.5)
@@ -151,8 +151,7 @@ public sealed class CylinderMesh : IMesh
                 var position = new Vector3(unitCircleVertices[j].X, unitCircleVertices[j].Y, h);
                 var normal = new Vector3(unitCircleVertices[j].X, unitCircleVertices[j].Y, 0.0f).Normalized();
                 var textureUv = new Vector2((float)j / SectorCount, t);
-                vertices.Add(new VertexData(position.X, position.Y, position.Z, normal.X, normal.Y, normal.Z,
-                    textureUv.X, textureUv.Y));
+                vertices.Add(new VertexData(position, normal, textureUv));
             }
         }
 
@@ -169,7 +168,7 @@ public sealed class CylinderMesh : IMesh
             float nz = -1.0f + 2.0f * i; // [-1.0f, 1.0f]
 
             // center point
-            vertices.Add(new VertexData(0, 0, h, 0, 0, nz, 0.5f, 0.5f));
+            vertices.Add(new VertexData(new(0, 0, h), new(0, 0, nz), new(0.5f, 0.5f)));
             for (var j = 0; j < SectorCount; ++j)
             {
                 var position = new Vector3(unitCircleVertices[j].X, unitCircleVertices[j].Y, h);
@@ -177,8 +176,7 @@ public sealed class CylinderMesh : IMesh
                 var textureUV = new Vector2(-unitCircleVertices[j].X * 0.5f + 0.5f,
                     -unitCircleVertices[j].Y * 0.5f + 0.5f);
 
-                vertices.Add(new VertexData(position.X, position.Y, position.Z, normal.X, normal.Y, normal.Z,
-                    textureUV.X, textureUV.Y));
+                vertices.Add(new VertexData(position, normal, textureUV));
             }
         }
 
