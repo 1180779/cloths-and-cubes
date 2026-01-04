@@ -66,8 +66,8 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
             max.Z = Math.Max(max.Z, pos.Z);
         }
 
-        var center = new Engine.Vector3((min.X + max.X) / 2, (min.Y + max.Y) / 2, (min.Z + max.Z) / 2);
-        var halfSize = new Engine.Vector3((max.X - min.X) / 2, (max.Y - min.Y) / 2, (max.Z - min.Z) / 2);
+        var center = (min + max) / 2;
+        var halfSize = (max - min) / 2;
         return new BoundingBox(center, halfSize);
     }
 

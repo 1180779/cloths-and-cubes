@@ -493,7 +493,7 @@ public static class RayIntersection
         return false;
     }
 
-    public static bool IntersectRayCloth(Ray ray, Triangle[] triangles, out Real distance)
+    public static bool IntersectRayCloth(Ray ray, Triangle[] triangles, float positionEpsilon, out Real distance)
     {
         distance = Real.MaxValue;
         bool hit = false;
@@ -508,6 +508,12 @@ public static class RayIntersection
                     hit = true;
                 }
             }
+        }
+
+        // Apply position epsilon to avoid precision issues with cloth intersection
+        if (distance > positionEpsilon && hit)
+        {
+            distance -= positionEpsilon;
         }
 
         return hit;

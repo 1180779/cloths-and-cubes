@@ -25,8 +25,6 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class BoxesDemo : RigidBodyApplication
 {
     protected Plane _plane = null!; // initialized in scene initialization
-    public Plane Plane => _plane;
-
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
     protected Cloth[] _cloths = [];
@@ -69,18 +67,24 @@ public class BoxesDemo : RigidBodyApplication
 
         _boxesDemoSettingsWindow = new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length)
         {
-            SetBoxesCount = count =>
+            SetBoxesCount = newCount =>
             {
                 Random random = new();
                 int length = _boxes.Length;
-                for (int i = count; i < length; ++i)
+
+                var toBeRemoved = _boxes.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
+                if (_selectionManager is not null && toBeRemoved.Contains(_selectionManager.SelectedObject))
+                    _selectionManager.ClearSelection();
+
+                for (int i = newCount; i < length; ++i)
                 {
                     _sceneManager.RemoveGameObject(_boxes[i]);
                     _boxes[i].Dispose();
                 }
 
-                Array.Resize(ref _boxes, count);
-                for (int i = length; i < count; ++i)
+                Array.Resize(ref _boxes, newCount);
+
+                for (int i = length; i < newCount; ++i)
                 {
                     _boxes[i] = new Box();
                     _boxes[i].EngineBox.Random(random);
@@ -89,18 +93,23 @@ public class BoxesDemo : RigidBodyApplication
 
                 _forcebvhRebuildOnNoUpdate = true;
             },
-            SetSpheresCount = count =>
+            SetSpheresCount = newCount =>
             {
                 Random random = new();
                 int length = _balls.Length;
-                for (int i = count; i < length; ++i)
+
+                var toBeRemoved = _balls.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
+                if (_selectionManager is not null && toBeRemoved.Contains(_selectionManager.SelectedObject))
+                    _selectionManager.ClearSelection();
+
+                for (int i = newCount; i < length; ++i)
                 {
                     _sceneManager.RemoveGameObject(_balls[i]);
                     _balls[i].Dispose();
                 }
 
-                Array.Resize(ref _balls, count);
-                for (int i = length; i < count; ++i)
+                Array.Resize(ref _balls, newCount);
+                for (int i = length; i < newCount; ++i)
                 {
                     _balls[i] = new Ball();
                     _balls[i].EngineBall.Random(random);
@@ -110,18 +119,24 @@ public class BoxesDemo : RigidBodyApplication
                 _forcebvhRebuildOnNoUpdate = true;
             }
         };
-        _boxesDemoSettingsWindow.SetClothsCount = count =>
+        _boxesDemoSettingsWindow.SetClothsCount = newCount =>
         {
             int length = _cloths.Length;
-            for (int i = count; i < length; ++i)
+
+            var toBeRemoved = _cloths.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
+            if (_selectionManager is not null && toBeRemoved.Contains(_selectionManager.SelectedObject))
+                _selectionManager.ClearSelection();
+
+            for (int i = newCount; i < length; ++i)
             {
                 _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
                 _sceneManager.RemoveGameObject(_cloths[i]);
                 _cloths[i].Dispose();
             }
 
-            Array.Resize(ref _cloths, count);
-            for (int i = length; i < count; ++i)
+            Array.Resize(ref _cloths, newCount);
+
+            for (int i = length; i < newCount; ++i)
             {
                 _cloths[i] = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
@@ -163,7 +178,8 @@ public class BoxesDemo : RigidBodyApplication
                         break;
                     case Cloth cloth:
                         var triangles = cloth.VisualCloth.GetTriangles();
-                        if (RayIntersection.IntersectRayCloth(ray, triangles, out distance))
+                        if (RayIntersection.IntersectRayCloth(ray, triangles, _contactResolver.PositionEpsilon,
+                            out distance))
                             return (true, distance, cloth);
                         break;
                     case RigidParticle particle:
@@ -562,7 +578,7 @@ public class BoxesDemo : RigidBodyApplication
         // Add newly created objects to the scene
         foreach (var obj in updatedObjects)
         {
-            if (obj is not Visualisation.Core.GameObjects.Plane && !currentObjects.Contains(obj))
+            if (obj is not Plane && !currentObjects.Contains(obj))
             {
                 _sceneManager.AddGameObject(obj);
             }
@@ -629,7 +645,9 @@ public class BoxesDemo : RigidBodyApplication
     }
 
     /// <summary>
-    /// Update object arrays after scene loading
+    /// Update object arrays after scene loading. 
+    ///
+    /// It is assumed that the previous objects have been removed or disposed of already.
     /// </summary>
     public void UpdateObjectArrays(List<GameObject> gameObjects)
     {
@@ -653,9 +671,14 @@ public class BoxesDemo : RigidBodyApplication
             }
         }
 
-        _boxes = boxes.ToArray();
-        _balls = balls.ToArray();
-        _cloths = cloths.ToArray();
+        Array.Resize(ref _boxes, boxes.Count);
+        Array.Copy(_boxes, boxes.ToArray(), boxes.Count);
+
+        Array.Resize(ref _balls, balls.Count);
+        Array.Copy(_balls, balls.ToArray(), balls.Count);
+
+        Array.Resize(ref _cloths, cloths.Count);
+        Array.Copy(_cloths, cloths.ToArray(), cloths.Count);
 
         _forcebvhRebuildOnNoUpdate = true;
     }

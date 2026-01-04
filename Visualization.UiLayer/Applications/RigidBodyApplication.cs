@@ -17,7 +17,7 @@ public abstract class RigidBodyApplication : Application
         Friction = (Real)0.9, Restitution = (Real)0.6, Tolerance = (Real)0.1,
     };
 
-    protected ContactResolver _contactResolver = new(MaxContacts * 8);
+    protected ContactResolver _contactResolver = new(MaxContacts * 8, positionEpsilon: 0.01f);
 
     protected abstract void GenerateContacts();
     protected abstract void UpdateObjects(float duration);
@@ -46,7 +46,7 @@ public abstract class RigidBodyApplication : Application
 
         // Perform the contact generation
         GenerateContacts();
-        
+
         // Resolve detected contacts
         _contactResolver.ResolveContacts(
             _collisionData.ContactList,

@@ -2,17 +2,16 @@ namespace Engine;
 
 public class ContactResolver
 {
-    private uint velocityIterations;
-    private uint positionIterations;
-    private Real velocityEpsilon;
-    private Real positionEpsilon;
-    private bool validSettings = false;
+    public uint VelocityIterations;
+    public uint PositionIterations;
+    public Real VelocityEpsilon;
+    public Real PositionEpsilon;
 
-    public uint VelocityIterationsUsed { get; set; } = 0;
-    public uint PositionIterationsUsed { get; set; } = 0;
+    public uint VelocityIterationsUsed { get; private set; }
+    public uint PositionIterationsUsed { get; private set; }
 
     public bool IsValid =>
-        velocityIterations > 0 && positionIterations > 0 && positionEpsilon >= 0 && velocityEpsilon >= 0;
+        VelocityIterations > 0 && PositionIterations > 0 && PositionEpsilon >= 0 && VelocityEpsilon >= 0;
 
     public ContactResolver()
     {
@@ -20,10 +19,10 @@ public class ContactResolver
 
     public ContactResolver(uint iterations, Real velocityEpsilon = (Real)0.01, Real positionEpsilon = (Real)0.01)
     {
-        positionIterations = iterations;
-        velocityIterations = iterations;
-        this.velocityEpsilon = velocityEpsilon;
-        this.positionEpsilon = positionEpsilon;
+        PositionIterations = iterations;
+        VelocityIterations = iterations;
+        this.VelocityEpsilon = velocityEpsilon;
+        this.PositionEpsilon = positionEpsilon;
     }
 
     public ContactResolver(
@@ -32,10 +31,10 @@ public class ContactResolver
         Real velocityEpsilon = (Real)0.01,
         Real positionEpsilon = (Real)0.01)
     {
-        this.positionIterations = positionIterations;
-        this.velocityIterations = velocityIterations;
-        this.velocityEpsilon = velocityEpsilon;
-        this.positionEpsilon = positionEpsilon;
+        this.PositionIterations = positionIterations;
+        this.VelocityIterations = velocityIterations;
+        this.VelocityEpsilon = velocityEpsilon;
+        this.PositionEpsilon = positionEpsilon;
     }
 
     public void ResolveContacts(Contact[] contacts, uint numContacts, Real duration)
@@ -64,10 +63,10 @@ public class ContactResolver
 
         // iteratively handle impacts in order of severity.
         VelocityIterationsUsed = 0;
-        while (VelocityIterationsUsed < velocityIterations)
+        while (VelocityIterationsUsed < VelocityIterations)
         {
             // Find contact with maximum magnitude of probable velocity change.
-            var max = velocityEpsilon;
+            var max = VelocityEpsilon;
             var index = numContacts;
             for (uint i = 0; i < numContacts; i++)
             {
@@ -122,20 +121,17 @@ public class ContactResolver
 
     protected void AdjustPositions(Contact[] contacts, uint numContacts, Real duration)
     {
-        uint i = 0;
-        uint index = 0;
         Vector3[] linearChange = [new(), new()];
         Vector3[] angularChange = [new(), new()];
-        Real max = 0;
-        Vector3 deltaPosition = new();
 
         // iteratively resolve interpenetrations in order of severity.
         PositionIterationsUsed = 0;
-        while (PositionIterationsUsed < positionIterations)
+        while (PositionIterationsUsed < PositionIterations)
         {
             // Find biggest penetration
-            max = positionEpsilon;
-            index = numContacts;
+            Real max = PositionEpsilon;
+            uint index = numContacts;
+            uint i;
             for (i = 0; i < numContacts; i++)
             {
                 if (contacts[i].Penetration > max)
@@ -170,7 +166,7 @@ public class ContactResolver
                         {
                             if (contacts[i].Body[b] == contacts[index].Body[d])
                             {
-                                deltaPosition = linearChange[d] +
+                                Vector3 deltaPosition = linearChange[d] +
                                     angularChange[d].VectorProduct(
                                         contacts[i].RelativeContactPosition[b]);
 
