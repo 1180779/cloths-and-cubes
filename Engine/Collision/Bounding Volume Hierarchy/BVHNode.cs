@@ -99,7 +99,6 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
                 maxV.Z = Math.Max(maxV.Z, maxVpartitions[i].Z);
             }
 
-
             // TODO: check if the morton codes are allowed to duplicate
             //  seems to work for now
             // Handle Morton code collisions by grouping objects with the same code

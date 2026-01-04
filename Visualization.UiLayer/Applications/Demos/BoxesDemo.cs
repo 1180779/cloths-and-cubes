@@ -184,6 +184,10 @@ public class BoxesDemo : RigidBodyApplication
                             // adjust to account for position epsilon
                             return (true, distance - _contactResolver.PositionEpsilon, cloth);
                         break;
+                    case RigidParticleInCorner particleInCorner:
+                        if (RayIntersection.IntersectRayAABB(ray, particleInCorner.GetBoundingBox(), out distance))
+                            return (true, distance, particleInCorner);
+                        break;
                     case RigidParticle particle:
                         if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
                             return (true, distance, particle);

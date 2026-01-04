@@ -287,9 +287,19 @@ public abstract class SceneManager : IDisposable
                         GL.Enable(EnableCap.CullFace);
                         break;
                     }
+                case RigidParticleInCorner particleInCorner:
+                    {
+                        var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
+                        var position = particleInCorner.GetAxis(3);
+                        BasicShader.SetMatrix4("model",
+                            Matrix4.CreateScale(particleScale, particleScale, particleScale) *
+                            Matrix4.CreateTranslation(position.X, position.Y, position.Z));
+                        _cube.Render();
+                        break;
+                    }
                 case RigidParticle particle:
                     {
-                        var particleScale = RigidParticle.BoundingBoxHalfSize * 2;
+                        var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
                         var position = particle.GetAxis(3);
                         BasicShader.SetMatrix4("model",
                             Matrix4.CreateScale(particleScale, particleScale, particleScale) *

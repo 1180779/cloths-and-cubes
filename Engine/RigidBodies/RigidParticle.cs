@@ -6,8 +6,9 @@ namespace Engine.RigidBodies
     public class RigidParticle : CollisionParticle, IBoxable
     {
         public const float BoundingBoxHalfSize = 0.04f;
+        public const float BoxScale = 2 * BoundingBoxHalfSize;
 
-        public BoundingBox GetBoundingBox()
+        public virtual BoundingBox GetBoundingBox()
         {
             return new BoundingBox(
                 center: this.Body.Position,

@@ -71,13 +71,28 @@ public class Cloth
         CreateSprings();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IsCorner(int i, int j) =>
+        (i == 0 && j == 0) ||
+        (i == 0 && j == SizeY - 1) ||
+        (i == SizeX - 1 && j == 0) ||
+        (i == SizeX - 1 && j == SizeY - 1);
+
     private void ResetToInitialPosition()
     {
         for (int i = 0; i < SizeX; i++)
         {
             for (int j = 0; j < SizeY; j++)
             {
-                Particles[i, j] ??= new RigidParticle(); // Create a new particle if null
+                if (IsCorner(i, j))
+                {
+                    Particles[i, j] ??= new RigidParticleInCorner() { AttachedToCloth = this, };
+                }
+                else
+                {
+                    Particles[i, j] ??= new RigidParticle(); // Create a new particle if null
+                }
+
                 Particles[i, j].SetState(
                     Particle0Pos + new Vector3(SpringLength * i, 0, SpringLength * j),
                     0,

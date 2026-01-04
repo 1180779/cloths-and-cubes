@@ -115,6 +115,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
                 case Cloth cloth:
                     DrawCloth(cloth);
                     break;
+                case RigidParticleInCorner particleInCorner:
+                    DrawParticle(particleInCorner);
+                    break;
                 case RigidParticle particle:
                     DrawParticle(particle);
                     break;
