@@ -41,6 +41,8 @@ public abstract class SceneManager : IDisposable
         _rotationGizmo = new RotationGizmo(BasicShader);
     }
 
+    public Func<float>? PositionEpsilonProvider { get; set; }
+
     public const float OutlineSize = 0.05f;
     public const float OutlineFactor = 1f + OutlineSize;
 
@@ -202,19 +204,25 @@ public abstract class SceneManager : IDisposable
                 GL.StencilMask(0x00);
             }
 
-            // Disable backface culling for cloth to enable two-sided rendering
+            // Also enable polygon offset to prevent Z-fighting with coplanar surfaces
+            // The offset is dynamically scaled based on physics positionEpsilon
             if (gameObject is Cloth)
             {
                 GL.Disable(EnableCap.CullFace);
+                GL.Enable(EnableCap.PolygonOffsetFill);
+                // Negative values pull cloth toward camera
+                float offset = -(PositionEpsilonProvider?.Invoke() ?? 0) * 1000.0f;
+                GL.PolygonOffset(offset, offset);
             }
 
             gameObject.SetForShader(PbrShader);
             gameObject.Render(SelectionManager?.DrawInvisibleObjects ?? false);
 
-            // Re-enable backface culling after rendering cloth
+            // Re-enable backface culling and disable polygon offset after rendering cloth
             if (gameObject is Cloth)
             {
                 GL.Enable(EnableCap.CullFace);
+                GL.Disable(EnableCap.PolygonOffsetFill);
             }
 
             if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)

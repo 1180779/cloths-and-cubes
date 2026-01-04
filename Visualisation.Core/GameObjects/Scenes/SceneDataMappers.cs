@@ -409,10 +409,11 @@ public static class SceneDataMappers
         }
     }
 
-    public static Cloth ToCloth(this ClothData data, ForceRegistry forceRegistry)
+    public static Cloth ToCloth(this ClothData data, ForceRegistry forceRegistry, Func<float> positionEpsilonProvider)
     {
         var cloth = new Cloth(
             forceRegistry,
+            positionEpsilonProvider,
             data.EngineCloth.SizeX,
             data.EngineCloth.SizeY,
             data.EngineCloth.SpringLength,
@@ -628,6 +629,7 @@ public static class SceneDataMappers
     public static List<GameObject> ToGameObjects(
         this SceneData sceneData,
         ForceRegistry forceRegistry,
+        Func<float> positionEpsilonProvider,
         out Plane? plane,
         out CollisionData collisionData)
     {
@@ -649,7 +651,7 @@ public static class SceneDataMappers
         // Create game objects
         gameObjects.AddRange(sceneData.Boxes.Select(b => b.ToBox()));
         gameObjects.AddRange(sceneData.Balls.Select(b => b.ToBall()));
-        gameObjects.AddRange(sceneData.Cloths.Select(c => c.ToCloth(forceRegistry)));
+        gameObjects.AddRange(sceneData.Cloths.Select(c => c.ToCloth(forceRegistry, positionEpsilonProvider)));
 
         return gameObjects;
     }
@@ -662,6 +664,7 @@ public static class SceneDataMappers
         this SceneData sceneData,
         ForceRegistry forceRegistry,
         ICollection<GameObject> existingObjects,
+        Func<float> positionEpsilonProvider,
         out Plane? plane,
         out CollisionData collisionData,
         out List<GameObject> objectsToRemove)
@@ -746,7 +749,7 @@ public static class SceneDataMappers
             }
             else
             {
-                gameObjects.Add(clothData.ToCloth(forceRegistry));
+                gameObjects.Add(clothData.ToCloth(forceRegistry, positionEpsilonProvider));
             }
         }
 

@@ -1,4 +1,6 @@
-﻿using Engine.Collision.Bounding_Volume_Hierarchy;
+﻿#define CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
+
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 
 using Visualisation.Core.Display.Gizmos.Rotation;
@@ -14,12 +16,18 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
     public Engine.Cloth EngineCloth { get; set; }
     public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
+    private readonly Func<float> _positionEpsilonProvider;
 
-    public Cloth(ForceRegistry registry)
+    public Cloth(ForceRegistry registry, Func<float> positionEpsilonProvider)
     {
+        _positionEpsilonProvider = positionEpsilonProvider;
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry);
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+#if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
+#else
+    Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+#endif
         VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
@@ -28,15 +36,21 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
     public Cloth(
         ForceRegistry registry,
+        Func<float> positionEpsilonProvider,
         int sizeX = 21,
         int sizeY = 21,
         float springLength = 0.25f,
         float springConstant = 1.0f,
         float particleMass = 0.1f)
     {
+        _positionEpsilonProvider = positionEpsilonProvider;
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry, sizeX, sizeY, springLength, springConstant, particleMass);
+#if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
+#else
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+#endif
         VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
@@ -45,7 +59,11 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
     protected override void PreRender()
     {
-        var pts = ConvertToOpenTk(EngineCloth.Points());
+#if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
+#else
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+#endif
         VisualCloth.UpdatePoints(pts);
     }
 
@@ -56,7 +74,6 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
         foreach (var particle in EngineCloth.Particles)
         {
-            if (particle == null || particle.Body == null) continue;
             var pos = particle.Body.Position;
             min.X = Math.Min(min.X, pos.X);
             min.Y = Math.Min(min.Y, pos.Y);

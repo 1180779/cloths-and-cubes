@@ -35,7 +35,7 @@ public class BoxesDemo : RigidBodyApplication
 
     protected ForceRegistry _forceRegistry = new();
 
-    protected BVH _bvh = BVH.Build([]);
+    protected BVH _bvh = BVH.BuildSynchronous([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
 
     protected SelectionManager _selectionManager;
@@ -138,7 +138,8 @@ public class BoxesDemo : RigidBodyApplication
 
             for (int i = length; i < newCount; ++i)
             {
-                _cloths[i] = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+                _cloths[i] = new Cloth(_forceRegistry, () => _contactResolver.PositionEpsilon,
+                    _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                     _boxesDemoSettingsWindow.ParticleMass);
                 _sceneManager.AddGameObject(_cloths[i]);
@@ -178,9 +179,10 @@ public class BoxesDemo : RigidBodyApplication
                         break;
                     case Cloth cloth:
                         var triangles = cloth.VisualCloth.GetTriangles();
-                        if (RayIntersection.IntersectRayCloth(ray, triangles, _contactResolver.PositionEpsilon,
-                            out distance))
-                            return (true, distance, cloth);
+                        if (RayIntersection.IntersectRayCloth(ray, triangles,
+                                out distance))
+                            // adjust to account for position epsilon
+                            return (true, distance - _contactResolver.PositionEpsilon, cloth);
                         break;
                     case RigidParticle particle:
                         if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
@@ -210,6 +212,8 @@ public class BoxesDemo : RigidBodyApplication
 
         _sceneManagementWindow = new(this);
         _windowsManager.Add(_sceneManagementWindow);
+
+        _sceneManager.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
     }
 
     protected override void InitializeScene()
@@ -263,15 +267,12 @@ public class BoxesDemo : RigidBodyApplication
                 for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
                 {
                     var particle = cloth.EngineCloth.Particles[i, j];
-                    if (particle != null && particle.Body != null)
-                    {
-                        _bvhDictionary[offset++] = particle;
-                    }
+                    _bvhDictionary[offset++] = particle;
                 }
             }
         }
 
-        _bvh = BVH.Build(_bvhDictionary);
+        _bvh = BVH.BuildSynchronous(_bvhDictionary);
     }
 
     public override long AvailableSteps
@@ -352,7 +353,6 @@ public class BoxesDemo : RigidBodyApplication
         {
             foreach (var particle in cloth.EngineCloth.Particles)
             {
-                if (particle == null || particle.Body == null) continue;
                 if (!_collisionData.HasMoreContacts()) return;
                 CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
             }
@@ -548,6 +548,7 @@ public class BoxesDemo : RigidBodyApplication
         var updatedObjects = sceneData.ToGameObjectsWithUpdate(
             _forceRegistry,
             currentObjects,
+            () => _contactResolver.PositionEpsilon,
             out var plane,
             out var collisionData,
             out var objectsToRemove);

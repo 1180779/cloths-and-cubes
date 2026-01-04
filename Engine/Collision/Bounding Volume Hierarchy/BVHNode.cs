@@ -38,7 +38,7 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
     {
         public BVHNode? root;
 
-        public BVH(BVHNode root)
+        public BVH(BVHNode? root)
         {
             this.root = root;
         }
@@ -54,7 +54,6 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             Vector3 minV = new(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 maxV = new(float.MinValue, float.MinValue, float.MinValue);
 
-            var lockObject = new object();
             ConcurrentDictionary<int, BoundingBox> concurrentBodyDict = new ConcurrentDictionary<int, BoundingBox>();
             Parallel.ForEach(bodies, body =>
             {
@@ -83,8 +82,10 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
                         localMaxV.Y = Math.Max(localMaxV.Y, boxMax.Y);
                         localMaxV.Z = Math.Max(localMaxV.Z, boxMax.Z);
                     }
+
                     count++;
                 }
+
                 minVpartitions[partitionIndex] = localMinV;
                 maxVpartitions[partitionIndex] = localMaxV;
             });
@@ -99,22 +100,32 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             }
 
 
-            ConcurrentDictionary<ulong, BVHLeaf> leafCodes = new ConcurrentDictionary<ulong, BVHLeaf>();
+            // TODO: check if the morton codes are allowed to duplicate
+            //  seems to work for now
+            // Handle Morton code collisions by grouping objects with the same code
+            var leafList = new List<(ulong code, BVHLeaf leaf)>();
+            var leafListLock = new object();
+
             Parallel.ForEach(concurrentBodyDict, kvp =>
             {
                 var code = MortonCodes.Encode(kvp.Value.Center, minV, maxV);
-                leafCodes[code] = new BVHLeaf(kvp.Value, kvp.Key);
+                var leaf = new BVHLeaf(kvp.Value, kvp.Key);
+                lock (leafListLock)
+                {
+                    leafList.Add((code, leaf));
+                }
             });
 
-            var sortedLeaves = leafCodes.OrderBy(x => x.Key).Select(x => x.Value).ToList();
-            var sortedMortonCodes = leafCodes.Keys.OrderBy(x => x).ToList();
+            var sortedPairs = leafList.OrderBy(x => x.code).ToList();
+            var sortedLeaves = sortedPairs.Select(x => x.leaf).ToList();
+            var sortedMortonCodes = sortedPairs.Select(x => x.code).ToList();
             BVHNode root = GenerateHierarchy(sortedMortonCodes, sortedLeaves, 0, (uint)(sortedLeaves.Count - 1));
             return new BVH(root);
         }
 
         public static BVH BuildSynchronous(Dictionary<int, IBoxable> bodies)
         {
-            if (bodies == null) return new BVH(null);
+            if (bodies.Count == 0) return new BVH(null);
 
             Vector3 minV = new(float.MaxValue, float.MaxValue, float.MaxValue);
             Vector3 maxV = new(float.MinValue, float.MinValue, float.MinValue);
@@ -124,6 +135,7 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             {
                 bodyDict[body.Key] = body.Value.GetBoundingBox();
             }
+
             foreach (var body in bodyDict)
             {
                 var box = body.Value;
@@ -136,14 +148,20 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
                 maxV.Y = Math.Max(maxV.Y, boxMax.Y);
                 maxV.Z = Math.Max(maxV.Z, boxMax.Z);
             }
-            Dictionary<ulong, BVHLeaf> leafCodes = new Dictionary<ulong, BVHLeaf>();
+
+            // Handle Morton code collisions by preserving all objects
+            var leafList = new List<(ulong code, BVHLeaf leaf)>();
             foreach (var kvp in bodyDict)
             {
                 var code = MortonCodes.Encode(kvp.Value.Center, minV, maxV);
-                leafCodes[code] = new BVHLeaf(kvp.Value, kvp.Key);
+                var leaf = new BVHLeaf(kvp.Value, kvp.Key);
+                leafList.Add((code, leaf));
             }
-            var sortedLeaves = leafCodes.OrderBy(x => x.Key).Select(x => x.Value).ToList();
-            var sortedMortonCodes = leafCodes.Keys.OrderBy(x => x).ToList();
+
+            // Sort by Morton code, but preserve all objects even with duplicate codes
+            var sortedPairs = leafList.OrderBy(x => x.code).ToList();
+            var sortedLeaves = sortedPairs.Select(x => x.leaf).ToList();
+            var sortedMortonCodes = sortedPairs.Select(x => x.code).ToList();
             BVHNode root = GenerateHierarchy(sortedMortonCodes, sortedLeaves, 0, (uint)(sortedLeaves.Count - 1));
             return new BVH(root);
         }
@@ -162,12 +180,17 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             int split = FindSplit(sortedMortonCodes, first, last);
             BVHNode left = GenerateHierarchy(sortedMortonCodes, sortedLeaves, first, (uint)split);
             BVHNode right = GenerateHierarchy(sortedMortonCodes, sortedLeaves, (uint)(split + 1), last);
-            var combinedVolume = BoundingBox.JoinAABBs(new List<BoundingBox> { left.bounds, right.bounds });
+            var combinedVolume = BoundingBox.JoinAABBs([left.bounds, right.bounds]);
             return new BVHInternal(combinedVolume, left, right);
         }
 
         public static int FindSplit(List<ulong> sortedMortonCodes, uint first, uint last)
         {
+            if (sortedMortonCodes.Count < first)
+                throw new ArgumentOutOfRangeException(nameof(first));
+            if (sortedMortonCodes.Count < last)
+                throw new ArgumentOutOfRangeException(nameof(last));
+
             uint firstCode = (uint)sortedMortonCodes[(int)first];
             uint lastCode = (uint)sortedMortonCodes[(int)last];
             if (firstCode == lastCode)

@@ -77,7 +77,8 @@ public class BoxesMaterialsDemo : BoxesDemo
             Array.Resize(ref _cloths, count);
             for (int i = length; i < count; ++i)
             {
-                _cloths[i] = new Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+                _cloths[i] = new Cloth(_forceRegistry, () => _contactResolver.PositionEpsilon,
+                    _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                     _boxesDemoSettingsWindow.ParticleMass);
                 _sceneManager.AddGameObject(_cloths[i]);
