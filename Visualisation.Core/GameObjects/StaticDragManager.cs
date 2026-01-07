@@ -72,6 +72,12 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
         bool isButtonDown = inputProvider.IsMouseButtonDown(DragButton);
         if (IsDragging && !isButtonDown)
         {
+            // End dragging - restore particle mass if it's a cloth particle
+            if (DraggedObject is ClothParticleWrapper wrapper)
+            {
+                wrapper.EndDrag();
+            }
+
             DraggedObject = null;
             return false;
         }

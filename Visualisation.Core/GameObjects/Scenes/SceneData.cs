@@ -103,7 +103,7 @@ public sealed record EngineClothData
     public Vector3Data Particle0Position { get; init; } = new(0, 0, 0);
 
     // Optional: store all particle states for exact recreation
-    public List<ParticleData>? ParticleStates { get; init; }
+    public List<ClothParticleData>? ParticleStates { get; init; }
 }
 
 public record CollisionParticleData
@@ -112,7 +112,11 @@ public record CollisionParticleData
     public Vector3Data Radius { get; init; } = new(0, 0, 0);
 }
 
-public sealed record ParticleData : CollisionParticleData;
+public sealed record ClothParticleData : CollisionParticleData
+{
+    public int ClothParticleX { get; init; }
+    public int ClothParticleY { get; init; }
+}
 
 public sealed record ClothData
 {

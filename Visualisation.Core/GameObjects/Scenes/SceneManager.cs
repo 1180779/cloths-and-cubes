@@ -353,7 +353,7 @@ public abstract class SceneManager : IDisposable
                     GL.Enable(EnableCap.CullFace);
                     break;
                 }
-            case RigidParticleInCorner particleInCorner:
+            case ClothRigidParticleInCorner particleInCorner:
                 {
                     var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
                     var position = particleInCorner.GetAxis(3);

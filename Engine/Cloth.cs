@@ -7,7 +7,7 @@ namespace Engine;
 
 public class Cloth
 {
-    public RigidParticle[,] Particles;
+    public ClothRigidParticle[,] Particles;
     public ForceRegistry Registry;
     public int SizeX;
     public int SizeY;
@@ -65,7 +65,7 @@ public class Cloth
         this.SpringConstant = springConstant;
         this.ParticleMass = particleMass;
         this.Particle0Pos = particle0Pos.Value;
-        Particles = new RigidParticle[sizeX, sizeY];
+        Particles = new ClothRigidParticle[sizeX, sizeY];
         ResetToInitialPosition();
 
         CreateSprings();
@@ -86,11 +86,18 @@ public class Cloth
             {
                 if (IsCorner(i, j))
                 {
-                    Particles[i, j] ??= new RigidParticleInCorner() { AttachedToCloth = this, };
+                    Particles[i, j] ??= new ClothRigidParticleInCorner
+                    {
+                        AttachedToCloth = this, ClothParticleX = i, ClothParticleY = j
+                    };
                 }
                 else
                 {
-                    Particles[i, j] ??= new RigidParticle(); // Create a new particle if null
+                    Particles[i, j] ??=
+                        new ClothRigidParticle
+                        {
+                            AttachedToCloth = this, ClothParticleX = i, ClothParticleY = j
+                        }; // Create a new particle if null
                 }
 
                 Particles[i, j].SetState(

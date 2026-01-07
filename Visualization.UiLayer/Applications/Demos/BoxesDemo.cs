@@ -181,18 +181,41 @@ public class BoxesDemo : RigidBodyApplication
                         break;
                     case Cloth cloth:
                         var triangles = cloth.VisualCloth.GetTriangles();
-                        if (RayIntersection.IntersectRayCloth(ray, triangles,
-                                out distance))
+                        var (hit, vertexIdx, triangleIdx) =
+                            RayIntersection.IntersectRayCloth(ray, triangles, out distance);
+                        if (hit)
+                        {
+                            // Get the particle coordinates from the triangle and vertex index
+                            var (particleX, particleY) =
+                                cloth.VisualCloth.GetParticleCoordinatesFromTriangle(triangleIdx, vertexIdx);
+
+                            // Create a wrapper for the specific particle
+                            var particleWrapper = new ClothParticleWrapper(cloth, particleX, particleY);
+
                             // adjust to account for position epsilon
-                            return (true, distance - _contactResolver.PositionEpsilon, cloth);
+                            return (true, distance - _contactResolver.PositionEpsilon, particleWrapper);
+                        }
+
                         break;
-                    case RigidParticleInCorner particleInCorner:
+                    case ClothRigidParticleInCorner particleInCorner:
                         if (RayIntersection.IntersectRayAABB(ray, particleInCorner.GetBoundingBox(), out distance))
-                            return (true, distance, particleInCorner);
+                        {
+                            var gameCloth = _cloths.First(c => c.EngineCloth == particleInCorner.AttachedToCloth);
+                            var particleWrapper = new ClothParticleWrapper(gameCloth, particleInCorner.ClothParticleX,
+                                particleInCorner.ClothParticleY);
+                            return (true, distance, particleWrapper);
+                        }
+
                         break;
-                    case RigidParticle particle:
+                    case ClothRigidParticle particle:
                         if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
-                            return (true, distance, particle);
+                        {
+                            var gameCloth = _cloths.First(c => c.EngineCloth == particle.AttachedToCloth);
+                            var particleWrapper = new ClothParticleWrapper(gameCloth, particle.ClothParticleX,
+                                particle.ClothParticleY);
+                            return (true, distance, particleWrapper);
+                        }
+
                         break;
                     case Cylinder cylinder:
                         if (RayIntersection.IntersectionRayCylinder(ray, cylinder.EngineCylinder, out distance))

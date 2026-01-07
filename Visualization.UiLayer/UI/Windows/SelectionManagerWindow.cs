@@ -42,6 +42,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
     private System.Numerics.Vector3 _initialCenterPosition;
     private System.Numerics.Vector3 _accumulatedRotation;
 
+    // Track previously selected cloth particle for pinning
+    private ClothParticleWrapper? _previouslySelectedParticle;
+
     public string Name => "Selected Object";
 
     public void DebugRenderInScene(Shader shader)
@@ -141,6 +144,11 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
 
         switch (targetObject)
         {
+            case ClothParticleWrapper particleWrapper:
+                // Track the selected cloth particle for potential pinning
+                _previouslySelectedParticle = particleWrapper;
+                DrawClothParticleWrapper(particleWrapper);
+                break;
             case Box box:
                 DrawBox(box);
                 break;
@@ -150,7 +158,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
             case Cloth cloth:
                 DrawCloth(cloth);
                 break;
-            case RigidParticleInCorner particleInCorner:
+            case ClothRigidParticleInCorner particleInCorner:
                 DrawParticle(particleInCorner);
                 break;
             case RigidParticle particle:
@@ -458,6 +466,64 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
         }
     }
 
+    private void DrawClothParticleWrapper(ClothParticleWrapper wrapper)
+    {
+        ImGui.Text($"Cloth Particle [{wrapper.ParticleX}, {wrapper.ParticleY}]");
+        ImGui.Separator();
+
+        var particle = wrapper.Particle;
+        var body = particle.Body;
+
+        ImGui.Text($"Position: ({body.Position.X:F2}, {body.Position.Y:F2}, {body.Position.Z:F2})");
+        ImGui.Text($"Velocity: ({body.Velocity.X:F2}, {body.Velocity.Y:F2}, {body.Velocity.Z:F2})");
+        ImGui.Text($"Inverse Mass: {body.InverseMass:F4}");
+
+        bool isAnchor = body.InverseMass == 0;
+        ImGui.Text($"Is Anchor: {(isAnchor ? "Yes" : "No")}");
+
+        ImGui.Separator();
+
+        if (ImGui.CollapsingHeader("Particle Controls"))
+        {
+            if (isAnchor)
+            {
+                if (ImGui.Button("Release Anchor"))
+                {
+                    wrapper.RestoreDefaultMass();
+                }
+            }
+            else
+            {
+                if (ImGui.Button("Make Anchor"))
+                {
+                    wrapper.MakeAnchor();
+                }
+            }
+
+            ImGui.Separator();
+            ImGui.TextWrapped(
+                "Tip: Drag the particle with the gizmo to move it. The particle will automatically become an anchor while dragging.");
+        }
+
+        if (ImGui.CollapsingHeader("Pin to Box Corner"))
+        {
+            ImGui.TextWrapped(
+                "Select this particle, then select a box corner (RigidParticleInCorner) and use the 'Pin Cloth Particle' button that will appear.");
+            ImGui.TextWrapped("Note: This feature requires selecting both the cloth particle and a box corner.");
+        }
+
+        ImGui.Separator();
+
+        if (ImGui.CollapsingHeader("Parent Cloth Info"))
+        {
+            var cloth = wrapper.ParentCloth;
+            ImGui.Text($"Cloth Size: {cloth.EngineCloth.SizeX} x {cloth.EngineCloth.SizeY}");
+            ImGui.Text($"Spring Constant: {cloth.EngineCloth.SpringConstant:F2}");
+            ImGui.Text($"Spring Length: {cloth.EngineCloth.SpringLength:F2}");
+            ImGui.Text($"Particle Mass: {cloth.EngineCloth.ParticleMass:F4}");
+        }
+    }
+
     private bool DrawClothLsctpm(ref Real springConstant, ref Real particleMass)
     {
         bool changed = false;
@@ -614,6 +680,20 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
 
     private void DrawParticle(RigidParticle particle, int x = 0, int y = 0)
     {
+        // Check if this is a corner particle and if we have a previously selected cloth particle
+        if (particle is ClothRigidParticleInCorner corner && _previouslySelectedParticle != null)
+        {
+            ImGui.Separator();
+            if (ImGui.Button("Pin Cloth Particle to This Corner"))
+            {
+                _previouslySelectedParticle.PinToBoxCorner(corner);
+                ImGui.Text(
+                    $"Pinned particle [{_previouslySelectedParticle.ParticleX}, {_previouslySelectedParticle.ParticleY}] to corner!");
+            }
+
+            ImGui.Separator();
+        }
+
         if (ImGui.CollapsingHeader("Transformation", ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Indent();

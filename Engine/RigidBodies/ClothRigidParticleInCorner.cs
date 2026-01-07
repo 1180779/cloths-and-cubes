@@ -12,9 +12,8 @@ namespace Engine.RigidBodies;
 /// bounding box is calculated based on the spring length of the attached cloth
 /// instead of a fixed small size to enable easier selection.
 /// </remarks>
-public sealed class RigidParticleInCorner : RigidParticle
+public sealed class ClothRigidParticleInCorner : ClothRigidParticle
 {
-    public required Cloth AttachedToCloth { get; init; }
     public new float BoundingBoxHalfSize => AttachedToCloth.SpringLength / 2.0f + RigidParticle.BoundingBoxHalfSize;
 
     public override BoundingBox GetBoundingBox()

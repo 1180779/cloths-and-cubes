@@ -3,6 +3,13 @@ using Engine.Collision.Bounding_Volume_Hierarchy;
 
 namespace Engine.RigidBodies
 {
+    public class ClothRigidParticle : RigidParticle
+    {
+        public required int ClothParticleX { get; init; }
+        public required int ClothParticleY { get; init; }
+        public required Cloth AttachedToCloth { get; init; }
+    }
+
     public class RigidParticle : CollisionParticle, IBoxable
     {
         public const float BoundingBoxHalfSize = 0.04f;

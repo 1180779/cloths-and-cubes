@@ -21,6 +21,9 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
         private VertexData[]? _vertices;
         private int _vertexCount;
 
+        // Mapping from triangle index to grid coordinates (base vertex of the triangle)
+        private List<(int x, int y)> _triangleToGridMapping = new();
+
         public ClothMesh(Vector3[,] points)
         {
             _meshName = Guid.NewGuid().ToString();
@@ -33,6 +36,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             int height = newPoints.GetLength(1);
 
             var vertices = new VertexData[width, height];
+            _triangleToGridMapping.Clear();
 
             for (int y = 0; y < height; y++)
             {
@@ -86,9 +90,12 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                     vertexData.Add(v00);
                     vertexData.Add(v10);
                     vertexData.Add(v01);
+                    _triangleToGridMapping.Add((x, y));
+
                     vertexData.Add(v10);
                     vertexData.Add(v11);
                     vertexData.Add(v01);
+                    _triangleToGridMapping.Add((x + 1, y));
                 }
             }
 
@@ -140,12 +147,57 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             return triangles.ToArray();
         }
 
+        /// <summary>
+        /// Gets the grid coordinates (x, y) for a specific triangle index and vertex index within that triangle.
+        /// The vertexIdx parameter indicates which vertex of the triangle was hit (0, 1, or 2).
+        /// </summary>
+        public (int x, int y) GetParticleCoordinatesFromTriangle(int triangleIdx, int vertexIdx)
+        {
+            if (triangleIdx < 0 || triangleIdx >= _triangleToGridMapping.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(triangleIdx));
+            }
+
+            var (baseX, baseY) = _triangleToGridMapping[triangleIdx];
+
+            // Triangles are indexed as: 2 triangles per quad
+            // Triangle 0 in quad: (x,y), (x+1,y), (x,y+1)
+            // Triangle 1 in quad: (x+1,y), (x+1,y+1), (x,y+1)
+
+            bool isFirstTriangleInQuad = (triangleIdx % 2) == 0;
+
+            if (isFirstTriangleInQuad)
+            {
+                // First triangle: v0=(x,y), v1=(x+1,y), v2=(x,y+1)
+                return vertexIdx switch
+                {
+                    0 => (baseX, baseY),
+                    1 => (baseX + 1, baseY),
+                    2 => (baseX, baseY + 1),
+                    _ => (baseX, baseY)
+                };
+            }
+            else
+            {
+                // Second triangle: v0=(x+1,y), v1=(x+1,y+1), v2=(x,y+1)
+                // baseX is already x+1 from the mapping
+                return vertexIdx switch
+                {
+                    0 => (baseX, baseY),
+                    1 => (baseX, baseY + 1),
+                    2 => (baseX - 1, baseY + 1),
+                    _ => (baseX, baseY)
+                };
+            }
+        }
+
         private void BuildMesh(Vector3[,] points)
         {
             int width = points.GetLength(0);
             int height = points.GetLength(1);
 
             var vertices = new VertexData[width, height];
+            _triangleToGridMapping.Clear();
 
             for (int y = 0; y < height; y++)
             {
@@ -199,9 +251,12 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                     vertexData.Add(v00);
                     vertexData.Add(v10);
                     vertexData.Add(v01);
+                    _triangleToGridMapping.Add((x, y));
+
                     vertexData.Add(v10);
                     vertexData.Add(v11);
                     vertexData.Add(v01);
+                    _triangleToGridMapping.Add((x + 1, y));
                 }
             }
 

@@ -288,21 +288,24 @@ public static class SceneDataMappers
 
     #region CollisionParticle
 
-    public static ParticleData ToData(this RigidParticle particle)
+    public static ClothParticleData ToData(this RigidParticle particle)
     {
-        return new ParticleData { RigidBody = particle.Body.ToData(), Radius = particle.Radius.ToData() };
+        return new ClothParticleData { RigidBody = particle.Body.ToData(), Radius = particle.Radius.ToData() };
     }
 
-    public static void UpdateFromData(this RigidParticle particle, ParticleData data)
+    public static void UpdateFromData(this RigidParticle particle, ClothParticleData data)
     {
         particle.Body.UpdateFromData(data.RigidBody);
         particle.Radius = data.Radius.ToEngine();
         particle.RefreshPhysicsState();
     }
 
-    public static RigidParticle ToEngineParticle(this ParticleData data)
+    public static ClothRigidParticle ToEngineParticle(this ClothParticleData data, Engine.Cloth cloth)
     {
-        var particle = new RigidParticle();
+        var particle = new ClothRigidParticle()
+        {
+            AttachedToCloth = cloth, ClothParticleX = data.ClothParticleX, ClothParticleY = data.ClothParticleY
+        };
         particle.UpdateFromData(data);
         return particle;
     }
@@ -313,10 +316,10 @@ public static class SceneDataMappers
 
     public static EngineClothData ToData(this Engine.Cloth cloth, bool includeParticleStates = false)
     {
-        List<ParticleData>? particleStates = null;
+        List<ClothParticleData>? particleStates = null;
         if (includeParticleStates)
         {
-            particleStates = new List<ParticleData>();
+            particleStates = new List<ClothParticleData>();
             for (int i = 0; i < cloth.SizeX; i++)
             {
                 for (int j = 0; j < cloth.SizeY; j++)
@@ -442,7 +445,7 @@ public static class SceneDataMappers
                 for (int j = 0; j < data.EngineCloth.SizeY; j++)
                 {
                     var particleData = data.EngineCloth.ParticleStates[index++];
-                    cloth.EngineCloth.Particles[i, j] = particleData.ToEngineParticle();
+                    cloth.EngineCloth.Particles[i, j] = particleData.ToEngineParticle(cloth.EngineCloth);
                 }
             }
         }

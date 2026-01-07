@@ -2,6 +2,7 @@
 
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
+using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Gizmos.Rotation;
 using Visualisation.Core.Display.Gizmos.Translation;
@@ -94,7 +95,29 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
     protected override IMesh Mesh { get; set; }
     public override object PhysicsObject => EngineCloth;
+
     public override Matrix4 Model => Matrix4.Identity;
+
+    /// <summary>
+    /// Retrieves the indices of a specific particle within the cloth simulation's particle grid.
+    /// </summary>
+    /// <param name="particle">The rigid particle to locate within the grid.</param>
+    /// <returns>A tuple containing the row and column indices of the particle. Returns (-1, -1) if the particle is not found.</returns>
+    public (int, int) GetParticleIndices(RigidParticle particle)
+    {
+        for (int i = 0; i < EngineCloth.SizeX; i++)
+        {
+            for (int j = 0; j < EngineCloth.SizeY; j++)
+            {
+                if (EngineCloth.Particles[i, j] == particle)
+                {
+                    return (i, j);
+                }
+            }
+        }
+
+        return (-1, -1);
+    }
 
     private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
     {
