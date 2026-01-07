@@ -67,7 +67,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
 
     public void Draw(ref bool isOpen)
     {
-        if (ImGui.Begin("Selected Object", ref isOpen))
+        if (ImGui.Begin("Selected/Dragged Object", ref isOpen))
         {
             ImGui.Checkbox("Enable static drag", ref _staticDragManager.Enabled);
             ImGui.SliderFloat("Static drag sensitivity", ref _staticDragManager.Sensitivity, 0.1f, 10.0f);
@@ -87,58 +87,85 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
             ImGui.Spacing();
 
             // Game Object Properties section - only if a GameObject is selected
-            if (_selectionManager.SelectedObject is GameObject gameObject)
+            if (ImGui.CollapsingHeader("Selected Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                if (ImGui.CollapsingHeader("Game Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
-                {
-                    ImGui.Indent();
-                    ImGui.Checkbox("Invisible", ref gameObject.Invisible);
-
-                    ImGui.Spacing();
-                    ImGui.Text($"Current Material: {gameObject.Material.Name}");
-
-                    ImGui.Text("Change Material:");
-                    DrawMaterialSelectors(gameObject);
-                    ImGui.Unindent();
-                }
-            }
-            else
-            {
-                ImGui.BeginDisabled();
-                ImGui.CollapsingHeader("Game Object Properties");
-                ImGui.EndDisabled();
+                ImGui.Indent();
+                DrawGameObjectProperties(_selectionManager.SelectedObject, "SelectedObject");
+                ImGui.Unindent();
             }
 
-            switch (_selectionManager.SelectedObject)
+            if (ImGui.CollapsingHeader("Hovered Object Properties"))
             {
-                case Box box:
-                    DrawBox(box);
-                    break;
-                case Ball ball:
-                    DrawSphere(ball);
-                    break;
-                case Cloth cloth:
-                    DrawCloth(cloth);
-                    break;
-                case RigidParticleInCorner particleInCorner:
-                    DrawParticle(particleInCorner);
-                    break;
-                case RigidParticle particle:
-                    DrawParticle(particle);
-                    break;
-                case Plane plane:
-                    DrawPlane(plane);
-                    break;
-                case Cylinder cylinder:
-                    DrawCylinder(cylinder);
-                    break;
-                case Cone cone:
-                    DrawCone(cone);
-                    break;
+                ImGui.Indent();
+                DrawGameObjectProperties(_selectionManager.HoveredObject, "HoveredObject");
+                ImGui.Unindent();
+            }
+
+            if (ImGui.CollapsingHeader("Dragged Object Properties"))
+            {
+                ImGui.Indent();
+                DrawGameObjectProperties(_staticDragManager.HoverTarget, "DraggedObject");
+                ImGui.Unindent();
             }
         }
 
         ImGui.End();
+    }
+
+    private void DrawGameObjectProperties(object? targetObject, string id)
+    {
+        ImGui.PushID(id);
+        if (targetObject is GameObject gameObject)
+        {
+            if (ImGui.CollapsingHeader("Game Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Indent();
+                ImGui.Checkbox("Invisible", ref gameObject.Invisible);
+
+                ImGui.Spacing();
+                ImGui.Text($"Current Material: {gameObject.Material.Name}");
+
+                ImGui.Text("Change Material:");
+                DrawMaterialSelectors(gameObject);
+                ImGui.Unindent();
+            }
+        }
+        else
+        {
+            ImGui.BeginDisabled();
+            ImGui.CollapsingHeader("Game Object Properties");
+            ImGui.EndDisabled();
+        }
+
+        ImGui.PopID();
+
+        switch (targetObject)
+        {
+            case Box box:
+                DrawBox(box);
+                break;
+            case Ball ball:
+                DrawSphere(ball);
+                break;
+            case Cloth cloth:
+                DrawCloth(cloth);
+                break;
+            case RigidParticleInCorner particleInCorner:
+                DrawParticle(particleInCorner);
+                break;
+            case RigidParticle particle:
+                DrawParticle(particle);
+                break;
+            case Plane plane:
+                DrawPlane(plane);
+                break;
+            case Cylinder cylinder:
+                DrawCylinder(cylinder);
+                break;
+            case Cone cone:
+                DrawCone(cone);
+                break;
+        }
     }
 
     private void DrawMaterialSelectors(GameObject gameObject)
