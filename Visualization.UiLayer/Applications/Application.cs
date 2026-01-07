@@ -110,6 +110,17 @@ public class Application : GameWindow
     {
         base.OnUpdateFrame(e);
 
+        // Set bypass flag BEFORE any keyboard input is processed
+        // This must happen here, not in Draw(), because OnUpdateFrame happens before rendering
+        if (_inputProvider is OpenTKWithImGuiInputProvider imguiProvider)
+        {
+            bool viewportIsActive = _sceneWindow.IsHovered ||
+                _inputProvider.GetCursorState() == Visualisation.Core.Inputs.CursorState.Grabbed ||
+                _sceneManager.StaticDragManager.IsDragging ||
+                (_sceneManager.ActiveGizmo?.IsActive ?? false);
+            imguiProvider.BypassImGuiKeyboardCapture = viewportIsActive;
+        }
+
         _inputProvider.UpdateMousePosition();
 
         // if (!IsFocused)

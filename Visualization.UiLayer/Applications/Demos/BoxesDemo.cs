@@ -314,7 +314,13 @@ public class BoxesDemo : RigidBodyApplication
 
     protected void ObjectSelectionHandling()
     {
-        if (_sceneWindow.IsHovered || _inputProvider.GetCursorState() == Visualisation.Core.Inputs.CursorState.Grabbed)
+        // Keep selection/drag handling active even if hover is lost during active operations
+        bool isDragging = _sceneManager.StaticDragManager.IsDragging;
+        bool isGizmoActive = _sceneManager.ActiveGizmo?.IsActive ?? false;
+
+        if (_sceneWindow.IsHovered ||
+            _inputProvider.GetCursorState() == Visualisation.Core.Inputs.CursorState.Grabbed ||
+            isDragging || isGizmoActive)
         {
             var mousePos = ImGui.GetMousePos();
             var imageTopLeft = _sceneWindow.ImageTopLeft;
@@ -426,6 +432,14 @@ public class BoxesDemo : RigidBodyApplication
             if (contacts > 0)
                 b.EngineBox.IsOverlapping = true;
         }
+    }
+
+    protected override void Update(float deltaTime)
+    {
+        // TODO: dragging
+
+        // Call base to run physics update and collision resolution
+        base.Update(deltaTime);
     }
 
     /// <summary>

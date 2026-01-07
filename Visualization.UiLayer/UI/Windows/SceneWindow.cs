@@ -9,6 +9,8 @@ using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
 
+using Visualization.UiLayer.Inputs;
+
 namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class SceneWindow(
@@ -43,7 +45,20 @@ public sealed class SceneWindow(
         ImGui.Begin("Game Viewport");
 
         _isHovered = ImGui.IsWindowHovered();
-        if (_isHovered || _inputProvider.GetCursorState() == CursorState.Grabbed)
+        // Keep input processing active during drag even if hover state is lost
+        bool isDragging = _sceneManager.StaticDragManager.IsDragging;
+        bool isGizmoActive = _sceneManager.ActiveGizmo?.IsActive ?? false;
+        bool viewportIsActive = _isHovered || _inputProvider.GetCursorState() == CursorState.Grabbed || isDragging ||
+            isGizmoActive;
+
+        // When viewport is active, bypass ImGui keyboard capture so all keyboard input works
+        // Note: This is also set in OnUpdateFrame for timing, but we keep it here for consistency
+        if (_inputProvider is OpenTKWithImGuiInputProvider imguiProvider)
+        {
+            imguiProvider.BypassImGuiKeyboardCapture = viewportIsActive;
+        }
+
+        if (viewportIsActive)
         {
             _sceneManager.ProcessInputInFocus(_inputProvider, dt);
         }
