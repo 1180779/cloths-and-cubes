@@ -33,6 +33,8 @@ public class BoxesDemo : RigidBodyApplication
     private SceneData? _initialSceneState;
     private bool _sceneWasLoaded;
 
+    private float _lastFrameDuration = 0.0f;
+
     protected ForceRegistry _forceRegistry = new();
 
     protected BVH _bvh = BVH.BuildSynchronous([]);
@@ -349,6 +351,47 @@ public class BoxesDemo : RigidBodyApplication
         BvhRebuild();
         ObjectSelectionHandling();
 
+        // The dragged object can find itself below the plane when set by the user 
+        // (in the case of using springs, this would be the anchor point below 
+        // the plane). It is necessary to first place the object within the valid scene 
+        // and update the bvh to reflect that to allow for proper collision 
+        // resolution. If not, the object is only resolved with the plane 
+        // and is not resolved with any objects that are within the scene and 
+        // above it, which leads to no collision resolution in that case.
+        // (In the future spring version this would make the desired position 
+        // to be outside the scene and probably cause issues with the spring force.) 
+        var draggedObject = _sceneManager.StaticDragManager.DraggedObject;
+        if (draggedObject != null)
+        {
+            _collisionData.Reset(MaxContacts);
+            if (draggedObject is Box box)
+            {
+                CollisionDetector.BoxAndHalfSpace(box.EngineBox, _plane.EnginePlane, _collisionData);
+            }
+            else if (draggedObject is Ball ball)
+            {
+                CollisionDetector.SphereAndHalfSpace(ball.EngineBall, _plane.EnginePlane, _collisionData);
+            }
+            else if (draggedObject is Cloth cloth)
+            {
+                foreach (var particle in cloth.EngineCloth.Particles)
+                {
+                    if (!_collisionData.HasMoreContacts()) break;
+                    CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
+                }
+            }
+
+            if (_collisionData.ContactCount > 0)
+            {
+                _contactResolver.ResolveContacts(_collisionData.ContactList, _collisionData.ContactCount,
+                    _lastFrameDuration);
+            }
+
+            _collisionData.Reset(MaxContacts);
+        }
+
+        BvhRebuild();
+
         // Process box-plane collisions
         foreach (var box in _boxes)
         {
@@ -436,7 +479,8 @@ public class BoxesDemo : RigidBodyApplication
 
     protected override void Update(float deltaTime)
     {
-        // TODO: dragging
+        if (deltaTime > 0.05f) deltaTime = 0.05f;
+        _lastFrameDuration = deltaTime;
 
         // Call base to run physics update and collision resolution
         base.Update(deltaTime);

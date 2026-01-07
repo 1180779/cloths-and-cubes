@@ -48,17 +48,22 @@ public abstract class RigidBodyApplication : Application
         GenerateContacts();
 
         // Resolve detected contacts
-        _contactResolver.ResolveContacts(
-            _collisionData.ContactList,
-            _collisionData.ContactCount,
-            deltaTime
-        );
+        ResolveContacts(deltaTime);
 #if DEBUG
 
 #if FRAMESAVER
         FrameSaver.SaveFrame(Scene);
 #endif
 #endif
+    }
+
+    protected virtual void ResolveContacts(float duration)
+    {
+        _contactResolver.ResolveContacts(
+            _collisionData.ContactList,
+            _collisionData.ContactCount,
+            duration
+        );
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
