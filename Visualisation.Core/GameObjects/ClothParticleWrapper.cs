@@ -1,3 +1,4 @@
+using Engine;
 using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Gizmos.Translation;
@@ -24,7 +25,7 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
         _particleY = particleY;
     }
 
-    public RigidParticle Particle => _parentCloth.EngineCloth.Particles[_particleX, _particleY];
+    public ClothRigidParticle Particle => _parentCloth.EngineCloth.Particles[_particleX, _particleY];
 
     public int ParticleX => _particleX;
     public int ParticleY => _particleY;
@@ -79,7 +80,13 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
     /// </summary>
     public void MakeAnchor()
     {
-        Particle.Body.InverseMass = 0;
+        Particle.Body.InverseMass = 0; // Infinite translational mass
+        Particle.Body.InverseInertiaTensor = new Matrix3(); // Infinite rotational inertia
+        Particle.Body.Velocity = Engine.Vector3.Zero;
+        Particle.Body.Acceleration = Engine.Vector3.Zero;
+        Particle.Body.Rotation = Engine.Vector3.Zero;
+        Particle.Body.ClearAccumulators();
+        Particle.Body.CalculateDerivedData();
         _isDragging = false;
     }
 
@@ -90,6 +97,13 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
     {
         float defaultMass = _parentCloth.EngineCloth.ParticleMass;
         Particle.Body.InverseMass = 1.0f / defaultMass;
+        Particle.Body.Acceleration = Engine.Vector3.Gravity;
+
+        // Restore the inertia tensor to a zero matrix (standard for particles)
+        Matrix3 tensor = new();
+        Particle.Body.SetInertiaTensor(tensor);
+
+        Particle.Body.CalculateDerivedData();
         _isDragging = false;
     }
 
@@ -100,8 +114,15 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
     {
         Particle.Body.Position = position;
         Particle.Body.Velocity = Engine.Vector3.Zero;
-        Particle.Body.InverseMass = 0; // Make it immovable
+        Particle.Body.Acceleration = Engine.Vector3.Zero;
+        Particle.Body.Rotation = Engine.Vector3.Zero;
+
+        // Make it truly immovable by setting both inverse mass and inverse inertia tensor to zero
+        Particle.Body.InverseMass = 0; // Infinite translational mass
+        Particle.Body.InverseInertiaTensor = new Matrix3(); // Infinite rotational inertia
+
         Particle.Body.ClearAccumulators();
+        Particle.Body.CalculateDerivedData();
     }
 
     /// <summary>
@@ -111,8 +132,14 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
     {
         Particle.Body.Position = corner.Body.Position;
         Particle.Body.Velocity = Engine.Vector3.Zero;
-        Particle.Body.InverseMass = 0; // Make it immovable like the corner
+        Particle.Body.Rotation = Engine.Vector3.Zero;
+
+        // Make it truly immovable by setting both inverse mass and inverse inertia tensor to zero
+        Particle.Body.InverseMass = 0; // Infinite translational mass
+        Particle.Body.InverseInertiaTensor = new Matrix3(); // Infinite rotational inertia
+
         Particle.Body.ClearAccumulators();
+        Particle.Body.CalculateDerivedData();
 
         // Note: This creates a one-time pin. For a continuous attachment,
         // you would need to update the particle position every frame based on the corner.

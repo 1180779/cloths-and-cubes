@@ -153,6 +153,7 @@ public class RigidBody
         transformMatrix.Data[10] = 1 - 2 * orientation.I * orientation.I -
             2 * orientation.J * orientation.J;
         transformMatrix.Data[11] = position.Z;
+        transformMatrix.DebugAssertNotNan();
     }
 
     public void CalculateDerivedData()

@@ -81,6 +81,8 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
                 _selectionManager.SelectionEnabled = selection;
             }
 
+            ImGui.Checkbox("Enable gizmos", ref _selectionManager.GizmosEnabled);
+
             ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
             ImGui.Checkbox("Draw invisible objects", ref _selectionManager.DrawInvisibleObjects);
             ImGui.Checkbox("Draw selected object even behind other objects",
@@ -476,6 +478,8 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
 
         ImGui.Text($"Position: ({body.Position.X:F2}, {body.Position.Y:F2}, {body.Position.Z:F2})");
         ImGui.Text($"Velocity: ({body.Velocity.X:F2}, {body.Velocity.Y:F2}, {body.Velocity.Z:F2})");
+        ImGui.Text($"Rotation: ({body.Rotation.X:F2}, {body.Rotation.Y:F2}, {body.Rotation.Z:F2})");
+        ImGui.Text($"Acceleration: ({body.Acceleration.X:F2}, {body.Acceleration.Y:F2}, {body.Acceleration.Z:F2})");
         ImGui.Text($"Inverse Mass: {body.InverseMass:F4}");
 
         bool isAnchor = body.InverseMass == 0;

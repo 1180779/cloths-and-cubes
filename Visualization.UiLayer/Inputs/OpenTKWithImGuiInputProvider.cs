@@ -83,8 +83,6 @@ public class OpenTKWithImGuiInputProvider : IInputProvider
         {
             if (!_hasLoggedKeyboardBlock)
             {
-                Console.WriteLine($"[ImGui] WantCaptureKeyboard = true, blocking keyboard");
-                Console.WriteLine($"  BypassFlag: {BypassImGuiKeyboardCapture}, WantMouse: {io.WantCaptureMouse}");
                 _hasLoggedKeyboardBlock = true;
             }
 

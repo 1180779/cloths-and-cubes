@@ -55,6 +55,8 @@ public sealed class SelectionManager(
     public bool Unselect = true;
     private bool _selectionEnabled = true;
 
+    public bool GizmosEnabled;
+
     public bool SelectionEnabled
     {
         get => _selectionEnabled;

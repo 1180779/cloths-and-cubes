@@ -160,7 +160,14 @@ public abstract class SceneManager : IDisposable
         // it maintains priority until the operation completes (mouse button released)
 
         // Check if gizmo is already active (the highest priority when active)
-        if (_activeGizmo?.IsActive ?? false)
+        if (!(SelectionManager?.GizmosEnabled ?? false) && _activeGizmo?.Target is not null)
+        {
+            _activeGizmo.Target = null;
+            SetActiveGizmoType(GizmoType.None);
+        }
+
+        if (((SelectionManager?.GizmosEnabled ?? false) && (_activeGizmo?.IsActive ?? false)) &&
+            _activeGizmo is not null)
         {
             _activeGizmo.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize);
             return;
@@ -184,10 +191,12 @@ public abstract class SceneManager : IDisposable
 
         // Check gizmo first (the highest priority for new operations)
         bool gizmoTookMouseInput = false;
-        if (_activeGizmo is not null)
+        if ((SelectionManager?.GizmosEnabled ?? false) && _activeGizmo is not null)
+        {
             _activeGizmo.Target = (IGizmoTarget?)_selectionManager?.SelectedObject;
-        gizmoTookMouseInput =
-            _activeGizmo?.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize) ?? false;
+            gizmoTookMouseInput =
+                _activeGizmo?.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize) ?? false;
+        }
 
         bool selectedHoveredObject = !gizmoTookMouseInput && input.IsMouseButtonPressed(MouseButton.Left) &&
             (SelectionManager?.SelectHoveredObject() ?? false);
@@ -353,24 +362,34 @@ public abstract class SceneManager : IDisposable
                     GL.Enable(EnableCap.CullFace);
                     break;
                 }
-            case ClothRigidParticleInCorner particleInCorner:
+            case ClothParticleWrapper particleWrapper:
                 {
-                    var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
-                    var position = particleInCorner.GetAxis(3);
-                    BasicShader.SetMatrix4("model",
-                        Matrix4.CreateScale(particleScale, particleScale, particleScale) *
-                        Matrix4.CreateTranslation(position.X, position.Y, position.Z));
-                    _cube.Render();
-                    break;
-                }
-            case RigidParticle particle:
-                {
-                    var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
-                    var position = particle.GetAxis(3);
-                    BasicShader.SetMatrix4("model",
-                        Matrix4.CreateScale(particleScale, particleScale, particleScale) *
-                        Matrix4.CreateTranslation(position.X, position.Y, position.Z));
-                    _cube.Render();
+                    var innerParticle = particleWrapper.Particle;
+                    switch (innerParticle)
+                    {
+                        case ClothRigidParticleInCorner particleInCorner:
+                            {
+                                var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
+                                var position = particleInCorner.GetAxis(3);
+                                BasicShader.SetMatrix4("model",
+                                    Matrix4.CreateScale(particleScale, particleScale, particleScale) *
+                                    Matrix4.CreateTranslation(position.X, position.Y, position.Z));
+                                _cube.Render();
+                                break;
+                            }
+                        // TODO: remove; depreciated
+                        case { } particle:
+                            {
+                                var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
+                                var position = particle.GetAxis(3);
+                                BasicShader.SetMatrix4("model",
+                                    Matrix4.CreateScale(particleScale, particleScale, particleScale) *
+                                    Matrix4.CreateTranslation(position.X, position.Y, position.Z));
+                                _cube.Render();
+                                break;
+                            }
+                    }
+
                     break;
                 }
             case Cylinder cylinder:
