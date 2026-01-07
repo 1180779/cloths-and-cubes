@@ -335,4 +335,17 @@ public class Cloth
         // Update Particle0Pos
         Particle0Pos = Particles[0, 0].Body.Position;
     }
+
+    public void ClearAccumulators()
+    {
+        for (int i = 0; i < SizeX; i++)
+        {
+            for (int j = 0; j < SizeY; j++)
+            {
+                Particles[i, j].Body.ClearAccumulators();
+                Particles[i, j].Body.Velocity = Vector3.Zero;
+                Particles[i, j].Body.Rotation = Vector3.Zero;
+            }
+        }
+    }
 }

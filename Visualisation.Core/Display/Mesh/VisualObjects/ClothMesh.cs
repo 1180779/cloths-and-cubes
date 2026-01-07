@@ -221,7 +221,7 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
                 int vbo = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
                 GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * Marshal.SizeOf<VertexData>(), _vertices,
-                    BufferUsageHint.StaticDraw);
+                    BufferUsageHint.StreamDraw);
 
                 int vao = GL.GenVertexArray();
                 GL.BindVertexArray(vao);

@@ -145,6 +145,13 @@ public class ContactResolutionTests
             4u,
             "Face-on penetration"
         ).SetName("FaceContact_ResolvesCorrectly");
+
+        yield return new TestCaseData(
+            new Vector3(0, -5.0f, 0), new Vector3(0.5f, 0.5f, 0.5f), new Quaternion(),
+            new Vector3(0, 1, 0), 0f,
+            8u,
+            "Deep penetration"
+        ).SetName("DeepPenetration_ResolvesCorrectly");
     }
 
     [Test]

@@ -1,5 +1,8 @@
 using System.Diagnostics;
 
+using Engine.Collision;
+using Engine.Rays;
+
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Inputs;
@@ -98,7 +101,44 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
         _planeOffset += Sensitivity * scroll;
         _planeOffset = Math.Clamp(_planeOffset, Math.Max(camera.NearPlane, MinOffset),
             Math.Min(camera.FarPlane, MaxOffset));
-        DraggedObject.Position = camera.Position + camera.Front * _planeOffset;
+        var targetPosition = camera.Position + camera.Front * _planeOffset;
+
+        // Check if the target position is below the plane
+        // If so, adjust it to be above the plane
+        // This is a simple fix to prevent objects from being dragged below the plane
+        // and causing issues with collision resolution
+        var ray = new Ray(camera.Position.ToEngine(), camera.Front.ToEngine());
+        // TODO: replace with the actual plane in the scene
+        var plane = new CollisionPlane { Direction = Vector3.UnitY.ToEngine(), Offset = 0 };
+        if (RayIntersection.IntersectRayPlane(ray, plane, out var distance))
+        {
+            if (distance < _planeOffset)
+            {
+                // The target position is below the plane
+                // We clamp the position to be above the plane
+                // The resolution should take care of further adjustment
+                if (targetPosition.Y < 0)
+                {
+                    targetPosition.Y = 0.01f;
+                }
+            }
+        }
+
+        DraggedObject.Position = targetPosition;
+
+        // TODO: check if this is of any use 
+        // // Zero out velocity and rotation to prevent physics fighting the drag
+        // if (DraggedObject is GameObjectCollisionPrimitive gameObjectCollisionPrimitive)
+        // {
+        //     gameObjectCollisionPrimitive.EngineCollisionPrimitive.Body.Velocity = Engine.Vector3.Zero;
+        //     gameObjectCollisionPrimitive.EngineCollisionPrimitive.Body.Rotation = Engine.Vector3.Zero;
+        //     gameObjectCollisionPrimitive.EngineCollisionPrimitive.Body.ClearAccumulators();
+        // }
+        // else if (DraggedObject is Cloth cloth)
+        // {
+        //     cloth.EngineCloth.ClearAccumulators();
+        // }
+
         OnObjectDragged?.Invoke();
         return true;
     }

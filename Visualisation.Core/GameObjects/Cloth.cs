@@ -138,6 +138,7 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
         set
         {
             EngineCloth.Center = value.ToEngine();
+            EngineCloth.ClearAccumulators();
         }
     }
 
@@ -159,6 +160,7 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
             var rotationVector = axis * angle;
 
             EngineCloth.RotateAroundCenter(rotationVector.ToEngine());
+            EngineCloth.ClearAccumulators();
         }
     }
 }

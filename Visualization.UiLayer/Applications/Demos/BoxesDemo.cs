@@ -221,10 +221,7 @@ public class BoxesDemo : RigidBodyApplication
 
         _sceneManager.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
 
-        _sceneManager.StaticDragManager.OnObjectDragged += () =>
-        {
-            _forcebvhRebuildOnNoUpdate = true;
-        };
+        _sceneManager.StaticDragManager.OnObjectDragged += BvhRebuild;
     }
 
     protected override void InitializeScene()
@@ -387,10 +384,14 @@ public class BoxesDemo : RigidBodyApplication
                     _lastFrameDuration);
             }
 
+            // Rebuild BVH after resolving dragged object collisions
+            // This ensures that the BVH is up to date with the resolved position
+            // of the dragged object, so that subsequent collision checks
+            // (e.g. between the dragged object and other objects) are correct.
+            BvhRebuild();
+
             _collisionData.Reset(MaxContacts);
         }
-
-        BvhRebuild();
 
         // Process box-plane collisions
         foreach (var box in _boxes)
