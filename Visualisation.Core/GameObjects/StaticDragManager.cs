@@ -17,7 +17,7 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
     public float MinOffset = 1.0f;
     public float MaxOffset = 1000_000.0f;
 
-    public bool IsDragging => _draggedObjectTranslation != null;
+    public bool IsDragging => DraggedObject != null;
 
     /// <summary>
     /// Event fired when an object's position is updated during dragging.
@@ -46,7 +46,7 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
     /// </summary>
     public bool ShowHoverIndicator { get; set; } = true;
 
-    private ITranslationGizmoTarget? _draggedObjectTranslation;
+    public ITranslationGizmoTarget? DraggedObject { get; private set; }
 
     private Func<object?> _getHoveredObject = getHoveredObject;
     private Func<CameraBase> _cameraProvider = cameraProvider;
@@ -69,7 +69,7 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
         bool isButtonDown = inputProvider.IsMouseButtonDown(DragButton);
         if (IsDragging && !isButtonDown)
         {
-            _draggedObjectTranslation = null;
+            DraggedObject = null;
             return false;
         }
 
@@ -82,23 +82,23 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
             var hoveredObject = HoverTarget;
             if (hoveredObject is ITranslationGizmoTarget translationGizmoTarget && hoveredObject is not Plane)
             {
-                _draggedObjectTranslation = translationGizmoTarget;
-                _planeOffset = Vector3.Dot(camera.Front, _draggedObjectTranslation.Position - camera.Position);
+                DraggedObject = translationGizmoTarget;
+                _planeOffset = Vector3.Dot(camera.Front, DraggedObject.Position - camera.Position);
                 return true;
             }
 
-            _draggedObjectTranslation = null;
+            DraggedObject = null;
             return false;
         }
 
-        Debug.Assert(_draggedObjectTranslation != null);
+        Debug.Assert(DraggedObject != null);
 
         var scroll = inputProvider.GetMouseScroll();
 
         _planeOffset += Sensitivity * scroll;
         _planeOffset = Math.Clamp(_planeOffset, Math.Max(camera.NearPlane, MinOffset),
             Math.Min(camera.FarPlane, MaxOffset));
-        _draggedObjectTranslation.Position = camera.Position + camera.Front * _planeOffset;
+        DraggedObject.Position = camera.Position + camera.Front * _planeOffset;
         OnObjectDragged?.Invoke();
         return true;
     }

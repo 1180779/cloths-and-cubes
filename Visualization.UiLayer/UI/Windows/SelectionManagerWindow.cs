@@ -104,7 +104,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
             if (ImGui.CollapsingHeader("Dragged Object Properties"))
             {
                 ImGui.Indent();
-                DrawGameObjectProperties(_staticDragManager.HoverTarget, "DraggedObject");
+                DrawGameObjectProperties(_staticDragManager.DraggedObject, "DraggedObject");
                 ImGui.Unindent();
             }
         }

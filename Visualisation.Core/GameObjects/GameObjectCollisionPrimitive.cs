@@ -18,7 +18,7 @@ public abstract class GameObjectCollisionPrimitive : GameObject, ITranslationGiz
         set
         {
             EngineCollisionPrimitive.Body.Position = value.ToEngine();
-            EngineCollisionPrimitive.Body.Velocity = Engine.Vector3.Zero; // Zero velocity
+            // EngineCollisionPrimitive.Body.Velocity = Engine.Vector3.Zero; // Zero velocity
             EngineCollisionPrimitive.Body.CalculateDerivedData();
             EngineCollisionPrimitive.Body.SetAwake();
             EngineCollisionPrimitive.CalculateInternals();
