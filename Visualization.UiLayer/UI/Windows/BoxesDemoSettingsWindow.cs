@@ -52,7 +52,7 @@ public sealed class BoxesDemoSettingsWindow(
         ImGui.SliderInt("Size Y", ref _sizeY, 1, 100);
 
         ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f);
-        ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 100.0f);
+        ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);
         ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f);
     }
 

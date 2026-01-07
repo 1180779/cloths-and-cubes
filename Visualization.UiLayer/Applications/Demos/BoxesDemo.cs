@@ -205,7 +205,7 @@ public class BoxesDemo : RigidBodyApplication
                 return (false, 0, null);
             });
 
-        _selectionManagerWindow = new(_selectionManager);
+        _selectionManagerWindow = new(_selectionManager, _sceneManager.StaticDragManager);
         _windowsManager.Add(_selectionManagerWindow);
 
         _gizmoSettingsWindow = new(_sceneManager);
@@ -218,6 +218,11 @@ public class BoxesDemo : RigidBodyApplication
         _windowsManager.Add(_sceneManagementWindow);
 
         _sceneManager.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
+
+        _sceneManager.StaticDragManager.OnObjectDragged += () =>
+        {
+            _forcebvhRebuildOnNoUpdate = true;
+        };
     }
 
     protected override void InitializeScene()
@@ -309,7 +314,7 @@ public class BoxesDemo : RigidBodyApplication
 
     protected void ObjectSelectionHandling()
     {
-        if (_sceneWindow.IsHovered && !_sceneManager.CamerasManager.CameraMode)
+        if (_sceneWindow.IsHovered || _inputProvider.GetCursorState() == Visualisation.Core.Inputs.CursorState.Grabbed)
         {
             var mousePos = ImGui.GetMousePos();
             var imageTopLeft = _sceneWindow.ImageTopLeft;

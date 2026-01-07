@@ -43,7 +43,7 @@ public sealed class SceneWindow(
         ImGui.Begin("Game Viewport");
 
         _isHovered = ImGui.IsWindowHovered();
-        if (_isHovered)
+        if (_isHovered || _inputProvider.GetCursorState() == CursorState.Grabbed)
         {
             _sceneManager.ProcessInputInFocus(_inputProvider, dt);
         }
@@ -70,6 +70,7 @@ public sealed class SceneWindow(
             DrawDebug();
             _sceneManager.RenderSelectedObjectOnTop();
             _sceneManager.RenderGizmo();
+            _sceneManager.RenderDragHoverIndicator();
             _msaaFrameBuffer.Unbind();
 
             _msaaFrameBuffer.BlitTo(_sceneRenderWindowFrb);
@@ -81,6 +82,7 @@ public sealed class SceneWindow(
             DrawDebug();
             _sceneManager.RenderSelectedObjectOnTop();
             _sceneManager.RenderGizmo();
+            _sceneManager.RenderDragHoverIndicator();
             _sceneRenderWindowFrb.Unbind();
         }
 

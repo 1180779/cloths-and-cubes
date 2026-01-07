@@ -61,12 +61,9 @@ public class OpenTKWithImGuiInputProvider : IInputProvider
 
     public float GetMouseScroll()
     {
-        return _mouseScrollDelta;
-    }
-
-    public void ResetMouseScroll()
-    {
+        var delta = _mouseScrollDelta;
         _mouseScrollDelta = 0;
+        return delta;
     }
 
     public bool IsKeyDown(InputKey key)

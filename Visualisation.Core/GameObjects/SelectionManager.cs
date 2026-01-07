@@ -19,6 +19,8 @@ public sealed class SelectionManager(
     Func<Ray, int, (bool, Real, object?)> testBvhIndexRayIntersection
 )
 {
+    public bool IsEnabled = true;
+
     private object? _selectedObject;
     private readonly IInputProvider _inputProvider = inputProvider;
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
@@ -27,22 +29,24 @@ public sealed class SelectionManager(
     public Ray? LastRay { get; private set; }
     public Real SelectedObjectDistance { get; set; }
 
+    /// <summary>
+    /// The object currently under the mouse cursor (updated every frame).
+    /// </summary>
+    public object? HoveredObject { get; private set; }
+
+    /// <summary>
+    /// The explicitly selected object (selected for gizmo manipulation).
+    /// </summary>
     public object? SelectedObject
     {
-        get
+        get => _selectedObject;
+        set
         {
-            return _selectedObject;
-        }
-        private set
-        {
+            if (!_selectionEnabled)
+                return;
             if (_selectedObject != value)
             {
                 _selectedObject = value;
-                OnSelectionChanged?.Invoke(_selectedObject);
-            }
-            else if (Unselect && _selectedObject != null)
-            {
-                _selectedObject = null;
                 OnSelectionChanged?.Invoke(_selectedObject);
             }
         }
@@ -56,11 +60,12 @@ public sealed class SelectionManager(
         get => _selectionEnabled;
         set
         {
-            _selectionEnabled = value;
             if (!value)
             {
                 SelectedObject = null;
             }
+
+            _selectionEnabled = value;
         }
     }
 
@@ -73,19 +78,35 @@ public sealed class SelectionManager(
     public event Action<object?>? OnSelectionChanged;
 
     /// <summary>
-    /// Updates selection based on mouse input. 
+    /// Updates which object is currently hovered by the mouse cursor.
+    /// This should be called every frame to keep the hover state current.
     /// </summary>
     /// <param name="viewportMousePos">The mouse position relative to the viewport.</param>
     /// <param name="screenSize">The dimensions of the viewport in framebuffer coordinates</param>
-    public void HandleInput(Vector2 viewportMousePos, Vector2i screenSize)
+    public void UpdateHover(Vector2 viewportMousePos, Vector2i screenSize)
     {
-        if (!SelectionEnabled)
-            return;
-
-        if (_inputProvider.IsMouseButtonPressed(MouseButton.Left))
+        if (!IsEnabled)
         {
-            PerformSelection(viewportMousePos, screenSize);
+            HoveredObject = null;
+            return;
         }
+
+        PerformHoverDetection(viewportMousePos, screenSize);
+    }
+
+    /// <summary>
+    /// Selects the currently hovered object (if any).
+    /// Returns true if an object was selected.
+    /// </summary>
+    public bool SelectHoveredObject()
+    {
+        if (HoveredObject != null)
+        {
+            SelectedObject = HoveredObject;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -127,9 +148,10 @@ public sealed class SelectionManager(
     }
 
     /// <summary>
-    /// Performs ray casting from the mouse position to detect object selection.
+    /// Performs ray casting from the mouse position to detect which object is under the cursor.
+    /// Updates HoveredObject but does not change selection.
     /// </summary>
-    private void PerformSelection(Vector2 mousePos, Vector2i screenSize)
+    private void PerformHoverDetection(Vector2 mousePos, Vector2i screenSize)
     {
         var ray = GetRayFromMouse(mousePos, _cameraProvider(), screenSize);
         LastRay = ray;
@@ -157,7 +179,7 @@ public sealed class SelectionManager(
             closestObject = planeObj;
         }
 
-        SelectedObject = closestObject;
+        HoveredObject = closestObject;
         SelectedObjectDistance = closestDistance;
     }
 

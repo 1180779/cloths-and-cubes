@@ -16,6 +16,8 @@ public class CameraBase
     protected float _yawRadians = -MathHelper.PiOver2; // Yaw in radians, initialized to -90 degrees to look along -Z
     protected float _fovRadians = MathHelper.PiOver2; // FOV in radians, initialized to 90 degrees
 
+    public Quaternion GetOrientation() => Quaternion.FromEulerAngles(PitchRadians, YawRadians, 0f);
+
     public CameraBase()
     {
     }

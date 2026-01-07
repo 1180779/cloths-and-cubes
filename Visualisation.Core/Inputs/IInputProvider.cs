@@ -94,15 +94,11 @@ public interface IInputProvider
     /// Retrieves the current mouse scroll delta value.
     /// This value represents vertical scroll movement where positive values indicate scrolling up
     /// and negative values indicate scrolling down.
+    ///
+    /// Reset to zero after each call.
     /// </summary>
     /// <returns>
     /// A <see cref="float"/> representing the current mouse scroll delta.
     /// </returns>
     float GetMouseScroll();
-
-    /// <summary>
-    /// Resets the mouse scroll delta to zero.
-    /// This should be called after processing the scroll value to prepare for the next frame.
-    /// </summary>
-    void ResetMouseScroll();
 }

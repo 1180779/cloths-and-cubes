@@ -13,8 +13,10 @@ using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class SelectionManagerWindow(SelectionManager selectionManager) : IWindow
+public sealed class SelectionManagerWindow(SelectionManager selectionManager, StaticDragManager staticDragManager)
+    : IWindow
 {
+    private StaticDragManager _staticDragManager = staticDragManager;
     private SelectionManager _selectionManager = selectionManager;
 
     private bool _debugRayDraw;
@@ -67,6 +69,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
     {
         if (ImGui.Begin("Selected Object", ref isOpen))
         {
+            ImGui.Checkbox("Enable static drag", ref _staticDragManager.Enabled);
+            ImGui.SliderFloat("Static drag sensitivity", ref _staticDragManager.Sensitivity, 0.1f, 10.0f);
+
             bool selection = _selectionManager.SelectionEnabled;
             if (ImGui.Checkbox("Enable selection", ref selection))
             {
@@ -452,7 +457,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         }
 
         ImGui.PushID("Scale (particle mass)");
-        if (ImGui.DragFloat("Scale", ref _lsctpmScale, 0.5f, 0.0f, 100.0f))
+        if (ImGui.DragFloat("Scale", ref _lsctpmScale, 0.5f, 0.0f, 100_000.0f))
         {
             springConstant = _lsctpmScale * particleMass + _lsctpmBias;
             changed = true;
@@ -461,7 +466,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         ImGui.PopID();
 
         ImGui.PushID("Bias (particle mass)");
-        if (ImGui.DragFloat("Bias", ref _lsctpmBias, 0.5f, 0.0f, 100.0f))
+        if (ImGui.DragFloat("Bias", ref _lsctpmBias, 0.5f, 0.0f, 100_000.0f))
         {
             springConstant = _lsctpmScale * particleMass + _lsctpmBias;
             changed = true;

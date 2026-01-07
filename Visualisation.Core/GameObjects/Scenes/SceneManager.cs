@@ -39,7 +39,11 @@ public abstract class SceneManager : IDisposable
         _translationGizmo = new TranslationGizmo(BasicShader);
         _scaleGizmo = new ScaleGizmo(BasicShader);
         _rotationGizmo = new RotationGizmo(BasicShader);
+
+        StaticDragManager = new(() => _selectionManager?.HoveredObject ?? null, () => CamerasManager.CurrentCamera);
     }
+
+    public StaticDragManager StaticDragManager;
 
     public Func<float>? PositionEpsilonProvider { get; set; }
 
@@ -100,17 +104,6 @@ public abstract class SceneManager : IDisposable
 
     public abstract void SetUp();
 
-    private void SelectionChange(object? obj)
-    {
-        if (ActiveGizmo is not null)
-        {
-            if (obj is IGizmoTarget gizmoTarget)
-                ActiveGizmo.Target = gizmoTarget;
-            else
-                ActiveGizmo.Target = null;
-        }
-    }
-
     private SelectionManager? _selectionManager;
 
     public SelectionManager? SelectionManager
@@ -118,16 +111,7 @@ public abstract class SceneManager : IDisposable
         get => _selectionManager;
         set
         {
-            if (_selectionManager is not null)
-            {
-                _selectionManager.OnSelectionChanged -= SelectionChange;
-            }
-
             _selectionManager = value;
-            if (_selectionManager is not null)
-            {
-                _selectionManager.OnSelectionChanged += SelectionChange;
-            }
         }
     }
 
@@ -163,15 +147,65 @@ public abstract class SceneManager : IDisposable
 
     public void HandleInput(IInputProvider input, Vector2 viewportMousePos, Vector2i screenSize)
     {
-        bool gizmoHandled = false;
-        if (_activeGizmo != null)
+        // When camera mode is active (cursor grabbed), use center of screen for raycasting
+        // since the mouse position doesn't move
+        Vector2 raycastPos = input.GetCursorState() == CursorState.Grabbed
+            ? new Vector2(screenSize.X / 2f, screenSize.Y / 2f)
+            : viewportMousePos;
+
+        // Update hover detection with the appropriate position
+        SelectionManager?.UpdateHover(raycastPos, screenSize);
+
+        // Priority system: Once an input handler starts an operation (gizmo drag, mouse drag),
+        // it maintains priority until the operation completes (mouse button released)
+
+        // Check if gizmo is already active (the highest priority when active)
+        if (_activeGizmo?.IsActive ?? false)
         {
-            gizmoHandled = _activeGizmo.HandleInput(input, viewportMousePos, CamerasManager.CurrentCamera, screenSize);
+            _activeGizmo.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize);
+            return;
         }
 
-        if (!gizmoHandled && SelectionManager != null)
+        if (StaticDragManager.Enabled && StaticDragManager.ShowHoverIndicator &&
+            SelectionManager?.HoveredObject is not null &&
+            _activeGizmo is not null &&
+            (_activeGizmo.Target is not null || SelectionManager.SelectedObject is not null))
         {
-            SelectionManager.HandleInput(viewportMousePos, screenSize);
+            SelectionManager.ClearSelection();
+            _activeGizmo.Target = null;
+        }
+
+        // Check if the drag manager is already active
+        if (StaticDragManager.IsDragging)
+        {
+            StaticDragManager.HandleInput(input);
+            return;
+        }
+
+        // Check gizmo first (the highest priority for new operations)
+        bool gizmoTookMouseInput = false;
+        if (_activeGizmo is not null)
+            _activeGizmo.Target = (IGizmoTarget?)_selectionManager?.SelectedObject;
+        gizmoTookMouseInput =
+            _activeGizmo?.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize) ?? false;
+
+        bool selectedHoveredObject = !gizmoTookMouseInput && input.IsMouseButtonPressed(MouseButton.Left) &&
+            (SelectionManager?.SelectHoveredObject() ?? false);
+
+        // Check if the drag manager can use the hovered object
+        if (!gizmoTookMouseInput && StaticDragManager.Enabled)
+        {
+            bool dragTookMouseInput = StaticDragManager.HandleInput(input);
+            if (dragTookMouseInput)
+            {
+                SelectionManager?.ClearSelection();
+                if (_activeGizmo is not null)
+                {
+                    _activeGizmo.Target = null;
+                }
+
+                return;
+            }
         }
     }
 
@@ -240,102 +274,10 @@ public abstract class SceneManager : IDisposable
                 GL.Disable(EnableCap.DepthTest);
             }
 
-            BasicShader.Use();
-            CamerasManager.CurrentCamera.SetForSimpleShader(BasicShader);
-            BasicShader.SetVector3("color", SelectionColor.Xyz);
-            BasicShader.SetFloat("alpha", SelectionColor.W);
-
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
-            var selectedObject = SelectionManager.SelectedObject;
-            switch (selectedObject)
-            {
-                case Box box:
-                    {
-                        var originalHalfSize = box.EngineBox.HalfSize;
-                        box.EngineBox.HalfSize *= OutlineFactor;
 
-                        box.SetForShaderNoMaterial(BasicShader);
-                        box.Render(SelectionManager.DrawInvisibleObjects);
-
-                        box.EngineBox.HalfSize = originalHalfSize;
-                        break;
-                    }
-                case Ball ball:
-                    {
-                        var originalRadius = ball.EngineBall.Radius;
-                        ball.EngineBall.Radius *= OutlineFactor;
-
-                        ball.SetForShaderNoMaterial(BasicShader);
-                        ball.Render(SelectionManager.DrawInvisibleObjects);
-
-                        ball.EngineBall.Radius = originalRadius;
-                        break;
-                    }
-                case Cloth cloth:
-                    {
-                        // Disable culling for two-sided rendering
-                        GL.Disable(EnableCap.CullFace);
-
-                        OutlineShader.Use();
-                        CamerasManager.CurrentCamera.SetForSimpleShader(OutlineShader);
-                        OutlineShader.SetFloat("outline_size", OutlineSize);
-                        OutlineShader.SetVector3("color", SelectionColor.Xyz);
-                        cloth.SetForShaderNoMaterial(OutlineShader);
-                        cloth.Render(SelectionManager.DrawInvisibleObjects);
-
-                        // Re-enable culling
-                        GL.Enable(EnableCap.CullFace);
-                        break;
-                    }
-                case RigidParticleInCorner particleInCorner:
-                    {
-                        var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
-                        var position = particleInCorner.GetAxis(3);
-                        BasicShader.SetMatrix4("model",
-                            Matrix4.CreateScale(particleScale, particleScale, particleScale) *
-                            Matrix4.CreateTranslation(position.X, position.Y, position.Z));
-                        _cube.Render();
-                        break;
-                    }
-                case RigidParticle particle:
-                    {
-                        var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
-                        var position = particle.GetAxis(3);
-                        BasicShader.SetMatrix4("model",
-                            Matrix4.CreateScale(particleScale, particleScale, particleScale) *
-                            Matrix4.CreateTranslation(position.X, position.Y, position.Z));
-                        _cube.Render();
-                        break;
-                    }
-                case Cylinder cylinder:
-                    {
-                        var originalRadius = cylinder.EngineCylinder.Radius;
-                        cylinder.EngineCylinder.Radius *= OutlineFactor;
-                        var originalHeight = cylinder.EngineCylinder.Height;
-                        cylinder.EngineCylinder.Height *= OutlineFactor;
-
-                        cylinder.SetForShaderNoMaterial(BasicShader);
-                        cylinder.Render(SelectionManager.DrawInvisibleObjects);
-
-                        cylinder.EngineCylinder.Radius = originalRadius;
-                        cylinder.EngineCylinder.Height = originalHeight;
-                        break;
-                    }
-                case Cone cone:
-                    {
-                        var originalRadius = cone.EngineCone.Radius;
-                        cone.EngineCone.Radius *= OutlineFactor;
-                        var originalHeight = cone.EngineCone.Height;
-                        cone.EngineCone.Height *= OutlineFactor;
-
-                        cone.SetForShaderNoMaterial(BasicShader);
-                        cone.Render(SelectionManager.DrawInvisibleObjects);
-
-                        cone.EngineCone.Radius = originalRadius;
-                        cone.EngineCone.Height = originalHeight;
-                        break;
-                    }
-            }
+            RenderObjectOutline(SelectionManager.SelectedObject, SelectionColor, OutlineFactor,
+                SelectionManager.DrawInvisibleObjects);
 
             GL.StencilMask(0xFF);
             GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
@@ -351,6 +293,139 @@ public abstract class SceneManager : IDisposable
         {
             _activeGizmo.Render(CamerasManager.CurrentCamera);
         }
+    }
+
+    /// <summary>
+    /// Renders an outline around the specified object.
+    /// </summary>
+    /// <param name="obj">The object to outline (GameObject or RigidParticle)</param>
+    /// <param name="color">The color of the outline</param>
+    /// <param name="scaleFactor">How much to scale the object for the outline (e.g., 1.02 for 2% larger)</param>
+    /// <param name="drawInvisible">Whether to draw even if the object is marked invisible</param>
+    public void RenderObjectOutline(
+        object obj,
+        Vector4 color,
+        float scaleFactor = OutlineFactor,
+        bool drawInvisible = false)
+    {
+        BasicShader.Use();
+        CamerasManager.CurrentCamera.SetForSimpleShader(BasicShader);
+        BasicShader.SetVector3("color", color.Xyz);
+        BasicShader.SetFloat("alpha", color.W);
+
+        switch (obj)
+        {
+            case Box box:
+                {
+                    var originalHalfSize = box.EngineBox.HalfSize;
+                    box.EngineBox.HalfSize *= scaleFactor;
+
+                    box.SetForShaderNoMaterial(BasicShader);
+                    box.Render(drawInvisible);
+
+                    box.EngineBox.HalfSize = originalHalfSize;
+                    break;
+                }
+            case Ball ball:
+                {
+                    var originalRadius = ball.EngineBall.Radius;
+                    ball.EngineBall.Radius *= scaleFactor;
+
+                    ball.SetForShaderNoMaterial(BasicShader);
+                    ball.Render(drawInvisible);
+
+                    ball.EngineBall.Radius = originalRadius;
+                    break;
+                }
+            case Cloth cloth:
+                {
+                    // Disable culling for two-sided rendering
+                    GL.Disable(EnableCap.CullFace);
+
+                    OutlineShader.Use();
+                    CamerasManager.CurrentCamera.SetForSimpleShader(OutlineShader);
+                    OutlineShader.SetFloat("outline_size", OutlineSize);
+                    OutlineShader.SetVector3("color", color.Xyz);
+                    cloth.SetForShaderNoMaterial(OutlineShader);
+                    cloth.Render(drawInvisible);
+
+                    // Re-enable culling
+                    GL.Enable(EnableCap.CullFace);
+                    break;
+                }
+            case RigidParticleInCorner particleInCorner:
+                {
+                    var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
+                    var position = particleInCorner.GetAxis(3);
+                    BasicShader.SetMatrix4("model",
+                        Matrix4.CreateScale(particleScale, particleScale, particleScale) *
+                        Matrix4.CreateTranslation(position.X, position.Y, position.Z));
+                    _cube.Render();
+                    break;
+                }
+            case RigidParticle particle:
+                {
+                    var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
+                    var position = particle.GetAxis(3);
+                    BasicShader.SetMatrix4("model",
+                        Matrix4.CreateScale(particleScale, particleScale, particleScale) *
+                        Matrix4.CreateTranslation(position.X, position.Y, position.Z));
+                    _cube.Render();
+                    break;
+                }
+            case Cylinder cylinder:
+                {
+                    var originalRadius = cylinder.EngineCylinder.Radius;
+                    cylinder.EngineCylinder.Radius *= scaleFactor;
+                    var originalHeight = cylinder.EngineCylinder.Height;
+                    cylinder.EngineCylinder.Height *= scaleFactor;
+
+                    cylinder.SetForShaderNoMaterial(BasicShader);
+                    cylinder.Render(drawInvisible);
+
+                    cylinder.EngineCylinder.Radius = originalRadius;
+                    cylinder.EngineCylinder.Height = originalHeight;
+                    break;
+                }
+            case Cone cone:
+                {
+                    var originalRadius = cone.EngineCone.Radius;
+                    cone.EngineCone.Radius *= scaleFactor;
+                    var originalHeight = cone.EngineCone.Height;
+                    cone.EngineCone.Height *= scaleFactor;
+
+                    cone.SetForShaderNoMaterial(BasicShader);
+                    cone.Render(drawInvisible);
+
+                    cone.EngineCone.Radius = originalRadius;
+                    cone.EngineCone.Height = originalHeight;
+                    break;
+                }
+        }
+    }
+
+    /// <summary>
+    /// Renders the hover indicator for the drag manager to show which object can be dragged.
+    /// Only shows when: drag manager is enabled, object is hovered, not currently dragging,
+    /// and the object is not selected for gizmo manipulation.
+    /// </summary>
+    public void RenderDragHoverIndicator()
+    {
+        if (!StaticDragManager.Enabled || !StaticDragManager.ShowHoverIndicator ||
+            StaticDragManager.HoverTarget == null || StaticDragManager.IsDragging)
+            return;
+
+        // Don't show hover indicator if the object is selected for gizmo manipulation
+        if (SelectionManager?.SelectedObject != null &&
+            SelectionManager.SelectedObject == StaticDragManager.HoverTarget)
+            return;
+
+        GL.Disable(EnableCap.DepthTest);
+
+        RenderObjectOutline(StaticDragManager.HoverTarget, StaticDragManager.HoverIndicatorColor,
+            StaticDragManager.HoverIndicatorScale, drawInvisible: true);
+
+        GL.Enable(EnableCap.DepthTest);
     }
 
     public void RenderSelectedObjectOnTop()
