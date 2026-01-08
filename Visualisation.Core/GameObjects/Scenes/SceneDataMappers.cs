@@ -166,7 +166,6 @@ public static class SceneDataMappers
     {
         box.UpdateFromData(data.CollisionPrimitive);
         box.HalfSize = data.HalfSize.ToEngine();
-        box.RefreshPhysicsState();
     }
 
     public static Engine.RigidBodies.Box ToEngineBox(this EngineBoxData data)
@@ -243,7 +242,6 @@ public static class SceneDataMappers
     public static void UpdateFromData(this Sphere sphere, EngineSphereData data)
     {
         sphere.UpdateFromData((CollisionSphereData)data);
-        sphere.RefreshPhysicsState();
     }
 
     public static Sphere ToEngineSphere(this EngineSphereData data)

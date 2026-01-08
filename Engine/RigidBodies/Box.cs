@@ -54,21 +54,6 @@ public class Box : CollisionBox, IBoxable
         Body.CalculateDerivedData();
     }
 
-    /// <summary>
-    /// Refreshes the physics state of the box by recalculating the inertia tensor,
-    /// adjusting damping values, updating the awake status, and calculating the derived physics data.
-    /// This method ensures that the physics body reflects its current state and properties accurately.
-    /// </summary>
-    public void RefreshPhysicsState()
-    {
-        RecalculateInertiaTensor();
-        Body.LinearDamping = 0.95f;
-        Body.AngularDamping = 0.8f;
-        Body.SetAwake();
-        Body.CalculateDerivedData();
-        CalculateInternals();
-    }
-
     public void SetAutoMass()
     {
         float mass = (float)(HalfSize.X * HalfSize.Y * HalfSize.Z * 8.0f);
