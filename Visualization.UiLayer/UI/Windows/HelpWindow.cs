@@ -41,22 +41,8 @@ public sealed class HelpWindow : IWindow
                     { "Add frames (frame mode)", "0" },
                 }
             },
-#if DEBUG
-            {
-                " Objects in time",
-                new()
-                {
-                    { "Go back", "Left" },
-                    { "Go forward", "Right" },
-                    {
-                        "Using this feature while not being in (single) frame mode can lead to unexpected results. Use with caution. ",
-                        ""
-                    }
-                }
-            },
-#endif
             { "Scene", new() { { "Reset demo", "R" }, } },
-            {"Performance", new(){{"Cap/Uncap FPS", "X"},} },
+            { "Performance", new() { { "Cap/Uncap FPS", "X" }, } },
         };
 
     public string Name => "Help";
@@ -90,6 +76,7 @@ public sealed class HelpWindow : IWindow
 
             ImGui.PopTextWrapPos();
         }
+
         ImGui.End();
     }
 }

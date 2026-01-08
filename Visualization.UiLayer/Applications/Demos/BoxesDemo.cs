@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 
+using Engine;
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
@@ -8,9 +9,12 @@ using Engine.RigidBodies;
 
 using ImGuiNET;
 
+using OpenTK.Windowing.Common;
+
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
 using Visualisation.Core.GameObjects.Scenes;
+using Visualisation.Core.Inputs;
 
 using Visualization.UiLayer.UI.Windows;
 
@@ -22,8 +26,19 @@ using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class BoxesDemo : RigidBodyApplication
+public class BoxesDemo : Application
 {
+    // Physics
+    protected static uint MaxContacts => 2 * 1024;
+
+    protected CollisionData _collisionData = new()
+    {
+        Friction = (Real)0.9, Restitution = (Real)0.6, Tolerance = (Real)0.1,
+    };
+
+    protected ContactResolver _contactResolver = new(MaxContacts * 8, positionEpsilon: 0.01f);
+
+    // Scene Objects
     protected Plane _plane = null!; // initialized in scene initialization
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
@@ -321,10 +336,8 @@ public class BoxesDemo : RigidBodyApplication
 
     protected bool _forcebvhRebuildOnNoUpdate;
 
-    protected override void OnNoPhysicsUpdate()
+    protected void OnNoPhysicsUpdate()
     {
-        base.OnNoPhysicsUpdate();
-
         if (_forcebvhRebuildOnNoUpdate)
         {
             BvhRebuild();
@@ -363,7 +376,7 @@ public class BoxesDemo : RigidBodyApplication
     /// <summary>
     /// Processes the contact generation code.
     /// </summary>
-    protected override void GenerateContacts()
+    protected void GenerateContacts()
     {
         // Set up the collision data structure
         _collisionData.Reset(MaxContacts);
@@ -503,17 +516,93 @@ public class BoxesDemo : RigidBodyApplication
 
     protected override void Update(float deltaTime)
     {
-        if (deltaTime > 0.05f) deltaTime = 0.05f;
+        // Physics update from RigidBodyApplication
+        if (!DoUpdate)
+        {
+            OnNoPhysicsUpdate();
+            return;
+        }
+
+        switch (deltaTime)
+        {
+            case <= 0.0f:
+                return;
+            case > 0.05f:
+                deltaTime = 0.05f;
+                break;
+        }
+
         _lastFrameDuration = deltaTime;
 
-        // Call base to run physics update and collision resolution
-        base.Update(deltaTime);
+        // Update objects
+        UpdateObjects(deltaTime);
+
+        // Perform the contact generation
+        GenerateContacts();
+
+        // Resolve detected contacts
+        _contactResolver.ResolveContacts(
+            _collisionData.ContactList,
+            _collisionData.ContactCount,
+            deltaTime
+        );
+    }
+
+    protected override void OnUpdateFrame(FrameEventArgs e)
+    {
+        base.OnUpdateFrame(e);
+
+        if (!IsFocused)
+        {
+            return;
+        }
+
+        // Step limiting controls from RigidBodyApplication
+        if (_inputProvider.IsKeyPressed(InputKey.LeftBracket))
+        {
+            StepsLimit = true;
+        }
+
+        if (StepsLimit)
+        {
+            if (_inputProvider.IsKeyDown(InputKey.D0))
+                AvailableSteps = 1;
+            if (_inputProvider.IsKeyPressed(InputKey.D1))
+                AvailableSteps = 1;
+            if (_inputProvider.IsKeyPressed(InputKey.D2))
+                AvailableSteps = 2;
+            if (_inputProvider.IsKeyPressed(InputKey.D3))
+                AvailableSteps = 3;
+            if (_inputProvider.IsKeyPressed(InputKey.D4))
+                AvailableSteps = 4;
+            if (_inputProvider.IsKeyPressed(InputKey.D5))
+                AvailableSteps = 5;
+            if (_inputProvider.IsKeyPressed(InputKey.D6))
+                AvailableSteps = 6;
+            if (_inputProvider.IsKeyPressed(InputKey.D7))
+                AvailableSteps = 7;
+            if (_inputProvider.IsKeyPressed(InputKey.D8))
+                AvailableSteps = 8;
+            if (_inputProvider.IsKeyPressed(InputKey.D9))
+                AvailableSteps = 9;
+        }
+
+        if (_inputProvider.IsKeyPressed(InputKey.RightBracket))
+        {
+            StepsLimit = false;
+        }
+
+        // reset
+        if (_inputProvider.IsKeyPressed(InputKey.R))
+        {
+            Reset();
+        }
     }
 
     /// <summary>
     /// Processes the objects in the simulation forward in time.
     /// </summary>
-    protected override void UpdateObjects(float duration)
+    protected void UpdateObjects(float duration)
     {
         _forceRegistry.updateForces(duration);
         foreach (Cloth cloth in _cloths)
@@ -539,7 +628,7 @@ public class BoxesDemo : RigidBodyApplication
     /// <summary>
     /// Resets the position of all the objects.
     /// </summary>
-    public override void Reset()
+    public virtual void Reset()
     {
         _forcebvhRebuildOnNoUpdate = true;
 

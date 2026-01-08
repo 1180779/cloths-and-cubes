@@ -17,6 +17,8 @@ namespace Visualization.UiLayer.Applications;
 
 public class Application : GameWindow
 {
+    private static bool s_fpsCappedTo60 = true;
+
     protected readonly ImGuiController _imGuiController;
     protected readonly IInputProvider _inputProvider;
     protected readonly SceneManager _sceneManager;
@@ -25,13 +27,7 @@ public class Application : GameWindow
 
     protected readonly SceneWindow _sceneWindow;
 
-#if DEBUG
     protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
-
-#if FRAMESAVER
-    protected readonly FrameSaver FrameSaver = new(0);
-#endif
-#endif
 
     protected const int DefaultWidth = 800;
     protected const int DefaultHeight = 600;
@@ -43,6 +39,8 @@ public class Application : GameWindow
     {
         Size = (width, height);
         Title = title;
+
+        if (s_fpsCappedTo60) UpdateFrequency = 60.0;
 
         _imGuiController = new ImGuiController(this);
         _imGuiController.HookToWindow(this);
@@ -57,13 +55,11 @@ public class Application : GameWindow
         _windowsManager = new WindowsManager();
         _windowsManager.Add(new StatsWindow(_sceneManager));
         _windowsManager.Add(new HelpWindow());
-#if DEBUG
         _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _sceneManager, Size);
         _windowsManager.Add(new ObjectInspectorWindow(_sceneManager));
         _windowsManager.Add(new GraphicsSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight,
             _sceneManager, _sceneWindow));
         _windowsManager.Add(_cascadingShadowMapsWindow);
-#endif
 
         // GL
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
@@ -102,15 +98,13 @@ public class Application : GameWindow
 
     protected virtual void Update(float deltaTime)
     {
-        // if (!DoUpdate)
-        //     return;
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
         base.OnUpdateFrame(e);
 
-        // Set bypass flag BEFORE any keyboard input is processed
+        // Set the bypass flag BEFORE any keyboard input is processed
         // This must happen here, not in Draw(), because OnUpdateFrame happens before rendering
         if (_inputProvider is OpenTKWithImGuiInputProvider imguiProvider)
         {
@@ -128,9 +122,19 @@ public class Application : GameWindow
         //     return;
         // }
 
-#if DEBUG
         _cascadingShadowMapsWindow.HandleInput();
-#endif
+
+        // cap/uncap fps
+        if (_inputProvider.IsKeyPressed(InputKey.X))
+        {
+            UpdateFrequency = UpdateFrequency switch
+            {
+                0.0 => 60.0,
+                _ => 0.0
+            };
+
+            s_fpsCappedTo60 = !s_fpsCappedTo60;
+        }
     }
 
     /// <summary>
@@ -216,9 +220,7 @@ public class Application : GameWindow
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
         GL.UseProgram(0);
-#if DEBUG
         _cascadingShadowMapsWindow.Dispose();
-#endif
         TexturesManager.AbortAllLoads();
         _imGuiController.UnhookFromWindow(this);
         _sceneManager.Dispose();
@@ -240,14 +242,12 @@ public class Application : GameWindow
     protected override void OnResize(ResizeEventArgs e)
     {
         base.OnResize(e);
-
         GL.Viewport(0, 0, Size.X, Size.Y);
     }
 
-    protected virtual void RenderWindows(double dt)
+    protected void RenderWindows(double dt)
     {
         _windowsManager.Draw();
-
         _sceneWindow.Draw(FramebufferSize, (float)dt);
     }
 
@@ -261,9 +261,7 @@ public class Application : GameWindow
         {
             WindowsState = _windowsManager.SaveState(),
             GraphicsSettings = ((GraphicsSettingsWindow)_windowsManager.GetWindow("Graphics Settings")).SaveState(),
-#if DEBUG
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState()
-#endif
         };
     }
 
@@ -280,11 +278,9 @@ public class Application : GameWindow
                 state.GraphicsSettings);
         }
 
-#if DEBUG
         if (state.CascadingShadowMaps is not null)
         {
             _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);
         }
-#endif
     }
 }

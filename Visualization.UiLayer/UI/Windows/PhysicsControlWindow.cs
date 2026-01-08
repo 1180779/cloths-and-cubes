@@ -1,13 +1,21 @@
 using ImGuiNET;
 
 using Visualization.UiLayer.Applications;
+using Visualization.UiLayer.Applications.Demos;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class PhysicsControlWindow(RigidBodyApplication application) : IWindow
+public sealed class PhysicsControlWindow : IWindow
 {
-    private readonly RigidBodyApplication _application = application;
+    private readonly Application _application;
+    private readonly BoxesDemo? _boxesDemo;
     private int _stepCount = 1;
+
+    public PhysicsControlWindow(Application application)
+    {
+        _application = application;
+        _boxesDemo = application as BoxesDemo;
+    }
 
     public string Name => "Physics Control";
 
@@ -108,12 +116,21 @@ public sealed class PhysicsControlWindow(RigidBodyApplication application) : IWi
             // Reset Section
             ImGui.SeparatorText("Scene Actions");
 
-            if (ImGui.Button("Reset Scene", new System.Numerics.Vector2(120, 0)))
+            if (_boxesDemo != null)
             {
-                _application.Reset();
-            }
+                if (ImGui.Button("Reset Scene", new System.Numerics.Vector2(120, 0)))
+                {
+                    _boxesDemo.Reset();
+                }
 
-            UiControls.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
+                UiControls.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
+            }
+            else
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("Reset Scene", new System.Numerics.Vector2(120, 0));
+                ImGui.EndDisabled();
+            }
 
             ImGui.Spacing();
             ImGui.Separator();
