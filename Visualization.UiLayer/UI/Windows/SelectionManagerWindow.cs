@@ -13,11 +13,10 @@ using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class SelectionManagerWindow(SelectionManager selectionManager, StaticDragManager staticDragManager)
+public sealed class SelectionManagerWindow(InteractionManager interactionManager)
     : IWindow
 {
-    private StaticDragManager _staticDragManager = staticDragManager;
-    private SelectionManager _selectionManager = selectionManager;
+    private InteractionManager _interactionManager = interactionManager;
 
     private bool _debugRayDraw;
     private Line? _debugRay;
@@ -51,14 +50,14 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
     {
         if (!_debugRayDraw)
             return;
-        if (_selectionManager.LastRay is not null &&
-            (_lastRay is null || _lastRay.Value != _selectionManager.LastRay.Value))
+        if (_interactionManager.SelectionManager.LastRay is not null &&
+            (_lastRay is null || _lastRay.Value != _interactionManager.SelectionManager.LastRay.Value))
         {
-            _lastRay = _selectionManager.LastRay;
-            var ray = _selectionManager.LastRay.Value;
+            _lastRay = _interactionManager.SelectionManager.LastRay;
+            var ray = _interactionManager.SelectionManager.LastRay.Value;
             var rayDirection = new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z);
             var rayOriginInWorld = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
-            Vector3 end = rayOriginInWorld + rayDirection * _selectionManager.SelectedObjectDistance;
+            Vector3 end = rayOriginInWorld + rayDirection * _interactionManager.SelectionManager.SelectedObjectDistance;
 
             _debugRay?.Dispose();
             _debugRay = new Line(rayOriginInWorld, end);
@@ -72,22 +71,23 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
     {
         if (ImGui.Begin("Selected/Dragged Object", ref isOpen))
         {
-            ImGui.Checkbox("Enable static drag", ref _staticDragManager.Enabled);
-            ImGui.SliderFloat("Static drag sensitivity", ref _staticDragManager.Sensitivity, 0.1f, 10.0f);
+            ImGui.Checkbox("Enable static drag", ref _interactionManager.StaticDragManager.Enabled);
+            ImGui.SliderFloat("Static drag sensitivity", ref _interactionManager.StaticDragManager.Sensitivity, 0.1f,
+                10.0f);
 
-            bool selection = _selectionManager.SelectionEnabled;
+            bool selection = _interactionManager.SelectionManager.SelectionEnabled;
             if (ImGui.Checkbox("Enable selection", ref selection))
             {
-                _selectionManager.SelectionEnabled = selection;
+                _interactionManager.SelectionManager.SelectionEnabled = selection;
             }
 
-            ImGui.Checkbox("Enable gizmos", ref _selectionManager.GizmosEnabled);
+            ImGui.Checkbox("Enable gizmos", ref _interactionManager.SelectionManager.GizmosEnabled);
 
             ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
-            ImGui.Checkbox("Draw invisible objects", ref _selectionManager.DrawInvisibleObjects);
-            ImGui.Checkbox("Draw selected object even behind other objects",
-                ref _selectionManager.DrawSelectedObjectWithoutDepthTesting);
-            ImGui.Checkbox("Unselect objects", ref _selectionManager.Unselect);
+            // ImGui.Checkbox("Draw invisible objects", ref _interactionManager.SelectionManager.DrawInvisibleObjects);
+            // ImGui.Checkbox("Draw selected object even behind other objects",
+            // ref _interactionManager.SelectionManager.DrawSelectedObjectWithoutDepthTesting);
+            ImGui.Checkbox("Unselect objects", ref _interactionManager.SelectionManager.Unselect);
             ImGui.Separator();
             ImGui.Spacing();
 
@@ -95,21 +95,21 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
             if (ImGui.CollapsingHeader("Selected Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
             {
                 ImGui.Indent();
-                DrawGameObjectProperties(_selectionManager.SelectedObject, "SelectedObject");
+                DrawGameObjectProperties(_interactionManager.SelectionManager.SelectedObject, "SelectedObject");
                 ImGui.Unindent();
             }
 
             if (ImGui.CollapsingHeader("Hovered Object Properties"))
             {
                 ImGui.Indent();
-                DrawGameObjectProperties(_selectionManager.HoveredObject, "HoveredObject");
+                DrawGameObjectProperties(_interactionManager.SelectionManager.HoveredObject, "HoveredObject");
                 ImGui.Unindent();
             }
 
             if (ImGui.CollapsingHeader("Dragged Object Properties"))
             {
                 ImGui.Indent();
-                DrawGameObjectProperties(_staticDragManager.DraggedObject, "DraggedObject");
+                DrawGameObjectProperties(_interactionManager.StaticDragManager.DraggedObject, "DraggedObject");
                 ImGui.Unindent();
             }
         }
@@ -747,9 +747,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
 
     public sealed record State
     {
-        public bool DrawInvisibleObjects { get; init; }
         public bool DrawDebugRay { get; init; }
-        public bool DrawSelectedObjectWithoutDepthTesting { get; init; }
         public bool Unselect { get; init; }
         public bool SelectionEnabled { get; init; }
         public bool Lsctpm { get; init; }
@@ -764,11 +762,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
     {
         return new State
         {
-            DrawInvisibleObjects = _selectionManager.DrawInvisibleObjects,
             DrawDebugRay = _debugRayDraw,
-            DrawSelectedObjectWithoutDepthTesting = _selectionManager.DrawSelectedObjectWithoutDepthTesting,
-            Unselect = _selectionManager.Unselect,
-            SelectionEnabled = _selectionManager.SelectionEnabled,
+            Unselect = _interactionManager.SelectionManager.Unselect,
+            SelectionEnabled = _interactionManager.SelectionManager.SelectionEnabled,
             Lsctpm = _lsctpm,
             LsctpmScale = _lsctpmScale,
             LsctpmBias = _lsctpmBias,
@@ -782,10 +778,8 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager, St
     {
         _debugRayDraw = state.DrawDebugRay;
 
-        _selectionManager.DrawInvisibleObjects = state.DrawInvisibleObjects;
-        _selectionManager.DrawSelectedObjectWithoutDepthTesting = state.DrawSelectedObjectWithoutDepthTesting;
-        _selectionManager.Unselect = state.Unselect;
-        _selectionManager.SelectionEnabled = state.SelectionEnabled;
+        _interactionManager.SelectionManager.Unselect = state.Unselect;
+        _interactionManager.SelectionManager.SelectionEnabled = state.SelectionEnabled;
 
         _lsctpm = state.Lsctpm;
         _lsctpmScale = state.LsctpmScale;

@@ -1,3 +1,4 @@
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.RigidBodies;
 
 using OpenTK.Graphics.OpenGL4;
@@ -6,25 +7,43 @@ using OpenTK.Mathematics;
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Gizmos;
-using Visualisation.Core.Display.Gizmos.Rotation;
-using Visualisation.Core.Display.Gizmos.Scale;
-using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Light;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects.Scenes;
 
-public abstract class SceneManager : IDisposable
+public abstract class SceneRenderer : IDisposable
 {
-    public SceneManager(float aspectRatio, IInputProvider inputProvider)
+    public SceneRenderer(
+        float aspectRatio,
+        IInputProvider inputProvider,
+        Func<IEnumerable<GameObject>> getGameObjects,
+        Func<CameraBase> cameraProvider,
+        Func<BVH> bvhProvider,
+        Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
+        Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
+        Func<Plane> planeProvider,
+        Func<float> positionEpsilonProvider)
     {
+        _getGameObjects = getGameObjects;
+
         EnvironmentMap = new(
             Hdr,
             EquirectangularToCubemapShader,
             IrradianceConvolutionShader,
             PrefilterShader,
             BrdfLutShader);
+
+        InteractionManager = new(
+            BasicShader,
+            inputProvider,
+            cameraProvider,
+            bvhProvider,
+            bvhDictionaryProvider,
+            clothsProvider,
+            planeProvider,
+            positionEpsilonProvider);
 
         CamerasManager = new CamerasManager(inputProvider);
         LightsManager = new LightsManager(CamerasManager);
@@ -35,15 +54,13 @@ public abstract class SceneManager : IDisposable
             Position = new Vector3(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
         };
         CamerasManager.AddCamera(camera);
-
-        _translationGizmo = new TranslationGizmo(BasicShader);
-        _scaleGizmo = new ScaleGizmo(BasicShader);
-        _rotationGizmo = new RotationGizmo(BasicShader);
-
-        StaticDragManager = new(() => _selectionManager?.HoveredObject ?? null, () => CamerasManager.CurrentCamera);
     }
 
-    public StaticDragManager StaticDragManager;
+    public bool DrawSelectedObjectWithoutDepthTesting;
+    public bool DrawInvisibleObjects;
+
+    protected readonly Func<IEnumerable<GameObject>> _getGameObjects;
+    public InteractionManager InteractionManager { get; set; }
 
     public Func<float>? PositionEpsilonProvider { get; set; }
 
@@ -69,51 +86,10 @@ public abstract class SceneManager : IDisposable
 
     public LightsManager LightsManager { get; private set; }
     public CamerasManager CamerasManager { get; private set; }
-    protected List<GameObject> _gameObjects = [];
-    public ICollection<GameObject> GameObjects => _gameObjects;
 
-    private readonly TranslationGizmo _translationGizmo;
-    private readonly ScaleGizmo _scaleGizmo;
-    private readonly RotationGizmo _rotationGizmo;
-    private IGizmo? _activeGizmo;
-    public IGizmo? ActiveGizmo => _activeGizmo;
-
-    public GizmoType ActiveGizmoType
-    {
-        get
-        {
-            return ActiveGizmo switch
-            {
-                Display.Gizmos.Translation.TranslationGizmo => GizmoType.Translation,
-                Display.Gizmos.Rotation.RotationGizmo => GizmoType.Rotation,
-                Display.Gizmos.Scale.ScaleGizmo => GizmoType.Scale,
-                _ => GizmoType.None
-            };
-        }
-    }
-
-    public void AddGameObject(GameObject gameObject)
-    {
-        _gameObjects.Add(gameObject);
-    }
-
-    public void RemoveGameObject(GameObject gameObject)
-    {
-        _gameObjects.Remove(gameObject);
-    }
+    public SelectionManager SelectionManager => InteractionManager.SelectionManager;
 
     public abstract void SetUp();
-
-    private SelectionManager? _selectionManager;
-
-    public SelectionManager? SelectionManager
-    {
-        get => _selectionManager;
-        set
-        {
-            _selectionManager = value;
-        }
-    }
 
     public Vector4 SelectionColor = new(0.0f, 1.0f, 0.0f, 1.0f);
 
@@ -122,16 +98,15 @@ public abstract class SceneManager : IDisposable
         // Gizmo switching
         if (input.IsKeyPressed(InputKey.T))
         {
-            SetActiveGizmoType(GizmoType.Translation);
+            InteractionManager.SetActiveGizmoType(GizmoType.Translation);
         }
         else if (input.IsKeyPressed(InputKey.Y))
         {
-            SetActiveGizmoType(GizmoType.Scale);
-            _activeGizmo = _scaleGizmo;
+            InteractionManager.SetActiveGizmoType(GizmoType.Scale);
         }
         else if (input.IsKeyPressed(InputKey.U))
         {
-            SetActiveGizmoType(GizmoType.Rotation);
+            InteractionManager.SetActiveGizmoType(GizmoType.Rotation);
         }
     }
 
@@ -147,81 +122,15 @@ public abstract class SceneManager : IDisposable
 
     public void HandleInput(IInputProvider input, Vector2 viewportMousePos, Vector2i screenSize)
     {
-        // When camera mode is active (cursor grabbed), use center of screen for raycasting
-        // since the mouse position doesn't move
-        Vector2 raycastPos = input.GetCursorState() == CursorState.Grabbed
-            ? new Vector2(screenSize.X / 2f, screenSize.Y / 2f)
-            : viewportMousePos;
-
-        // Update hover detection with the appropriate position
-        SelectionManager?.UpdateHover(raycastPos, screenSize);
-
-        // Priority system: Once an input handler starts an operation (gizmo drag, mouse drag),
-        // it maintains priority until the operation completes (mouse button released)
-
-        // Check if gizmo is already active (the highest priority when active)
-        if (!(SelectionManager?.GizmosEnabled ?? false) && _activeGizmo?.Target is not null)
-        {
-            _activeGizmo.Target = null;
-            SetActiveGizmoType(GizmoType.None);
-        }
-
-        if (((SelectionManager?.GizmosEnabled ?? false) && (_activeGizmo?.IsActive ?? false)) &&
-            _activeGizmo is not null)
-        {
-            _activeGizmo.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize);
-            return;
-        }
-
-        if (StaticDragManager.Enabled && StaticDragManager.ShowHoverIndicator &&
-            SelectionManager?.HoveredObject is not null &&
-            _activeGizmo is not null &&
-            (_activeGizmo.Target is not null || SelectionManager.SelectedObject is not null))
-        {
-            SelectionManager.ClearSelection();
-            _activeGizmo.Target = null;
-        }
-
-        // Check if the drag manager is already active
-        if (StaticDragManager.IsDragging)
-        {
-            StaticDragManager.HandleInput(input);
-            return;
-        }
-
-        // Check gizmo first (the highest priority for new operations)
-        bool gizmoTookMouseInput = false;
-        if ((SelectionManager?.GizmosEnabled ?? false) && _activeGizmo is not null)
-        {
-            _activeGizmo.Target = (IGizmoTarget?)_selectionManager?.SelectedObject;
-            gizmoTookMouseInput =
-                _activeGizmo?.HandleInput(input, raycastPos, CamerasManager.CurrentCamera, screenSize) ?? false;
-        }
-
-        bool selectedHoveredObject = !gizmoTookMouseInput && input.IsMouseButtonPressed(MouseButton.Left) &&
-            (SelectionManager?.SelectHoveredObject() ?? false);
-
-        // Check if the drag manager can use the hovered object
-        if (!gizmoTookMouseInput && StaticDragManager.Enabled)
-        {
-            bool dragTookMouseInput = StaticDragManager.HandleInput(input);
-            if (dragTookMouseInput)
-            {
-                SelectionManager?.ClearSelection();
-                if (_activeGizmo is not null)
-                {
-                    _activeGizmo.Target = null;
-                }
-
-                return;
-            }
-        }
+        InteractionManager.HandleInput(input, viewportMousePos, screenSize);
     }
 
     public void RenderSceneWindow(IBindable framebuffer)
     {
-        LightsManager.RenderShadowsToMaps(_gameObjects);
+        var gameObjects = _getGameObjects();
+        LightsManager.RenderShadowsToMaps(gameObjects);
 
+        gameObjects = _getGameObjects();
         framebuffer.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
         GL.Enable(EnableCap.StencilTest);
@@ -235,7 +144,7 @@ public abstract class SceneManager : IDisposable
 
         GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
         GL.StencilMask(0xFF);
-        foreach (var gameObject in _gameObjects)
+        foreach (var gameObject in gameObjects)
         {
             if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)
             {
@@ -259,7 +168,7 @@ public abstract class SceneManager : IDisposable
             }
 
             gameObject.SetForShader(PbrShader);
-            gameObject.Render(SelectionManager?.DrawInvisibleObjects ?? false);
+            gameObject.Render(DrawInvisibleObjects);
 
             // Re-enable backface culling and disable polygon offset after rendering cloth
             if (gameObject is Cloth)
@@ -278,15 +187,14 @@ public abstract class SceneManager : IDisposable
         {
             GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
             GL.StencilMask(0x00);
-            if (SelectionManager.DrawSelectedObjectWithoutDepthTesting)
+            if (DrawSelectedObjectWithoutDepthTesting)
             {
                 GL.Disable(EnableCap.DepthTest);
             }
 
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
 
-            RenderObjectOutline(SelectionManager.SelectedObject, SelectionColor, OutlineFactor,
-                SelectionManager.DrawInvisibleObjects);
+            RenderObjectOutline(SelectionManager.SelectedObject, SelectionColor, OutlineFactor, DrawInvisibleObjects);
 
             GL.StencilMask(0xFF);
             GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
@@ -298,10 +206,7 @@ public abstract class SceneManager : IDisposable
 
     public void RenderGizmo()
     {
-        if (_activeGizmo != null)
-        {
-            _activeGizmo.Render(CamerasManager.CurrentCamera);
-        }
+        InteractionManager.ActiveGizmo?.Render(CamerasManager.CurrentCamera);
     }
 
     /// <summary>
@@ -429,32 +334,36 @@ public abstract class SceneManager : IDisposable
     /// </summary>
     public void RenderDragHoverIndicator()
     {
-        if (!StaticDragManager.Enabled || !StaticDragManager.ShowHoverIndicator ||
-            StaticDragManager.HoverTarget == null || StaticDragManager.IsDragging)
+        if (InteractionManager?.StaticDragManager.Enabled != true ||
+            !InteractionManager.StaticDragManager.ShowHoverIndicator ||
+            InteractionManager.StaticDragManager.HoverTarget == null ||
+            InteractionManager.StaticDragManager.IsDragging)
             return;
 
         // Don't show the hover indicator if the object is selected for gizmo manipulation
         if (SelectionManager?.SelectedObject != null &&
-            SelectionManager.SelectedObject == StaticDragManager.HoverTarget)
+            SelectionManager.SelectedObject == InteractionManager.StaticDragManager.HoverTarget)
             return;
 
         GL.Disable(EnableCap.DepthTest);
 
-        RenderObjectOutline(StaticDragManager.HoverTarget, StaticDragManager.HoverIndicatorColor,
-            StaticDragManager.HoverIndicatorScale, drawInvisible: true);
+        RenderObjectOutline(InteractionManager.StaticDragManager.HoverTarget,
+            InteractionManager.StaticDragManager.HoverIndicatorColor,
+            InteractionManager.StaticDragManager.HoverIndicatorScale, drawInvisible: true);
 
         GL.Enable(EnableCap.DepthTest);
     }
 
     public void RenderSelectedObjectOnTop()
     {
-        if (SelectionManager is { DrawSelectedObjectWithoutDepthTesting: true, SelectedObject: GameObject gameObject })
+        if (DrawSelectedObjectWithoutDepthTesting == true &&
+            InteractionManager.SelectionManager.SelectedObject is GameObject gameObject)
         {
             GL.Clear(ClearBufferMask.DepthBufferBit);
             PbrShader.Use();
             SetSharedPbrUniforms();
             gameObject.SetForShader(PbrShader);
-            gameObject.Render(SelectionManager.DrawInvisibleObjects);
+            gameObject.Render(DrawInvisibleObjects);
         }
     }
 
@@ -479,54 +388,6 @@ public abstract class SceneManager : IDisposable
         LightsManager.SetForShader(PbrShader);
     }
 
-    /// <summary>
-    /// Sets the active gizmo type based on enum value.
-    /// </summary>
-    public void SetActiveGizmoType(GizmoType gizmoType)
-    {
-        _activeGizmo = gizmoType switch
-        {
-            GizmoType.None => null,
-            GizmoType.Translation => _translationGizmo,
-            GizmoType.Rotation => _rotationGizmo,
-            GizmoType.Scale => _scaleGizmo,
-            _ => null
-        };
-
-        if (_activeGizmo is not null && SelectionManager?.SelectedObject is IGizmoTarget gizmoTarget)
-        {
-            _activeGizmo.Target = gizmoTarget;
-        }
-    }
-
-    /// <summary>
-    /// Resets all gizmo handle sizes to 1.0.
-    /// </summary>
-    public void ResetAllGizmoScales()
-    {
-        _translationGizmo.HandleSize = 1.0f;
-        _rotationGizmo.HandleSize = 1.0f;
-        _scaleGizmo.HandleSize = 1.0f;
-    }
-
-    /// <summary>
-    /// Clears the current selection and deactivates any active gizmo.
-    /// Should be called when loading or resetting scenes to prevent stale references.
-    /// </summary>
-    public void ClearSelectionAndGizmos()
-    {
-        // Clear selection first (this will also trigger OnSelectionChanged event)
-        SelectionManager?.ClearSelection();
-
-        // Deactivate any active gizmo
-        _activeGizmo = null;
-    }
-
-    public TranslationGizmo TranslationGizmo => _translationGizmo;
-    public RotationGizmo RotationGizmo => _rotationGizmo;
-    public ScaleGizmo ScaleGizmo => _scaleGizmo;
-
-
     public void Dispose()
     {
         _cube.Dispose();
@@ -537,13 +398,8 @@ public abstract class SceneManager : IDisposable
         EquirectangularToCubemapShader.Dispose();
 
         LightsManager.Dispose();
-        foreach (var gameObject in _gameObjects)
-        {
-            gameObject.Dispose();
-        }
 
-        _translationGizmo.Dispose();
-        _scaleGizmo.Dispose();
-        _rotationGizmo.Dispose();
+        // Note: GameObjects are owned by the application/demo, not by SceneRenderer
+        // Note: InteractionManager is owned by the application/demo, not by SceneRenderer
     }
 }

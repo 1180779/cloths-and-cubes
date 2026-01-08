@@ -4,30 +4,68 @@ using Engine;
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
-using Engine.Rays;
 using Engine.RigidBodies;
 
 using ImGuiNET;
 
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 
 using Visualisation.Core;
+using Visualisation.Core.Display.Texture;
 using Visualisation.Core.GameObjects;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
 
+using Visualization.UiLayer.Inputs;
+using Visualization.UiLayer.UI;
 using Visualization.UiLayer.UI.Windows;
 
 using Box = Visualisation.Core.GameObjects.Box;
 using Cloth = Visualisation.Core.GameObjects.Cloth;
-using Cone = Visualisation.Core.GameObjects.Cone;
-using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class BoxesDemo : Application
+public class Application : GameWindow
 {
+    // Fields from Application
+    private static bool s_fpsCappedTo60 = true;
+    protected readonly ImGuiController _imGuiController;
+    protected readonly IInputProvider _inputProvider;
+    protected readonly SettingsSaverLoader _settingsSaverLoader = new();
+    protected readonly WindowsManager _windowsManager = new();
+    protected readonly SceneWindow _sceneWindow;
+    protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
+
+    protected SceneRenderer _sceneRenderer; // initialized in constructor
+
+    // Application properties
+    public bool StepsLimit { get; set; }
+    protected long AvailableStepsInternal { get; set; }
+
+    public virtual long AvailableSteps
+    {
+        get => AvailableStepsInternal;
+        set
+        {
+            _forceBVHRebuildOnNoUpdate = true;
+            AvailableStepsInternal = value;
+        }
+    }
+
+    protected bool DoUpdate
+    {
+        get
+        {
+            if (!StepsLimit) return true;
+            if (AvailableSteps <= 0) return false;
+            AvailableSteps--;
+            return true;
+        }
+    }
+
     // Physics
     protected static uint MaxContacts => 2 * 1024;
 
@@ -44,18 +82,19 @@ public class BoxesDemo : Application
     protected Ball[] _balls = [];
     protected Cloth[] _cloths = [];
 
+    public IEnumerable<GameObject> GameObjects => [_plane, .._boxes, .._balls, .._cloths];
+
     // Store initial state for proper reset
     private SceneData? _initialSceneState;
     private bool _sceneWasLoaded;
 
-    private float _lastFrameDuration = 0.0f;
+    private float _lastFrameDuration;
 
     protected ForceRegistry _forceRegistry = new();
 
     protected BVH _bvh = BVH.BuildSynchronous([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
 
-    protected SelectionManager _selectionManager;
     protected SelectionManagerWindow _selectionManagerWindow;
     protected GizmoSettingsWindow _gizmoSettingsWindow;
     protected PhysicsControlWindow _physicsControlWindow;
@@ -64,7 +103,7 @@ public class BoxesDemo : Application
     protected BvhNodesWindow _bvhNodesWindow = new();
 
     // Public accessors for scene management
-    public SceneManager SceneManager => _sceneManager;
+    public SceneRenderer SceneRenderer => _sceneRenderer;
     public CollisionData CollisionData => _collisionData;
     public ForceRegistry ForceRegistry => _forceRegistry;
     protected CollisionParametersWindow _collisionParametersWindow;
@@ -72,8 +111,57 @@ public class BoxesDemo : Application
 
     protected BoxesDemoSettingsWindow _boxesDemoSettingsWindow;
 
-    public BoxesDemo()
+    public Application() : base(
+        GameWindowSettings.Default,
+        new NativeWindowSettings { WindowState = WindowState.Maximized })
     {
+        Size = (800, 600);
+        Title = "Boxes Demo";
+
+        if (s_fpsCappedTo60) UpdateFrequency = 60.0;
+
+        _imGuiController = new ImGuiController(this);
+        _imGuiController.HookToWindow(this);
+        _inputProvider = new OpenTKWithImGuiInputProvider(this, _imGuiController);
+
+        // Initialize SceneRenderer with all required providers
+        _sceneRenderer = new SceneLightningOnly(
+            Size.X / (float)Size.Y,
+            _inputProvider,
+            () => GameObjects,
+            () => _sceneRenderer.CamerasManager.CurrentCamera,
+            () => _bvh,
+            () => _bvhDictionary,
+            () => _cloths.ToDictionary(c => c.EngineCloth, c => c),
+            () => _plane,
+            () => _contactResolver.PositionEpsilon);
+
+        _sceneWindow = new SceneWindow(_imGuiController, _sceneRenderer, _inputProvider, Size);
+        _sceneWindow.DebugRenderInScene += DebugRenderInScene;
+
+        _cascadingShadowMapsWindow =
+            new CascadingShadowMapsWindow(_imGuiController, _sceneRenderer.LightsManager, Size);
+
+        // GL setup
+        GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
+        GL.Enable(EnableCap.CullFace);
+        GL.Enable(EnableCap.DepthTest);
+        GL.FrontFace(FrontFaceDirection.Ccw);
+        GL.Enable(EnableCap.TextureCubeMapSeamless);
+
+        // Initialize windows
+        _windowsManager.Add(new StatsWindow(_sceneRenderer));
+        _windowsManager.Add(new HelpWindow());
+        _windowsManager.Add(new ObjectInspectorWindow(() => GameObjects));
+        _windowsManager.Add(new GraphicsSettingsWindow(
+            () => _sceneRenderer.LightsManager.DirectionalLight,
+            _sceneRenderer, _sceneWindow));
+        _windowsManager.Add(_cascadingShadowMapsWindow);
+
+        _sceneRenderer.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
+        _sceneRenderer.InteractionManager.StaticDragManager.OnObjectDragged += BvhRebuild;
+
+        // Physics-specific windows
         _windowsManager.Add(_bvhNodesWindow);
 
         _collisionParametersWindow = new(_collisionData);
@@ -90,12 +178,10 @@ public class BoxesDemo : Application
                 int length = _boxes.Length;
 
                 var toBeRemoved = _boxes.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
-                if (_selectionManager is not null && toBeRemoved.Contains(_selectionManager.SelectedObject))
-                    _selectionManager.ClearSelection();
+                _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
 
                 for (int i = newCount; i < length; ++i)
                 {
-                    _sceneManager.RemoveGameObject(_boxes[i]);
                     _boxes[i].Dispose();
                 }
 
@@ -105,10 +191,9 @@ public class BoxesDemo : Application
                 {
                     _boxes[i] = new Box();
                     _boxes[i].EngineBox.Random(random);
-                    _sceneManager.AddGameObject(_boxes[i]);
                 }
 
-                _forcebvhRebuildOnNoUpdate = true;
+                _forceBVHRebuildOnNoUpdate = true;
             },
             SetSpheresCount = newCount =>
             {
@@ -116,12 +201,10 @@ public class BoxesDemo : Application
                 int length = _balls.Length;
 
                 var toBeRemoved = _balls.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
-                if (_selectionManager is not null && toBeRemoved.Contains(_selectionManager.SelectedObject))
-                    _selectionManager.ClearSelection();
+                _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
 
                 for (int i = newCount; i < length; ++i)
                 {
-                    _sceneManager.RemoveGameObject(_balls[i]);
                     _balls[i].Dispose();
                 }
 
@@ -130,10 +213,9 @@ public class BoxesDemo : Application
                 {
                     _balls[i] = new Ball();
                     _balls[i].EngineBall.Random(random);
-                    _sceneManager.AddGameObject(_balls[i]);
                 }
 
-                _forcebvhRebuildOnNoUpdate = true;
+                _forceBVHRebuildOnNoUpdate = true;
             }
         };
         _boxesDemoSettingsWindow.SetClothsCount = newCount =>
@@ -141,13 +223,11 @@ public class BoxesDemo : Application
             int length = _cloths.Length;
 
             var toBeRemoved = _cloths.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
-            if (_selectionManager is not null && toBeRemoved.Contains(_selectionManager.SelectedObject))
-                _selectionManager.ClearSelection();
+            _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
 
             for (int i = newCount; i < length; ++i)
             {
                 _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
-                _sceneManager.RemoveGameObject(_cloths[i]);
                 _cloths[i].Dispose();
             }
 
@@ -159,96 +239,16 @@ public class BoxesDemo : Application
                     _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                     _boxesDemoSettingsWindow.ParticleMass);
-                _sceneManager.AddGameObject(_cloths[i]);
             }
 
-            _forcebvhRebuildOnNoUpdate = true;
+            _forceBVHRebuildOnNoUpdate = true;
         };
         _windowsManager.Add(_boxesDemoSettingsWindow);
 
-
-        _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
-            (ray, index) =>
-            {
-                if (!_bvhDictionary.TryGetValue(index, out var item))
-                {
-                    if (index == -1)
-                    {
-                        if (RayIntersection.IntersectRayPlane(ray, _plane.EnginePlane, out var planeDistance))
-                        {
-                            return (true, planeDistance, _plane);
-                        }
-                    }
-
-                    return (false, 0, null);
-                }
-
-                Real distance;
-                switch (item)
-                {
-                    case Box box:
-                        if (RayIntersection.IntersectRayOBB(ray, box.EngineBox, out distance))
-                            return (true, distance, box);
-                        break;
-                    case Ball ball:
-                        if (RayIntersection.IntersectRaySphere(ray, ball.EngineBall, out distance))
-                            return (true, distance, ball);
-                        break;
-                    case Cloth cloth:
-                        var triangles = cloth.VisualCloth.GetTriangles();
-                        var (hit, vertexIdx, triangleIdx) =
-                            RayIntersection.IntersectRayCloth(ray, triangles, out distance);
-                        if (hit)
-                        {
-                            // Get the particle coordinates from the triangle and vertex index
-                            var (particleX, particleY) =
-                                cloth.VisualCloth.GetParticleCoordinatesFromTriangle(triangleIdx, vertexIdx);
-
-                            // Create a wrapper for the specific particle
-                            var particleWrapper = new ClothParticleWrapper(cloth, particleX, particleY);
-
-                            // adjust to account for position epsilon
-                            return (true, distance - _contactResolver.PositionEpsilon, particleWrapper);
-                        }
-
-                        break;
-                    case ClothRigidParticleInCorner particleInCorner:
-                        if (RayIntersection.IntersectRayAABB(ray, particleInCorner.GetBoundingBox(), out distance))
-                        {
-                            var gameCloth = _cloths.First(c => c.EngineCloth == particleInCorner.AttachedToCloth);
-                            var particleWrapper = new ClothParticleWrapper(gameCloth, particleInCorner.ClothParticleX,
-                                particleInCorner.ClothParticleY);
-                            return (true, distance, particleWrapper);
-                        }
-
-                        break;
-                    case ClothRigidParticle particle:
-                        if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
-                        {
-                            var gameCloth = _cloths.First(c => c.EngineCloth == particle.AttachedToCloth);
-                            var particleWrapper = new ClothParticleWrapper(gameCloth, particle.ClothParticleX,
-                                particle.ClothParticleY);
-                            return (true, distance, particleWrapper);
-                        }
-
-                        break;
-                    case Cylinder cylinder:
-                        if (RayIntersection.IntersectionRayCylinder(ray, cylinder.EngineCylinder, out distance))
-                            return (true, distance, cylinder);
-                        break;
-                    case Cone cone:
-                        if (RayIntersection.IntersectionRayCone(ray, cone.EngineCone, out distance))
-                            return (true, distance, cone);
-                        break;
-                }
-
-                return (false, 0, null);
-            });
-
-        _selectionManagerWindow = new(_selectionManager, _sceneManager.StaticDragManager);
+        _selectionManagerWindow = new(_sceneRenderer.InteractionManager);
         _windowsManager.Add(_selectionManagerWindow);
 
-        _gizmoSettingsWindow = new(_sceneManager);
+        _gizmoSettingsWindow = new(_sceneRenderer.InteractionManager);
         _windowsManager.Add(_gizmoSettingsWindow);
 
         _physicsControlWindow = new(this);
@@ -257,29 +257,22 @@ public class BoxesDemo : Application
         _sceneManagementWindow = new(this);
         _windowsManager.Add(_sceneManagementWindow);
 
-        _sceneManager.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
+        _sceneRenderer.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
 
-        _sceneManager.StaticDragManager.OnObjectDragged += BvhRebuild;
+        _sceneRenderer.InteractionManager.StaticDragManager.OnObjectDragged += BvhRebuild;
     }
 
-    protected override void InitializeScene()
+    protected void InitializeScene()
     {
-        base.InitializeScene();
-
-        _sceneManager.SelectionManager = _selectionManager;
-
         // add ground plane to the scene
         _plane = new();
-        _sceneManager.AddGameObject(_plane);
 
         /* set everything up */
         Reset();
     }
 
-    protected override void DebugRenderInScene(Shader sh)
+    protected void DebugRenderInScene(Shader sh)
     {
-        base.DebugRenderInScene(sh);
-
         // no need to rebuild?
         // BvhRebuild();
         _bvhNodesWindow.DebugRenderInScene(sh, _bvh);
@@ -321,27 +314,14 @@ public class BoxesDemo : Application
         _bvh = BVH.BuildSynchronous(_bvhDictionary);
     }
 
-    public override long AvailableSteps
-    {
-        get
-        {
-            return base.AvailableSteps;
-        }
-        set
-        {
-            _forcebvhRebuildOnNoUpdate = true;
-            base.AvailableSteps = value;
-        }
-    }
-
-    protected bool _forcebvhRebuildOnNoUpdate;
+    protected bool _forceBVHRebuildOnNoUpdate;
 
     protected void OnNoPhysicsUpdate()
     {
-        if (_forcebvhRebuildOnNoUpdate)
+        if (_forceBVHRebuildOnNoUpdate)
         {
             BvhRebuild();
-            _forcebvhRebuildOnNoUpdate = false;
+            _forceBVHRebuildOnNoUpdate = false;
         }
 
         ObjectSelectionHandling();
@@ -350,8 +330,8 @@ public class BoxesDemo : Application
     protected void ObjectSelectionHandling()
     {
         // Keep selection/drag handling active even if hover is lost during active operations
-        bool isDragging = _sceneManager.StaticDragManager.IsDragging;
-        bool isGizmoActive = _sceneManager.ActiveGizmo?.IsActive ?? false;
+        bool isDragging = _sceneRenderer.InteractionManager.StaticDragManager.IsDragging;
+        bool isGizmoActive = _sceneRenderer.InteractionManager.ActiveGizmo?.IsActive ?? false;
 
         if (_sceneWindow.IsHovered ||
             _inputProvider.GetCursorState() == Visualisation.Core.Inputs.CursorState.Grabbed ||
@@ -369,7 +349,7 @@ public class BoxesDemo : Application
             var viewportMousePos = new Vector2(scaledX, scaledY);
 
             // Pass input to SceneManager, which handles Gizmos and Selection
-            _sceneManager.HandleInput(_inputProvider, viewportMousePos, new(_sceneWindow.Width, _sceneWindow.Height));
+            _sceneRenderer.HandleInput(_inputProvider, viewportMousePos, new(_sceneWindow.Width, _sceneWindow.Height));
         }
     }
 
@@ -393,7 +373,7 @@ public class BoxesDemo : Application
         // above it, which leads to no collision resolution in that case.
         // (In the future spring version this would make the desired position 
         // to be outside the scene and probably cause issues with the spring force.) 
-        var draggedObject = _sceneManager.StaticDragManager.DraggedObject;
+        var draggedObject = _sceneRenderer.InteractionManager.StaticDragManager.DraggedObject;
         if (draggedObject != null)
         {
             _collisionData.Reset(MaxContacts);
@@ -422,8 +402,8 @@ public class BoxesDemo : Application
 
             // Rebuild BVH after resolving dragged object collisions
             // This ensures that the BVH is up to date with the resolved position
-            // of the dragged object, so that subsequent collision checks
-            // (e.g. between the dragged object and other objects) are correct.
+            // of the dragged object, so that later collision checks
+            // (e.g., between the dragged object and other objects) are correct.
             BvhRebuild();
 
             _collisionData.Reset(MaxContacts);
@@ -514,7 +494,7 @@ public class BoxesDemo : Application
         }
     }
 
-    protected override void Update(float deltaTime)
+    protected void Update(float deltaTime)
     {
         // Physics update from RigidBodyApplication
         if (!DoUpdate)
@@ -552,12 +532,36 @@ public class BoxesDemo : Application
     {
         base.OnUpdateFrame(e);
 
+        // Set the bypass flag BEFORE any keyboard input is processed (from Application)
+        if (_inputProvider is OpenTKWithImGuiInputProvider imguiProvider)
+        {
+            bool viewportIsActive = _sceneWindow.IsHovered ||
+                _inputProvider.GetCursorState() == Visualisation.Core.Inputs.CursorState.Grabbed ||
+                _sceneRenderer.InteractionManager.StaticDragManager.IsDragging ||
+                (_sceneRenderer.InteractionManager.ActiveGizmo?.IsActive ?? false);
+            imguiProvider.BypassImGuiKeyboardCapture = viewportIsActive;
+        }
+
+        _inputProvider.UpdateMousePosition();
+        _windowsManager.HandleInput();
+
+        // cap/uncap fps (from Application)
+        if (_inputProvider.IsKeyPressed(InputKey.X))
+        {
+            UpdateFrequency = UpdateFrequency switch
+            {
+                0.0 => 60.0,
+                _ => 0.0
+            };
+            s_fpsCappedTo60 = !s_fpsCappedTo60;
+        }
+
         if (!IsFocused)
         {
             return;
         }
 
-        // Step limiting controls from RigidBodyApplication
+        // Step limiting controls (from BoxesDemo)
         if (_inputProvider.IsKeyPressed(InputKey.LeftBracket))
         {
             StepsLimit = true;
@@ -630,7 +634,7 @@ public class BoxesDemo : Application
     /// </summary>
     public virtual void Reset()
     {
-        _forcebvhRebuildOnNoUpdate = true;
+        _forceBVHRebuildOnNoUpdate = true;
 
         // If a scene was loaded, restore it instead of using hardcoded values
         if (_sceneWasLoaded && _initialSceneState != null)
@@ -722,7 +726,7 @@ public class BoxesDemo : Application
     /// </summary>
     public void ApplySceneData(SceneData sceneData)
     {
-        var currentObjects = _sceneManager.GameObjects.ToList();
+        var currentObjects = GameObjects.ToList();
         var currentPlane = _plane;
 
         var updatedObjects = sceneData.ToGameObjectsWithUpdate(
@@ -738,10 +742,10 @@ public class BoxesDemo : Application
         _collisionData.Tolerance = collisionData.Tolerance;
 
         // Clear selection and gizmos if the selected object is being removed
-        if (_sceneManager.SelectionManager?.SelectedObject is GameObject selectedObject &&
+        if (_sceneRenderer.SelectionManager.SelectedObject is GameObject selectedObject &&
             objectsToRemove.Contains(selectedObject))
         {
-            _sceneManager.ClearSelectionAndGizmos();
+            _sceneRenderer.InteractionManager.ClearSelectionAndGizmos();
         }
 
         // Remove objects that are no longer in the scene
@@ -752,17 +756,7 @@ public class BoxesDemo : Application
                 cloth.EngineCloth.RemoveSpringsFromForceRegistry();
             }
 
-            _sceneManager.RemoveGameObject(obj);
             obj.Dispose();
-        }
-
-        // Add newly created objects to the scene
-        foreach (var obj in updatedObjects)
-        {
-            if (obj is not Plane && !currentObjects.Contains(obj))
-            {
-                _sceneManager.AddGameObject(obj);
-            }
         }
 
         UpdateObjectArrays(updatedObjects);
@@ -773,22 +767,152 @@ public class BoxesDemo : Application
         }
     }
 
-    protected override ApplicationState SaveState()
+    // === Methods from Application ===
+
+    protected override void OnLoad()
     {
-        var state = base.SaveState();
-        state.BvhNodes = _bvhNodesWindow.SaveState();
-        state.CollisionParameters = _collisionParametersWindow.SaveState();
-        state.ClothSettings = _boxesDemoSettingsWindow.SaveState();
-        state.SelectionSettings = _selectionManagerWindow.SaveState();
-        state.GizmoSettings = _gizmoSettingsWindow.SaveState();
-        state.PhysicsControl = _physicsControlWindow.SaveState();
-        state.SceneManagement = _sceneManagementWindow.SaveState();
-        return state;
+        base.OnLoad();
+
+        // Hook up SceneWindow debug rendering
+        _sceneWindow.DebugRenderInScene += DebugRenderInScene;
+
+        var state = _settingsSaverLoader.Load();
+        if (state is not null)
+        {
+            LoadState(state);
+        }
+
+        InitializeScene();
+
+        // set up internal scene objects after the scene is initialized
+        _sceneRenderer.SetUp();
     }
 
-    protected override void LoadState(ApplicationState state)
+    protected override void OnRenderFrame(FrameEventArgs args)
     {
-        base.LoadState(state);
+        base.OnRenderFrame(args);
+
+        _imGuiController.Update((float)args.Time);
+
+        Update((float)args.Time); // Update game/app logic before any rendering
+
+        _windowsManager.DrawMenu();
+
+        // --- ImGui Docking Setup ---
+        ImGuiWindowFlags dockspaceFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse |
+            ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus |
+            ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
+        ImGuiViewportPtr viewport = ImGui.GetMainViewport();
+        ImGui.SetNextWindowPos(viewport.WorkPos);
+        ImGui.SetNextWindowSize(viewport.WorkSize);
+        ImGui.SetNextWindowViewport(viewport.ID);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0.0f);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0.0f);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new System.Numerics.Vector2(0.0f, 0.0f));
+        ImGui.Begin("DockSpace Host", dockspaceFlags);
+        ImGui.PopStyleVar(3);
+
+        uint dockspaceId = ImGui.GetID("MyDockSpace");
+        ImGui.DockSpace(dockspaceId, new System.Numerics.Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
+
+        RenderWindows(args.Time);
+
+        // end dockspace
+        ImGui.End();
+
+        // clear the screen underneath the imGui windows (now background only)
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _imGuiController.Render();
+
+        SwapBuffers();
+
+        // upload any finished texture loads to the openGL
+        TexturesManager.ProcessPendingUploads();
+    }
+
+    protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
+    {
+        base.OnFramebufferResize(e);
+        GL.Viewport(0, 0, e.Width, e.Height);
+    }
+
+    protected override void OnUnload()
+    {
+        var state = SaveState();
+        _settingsSaverLoader.Save(state);
+
+        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        GL.BindVertexArray(0);
+        GL.UseProgram(0);
+
+        _windowsManager.Dispose();
+        TexturesManager.AbortAllLoads();
+        _imGuiController.UnhookFromWindow(this);
+        _sceneRenderer.Dispose();
+        _sceneWindow.Dispose();
+
+        base.OnUnload();
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnMouseWheel(e);
+
+        if (!ImGui.GetIO().WantCaptureMouse && _sceneRenderer.CamerasManager.CameraMode)
+        {
+            _sceneRenderer.CamerasManager.CurrentCamera.FovDegrees -= _inputProvider.GetMouseScroll();
+        }
+    }
+
+    protected override void OnResize(ResizeEventArgs e)
+    {
+        base.OnResize(e);
+        GL.Viewport(0, 0, Size.X, Size.Y);
+    }
+
+    protected void RenderWindows(double dt)
+    {
+        _windowsManager.Draw();
+        _sceneWindow.Draw(FramebufferSize, (float)dt);
+    }
+
+    protected ApplicationState SaveState()
+    {
+        return new ApplicationState
+        {
+            WindowsState = _windowsManager.SaveState(),
+            GraphicsSettings =
+                ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.StaticName)).SaveState(),
+            CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState(),
+            BvhNodes = _bvhNodesWindow.SaveState(),
+            CollisionParameters = _collisionParametersWindow.SaveState(),
+            ClothSettings = _boxesDemoSettingsWindow.SaveState(),
+            SelectionSettings = _selectionManagerWindow.SaveState(),
+            GizmoSettings = _gizmoSettingsWindow.SaveState(),
+            PhysicsControl = _physicsControlWindow.SaveState(),
+            SceneManagement = _sceneManagementWindow.SaveState()
+        };
+    }
+
+    protected void LoadState(ApplicationState state)
+    {
+        if (state.WindowsState is not null)
+        {
+            _windowsManager.RestoreState(state.WindowsState);
+        }
+
+        if (state.GraphicsSettings is not null)
+        {
+            ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.StaticName)).RestoreState(
+                state.GraphicsSettings);
+        }
+
+        if (state.CascadingShadowMaps is not null)
+        {
+            _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);
+        }
+
+        // Restore BoxesDemo-specific state
         if (state.BvhNodes is not null)
         {
             _bvhNodesWindow.RestoreState(state.BvhNodes);
@@ -861,7 +985,7 @@ public class BoxesDemo : Application
         Array.Resize(ref _cloths, cloths.Count);
         Array.Copy(_cloths, cloths.ToArray(), cloths.Count);
 
-        _forcebvhRebuildOnNoUpdate = true;
+        _forceBVHRebuildOnNoUpdate = true;
     }
 
     /// <summary>
@@ -878,10 +1002,8 @@ public class BoxesDemo : Application
     /// </summary>
     public void UpdatePlane(Plane plane)
     {
-        _sceneManager.RemoveGameObject(_plane);
+        _sceneRenderer.InteractionManager.RemoveObject(plane);
         _plane.Dispose();
-
         _plane = plane;
-        _sceneManager.AddGameObject(_plane);
     }
 }

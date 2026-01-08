@@ -3,7 +3,7 @@ using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
-public class BoxesMaterialsDemo : BoxesDemo
+public class BoxesMaterialsDemo : Application
 {
     public BoxesMaterialsDemo()
     {
@@ -14,7 +14,6 @@ public class BoxesMaterialsDemo : BoxesDemo
                 int length = _boxes.Length;
                 for (int i = count; i < length; ++i)
                 {
-                    _sceneManager.RemoveGameObject(_boxes[i]);
                     _boxes[i].Dispose();
                 }
 
@@ -32,7 +31,6 @@ public class BoxesMaterialsDemo : BoxesDemo
                         velocity: new Engine.Vector3()
                     );
                     _boxes[i].Material = Materials[i % Materials.Length].TypedClone();
-                    _sceneManager.AddGameObject(_boxes[i]);
                     rowCount++;
                 }
             },
@@ -41,7 +39,6 @@ public class BoxesMaterialsDemo : BoxesDemo
                 int length = _balls.Length;
                 for (int i = count; i < length; ++i)
                 {
-                    _sceneManager.RemoveGameObject(_balls[i]);
                     _balls[i].Dispose();
                 }
 
@@ -59,7 +56,6 @@ public class BoxesMaterialsDemo : BoxesDemo
                         velocity: new Engine.Vector3()
                     );
                     _balls[i].Material = Materials[i % Materials.Length].TypedClone();
-                    _sceneManager.AddGameObject(_balls[i]);
                     rowCount++;
                 }
             }
@@ -70,7 +66,6 @@ public class BoxesMaterialsDemo : BoxesDemo
             for (int i = count; i < length; ++i)
             {
                 _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
-                _sceneManager.RemoveGameObject(_cloths[i]);
                 _cloths[i].Dispose();
             }
 
@@ -81,7 +76,6 @@ public class BoxesMaterialsDemo : BoxesDemo
                     _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                     _boxesDemoSettingsWindow.ParticleMass);
-                _sceneManager.AddGameObject(_cloths[i]);
             }
         };
     }
@@ -92,7 +86,7 @@ public class BoxesMaterialsDemo : BoxesDemo
 
     public override void Reset()
     {
-        _forcebvhRebuildOnNoUpdate = true;
+        _forceBVHRebuildOnNoUpdate = true;
 
         _forceRegistry.Clear();
         foreach (Cloth cloth in _cloths)

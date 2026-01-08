@@ -8,7 +8,7 @@ namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class SceneManagementWindow : IWindow
 {
-    private readonly BoxesDemo _application;
+    private readonly Application _application;
     private readonly string _scenesDirectory;
 
     private string _newSceneName = "New Scene";
@@ -22,7 +22,7 @@ public sealed class SceneManagementWindow : IWindow
     private string? _selectedScene;
     private SceneData? _previewData;
 
-    public SceneManagementWindow(BoxesDemo application, string scenesDirectory = "scenes")
+    public SceneManagementWindow(Application application, string scenesDirectory = "scenes")
     {
         _application = application;
         _scenesDirectory = scenesDirectory;
@@ -228,7 +228,7 @@ public sealed class SceneManagementWindow : IWindow
             var filePath = Path.Combine(_scenesDirectory, fileName);
 
             var sceneData = SceneSerializer.SerializeScene(
-                _application.SceneManager.GameObjects,
+                _application.GameObjects,
                 _application.CollisionData,
                 _newSceneName,
                 _sceneDescription,

@@ -59,6 +59,11 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
     /// </summary>
     private float _planeOffset = 0.1f;
 
+    public void Clear()
+    {
+        DraggedObject = null;
+    }
+
     /// <summary>
     /// Handle input for dragging. 
     /// </summary>

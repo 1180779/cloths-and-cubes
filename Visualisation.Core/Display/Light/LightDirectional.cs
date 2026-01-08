@@ -282,7 +282,7 @@ public class LightDirectional : LightPoint
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    public void RenderToDepthMap(Shader sh, ICollection<GameObject> objects)
+    public void RenderToDepthMap(Shader sh, IEnumerable<GameObject> objects)
     {
         GL.Viewport(0, 0, ShadowWidth, ShadowHeight);
         sh.Use();

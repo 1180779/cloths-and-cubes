@@ -21,7 +21,7 @@ public class SceneSerializer
     /// Serialize a scene to SceneData
     /// </summary>
     public static SceneData SerializeScene(
-        ICollection<GameObject> gameObjects,
+        IEnumerable<GameObject> gameObjects,
         CollisionData collisionData,
         string sceneName = "Untitled Scene",
         string description = "",

@@ -575,7 +575,7 @@ public static class SceneDataMappers
     #region Scene-level Mapping
 
     public static SceneData ToSceneData(
-        this ICollection<GameObject> gameObjects,
+        this IEnumerable<GameObject> gameObjects,
         CollisionData collisionData,
         string sceneName = "Untitled Scene",
         string description = "",
@@ -586,8 +586,10 @@ public static class SceneDataMappers
         var cloths = new List<ClothData>();
         PlaneData? plane = null;
 
+        int count = 0;
         foreach (var obj in gameObjects)
         {
+            count++;
             switch (obj)
             {
                 case Box box:
@@ -614,7 +616,7 @@ public static class SceneDataMappers
                 CreatedDate = DateTime.UtcNow,
                 ModifiedDate = DateTime.UtcNow,
                 Version = "1.0",
-                TotalObjects = gameObjects.Count
+                TotalObjects = count
             },
             CollisionSettings = new CollisionSettings
             {

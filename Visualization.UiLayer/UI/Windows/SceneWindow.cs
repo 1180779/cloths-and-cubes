@@ -15,13 +15,13 @@ namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class SceneWindow(
     ImGuiController imGuiController,
-    SceneManager sceneManagerManager,
+    SceneRenderer sceneRendererRenderer,
     IInputProvider inputProvider,
     Vector2i size
 ) : IDisposable
 {
     private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
-    private readonly SceneManager _sceneManager = sceneManagerManager; /* borrowed */
+    private readonly SceneRenderer _sceneRenderer = sceneRendererRenderer; /* borrowed */
     private readonly IInputProvider _inputProvider = inputProvider; /* borrowed */
 
     private bool _disposed;
@@ -46,8 +46,8 @@ public sealed class SceneWindow(
 
         _isHovered = ImGui.IsWindowHovered();
         // Keep input processing active during drag even if hover state is lost
-        bool isDragging = _sceneManager.StaticDragManager.IsDragging;
-        bool isGizmoActive = _sceneManager.ActiveGizmo?.IsActive ?? false;
+        bool isDragging = _sceneRenderer.InteractionManager.StaticDragManager.IsDragging;
+        bool isGizmoActive = _sceneRenderer.InteractionManager.ActiveGizmo?.IsActive ?? false;
         bool viewportIsActive = _isHovered || _inputProvider.GetCursorState() == CursorState.Grabbed || isDragging ||
             isGizmoActive;
 
@@ -60,14 +60,14 @@ public sealed class SceneWindow(
 
         if (viewportIsActive)
         {
-            _sceneManager.ProcessInputInFocus(_inputProvider, dt);
+            _sceneRenderer.ProcessInputInFocus(_inputProvider, dt);
         }
         else
         {
-            _sceneManager.ProcessInputOutOfFocus(_inputProvider, dt);
+            _sceneRenderer.ProcessInputOutOfFocus(_inputProvider, dt);
         }
 
-        _sceneManager.ProcessInputInAndOutOfFocus(_inputProvider, dt);
+        _sceneRenderer.ProcessInputInAndOutOfFocus(_inputProvider, dt);
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
         var fbScale = _imGuiController.ScaleFactor;
@@ -82,11 +82,11 @@ public sealed class SceneWindow(
 
             _msaaFrameBuffer.Resize(fbW, fbH);
             _msaaFrameBuffer.Bind();
-            _sceneManager.RenderSceneWindow(_msaaFrameBuffer);
+            _sceneRenderer.RenderSceneWindow(_msaaFrameBuffer);
             DrawDebug();
-            _sceneManager.RenderSelectedObjectOnTop();
-            _sceneManager.RenderGizmo();
-            _sceneManager.RenderDragHoverIndicator();
+            _sceneRenderer.RenderSelectedObjectOnTop();
+            _sceneRenderer.RenderGizmo();
+            _sceneRenderer.RenderDragHoverIndicator();
             _msaaFrameBuffer.Unbind();
 
             _msaaFrameBuffer.BlitTo(_sceneRenderWindowFrb);
@@ -94,11 +94,11 @@ public sealed class SceneWindow(
         else
         {
             _sceneRenderWindowFrb.Bind();
-            _sceneManager.RenderSceneWindow(_sceneRenderWindowFrb);
+            _sceneRenderer.RenderSceneWindow(_sceneRenderWindowFrb);
             DrawDebug();
-            _sceneManager.RenderSelectedObjectOnTop();
-            _sceneManager.RenderGizmo();
-            _sceneManager.RenderDragHoverIndicator();
+            _sceneRenderer.RenderSelectedObjectOnTop();
+            _sceneRenderer.RenderGizmo();
+            _sceneRenderer.RenderDragHoverIndicator();
             _sceneRenderWindowFrb.Unbind();
         }
 
@@ -121,8 +121,8 @@ public sealed class SceneWindow(
             return;
 
         _debugBasicShader.Use();
-        _debugBasicShader.SetMatrix4("view", _sceneManager.CamerasManager.CurrentCamera.ViewMatrix);
-        _debugBasicShader.SetMatrix4("projection", _sceneManager.CamerasManager.CurrentCamera.ProjectionMatrix);
+        _debugBasicShader.SetMatrix4("view", _sceneRenderer.CamerasManager.CurrentCamera.ViewMatrix);
+        _debugBasicShader.SetMatrix4("projection", _sceneRenderer.CamerasManager.CurrentCamera.ProjectionMatrix);
         GL.Disable(EnableCap.CullFace);
         DebugRenderInScene(_debugBasicShader);
         GL.Enable(EnableCap.CullFace);

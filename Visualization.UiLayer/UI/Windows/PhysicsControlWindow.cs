@@ -1,6 +1,5 @@
 using ImGuiNET;
 
-using Visualization.UiLayer.Applications;
 using Visualization.UiLayer.Applications.Demos;
 
 namespace Visualization.UiLayer.UI.Windows;
@@ -8,13 +7,11 @@ namespace Visualization.UiLayer.UI.Windows;
 public sealed class PhysicsControlWindow : IWindow
 {
     private readonly Application _application;
-    private readonly BoxesDemo? _boxesDemo;
     private int _stepCount = 1;
 
     public PhysicsControlWindow(Application application)
     {
         _application = application;
-        _boxesDemo = application as BoxesDemo;
     }
 
     public string Name => "Physics Control";
@@ -116,21 +113,12 @@ public sealed class PhysicsControlWindow : IWindow
             // Reset Section
             ImGui.SeparatorText("Scene Actions");
 
-            if (_boxesDemo != null)
+            if (ImGui.Button("Reset Scene", new System.Numerics.Vector2(120, 0)))
             {
-                if (ImGui.Button("Reset Scene", new System.Numerics.Vector2(120, 0)))
-                {
-                    _boxesDemo.Reset();
-                }
+                _application.Reset();
+            }
 
-                UiControls.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
-            }
-            else
-            {
-                ImGui.BeginDisabled();
-                ImGui.Button("Reset Scene", new System.Numerics.Vector2(120, 0));
-                ImGui.EndDisabled();
-            }
+            UiControls.SetTooltip("Reset all objects to initial positions (Keyboard: R)");
 
             ImGui.Spacing();
             ImGui.Separator();

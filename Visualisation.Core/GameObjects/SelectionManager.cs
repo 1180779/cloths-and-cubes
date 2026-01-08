@@ -1,5 +1,6 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
+using Engine.RigidBodies;
 
 using OpenTK.Mathematics;
 
@@ -16,7 +17,10 @@ public sealed class SelectionManager(
     IInputProvider inputProvider,
     Func<CameraBase> cameraProvider,
     Func<BVH> bvhProvider,
-    Func<Ray, int, (bool, Real, object?)> testBvhIndexRayIntersection
+    Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
+    Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
+    Func<Plane> planeProvider,
+    Func<float> positionEpsilonProvider
 )
 {
     public bool IsEnabled = true;
@@ -25,7 +29,6 @@ public sealed class SelectionManager(
     private readonly IInputProvider _inputProvider = inputProvider;
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
-    private readonly Func<Ray, int, (bool, Real, object?)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
     public Ray? LastRay { get; private set; }
     public Real SelectedObjectDistance { get; set; }
 
@@ -70,9 +73,6 @@ public sealed class SelectionManager(
             _selectionEnabled = value;
         }
     }
-
-    public bool DrawInvisibleObjects;
-    public bool DrawSelectedObjectWithoutDepthTesting = true;
 
     /// <summary>
     /// Event raised when the selected object changes.
@@ -166,7 +166,7 @@ public sealed class SelectionManager(
 
         foreach (var hitIndex in potentialHits)
         {
-            var (hit, distance, obj) = _testBvhIndexRayIntersection(ray, hitIndex);
+            var (hit, distance, obj) = TestRayIntersection(ray, hitIndex);
             if (hit && distance < closestDistance && distance >= 0)
             {
                 closestDistance = distance;
@@ -174,7 +174,7 @@ public sealed class SelectionManager(
             }
         }
 
-        var (planeHit, planeDistance, planeObj) = _testBvhIndexRayIntersection(ray, -1);
+        var (planeHit, planeDistance, planeObj) = TestRayIntersection(ray, -1);
         if (planeHit && planeDistance < closestDistance && planeDistance >= 0)
         {
             closestDistance = planeDistance;
@@ -183,6 +183,100 @@ public sealed class SelectionManager(
 
         HoveredObject = closestObject;
         SelectedObjectDistance = closestDistance;
+    }
+
+    private (bool, Real, object?) TestRayIntersection(Ray ray, int index)
+    {
+        var clothsDictionary = clothsProvider();
+        var bvhDictionary = bvhDictionaryProvider();
+        if (!bvhDictionary.TryGetValue(index, out var item))
+        {
+            if (index == -1)
+            {
+                var plane = planeProvider();
+                if (RayIntersection.IntersectRayPlane(ray, plane.EnginePlane, out var planeDistance))
+                {
+                    return (true, planeDistance, plane);
+                }
+            }
+
+            return (false, 0, null);
+        }
+
+        Real distance;
+        switch (item)
+        {
+            case Box box:
+                if (RayIntersection.IntersectRayOBB(ray, box.EngineBox, out distance))
+                    return (true, distance, box);
+                break;
+            case Ball ball:
+                if (RayIntersection.IntersectRaySphere(ray, ball.EngineBall, out distance))
+                    return (true, distance, ball);
+                break;
+            case Cloth cloth:
+                var triangles = cloth.VisualCloth.GetTriangles();
+                var (hit, vertexIdx, triangleIdx) =
+                    RayIntersection.IntersectRayCloth(ray, triangles, out distance);
+                if (hit)
+                {
+                    // Get the particle coordinates from the triangle and vertex index
+                    var (particleX, particleY) =
+                        cloth.VisualCloth.GetParticleCoordinatesFromTriangle(triangleIdx, vertexIdx);
+
+                    // Create a wrapper for the specific particle
+                    var particleWrapper = new ClothParticleWrapper(cloth, particleX, particleY);
+
+                    var positionEpsilon = positionEpsilonProvider();
+                    // adjust to account for position epsilon
+                    return (true, distance - positionEpsilon, particleWrapper);
+                }
+
+                break;
+            // unnecessary, overrides the one in ClothRigidParticle
+            // case ClothRigidParticleInCorner particleInCorner:
+            //     if (RayIntersection.IntersectRayAABB(ray, particleInCorner.GetBoundingBox(), out distance))
+            //     {
+            //         clothsDictionary.TryGetValue(particleInCorner.AttachedToCloth, out var gameCloth);
+            //         if (gameCloth is null)
+            //             return (false, 0, null);
+            //         
+            //         var particleWrapper = new ClothParticleWrapper(gameCloth, particleInCorner.ClothParticleX,
+            //             particleInCorner.ClothParticleY);
+            //         return (true, distance, particleWrapper);
+            //     }
+            //
+            //     break;
+            case ClothRigidParticle particle:
+                if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
+                {
+                    clothsDictionary.TryGetValue(particle.AttachedToCloth, out var gameCloth);
+                    if (gameCloth is null)
+                        return (false, 0, null);
+
+                    var particleWrapper = new ClothParticleWrapper(gameCloth, particle.ClothParticleX,
+                        particle.ClothParticleY);
+                    return (true, distance, particleWrapper);
+                }
+
+                break;
+            case Cylinder cylinder:
+                if (RayIntersection.IntersectionRayCylinder(ray, cylinder.EngineCylinder, out distance))
+                    return (true, distance, cylinder);
+                break;
+            case Cone cone:
+                if (RayIntersection.IntersectionRayCone(ray, cone.EngineCone, out distance))
+                    return (true, distance, cone);
+                break;
+        }
+
+        return (false, 0, null);
+    }
+
+    public void ClearHover()
+    {
+        HoveredObject = null;
+        LastRay = null;
     }
 
     /// <summary>

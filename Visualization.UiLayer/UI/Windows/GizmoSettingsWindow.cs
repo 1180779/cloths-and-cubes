@@ -4,17 +4,17 @@ using ImGuiNET;
 
 using Visualisation.Core.Display.Gizmos;
 using Visualisation.Core.Display.Gizmos.Rotation;
-using Visualisation.Core.GameObjects.Scenes;
+using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class GizmoSettingsWindow : IWindow
 {
-    private readonly SceneManager _sceneManager;
+    private readonly InteractionManager _interactionManager;
 
-    public GizmoSettingsWindow(SceneManager sceneManager)
+    public GizmoSettingsWindow(InteractionManager interactionManager)
     {
-        _sceneManager = sceneManager;
+        _interactionManager = interactionManager;
     }
 
     public string Name => "Gizmo Settings";
@@ -30,7 +30,7 @@ public sealed class GizmoSettingsWindow : IWindow
             ImGui.Spacing();
 
             // Gizmo Settings
-            if (_sceneManager.ActiveGizmo == null)
+            if (_interactionManager.ActiveGizmo == null)
             {
                 ImGui.TextColored(new System.Numerics.Vector4(0.6f, 0.6f, 0.6f, 1.0f),
                     "No active gizmo. Select an object and choose a gizmo type.");
@@ -50,7 +50,7 @@ public sealed class GizmoSettingsWindow : IWindow
         {
             if (ImGui.Button("Reset All Gizmo Scales"))
             {
-                _sceneManager.ResetAllGizmoScales();
+                _interactionManager.ResetAllGizmoScales();
             }
 
             ImGui.SameLine();
@@ -92,9 +92,9 @@ public sealed class GizmoSettingsWindow : IWindow
 
     private void DrawGizmo()
     {
-        Debug.Assert(_sceneManager.ActiveGizmo is not null);
+        Debug.Assert(_interactionManager.ActiveGizmo is not null);
 
-        IGizmo gizmo = _sceneManager.ActiveGizmo;
+        IGizmo gizmo = _interactionManager.ActiveGizmo;
 
         ImGui.SeparatorText("Coordinate Space");
         DrawGizmoCoordinateSpace(gizmo);
@@ -130,8 +130,8 @@ public sealed class GizmoSettingsWindow : IWindow
     {
         ImGui.SeparatorText("Gizmo Type");
 
-        var previousType = _sceneManager.ActiveGizmoType;
-        var selectedGizmoType = _sceneManager.ActiveGizmoType;
+        var previousType = _interactionManager.ActiveGizmoType;
+        var selectedGizmoType = _interactionManager.ActiveGizmoType;
         if (ImGui.RadioButton("None", selectedGizmoType == GizmoType.None))
         {
             selectedGizmoType = GizmoType.None;
@@ -154,7 +154,7 @@ public sealed class GizmoSettingsWindow : IWindow
 
         if (previousType != selectedGizmoType)
         {
-            _sceneManager.SetActiveGizmoType(selectedGizmoType);
+            _interactionManager.SetActiveGizmoType(selectedGizmoType);
         }
     }
 
@@ -182,27 +182,27 @@ public sealed class GizmoSettingsWindow : IWindow
     {
         var state = new State
         {
-            SelectedGizmoType = _sceneManager.ActiveGizmoType,
+            SelectedGizmoType = _interactionManager.ActiveGizmoType,
             TranslationGizmoState =
                 new GizmoState
                 {
-                    HandleSize = _sceneManager.TranslationGizmo.HandleSize,
-                    Space = _sceneManager.TranslationGizmo.Space,
-                    ConstantScreenSize = _sceneManager.TranslationGizmo.ConstantScreenSize
+                    HandleSize = _interactionManager.TranslationGizmo.HandleSize,
+                    Space = _interactionManager.TranslationGizmo.Space,
+                    ConstantScreenSize = _interactionManager.TranslationGizmo.ConstantScreenSize
                 },
             ScaleGizmoState =
                 new GizmoState
                 {
-                    HandleSize = _sceneManager.ScaleGizmo.HandleSize,
-                    Space = _sceneManager.ScaleGizmo.Space,
-                    ConstantScreenSize = _sceneManager.ScaleGizmo.ConstantScreenSize
+                    HandleSize = _interactionManager.ScaleGizmo.HandleSize,
+                    Space = _interactionManager.ScaleGizmo.Space,
+                    ConstantScreenSize = _interactionManager.ScaleGizmo.ConstantScreenSize
                 },
             RotationGizmoState = new RotationGizmoState
             {
-                HandleSize = _sceneManager.RotationGizmo.HandleSize,
-                Space = _sceneManager.RotationGizmo.Space,
-                ConstantScreenSize = _sceneManager.RotationGizmo.ConstantScreenSize,
-                Sensitivity = _sceneManager.RotationGizmo.Sensitivity
+                HandleSize = _interactionManager.RotationGizmo.HandleSize,
+                Space = _interactionManager.RotationGizmo.Space,
+                ConstantScreenSize = _interactionManager.RotationGizmo.ConstantScreenSize,
+                Sensitivity = _interactionManager.RotationGizmo.Sensitivity
             },
         };
         return state;
@@ -210,28 +210,28 @@ public sealed class GizmoSettingsWindow : IWindow
 
     public void RestoreState(State state)
     {
-        _sceneManager.SetActiveGizmoType(state.SelectedGizmoType);
+        _interactionManager.SetActiveGizmoType(state.SelectedGizmoType);
 
         if (state.TranslationGizmoState is not null)
         {
-            _sceneManager.TranslationGizmo.HandleSize = state.TranslationGizmoState.HandleSize;
-            _sceneManager.TranslationGizmo.Space = state.TranslationGizmoState.Space;
-            _sceneManager.TranslationGizmo.ConstantScreenSize = state.TranslationGizmoState.ConstantScreenSize;
+            _interactionManager.TranslationGizmo.HandleSize = state.TranslationGizmoState.HandleSize;
+            _interactionManager.TranslationGizmo.Space = state.TranslationGizmoState.Space;
+            _interactionManager.TranslationGizmo.ConstantScreenSize = state.TranslationGizmoState.ConstantScreenSize;
         }
 
         if (state.ScaleGizmoState is not null)
         {
-            _sceneManager.ScaleGizmo.HandleSize = state.ScaleGizmoState.HandleSize;
-            _sceneManager.ScaleGizmo.Space = state.ScaleGizmoState.Space;
-            _sceneManager.ScaleGizmo.ConstantScreenSize = state.ScaleGizmoState.ConstantScreenSize;
+            _interactionManager.ScaleGizmo.HandleSize = state.ScaleGizmoState.HandleSize;
+            _interactionManager.ScaleGizmo.Space = state.ScaleGizmoState.Space;
+            _interactionManager.ScaleGizmo.ConstantScreenSize = state.ScaleGizmoState.ConstantScreenSize;
         }
 
         if (state.RotationGizmoState is not null)
         {
-            _sceneManager.RotationGizmo.ConstantScreenSize = state.RotationGizmoState.ConstantScreenSize;
-            _sceneManager.RotationGizmo.Space = state.RotationGizmoState.Space;
-            _sceneManager.RotationGizmo.ConstantScreenSize = state.RotationGizmoState.ConstantScreenSize;
-            _sceneManager.RotationGizmo.Sensitivity = state.RotationGizmoState.Sensitivity;
+            _interactionManager.RotationGizmo.ConstantScreenSize = state.RotationGizmoState.ConstantScreenSize;
+            _interactionManager.RotationGizmo.Space = state.RotationGizmoState.Space;
+            _interactionManager.RotationGizmo.ConstantScreenSize = state.RotationGizmoState.ConstantScreenSize;
+            _interactionManager.RotationGizmo.Sensitivity = state.RotationGizmoState.Sensitivity;
         }
     }
 }
