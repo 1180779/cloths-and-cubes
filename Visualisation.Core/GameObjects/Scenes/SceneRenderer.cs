@@ -24,7 +24,8 @@ public abstract class SceneRenderer : IDisposable
         Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
         Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
         Func<Plane> planeProvider,
-        Func<float> positionEpsilonProvider)
+        Func<float> positionEpsilonProvider,
+        Func<IEnumerable<Box>> boxesProvider)
     {
         _getGameObjects = getGameObjects;
 
@@ -43,7 +44,8 @@ public abstract class SceneRenderer : IDisposable
             bvhDictionaryProvider,
             clothsProvider,
             planeProvider,
-            positionEpsilonProvider);
+            positionEpsilonProvider,
+            boxesProvider);
 
         CamerasManager = new CamerasManager(inputProvider);
         LightsManager = new LightsManager(CamerasManager);

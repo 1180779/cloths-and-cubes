@@ -290,6 +290,22 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
         {
             ImGui.Indent();
 
+            if (body.InverseMass == 0)
+            {
+                ImGui.Text("This body is static and immovable by physic interactions.");
+                ImGui.BeginDisabled();
+                ImGui.Button("Make static", UiControls.Style.ButtonSizes.Small("Make static"));
+                ImGui.EndDisabled();
+            }
+            else
+            {
+                ImGui.Text("This body is dynamic.");
+                if (ImGui.Button("Make static", UiControls.Style.ButtonSizes.Small("Make static")))
+                {
+                    body.MakeStatic();
+                }
+            }
+
             bool returnValue = false;
             returnValue |= DrawVector3(ref body.Position, "Position");
 
@@ -480,7 +496,8 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
         ImGui.Text($"Velocity: ({body.Velocity.X:F2}, {body.Velocity.Y:F2}, {body.Velocity.Z:F2})");
         ImGui.Text($"Rotation: ({body.Rotation.X:F2}, {body.Rotation.Y:F2}, {body.Rotation.Z:F2})");
         ImGui.Text($"Acceleration: ({body.Acceleration.X:F2}, {body.Acceleration.Y:F2}, {body.Acceleration.Z:F2})");
-        ImGui.Text($"Inverse Mass: {body.InverseMass:F4}");
+        ImGui.Text($"Mass: {body.Mass:F4}");
+        ImGui.Text($"Inverse mass: {body.InverseMass:F4}");
 
         bool isAnchor = body.InverseMass == 0;
         ImGui.Text($"Is Anchor: {(isAnchor ? "Yes" : "No")}");
@@ -509,11 +526,24 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
                 "Tip: Drag the particle with the gizmo to move it. The particle will automatically become an anchor while dragging.");
         }
 
-        if (ImGui.CollapsingHeader("Pin to Box Corner"))
+        if (ImGui.CollapsingHeader("Automatic Pinning to Box Corners"))
         {
             ImGui.TextWrapped(
-                "Select this particle, then select a box corner (RigidParticleInCorner) and use the 'Pin Cloth Particle' button that will appear.");
-            ImGui.TextWrapped("Note: This feature requires selecting both the cloth particle and a box corner.");
+                "When dragging this particle, it will automatically pin to nearby immovable box corners.");
+            ImGui.TextWrapped(
+                "Move the particle close to an immovable box corner to pin it. Move it away to unpin.");
+
+            if (wrapper.IsPinned)
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+                    "Currently PINNED to a box corner");
+                ImGui.Text($"Pinned position: {wrapper.PinnedPosition}");
+            }
+            else
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+                    "Not pinned");
+            }
         }
 
         ImGui.Separator();
@@ -684,19 +714,8 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
 
     private void DrawParticle(RigidParticle particle, int x = 0, int y = 0)
     {
-        // Check if this is a corner particle and if we have a previously selected cloth particle
-        if (particle is ClothRigidParticleInCorner corner && _previouslySelectedParticle != null)
-        {
-            ImGui.Separator();
-            if (ImGui.Button("Pin Cloth Particle to This Corner"))
-            {
-                _previouslySelectedParticle.PinToBoxCorner(corner);
-                ImGui.Text(
-                    $"Pinned particle [{_previouslySelectedParticle.ParticleX}, {_previouslySelectedParticle.ParticleY}] to corner!");
-            }
-
-            ImGui.Separator();
-        }
+        // Note: Automatic pinning to box corners now happens during dragging.
+        // The old manual pinning interface has been removed.
 
         if (ImGui.CollapsingHeader("Transformation", ImGuiTreeNodeFlags.DefaultOpen))
         {

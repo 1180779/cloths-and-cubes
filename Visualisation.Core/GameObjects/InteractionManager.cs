@@ -32,7 +32,8 @@ public sealed class InteractionManager : IDisposable
         Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
         Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
         Func<Plane> planeProvider,
-        Func<float> positionEpsilonProvider)
+        Func<float> positionEpsilonProvider,
+        Func<IEnumerable<Box>> boxesProvider)
     {
         _translationGizmo = new TranslationGizmo(shader);
         _scaleGizmo = new ScaleGizmo(shader);
@@ -40,7 +41,7 @@ public sealed class InteractionManager : IDisposable
 
         _cameraProvider = cameraProvider;
 
-        StaticDragManager = new(() => SelectionManager?.HoveredObject ?? null, cameraProvider);
+        StaticDragManager = new(() => SelectionManager?.HoveredObject ?? null, cameraProvider, boxesProvider);
         SelectionManager = new(
             inputProvider,
             cameraProvider,
@@ -196,7 +197,11 @@ public sealed class InteractionManager : IDisposable
         bool gizmoTookMouseInput = false;
         if ((SelectionManager?.GizmosEnabled ?? false) && ActiveGizmo is not null)
         {
-            ActiveGizmo.Target = (IGizmoTarget?)SelectionManager?.SelectedObject;
+            if (SelectionManager?.SelectedObject is IGizmoTarget translationGizmoTarget)
+            {
+                ActiveGizmo.Target = translationGizmoTarget;
+            }
+
             gizmoTookMouseInput = ActiveGizmo?.HandleInput(input, raycastPos, camera, screenSize) ?? false;
         }
 

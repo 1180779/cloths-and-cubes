@@ -16,6 +16,8 @@ public sealed class ContactsInspectorWindow(Func<Contact[]> contactProvider) : I
     private static readonly System.Numerics.Vector4 InvalidContactColor = new(0.9f, 0.3f, 0.3f, 1.0f);
     private static readonly System.Numerics.Vector4 InfoColor = new(0.7f, 0.7f, 0.9f, 1.0f);
 
+    public const string WindowName = "Contacts Inspector";
+    public string Name => WindowName;
 
     public void Draw(ref bool isOpen)
     {
@@ -240,6 +242,4 @@ public sealed class ContactsInspectorWindow(Func<Contact[]> contactProvider) : I
 
         ImGui.Unindent(10);
     }
-
-    public string Name => "Collisions Inspector";
 }

@@ -357,4 +357,18 @@ public class RigidBody
             InverseMass = (Real)1.0 / value;
         }
     }
+
+    /// <summary>
+    /// Sets the rigid body to a static state by making its inverse mass zero.
+    /// A static rigid body will not respond to forces effectively rendering it immovable.
+    /// </summary>
+    public void MakeStatic()
+    {
+        SetInertiaTensor(new());
+        InverseMass = 0;
+        Acceleration = Vector3.Zero;
+        Rotation = Vector3.Zero;
+        ClearAccumulators();
+        CalculateDerivedData();
+    }
 }

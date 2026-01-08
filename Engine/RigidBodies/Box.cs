@@ -90,4 +90,33 @@ public class Box : CollisionBox, IBoxable
             center: Body.Position,
             halfSize: worldHalfSize);
     }
+
+    /// <summary>
+    /// Gets all 8 corners of the box in world space.
+    /// </summary>
+    public Vector3[] GetCorners()
+    {
+        CalculateInternals();
+
+        // Get the three local axes in world space
+        Vector3 axisX = GetAxis(0);
+        Vector3 axisY = GetAxis(1);
+        Vector3 axisZ = GetAxis(2);
+
+        // Center position
+        Vector3 center = Body.Position;
+
+        // Calculate all 8 corners with dot products with the local axes
+        Vector3[] corners = new Vector3[8];
+        corners[0] = center - axisX * HalfSize.X - axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[1] = center + axisX * HalfSize.X - axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[2] = center - axisX * HalfSize.X + axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[3] = center + axisX * HalfSize.X + axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[4] = center - axisX * HalfSize.X - axisY * HalfSize.Y + axisZ * HalfSize.Z;
+        corners[5] = center + axisX * HalfSize.X - axisY * HalfSize.Y + axisZ * HalfSize.Z;
+        corners[6] = center - axisX * HalfSize.X + axisY * HalfSize.Y + axisZ * HalfSize.Z;
+        corners[7] = center + axisX * HalfSize.X + axisY * HalfSize.Y + axisZ * HalfSize.Z;
+
+        return corners;
+    }
 }

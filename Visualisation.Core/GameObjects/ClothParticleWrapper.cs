@@ -1,4 +1,5 @@
 using Engine;
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Gizmos.Translation;
@@ -10,19 +11,23 @@ namespace Visualisation.Core.GameObjects;
 /// individually using translation gizmos. When moved, the particle's mass is set to
 /// infinity (inverse mass = 0) to act as an anchor point.
 /// </summary>
-public sealed class ClothParticleWrapper : ITranslationGizmoTarget
+public sealed class ClothParticleWrapper : ITranslationGizmoTarget, IBoxable
 {
     private readonly Cloth _parentCloth;
     private readonly int _particleX;
     private readonly int _particleY;
     private float _originalInverseMass;
     private bool _isDragging;
+    private bool _isPinned;
+    private Engine.Vector3 _pinnedPosition;
+    private Func<Engine.Vector3> _gravityProvider;
 
-    public ClothParticleWrapper(Cloth parentCloth, int particleX, int particleY)
+    public ClothParticleWrapper(Cloth parentCloth, int particleX, int particleY, Func<Engine.Vector3> gravityProvider)
     {
         _parentCloth = parentCloth;
         _particleX = particleX;
         _particleY = particleY;
+        _gravityProvider = gravityProvider;
     }
 
     public ClothRigidParticle Particle => _parentCloth.EngineCloth.Particles[_particleX, _particleY];
@@ -40,6 +45,13 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
         get => Particle.Body.Position.ToOpenTK();
         set
         {
+            // If pinned, we'll handle position updates through the Pin method
+            // if (_isPinned)
+            // {
+            //     // During drag, the position is managed by pinning logic
+            //     return;
+            // }
+
             // When dragging, set infinite mass (inverseMass = 0) to make it an anchor
             if (!_isDragging)
             {
@@ -57,22 +69,41 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
     /// </summary>
     public void BeginDrag()
     {
-        if (_isDragging) return;
+        if (_isDragging)
+        {
+            return;
+        }
 
         _isDragging = true;
-        _originalInverseMass = Particle.Body.InverseMass;
+
+        // Only save original values if not already pinned
+        if (!_isPinned)
+        {
+            _originalInverseMass = Particle.Body.InverseMass;
+        }
+
+        Particle.Body.Acceleration = Engine.Vector3.Zero;
         Particle.Body.InverseMass = 0; // Infinite mass
     }
 
     /// <summary>
-    /// Ends dragging this particle, restoring its original mass.
+    /// Ends dragging this particle, restoring its original mass only if not pinned.
     /// </summary>
     public void EndDrag()
     {
-        if (!_isDragging) return;
+        if (!_isDragging)
+        {
+            return;
+        }
 
         _isDragging = false;
-        Particle.Body.InverseMass = _originalInverseMass;
+
+        // Only restore if not pinned
+        if (!_isPinned)
+        {
+            Particle.Body.InverseMass = _originalInverseMass;
+            Particle.Body.Velocity = _gravityProvider();
+        }
     }
 
     /// <summary>
@@ -109,44 +140,70 @@ public sealed class ClothParticleWrapper : ITranslationGizmoTarget
 
     /// <summary>
     /// Pins this cloth particle to a specific world position (like a box corner).
+    /// This saves the original mass/inertia if not already saved.
     /// </summary>
-    public void PinToPosition(Engine.Vector3 position)
+    public void Pin(Engine.Vector3 position)
     {
+        if (_isPinned)
+        {
+            // Already pinned, just update position
+            _pinnedPosition = position;
+            Particle.Body.Position = position;
+            Particle.Body.Velocity = Engine.Vector3.Zero;
+            Particle.Body.ClearAccumulators();
+            return;
+        }
+
+        // First time pinning - save original values if not dragging
+        if (!_isDragging)
+        {
+            _originalInverseMass = Particle.Body.InverseMass;
+        }
+
+        _isPinned = true;
+        _pinnedPosition = position;
+
         Particle.Body.Position = position;
         Particle.Body.Velocity = Engine.Vector3.Zero;
         Particle.Body.Acceleration = Engine.Vector3.Zero;
-        Particle.Body.Rotation = Engine.Vector3.Zero;
 
-        // Make it truly immovable by setting both inverse mass and inverse inertia tensor to zero
+        // Make it truly immovable
         Particle.Body.InverseMass = 0; // Infinite translational mass
-        Particle.Body.InverseInertiaTensor = new Matrix3(); // Infinite rotational inertia
 
         Particle.Body.ClearAccumulators();
         Particle.Body.CalculateDerivedData();
     }
 
     /// <summary>
-    /// Pins this cloth particle to a box corner, making it follow that corner's position.
+    /// Unpins this cloth particle, restoring its original mass and inertia tensor.
     /// </summary>
-    public void PinToBoxCorner(ClothRigidParticleInCorner corner)
+    public void Unpin()
     {
-        Particle.Body.Position = corner.Body.Position;
-        Particle.Body.Velocity = Engine.Vector3.Zero;
-        Particle.Body.Rotation = Engine.Vector3.Zero;
+        if (!_isPinned) return;
 
-        // Make it truly immovable by setting both inverse mass and inverse inertia tensor to zero
-        Particle.Body.InverseMass = 0; // Infinite translational mass
-        Particle.Body.InverseInertiaTensor = new Matrix3(); // Infinite rotational inertia
 
-        Particle.Body.ClearAccumulators();
+        _isPinned = false;
+
+        // Restore original values
+        Particle.Body.InverseMass = _originalInverseMass;
+        Particle.Body.Velocity = _gravityProvider();
         Particle.Body.CalculateDerivedData();
-
-        // Note: This creates a one-time pin. For a continuous attachment,
-        // you would need to update the particle position every frame based on the corner.
     }
+
+    /// <summary>
+    /// Gets whether this particle is currently pinned to a box corner.
+    /// </summary>
+    public bool IsPinned => _isPinned;
+
+    /// <summary>
+    /// Gets the position this particle is pinned to (if pinned).
+    /// </summary>
+    public Engine.Vector3 PinnedPosition => _pinnedPosition;
 
     public override string ToString()
     {
         return $"Cloth Particle [{_particleX}, {_particleY}]";
     }
+
+    public BoundingBox GetBoundingBox() => Particle.GetBoundingBox();
 }

@@ -1,5 +1,6 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 
 using Visualisation.Core.Display.Gizmos;
 using Visualisation.Core.Display.Gizmos.Scale;
@@ -16,6 +17,11 @@ public sealed class Box : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTar
 
     public override Vector3 Position =>
         new(EngineBox.Body.Position.X, EngineBox.Body.Position.Y, EngineBox.Body.Position.Z);
+
+    /// <summary>
+    /// Hold the joints attached to this box and particles from cloths. 
+    /// </summary>
+    public List<Joint> AttachedJoints { get; } = new();
 
     public override Matrix4 Model
     {

@@ -1,7 +1,9 @@
 using System.Diagnostics;
 
 using Engine.Collision;
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
+using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Gizmos.Translation;
@@ -9,7 +11,11 @@ using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<CameraBase> cameraProvider)
+public sealed class StaticDragManager(
+    Func<object?> getHoveredObject,
+    Func<CameraBase> cameraProvider,
+    Func<IEnumerable<Box>> boxesProvider
+)
 {
     // public bool UseSpring = false;
     // public Real Stiffness = (Real)50.0;
@@ -53,6 +59,7 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
 
     private Func<object?> _getHoveredObject = getHoveredObject;
     private Func<CameraBase> _cameraProvider = cameraProvider;
+    private Func<IEnumerable<Box>> _boxesProvider = boxesProvider;
 
     /// <summary>
     /// Distance from the camera in the camera front direction which determines the target location
@@ -78,9 +85,9 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
         if (IsDragging && !isButtonDown)
         {
             // End dragging - restore particle mass if it's a cloth particle
-            if (DraggedObject is ClothParticleWrapper wrapper)
+            if (DraggedObject is ClothParticleWrapper clothParticle)
             {
-                wrapper.EndDrag();
+                clothParticle.EndDrag();
             }
 
             DraggedObject = null;
@@ -137,6 +144,13 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
 
         DraggedObject.Position = targetPosition;
 
+        // Handle automatic pinning for cloth particles
+        if (DraggedObject is ClothParticleWrapper wrapper)
+        {
+            HandleClothParticlePinning(wrapper);
+        }
+
+
         // TODO: check if this is of any use 
         // // Zero out velocity and rotation to prevent physics fighting the drag
         // if (DraggedObject is GameObjectCollisionPrimitive gameObjectCollisionPrimitive)
@@ -152,5 +166,53 @@ public sealed class StaticDragManager(Func<object?> getHoveredObject, Func<Camer
 
         OnObjectDragged?.Invoke();
         return true;
+    }
+
+    /// <summary>
+    /// Handles automatic pinning/unpinning of cloth particles to box corners during dragging.
+    /// </summary>
+    private void HandleClothParticlePinning(ClothParticleWrapper particleWrapper)
+    {
+        var boxes = _boxesProvider().ToList(); // Materialize to avoid multiple enumeration
+        if (!boxes.Any())
+        {
+            // No boxes in the scene, unpin if pinned
+            if (particleWrapper.IsPinned)
+            {
+                particleWrapper.Unpin();
+            }
+
+            return;
+        }
+
+        Dictionary<int, IBoxable> bvhDictionary = new();
+        int idCounter = 0;
+        foreach (var box in boxes)
+        {
+            var cornerPositions = box.EngineBox.GetCorners();
+            for (int i = 0; i < cornerPositions.Length; i++)
+            {
+                bvhDictionary.Add(idCounter + i, new BoxCorner(cornerPositions[i], box.EngineBox, i));
+            }
+
+            idCounter += 8;
+        }
+
+        BVH bvh = BVH.BuildSynchronous(bvhDictionary);
+        int? firstContact = BVH.GetFirstContact(particleWrapper, bvh.root);
+        var collidingCorner = firstContact.HasValue ? (BoxCorner?)bvhDictionary[firstContact.Value] : null;
+        if (collidingCorner != null)
+        {
+            // Collision detected - pin or update pin position
+            particleWrapper.Pin(collidingCorner.Position);
+        }
+        else
+        {
+            // No collision - unpin if currently pinned
+            if (particleWrapper.IsPinned)
+            {
+                particleWrapper.Unpin();
+            }
+        }
     }
 }

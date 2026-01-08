@@ -1,4 +1,5 @@
 using System.Diagnostics;
+
 using Engine.RigidBodies;
 
 namespace Engine;
@@ -359,6 +360,15 @@ public class Contact
         {
             if (Body[i] != null)
             {
+                // Skip bodies with infinite mass (pinned/anchored bodies)
+                // They have inverse mass = 0 and zero inertia tensor, which would cause division by zero
+                if (Body[i].InverseMass == 0)
+                {
+                    linearInertia[i] = 0;
+                    angularInertia[i] = 0;
+                    continue;
+                }
+
                 Matrix3 inverseInertiaTensor = (Matrix3)Body[i].InverseInertiaTensorWorld.Clone();
 
                 // Use the same procedure as for calculating frictionless
@@ -376,16 +386,44 @@ public class Contact
             }
         }
 
+        if (totalInertia <= 0)
+        {
+            // Both bodies have infinite mass, so no resolution is possible.
+            return;
+        }
+
         // Loop through again calculating and applying the changes
         for (uint i = 0; i < 2; i++)
         {
             if (Body[i] != null)
             {
+                // Skip bodies with infinite mass (they shouldn't move)
+                if (Body[i].InverseMass == 0)
+                {
+                    angularMove[i] = 0;
+                    linearMove[i] = 0;
+                    angularChange[i].Clear();
+                    linearChange[i].Clear();
+                    continue;
+                }
+
+                // // Handle case where totalInertia is zero (both bodies are immovable)
+                // if (totalInertia == 0)
+                // {
+                //     angularMove[i] = 0;
+                //     linearMove[i] = 0;
+                //     angularChange[i].Clear();
+                //     linearChange[i].Clear();
+                //     continue;
+                // }
+
                 // The linear and angular movements required are in proportion to
                 // the two inverse inertias.
                 Real sign = (i == 0) ? 1 : -1;
                 angularMove[i] = sign * penetration * (angularInertia[i] / totalInertia);
+                Debug.Assert(!float.IsNaN(angularMove[i]) && !float.IsInfinity(angularMove[i]));
                 linearMove[i] = sign * penetration * (linearInertia[i] / totalInertia);
+                Debug.Assert(!float.IsNaN(linearMove[i]) && !float.IsInfinity(linearMove[i]));
 
                 // To avoid angular projections that are too great (when mass is large
                 // but inertia tensor is small) limit the angular move.
@@ -403,12 +441,14 @@ public class Contact
                     Real totalMove = angularMove[i] + linearMove[i];
                     angularMove[i] = -maxMagnitude;
                     linearMove[i] = totalMove - angularMove[i];
+                    Debug.Assert(!float.IsNaN(linearMove[i]) && !float.IsInfinity(linearMove[i]));
                 }
                 else if (angularMove[i] > maxMagnitude)
                 {
                     Real totalMove = angularMove[i] + linearMove[i];
                     angularMove[i] = maxMagnitude;
                     linearMove[i] = totalMove - angularMove[i];
+                    Debug.Assert(!float.IsNaN(linearMove[i]) && !float.IsInfinity(linearMove[i]));
                 }
 
                 // We have the linear amount of movement required by turning
@@ -423,28 +463,34 @@ public class Contact
                 {
                     // Work out the direction we'd like to rotate in.
                     Vector3 targetAngularDirection = RelativeContactPosition[i].VectorProduct(ContactNormal);
+                    targetAngularDirection.DebugAssertNotNan();
 
                     Matrix3 inverseInertiaTensor = (Matrix3)Body[i].InverseInertiaTensorWorld.Clone();
 
                     // Work out the direction we'd need to rotate to achieve that
-                    angularChange[i] = inverseInertiaTensor.Transform(targetAngularDirection) * 
+                    angularChange[i] = inverseInertiaTensor.Transform(targetAngularDirection) *
                         (angularMove[i] / angularInertia[i]);
                 }
 
                 // Velocity change is easier - it is just the linear movement
                 // along the contact normal.
                 linearChange[i] = ContactNormal * linearMove[i];
+                linearChange[i].DebugAssertNotNan();
 
                 // Now we can start to apply the values we've calculated.
                 // Apply the linear movement
+                Body[i].Position.DebugAssertNotNan();
                 Vector3 pos = Body[i].Position;
                 pos.AddScaledVector(ContactNormal, linearMove[i]);
                 Body[i].Position = pos;
+                Body[i].Position.DebugAssertNotNan();
 
                 // And the change in orientation
+                Body[i].Orientation.DebugAssertNotNan();
                 Quaternion q = Body[i].Orientation;
                 q.AddScaledVector(angularChange[i], (Real)1.0);
                 Body[i].Orientation = q;
+                Body[i].Orientation.DebugAssertNotNan();
 
                 // We need to calculate the derived data for any body that is
                 // asleep, so that the changes are reflected in the object's
@@ -513,72 +559,72 @@ public class Contact
     {
         Vector3 impulseContact;
         Real inverseMass = Body[0]!.InverseMass;
-        
+
         // The equivalent of a cross product in matrices is multiplication
         // by a skew symmetric matrix - we build the matrix for converting
         // between linear and angular quantities.
         Matrix3 impulseToTorque = new();
-        impulseToTorque.SetSkewSymmetric(RelativeContactPosition[0]); 
-        
+        impulseToTorque.SetSkewSymmetric(RelativeContactPosition[0]);
+
         // Build the matrix to convert contact impulse to change in velocity
         // in world coordinates.
         Matrix3 deltaVelWorld = impulseToTorque;
         deltaVelWorld *= inverseInertiaTensor[0];
         deltaVelWorld *= impulseToTorque;
         deltaVelWorld *= -1;
-        
+
         // Check if we need to add body two's data
         if (Body[1] != null)
         {
             // Set the cross product matrix
             impulseToTorque.SetSkewSymmetric(RelativeContactPosition[1]);
-        
+
             // Calculate the velocity change matrix
             Matrix3 deltaVelWorld2 = impulseToTorque;
-            deltaVelWorld2 *= inverseInertiaTensor[1]; 
+            deltaVelWorld2 *= inverseInertiaTensor[1];
             deltaVelWorld2 *= impulseToTorque;
             deltaVelWorld2 *= -1;
-        
+
             // Add to the total delta velocity.
             deltaVelWorld += deltaVelWorld2;
-        
+
             // Add to the inverse mass
             inverseMass += Body[1].InverseMass;
         }
-        
+
         // Do a change of basis to convert into contact coordinates.
         Matrix3 deltaVelocity = ContactToWorld.Transpose;
         deltaVelocity *= deltaVelWorld;
         deltaVelocity *= ContactToWorld;
-        
+
         // Add in the linear velocity change
         deltaVelocity[0] += inverseMass;
         deltaVelocity[4] += inverseMass;
         deltaVelocity[8] += inverseMass;
-        
+
         // Invert to get the impulse needed per unit velocity
         Matrix3 impulseMatrix = deltaVelocity.Inverse;
-        
+
         // Find the target velocities to kill
         Vector3 velKill = new(DesiredDeltaVelocity,
             -ContactVelocity.Y,
             -ContactVelocity.Z);
-        
+
         // Find the impulse to kill target velocities
         impulseContact = impulseMatrix.Transform(velKill);
-        
+
         // Check for exceeding friction
         Real planarImpulse = Real.Sqrt(
             impulseContact.Y * impulseContact.Y +
             impulseContact.Z * impulseContact.Z
         );
-        
+
         if (planarImpulse > impulseContact.X * Friction)
         {
             // We need to use dynamic friction
             impulseContact.Y /= planarImpulse;
             impulseContact.Z /= planarImpulse;
-        
+
             impulseContact.X = deltaVelocity[0] +
                 deltaVelocity[1] * Friction * impulseContact.Y +
                 deltaVelocity[2] * Friction * impulseContact.Z;
@@ -586,7 +632,7 @@ public class Contact
             impulseContact.Y *= Friction * impulseContact.X;
             impulseContact.Z *= Friction * impulseContact.X;
         }
-        
+
         return impulseContact;
     }
 };

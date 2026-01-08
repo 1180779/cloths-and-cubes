@@ -230,6 +230,44 @@ namespace Engine.Collision.Bounding_Volume_Hierarchy
             return res;
         }
 
+        public static int? GetFirstContact(IBoxable boundingBox, BVHNode? node)
+        {
+            // Null check
+            if (node == null)
+            {
+                return null;
+            }
+
+            // Traverse from the node downwards
+            Stack<BVHNode> nodeStack = new Stack<BVHNode>();
+            nodeStack.Push(node);
+            while (nodeStack.Count > 0)
+            {
+                var current = nodeStack.Pop();
+
+                if (!IntersectionTests.AABBOverlap(boundingBox.GetBoundingBox(), current.bounds))
+                {
+                    // No overlap, skip this node
+                    continue;
+                }
+
+                // Leaf node, return the object ID
+                if (current.isLeaf)
+                {
+                    var leaf = (BVHLeaf)current;
+                    return leaf.objectId;
+                }
+
+                // Internal node, push children to stack
+                var internalNode = (BVHInternal)current;
+                nodeStack.Push(internalNode.left);
+                nodeStack.Push(internalNode.right);
+            }
+
+            // No contact found
+            return null;
+        }
+
         public static void GetPotentialContacts(ref List<(int, int)> potentialContacts, BVHNode? node)
         {
             if (node == null || node.isLeaf)

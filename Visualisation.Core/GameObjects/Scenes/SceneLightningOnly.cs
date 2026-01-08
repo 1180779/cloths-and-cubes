@@ -17,9 +17,10 @@ public class SceneLightningOnly : SceneRenderer
         Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
         Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
         Func<Plane> planeProvider,
-        Func<float> positionEpsilonProvider)
+        Func<float> positionEpsilonProvider,
+        Func<IEnumerable<Box>> boxesProvider)
         : base(aspectRatio, inputProvider, getGameObjects, cameraProvider, bvhProvider,
-            bvhDictionaryProvider, clothsProvider, planeProvider, positionEpsilonProvider)
+            bvhDictionaryProvider, clothsProvider, planeProvider, positionEpsilonProvider, boxesProvider)
     {
     }
 

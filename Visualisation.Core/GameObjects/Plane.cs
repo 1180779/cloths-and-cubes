@@ -1,13 +1,13 @@
 using Engine.Collision;
 
-using Visualisation.Core.Display.Gizmos.Rotation;
-using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Plane : GameObject, ITranslationGizmoTarget, IRotationGizmoTarget
+// Entabling translation and rorations of the plance with the gizmo interfaces
+// can lead to physically not stable states. Better to disable that option for now
+public sealed class Plane : GameObject //, ITranslationGizmoTarget, IRotationGizmoTarget
 {
     public CollisionPlane EnginePlane = new() { Direction = new Engine.Vector3(0, 1, 0), Offset = 0, };
 
@@ -26,18 +26,18 @@ public sealed class Plane : GameObject, ITranslationGizmoTarget, IRotationGizmoT
         }
     }
 
-    public Vector3 AxisPosition => EnginePlane.Direction.ToOpenTK() * EnginePlane.Offset;
-    public Quaternion AxisOrientation => Orientation;
-
-    Vector3 ITranslationGizmoTarget.Position
-    {
-        get => EnginePlane.Direction.ToOpenTK() * EnginePlane.Offset;
-        set
-        {
-            EnginePlane.Offset = Vector3.Dot(value, EnginePlane.Direction.ToOpenTK());
-        }
-    }
-
+    // public Vector3 AxisPosition => EnginePlane.Direction.ToOpenTK() * EnginePlane.Offset;
+    // public Quaternion AxisOrientation => Orientation;
+    //
+    // Vector3 ITranslationGizmoTarget.Position
+    // {
+    //     get => EnginePlane.Direction.ToOpenTK() * EnginePlane.Offset;
+    //     set
+    //     {
+    //         EnginePlane.Offset = Vector3.Dot(value, EnginePlane.Direction.ToOpenTK());
+    //     }
+    // }
+    //
     public Quaternion Orientation
     {
         get

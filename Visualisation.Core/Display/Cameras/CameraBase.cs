@@ -6,7 +6,20 @@ public class CameraBase
 {
     protected const float CameraSpeed = 15f;
     protected const float Sensitivity = 0.2f;
-    public static float AspectRatio { get; set; }
+
+    private static float _aspectRatio = 16f / 9f;
+
+    public static float AspectRatio
+    {
+        get => _aspectRatio;
+        set
+        {
+            if (value > 0.0f)
+            {
+                _aspectRatio = value;
+            }
+        }
+    }
 
     protected Vector3 _front = -Vector3.UnitZ;
     protected Vector3 _up = Vector3.UnitY;

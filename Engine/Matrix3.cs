@@ -276,4 +276,11 @@ public struct Matrix3 : ICloneable
     {
         return new Matrix3((Real[])Data.Clone());
     }
+
+    public override string ToString()
+    {
+        return $"[{Data[0]:F2}, {Data[1]:F2}, {Data[2]:F2}]" + Environment.NewLine
+            + $"[{Data[3]:F2}, {Data[4]:F2}, {Data[5]:F2}]" + Environment.NewLine
+            + $"[{Data[6]:F2}, {Data[7]:F2}, {Data[8]:F2}]";
+    }
 }

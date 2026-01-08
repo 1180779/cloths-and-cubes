@@ -225,7 +225,8 @@ public sealed class SelectionManager(
                         cloth.VisualCloth.GetParticleCoordinatesFromTriangle(triangleIdx, vertexIdx);
 
                     // Create a wrapper for the specific particle
-                    var particleWrapper = new ClothParticleWrapper(cloth, particleX, particleY);
+                    var particleWrapper =
+                        new ClothParticleWrapper(cloth, particleX, particleY, () => Engine.Vector3.Gravity);
 
                     var positionEpsilon = positionEpsilonProvider();
                     // adjust to account for position epsilon
@@ -255,7 +256,7 @@ public sealed class SelectionManager(
                         return (false, 0, null);
 
                     var particleWrapper = new ClothParticleWrapper(gameCloth, particle.ClothParticleX,
-                        particle.ClothParticleY);
+                        particle.ClothParticleY, () => Engine.Vector3.Gravity);
                     return (true, distance, particleWrapper);
                 }
 

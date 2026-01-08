@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Engine;
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 using Engine.Force;
 using Engine.RigidBodies;
 
@@ -41,21 +42,28 @@ public class Application : GameWindow
 
     protected SceneRenderer _sceneRenderer; // initialized in constructor
 
-    // Application properties
+    /// <summary>
+    /// Whether to limit the number of physics steps that can be performed.
+    /// </summary>
     public bool StepsLimit { get; set; }
-    protected long AvailableStepsInternal { get; set; }
 
-    public virtual long AvailableSteps
-    {
-        get => AvailableStepsInternal;
-        set
-        {
-            _forceBVHRebuildOnNoUpdate = true;
-            AvailableStepsInternal = value;
-        }
-    }
+    /// <summary>
+    /// The number of available physics steps remaining.
+    /// Used when <see cref="StepsLimit"/> is true.
+    /// </summary>
+    public long AvailableSteps;
 
-    protected bool DoUpdate
+    protected bool _forceBVHRebuildOnNoUpdate;
+
+    /// <summary>
+    /// Whether the physics simulation should advance this frame.
+    /// <para>
+    /// If the <see cref="StepsLimit"/> is false, always returns true.
+    /// If the <see cref="StepsLimit"/> is true, returns true only if
+    /// there are available steps remaining, decrementing the count.
+    /// </para>
+    /// </summary>
+    protected bool ShouldAdvancePhysics
     {
         get
         {
@@ -74,7 +82,7 @@ public class Application : GameWindow
         Friction = (Real)0.9, Restitution = (Real)0.6, Tolerance = (Real)0.1,
     };
 
-    protected ContactResolver _contactResolver = new(MaxContacts * 8, positionEpsilon: 0.01f);
+    protected ContactResolver _contactResolver = new(MaxContacts * 8, positionEpsilon: 0.005f);
 
     // Scene Objects
     protected Plane _plane = null!; // initialized in scene initialization
@@ -82,11 +90,30 @@ public class Application : GameWindow
     protected Ball[] _balls = [];
     protected Cloth[] _cloths = [];
 
+    /// <summary>
+    /// Returns all game objects in the scene.
+    /// </summary>
     public IEnumerable<GameObject> GameObjects => [_plane, .._boxes, .._balls, .._cloths];
 
-    // Store initial state for proper reset
+    // TODO: change to other data structure if needed
+    /// <summary>
+    /// The global list of joints in the scene. 
+    /// If a joint is created between two bodies, it should be added to this list.
+    /// If a joint is removed, it should be removed from this list as well
+    /// (ex. when one of the connecting bodies is removed from the scene).
+    /// </summary>
+    /// <note>
+    /// <see cref="ConnectedJointData"/> can be used to track connected joints within bodies.
+    /// </note>
+    protected List<Joint> _joints = [];
+
+    /// <summary>
+    /// Stores the initial scene state when a scene is loaded from a file.
+    /// This is then used to reset the scene to the original state if needed.
+    ///
+    /// If no scene was loaded, this remains null and a reset to random positions is used.
+    /// </summary>
     private SceneData? _initialSceneState;
-    private bool _sceneWasLoaded;
 
     private float _lastFrameDuration;
 
@@ -99,7 +126,6 @@ public class Application : GameWindow
     protected GizmoSettingsWindow _gizmoSettingsWindow;
     protected PhysicsControlWindow _physicsControlWindow;
     protected SceneManagementWindow _sceneManagementWindow;
-
     protected BvhNodesWindow _bvhNodesWindow = new();
 
     // Public accessors for scene management
@@ -134,7 +160,8 @@ public class Application : GameWindow
             () => _bvhDictionary,
             () => _cloths.ToDictionary(c => c.EngineCloth, c => c),
             () => _plane,
-            () => _contactResolver.PositionEpsilon);
+            () => _contactResolver.PositionEpsilon,
+            () => _boxes);
 
         _sceneWindow = new SceneWindow(_imGuiController, _sceneRenderer, _inputProvider, Size);
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
@@ -168,7 +195,7 @@ public class Application : GameWindow
         _windowsManager.Add(_collisionParametersWindow);
 
         _contactsInspectorWindow = new(() => _collisionData.ContactList);
-        _windowsManager.Add(_contactsInspectorWindow);
+        _windowsManager.AddManuallyDrawn(_contactsInspectorWindow);
 
         _boxesDemoSettingsWindow = new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length)
         {
@@ -314,8 +341,6 @@ public class Application : GameWindow
         _bvh = BVH.BuildSynchronous(_bvhDictionary);
     }
 
-    protected bool _forceBVHRebuildOnNoUpdate;
-
     protected void OnNoPhysicsUpdate()
     {
         if (_forceBVHRebuildOnNoUpdate)
@@ -354,14 +379,18 @@ public class Application : GameWindow
     }
 
     /// <summary>
-    /// Processes the contact generation code.
+    /// Handles interactions between the dragged object and other objects in the scene.
+    /// 
+    /// The collision data is reset in this method. The caller should ensure that
+    /// no other contacts are pending in the collision data before calling this method.
+    ///
+    /// The BVH should be up to date before calling this method.
     /// </summary>
-    protected void GenerateContacts()
+    protected void HandleInteractionsWithObjects()
     {
         // Set up the collision data structure
         _collisionData.Reset(MaxContacts);
 
-        BvhRebuild();
         ObjectSelectionHandling();
 
         // The dragged object can find itself below the plane when set by the user 
@@ -408,7 +437,16 @@ public class Application : GameWindow
 
             _collisionData.Reset(MaxContacts);
         }
+    }
 
+    /// <summary>
+    /// Generates contacts from collisions between objects in the scene.
+    ///
+    /// Does not reset the collision data - the caller does that to allow
+    /// processing constraints as well. 
+    /// </summary>
+    protected void GenerateContactsFromCollisions()
+    {
         // Process box-plane collisions
         foreach (var box in _boxes)
         {
@@ -494,10 +532,26 @@ public class Application : GameWindow
         }
     }
 
-    protected void Update(float deltaTime)
+    /// <summary>
+    /// Generates contacts from joints in the scene.
+    /// </summary>
+    protected void GenerateContactsFromJoints()
     {
-        // Physics update from RigidBodyApplication
-        if (!DoUpdate)
+        foreach (var joint in _joints)
+        {
+            if (!_collisionData.HasMoreContacts())
+                return;
+            joint.AddContacts(_collisionData);
+        }
+    }
+
+    /// <summary>
+    /// Advances the physics simulation by the given time step.
+    /// </summary>
+    /// <param name="deltaTime"></param>
+    protected void AdvancePhysics(float deltaTime)
+    {
+        if (!ShouldAdvancePhysics)
         {
             OnNoPhysicsUpdate();
             return;
@@ -517,10 +571,18 @@ public class Application : GameWindow
         // Update objects
         UpdateObjects(deltaTime);
 
-        // Perform the contact generation
-        GenerateContacts();
+        BvhRebuild();
+        HandleInteractionsWithObjects();
 
-        // Resolve detected contacts
+        // Perform the contact generation
+        GenerateContactsFromCollisions();
+        GenerateContactsFromJoints();
+
+        // Draw out of order to allow inspection of contacts before they are resolved
+        // This does cause the window not to be in the same dockspace as other windows, but
+        // it is acceptable for debugging purposes.
+        _windowsManager.DrawManualWindow(ContactsInspectorWindow.WindowName);
+
         _contactResolver.ResolveContacts(
             _collisionData.ContactList,
             _collisionData.ContactCount,
@@ -637,7 +699,7 @@ public class Application : GameWindow
         _forceBVHRebuildOnNoUpdate = true;
 
         // If a scene was loaded, restore it instead of using hardcoded values
-        if (_sceneWasLoaded && _initialSceneState != null)
+        if (_initialSceneState != null)
         {
             RestoreSceneState(_initialSceneState);
             return;
@@ -794,11 +856,34 @@ public class Application : GameWindow
 
         _imGuiController.Update((float)args.Time);
 
-        Update((float)args.Time); // Update game/app logic before any rendering
+        // TODO: move the physics update to a separate thread
+        //  and synchronize with the main thread for rendering and controls
+        AdvancePhysics((float)args.Time);
 
         _windowsManager.DrawMenu();
 
-        // --- ImGui Docking Setup ---
+        ConfigureImGuiDocking();
+        uint dockspaceId = ImGui.GetID("MyDockSpace");
+        ImGui.DockSpace(dockspaceId, new System.Numerics.Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
+        _windowsManager.Draw();
+        _sceneWindow.Draw(FramebufferSize, (float)args.Time);
+        ImGui.End();
+
+        // draws ImGui on top of the OpenGL content, which is an empty background here
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _imGuiController.Render();
+
+        SwapBuffers();
+
+        // upload any finished texture loads to the openGL
+        TexturesManager.ProcessPendingUploads();
+    }
+
+    /// <summary>
+    /// Configure the ImGui docking space.
+    /// </summary>
+    private static void ConfigureImGuiDocking()
+    {
         ImGuiWindowFlags dockspaceFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse |
             ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus |
             ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground;
@@ -811,23 +896,6 @@ public class Application : GameWindow
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new System.Numerics.Vector2(0.0f, 0.0f));
         ImGui.Begin("DockSpace Host", dockspaceFlags);
         ImGui.PopStyleVar(3);
-
-        uint dockspaceId = ImGui.GetID("MyDockSpace");
-        ImGui.DockSpace(dockspaceId, new System.Numerics.Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
-
-        RenderWindows(args.Time);
-
-        // end dockspace
-        ImGui.End();
-
-        // clear the screen underneath the imGui windows (now background only)
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        _imGuiController.Render();
-
-        SwapBuffers();
-
-        // upload any finished texture loads to the openGL
-        TexturesManager.ProcessPendingUploads();
     }
 
     protected override void OnFramebufferResize(FramebufferResizeEventArgs e)
@@ -870,19 +938,13 @@ public class Application : GameWindow
         GL.Viewport(0, 0, Size.X, Size.Y);
     }
 
-    protected void RenderWindows(double dt)
-    {
-        _windowsManager.Draw();
-        _sceneWindow.Draw(FramebufferSize, (float)dt);
-    }
-
     protected ApplicationState SaveState()
     {
         return new ApplicationState
         {
             WindowsState = _windowsManager.SaveState(),
             GraphicsSettings =
-                ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.StaticName)).SaveState(),
+                ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.WindowName)).SaveState(),
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState(),
             BvhNodes = _bvhNodesWindow.SaveState(),
             CollisionParameters = _collisionParametersWindow.SaveState(),
@@ -903,7 +965,7 @@ public class Application : GameWindow
 
         if (state.GraphicsSettings is not null)
         {
-            ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.StaticName)).RestoreState(
+            ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.WindowName)).RestoreState(
                 state.GraphicsSettings);
         }
 
@@ -994,7 +1056,6 @@ public class Application : GameWindow
     public void StoreInitialSceneState(SceneData sceneData)
     {
         _initialSceneState = sceneData;
-        _sceneWasLoaded = true;
     }
 
     /// <summary>
