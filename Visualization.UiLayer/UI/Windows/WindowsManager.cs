@@ -7,7 +7,7 @@ namespace Visualization.UiLayer.UI.Windows;
 /// The WindowsManager allows for registering, rendering, and handling input for all managed windows,
 /// as well as state management for saving and restoring specific configurations of the windows.
 /// </summary>
-public sealed class WindowsManager
+public sealed class WindowsManager : IDisposable
 {
     private sealed record WindowEntry(IWindow Window)
     {
@@ -81,6 +81,17 @@ public sealed class WindowsManager
         _windows.ForEach(e => dict.Add(e.Window.Name, e.IsOpen));
 
         return new State { AreOpen = dict };
+    }
+
+    public void Dispose()
+    {
+        foreach (var window in _windows)
+        {
+            if (window.Window is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 
     public void RestoreState(State state)

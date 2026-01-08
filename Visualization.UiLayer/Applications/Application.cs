@@ -22,9 +22,9 @@ public class Application : GameWindow
     protected readonly ImGuiController _imGuiController;
     protected readonly IInputProvider _inputProvider;
     protected readonly SceneManager _sceneManager;
-    protected readonly SettingsSaverLoader _settingsSaverLoader;
-    protected readonly WindowsManager _windowsManager;
+    protected readonly SettingsSaverLoader _settingsSaverLoader = new();
 
+    protected readonly WindowsManager _windowsManager = new();
     protected readonly SceneWindow _sceneWindow;
 
     protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
@@ -50,11 +50,8 @@ public class Application : GameWindow
         _sceneWindow = new SceneWindow(_imGuiController, _sceneManager, _inputProvider, Size);
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
 
-        _settingsSaverLoader = new SettingsSaverLoader();
-
         _cascadingShadowMapsWindow = new CascadingShadowMapsWindow(_imGuiController, _sceneManager.LightsManager, Size);
 
-        _windowsManager = new WindowsManager();
         _windowsManager.Add(new StatsWindow(_sceneManager));
         _windowsManager.Add(new HelpWindow());
         _windowsManager.Add(new ObjectInspectorWindow(_sceneManager));
@@ -221,7 +218,8 @@ public class Application : GameWindow
         GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         GL.BindVertexArray(0);
         GL.UseProgram(0);
-        _cascadingShadowMapsWindow.Dispose();
+
+        _windowsManager.Dispose();
         TexturesManager.AbortAllLoads();
         _imGuiController.UnhookFromWindow(this);
         _sceneManager.Dispose();
@@ -261,7 +259,8 @@ public class Application : GameWindow
         return new ApplicationState
         {
             WindowsState = _windowsManager.SaveState(),
-            GraphicsSettings = ((GraphicsSettingsWindow)_windowsManager.GetWindow("Graphics Settings")).SaveState(),
+            GraphicsSettings =
+                ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.StaticName)).SaveState(),
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState()
         };
     }
@@ -275,7 +274,7 @@ public class Application : GameWindow
 
         if (state.GraphicsSettings is not null)
         {
-            ((GraphicsSettingsWindow)_windowsManager.GetWindow("Graphics Settings")).RestoreState(
+            ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.StaticName)).RestoreState(
                 state.GraphicsSettings);
         }
 

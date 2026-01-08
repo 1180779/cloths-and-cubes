@@ -377,7 +377,6 @@ public abstract class SceneManager : IDisposable
                                 _cube.Render();
                                 break;
                             }
-                        // TODO: remove; depreciated
                         case { } particle:
                             {
                                 var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
@@ -434,7 +433,7 @@ public abstract class SceneManager : IDisposable
             StaticDragManager.HoverTarget == null || StaticDragManager.IsDragging)
             return;
 
-        // Don't show hover indicator if the object is selected for gizmo manipulation
+        // Don't show the hover indicator if the object is selected for gizmo manipulation
         if (SelectionManager?.SelectedObject != null &&
             SelectionManager.SelectedObject == StaticDragManager.HoverTarget)
             return;

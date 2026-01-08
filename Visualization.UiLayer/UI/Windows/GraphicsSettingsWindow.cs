@@ -22,7 +22,8 @@ public sealed class GraphicsSettingsWindow(
     private DirectionArrowControl? _arrowControl;
     private bool _disposed;
 
-    public string Name => "Graphics Settings";
+    public static string StaticName => "Graphics Settings";
+    public string Name => StaticName;
 
     public void Draw(ref bool isOpen)
     {

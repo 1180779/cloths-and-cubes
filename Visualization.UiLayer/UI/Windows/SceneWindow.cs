@@ -79,6 +79,7 @@ public sealed class SceneWindow(
         if (_antialiasingType != AntialiasingType.None)
         {
             Debug.Assert(_msaaFrameBuffer is not null);
+
             _msaaFrameBuffer.Resize(fbW, fbH);
             _msaaFrameBuffer.Bind();
             _sceneManager.RenderSceneWindow(_msaaFrameBuffer);
