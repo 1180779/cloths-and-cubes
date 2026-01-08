@@ -3,24 +3,22 @@ using ImGuiNET;
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core;
+using Visualisation.Core.Display.Light;
 using Visualisation.Core.Display.Mesh;
-using Visualisation.Core.GameObjects.Scenes;
-using Visualisation.Core.Inputs;
 
 namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class CascadingShadowMapsWindow(
     ImGuiController imGuiController,
-    IInputProvider inputProvider,
-    SceneManager scene,
+    LightsManager lightsManager,
     Vector2i size
 ) : IDisposable, IWindow
 {
-    private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
-    private readonly IInputProvider _inputProvider = inputProvider; /* borrowed */
-    private readonly SceneManager _sceneManager = scene; /* borrowed */
-
     private bool _disposed;
+
+    private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
+    private readonly LightsManager _lightsManager = lightsManager; /* borrowed */
+
     private readonly WindowFrameBuffer _depthMapWindowFrb = new(size.X, size.Y); /* owned */
     private readonly Shader _quadCsmShader = new("depthMapShader.vert", "depthMapShader.frag"); /* owned */
     private readonly QuadMesh _quadMesh = new(); /* owned */
@@ -32,14 +30,14 @@ public sealed class CascadingShadowMapsWindow(
         get => _directionalLightLayer;
         set
         {
-            if (_sceneManager.LightsManager.DirectionalLight is null)
+            if (_lightsManager.DirectionalLight is null)
                 return;
 
             _directionalLightLayer =
-                value % (_sceneManager.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
+                value % (_lightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
             if (_directionalLightLayer < 0)
             {
-                _directionalLightLayer += (_sceneManager.LightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
+                _directionalLightLayer += (_lightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1);
             }
         }
     }
@@ -62,8 +60,7 @@ public sealed class CascadingShadowMapsWindow(
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             _quadCsmShader.Use();
-            _sceneManager.LightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader,
-                DirectionalLightLayer);
+            _lightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader, DirectionalLightLayer);
             _quadMesh.Render();
 
             _depthMapWindowFrb.Unbind();
@@ -77,12 +74,12 @@ public sealed class CascadingShadowMapsWindow(
 
     public void HandleInput()
     {
-        if (_inputProvider.IsKeyPressed(InputKey.Equal))
+        if (ImGui.IsKeyPressed(ImGuiKey.Equal))
         {
             DirectionalLightLayer++;
         }
 
-        if (_inputProvider.IsKeyPressed(InputKey.Minus))
+        if (ImGui.IsKeyPressed(ImGuiKey.Minus))
         {
             DirectionalLightLayer--;
         }

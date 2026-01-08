@@ -52,10 +52,11 @@ public class Application : GameWindow
 
         _settingsSaverLoader = new SettingsSaverLoader();
 
+        _cascadingShadowMapsWindow = new CascadingShadowMapsWindow(_imGuiController, _sceneManager.LightsManager, Size);
+
         _windowsManager = new WindowsManager();
         _windowsManager.Add(new StatsWindow(_sceneManager));
         _windowsManager.Add(new HelpWindow());
-        _cascadingShadowMapsWindow = new(_imGuiController, _inputProvider, _sceneManager, Size);
         _windowsManager.Add(new ObjectInspectorWindow(_sceneManager));
         _windowsManager.Add(new GraphicsSettingsWindow(() => this._sceneManager.LightsManager.DirectionalLight,
             _sceneManager, _sceneWindow));
@@ -122,7 +123,7 @@ public class Application : GameWindow
         //     return;
         // }
 
-        _cascadingShadowMapsWindow.HandleInput();
+        _windowsManager.HandleInput();
 
         // cap/uncap fps
         if (_inputProvider.IsKeyPressed(InputKey.X))
