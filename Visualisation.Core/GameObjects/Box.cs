@@ -1,14 +1,16 @@
+using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
-using Engine.RigidBodies;
 
+using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Scale;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Box : GameObjectRigidBody, IBoxable
+public sealed class Box : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTarget
 {
-    public Engine.RigidBodies.Box EngineBox { get; private set; } = new();
+    public Engine.RigidBodies.Box EngineBox { get; init; } = new();
     protected override IMesh Mesh { get; set; } = new CubeMesh();
     public override object PhysicsObject => EngineBox.Body;
 
@@ -20,20 +22,20 @@ public sealed class Box : GameObjectRigidBody, IBoxable
         get
         {
             var position = new Vector3(
-                (float)EngineBox.Body.Position.X,
-                (float)EngineBox.Body.Position.Y,
-                (float)EngineBox.Body.Position.Z);
+                EngineBox.Body.Position.X,
+                EngineBox.Body.Position.Y,
+                EngineBox.Body.Position.Z);
 
             var scale = 2.0f * new Vector3(
-                (float)EngineBox.HalfSize.X,
-                (float)EngineBox.HalfSize.Y,
-                (float)EngineBox.HalfSize.Z);
+                EngineBox.HalfSize.X,
+                EngineBox.HalfSize.Y,
+                EngineBox.HalfSize.Z);
 
             var q = new Quaternion(
-                (float)EngineBox.Body.Orientation.I,
-                (float)EngineBox.Body.Orientation.J,
-                (float)EngineBox.Body.Orientation.K,
-                (float)EngineBox.Body.Orientation.R);
+                EngineBox.Body.Orientation.I,
+                EngineBox.Body.Orientation.J,
+                EngineBox.Body.Orientation.K,
+                EngineBox.Body.Orientation.R);
 
             // Normalize to guard against drift
             if (MathF.Abs(1f - q.Length) > 1e-3f)
@@ -47,6 +49,35 @@ public sealed class Box : GameObjectRigidBody, IBoxable
     {
         return EngineBox.GetBoundingBox();
     }
-    
-    public override RigidBody EngineRigidBody => EngineBox.Body;
+
+    public override CollisionPrimitive EngineCollisionPrimitive => EngineBox;
+
+    public Vector3 Scale
+    {
+        get => EngineBox.HalfSize.ToOpenTK();
+        set
+        {
+            EngineBox.HalfSize = value.ToEngine();
+        }
+    }
+
+    public Vector3 Offset => EngineBox.HalfSize.ToOpenTK();
+
+    public Vector3 GetTargetScale(Vector3 scale, float factor, GizmoAxis axis)
+    {
+        switch (axis)
+        {
+            case GizmoAxis.X:
+                scale.X *= factor;
+                break;
+            case GizmoAxis.Y:
+                scale.Y *= factor;
+                break;
+            case GizmoAxis.Z:
+                scale.Z *= factor;
+                break;
+        }
+
+        return scale;
+    }
 }

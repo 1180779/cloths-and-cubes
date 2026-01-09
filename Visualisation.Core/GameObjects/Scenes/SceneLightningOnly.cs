@@ -18,8 +18,7 @@ public class SceneLightningOnly : SceneManager
         };
         LightsManager.DirectionalLight = lightDirectional2;
 
-        FollowingCamera followingCamera = new();
-        followingCamera.AttachTo(GameObjects.ToArray());
+        FollowingCamera followingCamera = new(() => GameObjects.ToArray());
         CamerasManager.AddCamera(followingCamera);
     }
 }

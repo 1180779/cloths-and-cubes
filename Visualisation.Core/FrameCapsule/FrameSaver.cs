@@ -47,7 +47,7 @@ public class FrameSaver
         FrameBufferLimit = frameBufferLimit;
     }
 
-    private int _currentFrameIndex = 0;
+    private int _currentFrameIndex;
 
     public int CurrentFrameIndex
     {
@@ -79,7 +79,7 @@ public class FrameSaver
     }
 
     private const int NotYetUsedIndexAllUsedValue = -1;
-    private int _notYetUsedIndex = 0;
+    private int _notYetUsedIndex;
 
     private int NotYetUsedIndex
     {

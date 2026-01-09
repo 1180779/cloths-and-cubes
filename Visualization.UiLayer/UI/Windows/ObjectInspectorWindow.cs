@@ -9,89 +9,93 @@ using Visualisation.Core.GameObjects.Scenes;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class ObjectInspectorWindow(SceneManager sceneManager)
+public sealed class ObjectInspectorWindow(SceneManager sceneManager) : IWindow
 {
     private readonly SceneManager _sceneManager = sceneManager;
     
     private static readonly System.Numerics.Vector4 HeaderColor = new(0.2f, 0.5f, 0.8f, 1.0f);
     private static readonly System.Numerics.Vector4 SeparatorColor = new(0.5f, 0.5f, 0.5f, 0.5f);
-    
-    public void Draw()
+
+    public string Name => "Object Inspector";
+
+    public void Draw(ref bool isOpen)
     {
+        if (!isOpen) return;
+
         if (_sceneManager.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
         {
             var o = _sceneManager.GameObjects.First(g => g == followingCamera.TargetObject);
-            DrawInternal([o.PhysicsObject]);
+            DrawInternal([o.PhysicsObject], ref isOpen);
         }
         else
         {
-            DrawInternal(_sceneManager.GameObjects.Select(g => g.PhysicsObject).ToArray());
+            DrawInternal(_sceneManager.GameObjects.Select(g => g.PhysicsObject).ToArray(), ref isOpen);
         }
     }
 
-    private void DrawInternal(object?[] objects, String windowName = "Scene Objects Inspector")
+    private void DrawInternal(object?[] objects, ref bool isOpen, String windowName = "Scene Objects Inspector")
     {
-        ImGui.Begin(windowName);
-
-        ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
-            $"Total Objects: {objects.Length}".ToString());
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        // Use per-root visited sets to avoid infinite loops on cyclic graphs
-        for (int i = 0; i < objects.Length; i++)
+        if (ImGui.Begin(windowName, ref isOpen))
         {
-            if (objects[i] is null)
+            ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+                $"Total Objects: {objects.Length}".ToString());
+            ImGui.Separator();
+            ImGui.Spacing();
+
+            // Use per-root visited sets to avoid infinite loops on cyclic graphs
+            for (int i = 0; i < objects.Length; i++)
             {
+                if (objects[i] is null)
+                {
+                    ImGui.PushID(i);
+                    ImGui.TextDisabled($"[{i}]: null");
+                    ImGui.PopID();
+
+                    if (i < objects.Length - 1)
+                    {
+                        ImGui.Spacing();
+                        ImGui.Separator();
+                        ImGui.Spacing();
+                    }
+
+                    continue;
+                }
+
+                var obj = objects[i];
                 ImGui.PushID(i);
-                ImGui.TextDisabled($"[{i}]: null");
+
+                // Draw a collapsible header for each top-level object with visual styling
+                var typeName = obj?.GetType().Name ?? "null";
+                var hashCode = RuntimeHelpers.GetHashCode(obj);
+
+                ImGui.PushStyleColor(ImGuiCol.Header, HeaderColor);
+                ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0.3f, 0.6f, 0.9f, 1.0f));
+                ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0.25f, 0.55f, 0.85f, 1.0f));
+
+                var isHeaderOpen = ImGui.CollapsingHeader($"[{i}] {typeName} (ID: {hashCode})", ImGuiTreeNodeFlags.DefaultOpen);
+
+                ImGui.PopStyleColor(3);
+
+                if (isHeaderOpen)
+                {
+                    ImGui.Indent();
+                    DrawNode(null, obj, new HashSet<object>(ReferenceEqualityComparer.Instance), 0);
+                    ImGui.Unindent();
+                }
+
                 ImGui.PopID();
 
+                // Add visual separator between objects
                 if (i < objects.Length - 1)
                 {
                     ImGui.Spacing();
+                    ImGui.PushStyleColor(ImGuiCol.Separator, SeparatorColor);
                     ImGui.Separator();
+                    ImGui.PopStyleColor();
                     ImGui.Spacing();
                 }
-
-                continue;
-            }
-
-            var obj = objects[i];
-            ImGui.PushID(i);
-
-            // Draw a collapsible header for each top-level object with visual styling
-            var typeName = obj?.GetType().Name ?? "null";
-            var hashCode = RuntimeHelpers.GetHashCode(obj);
-
-            ImGui.PushStyleColor(ImGuiCol.Header, HeaderColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0.3f, 0.6f, 0.9f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0.25f, 0.55f, 0.85f, 1.0f));
-
-            var isOpen = ImGui.CollapsingHeader($"[{i}] {typeName} (ID: {hashCode})", ImGuiTreeNodeFlags.DefaultOpen);
-
-            ImGui.PopStyleColor(3);
-
-            if (isOpen)
-            {
-                ImGui.Indent();
-                DrawNode(null, obj, new HashSet<object>(ReferenceEqualityComparer.Instance), 0);
-                ImGui.Unindent();
-            }
-
-            ImGui.PopID();
-
-            // Add visual separator between objects
-            if (i < objects.Length - 1)
-            {
-                ImGui.Spacing();
-                ImGui.PushStyleColor(ImGuiCol.Separator, SeparatorColor);
-                ImGui.Separator();
-                ImGui.PopStyleColor();
-                ImGui.Spacing();
             }
         }
-
         ImGui.End();
     }
 

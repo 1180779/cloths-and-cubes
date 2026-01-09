@@ -2,6 +2,8 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 
+using Visualisation.Core.Display.Gizmos.Rotation;
+using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
@@ -9,10 +11,10 @@ using System.Collections.Generic;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cloth : GameObject, IBoxable
+public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRotationGizmoTarget
 {
     public Engine.Cloth EngineCloth { get; set; }
-    public SpringMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
+    public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
 
     // Now stores checked/saved triangles per square (top-left index)
@@ -23,7 +25,7 @@ public sealed class Cloth : GameObject, IBoxable
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry);
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth = new SpringMesh(pts);
+        VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
         Material = MaterialConstant.BlueRubber;
@@ -40,7 +42,7 @@ public sealed class Cloth : GameObject, IBoxable
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry, sizeX, sizeY, springLength, springConstant, particleMass);
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth = new SpringMesh(pts);
+        VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
         Material = MaterialConstant.BlueRubber;
@@ -93,10 +95,58 @@ public sealed class Cloth : GameObject, IBoxable
             for (int y = 0; y < sy; y++)
             {
                 var e = enginePoints[x, y];
-                result[x, y] = new Vector3((float)e.X, (float)e.Y, (float)e.Z);
+                result[x, y] = new Vector3(e.X, e.Y, e.Z);
             }
         }
 
         return result;
+    }
+
+    public void RegenerateClothPreservingTheCenter(
+        int newSizeX,
+        int newSizeY,
+        float newSpringLength,
+        float newSpringConstant,
+        float newParticleMass)
+    {
+        EngineCloth.RegenerateGridPreservingTheCenter(newSizeX, newSizeY, newSpringLength, newSpringConstant,
+            newParticleMass);
+
+        // Update the mesh
+        var pts = ConvertToOpenTk(EngineCloth.Points());
+        VisualCloth.UpdatePoints(pts);
+    }
+
+    public Vector3 AxisPosition => EngineCloth.Center.ToOpenTK();
+    public Quaternion AxisOrientation => Quaternion.Identity;
+
+    Vector3 ITranslationGizmoTarget.Position
+    {
+        get => EngineCloth.Center.ToOpenTK();
+        set
+        {
+            EngineCloth.Center = value.ToEngine();
+        }
+    }
+
+    private Quaternion _previousOrientation = Quaternion.Identity;
+
+    public Quaternion Orientation
+    {
+        get => _previousOrientation;
+        set
+        {
+            var deltaRotation = value * Quaternion.Invert(_previousOrientation);
+            _previousOrientation = value;
+
+            var axisAngle = deltaRotation.ToAxisAngle();
+            var axis = axisAngle.Xyz;
+            var angle = axisAngle.W;
+
+            // Convert axis-angle to a rotation vector (scaled axis)
+            var rotationVector = axis * angle;
+
+            EngineCloth.RotateAroundCenter(rotationVector.ToEngine());
+        }
     }
 }

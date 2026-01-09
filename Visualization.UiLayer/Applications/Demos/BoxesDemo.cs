@@ -10,11 +10,14 @@ using ImGuiNET;
 
 using Visualisation.Core;
 using Visualisation.Core.GameObjects;
+using Visualisation.Core.GameObjects.Scenes;
 
 using Visualization.UiLayer.UI.Windows;
 
 using Box = Visualisation.Core.GameObjects.Box;
 using Cloth = Visualisation.Core.GameObjects.Cloth;
+using Cone = Visualisation.Core.GameObjects.Cone;
+using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 using Random = Engine.Random;
 
 namespace Visualization.UiLayer.Applications.Demos;
@@ -22,59 +25,89 @@ namespace Visualization.UiLayer.Applications.Demos;
 public class BoxesDemo : RigidBodyApplication
 {
     protected Plane _plane = null!; // initialized in scene initialization
+    public Plane Plane => _plane;
+
     protected Box[] _boxes = [];
     protected Ball[] _balls = [];
     protected Cloth[] _cloths = [];
+
+    // Store initial state for proper reset
+    private SceneData? _initialSceneState;
+    private bool _sceneWasLoaded;
+
     protected ForceRegistry _forceRegistry = new();
     
     protected BVH _bvh = BVH.Build([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
     protected Dictionary<RigidParticle,Box> corrections = [];
     protected SelectionManager _selectionManager;
-    protected BvhNodesWindow _bvhNodesWindow = new();
-    protected CollisionParametersWindow _collisionParametersWindow;
+    protected SelectionManagerWindow _selectionManagerWindow;
+    protected GizmoSettingsWindow _gizmoSettingsWindow;
+    protected PhysicsControlWindow _physicsControlWindow;
+    protected SceneManagementWindow _sceneManagementWindow;
 
-    protected BoxesDemoSettingsWindow
-        _boxesDemoSettingsWindow = new(1, 0, 1); // the delegates need to be initialized in the constructor
+    protected BvhNodesWindow _bvhNodesWindow = new();
+
+    // Public accessors for scene management
+    public SceneManager SceneManager => _sceneManager;
+    public CollisionData CollisionData => _collisionData;
+    public ForceRegistry ForceRegistry => _forceRegistry;
+    protected CollisionParametersWindow _collisionParametersWindow;
+    protected ContactsInspectorWindow _contactsInspectorWindow;
+
+    protected BoxesDemoSettingsWindow _boxesDemoSettingsWindow;
 
     public BoxesDemo()
     {
+        _windowsManager.Add(_bvhNodesWindow);
+
         _collisionParametersWindow = new(_collisionData);
+        _windowsManager.Add(_collisionParametersWindow);
 
-        _boxesDemoSettingsWindow.SetBoxesCount = count =>
+        _contactsInspectorWindow = new(() => _collisionData.ContactList);
+        _windowsManager.Add(_contactsInspectorWindow);
+
+        _boxesDemoSettingsWindow = new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length)
         {
-            Random random = new();
-            int length = _boxes.Length;
-            for (int i = count; i < length; ++i)
+            SetBoxesCount = count =>
             {
-                _sceneManager.RemoveGameObject(_boxes[i]);
-                _boxes[i].Dispose();
-            }
+                Random random = new();
+                int length = _boxes.Length;
+                for (int i = count; i < length; ++i)
+                {
+                    _sceneManager.RemoveGameObject(_boxes[i]);
+                    _boxes[i].Dispose();
+                }
 
-            Array.Resize(ref _boxes, count);
-            for (int i = length; i < count; ++i)
-            {
-                _boxes[i] = new Box();
-                _boxes[i].EngineBox.Random(random);
-                _sceneManager.AddGameObject(_boxes[i]);
-            }
-        };
-        _boxesDemoSettingsWindow.SetSpheresCount = count =>
-        {
-            Random random = new();
-            int length = _balls.Length;
-            for (int i = count; i < length; ++i)
-            {
-                _sceneManager.RemoveGameObject(_balls[i]);
-                _balls[i].Dispose();
-            }
+                Array.Resize(ref _boxes, count);
+                for (int i = length; i < count; ++i)
+                {
+                    _boxes[i] = new Box();
+                    _boxes[i].EngineBox.Random(random);
+                    _sceneManager.AddGameObject(_boxes[i]);
+                }
 
-            Array.Resize(ref _balls, count);
-            for (int i = length; i < count; ++i)
+                _forcebvhRebuildOnNoUpdate = true;
+            },
+            SetSpheresCount = count =>
             {
-                _balls[i] = new Ball();
-                _balls[i].EngineBall.Random(random);
-                _sceneManager.AddGameObject(_balls[i]);
+                Random random = new();
+                int length = _balls.Length;
+                for (int i = count; i < length; ++i)
+                {
+                    _sceneManager.RemoveGameObject(_balls[i]);
+                    _balls[i].Dispose();
+                }
+
+                Array.Resize(ref _balls, count);
+                for (int i = length; i < count; ++i)
+                {
+                    _balls[i] = new Ball();
+                    _balls[i].EngineBall.Random(random);
+                    _sceneManager.AddGameObject(_balls[i]);
+                }
+
+                _forcebvhRebuildOnNoUpdate = true;
             }
         };
         _boxesDemoSettingsWindow.SetClothsCount = count =>
@@ -95,7 +128,11 @@ public class BoxesDemo : RigidBodyApplication
                     _boxesDemoSettingsWindow.ParticleMass);
                 _sceneManager.AddGameObject(_cloths[i]);
             }
+
+            _forcebvhRebuildOnNoUpdate = true;
         };
+        _windowsManager.Add(_boxesDemoSettingsWindow);
+
 
         _selectionManager = new(_inputProvider, () => _sceneManager.CamerasManager.CurrentCamera, () => _bvh,
             (ray, index) =>
@@ -133,10 +170,30 @@ public class BoxesDemo : RigidBodyApplication
                         if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
                             return (true, distance, particle);
                         break;
+                    case Cylinder cylinder:
+                        if (RayIntersection.IntersectionRayCylinder(ray, cylinder.EngineCylinder, out distance))
+                            return (true, distance, cylinder);
+                        break;
+                    case Cone cone:
+                        if (RayIntersection.IntersectionRayCone(ray, cone.EngineCone, out distance))
+                            return (true, distance, cone);
+                        break;
                 }
 
                 return (false, 0, null);
             });
+
+        _selectionManagerWindow = new(_selectionManager);
+        _windowsManager.Add(_selectionManagerWindow);
+
+        _gizmoSettingsWindow = new(_sceneManager);
+        _windowsManager.Add(_gizmoSettingsWindow);
+
+        _physicsControlWindow = new(this);
+        _windowsManager.Add(_physicsControlWindow);
+
+        _sceneManagementWindow = new(this);
+        _windowsManager.Add(_sceneManagementWindow);
     }
 
     protected override void InitializeScene()
@@ -145,25 +202,12 @@ public class BoxesDemo : RigidBodyApplication
 
         _sceneManager.SelectionManager = _selectionManager;
 
-        /* add ground plane to the scene */
+        // add ground plane to the scene
         _plane = new();
-        _plane.Invisible = true; // start invisible by default
         _sceneManager.AddGameObject(_plane);
 
         /* set everything up */
         Reset();
-    }
-
-    protected override void RenderWindows(double dt)
-    {
-        base.RenderWindows(dt);
-        _collisionParametersWindow.Draw();
-        _selectionManager.DrawWindow();
-        _bvhNodesWindow.Draw();
-#if DEBUG
-        ContactsInspectorWindow.Draw(_collisionData.ContactList);
-#endif
-        _boxesDemoSettingsWindow.Draw();
     }
 
     protected override void DebugRenderInScene(Shader sh)
@@ -173,7 +217,7 @@ public class BoxesDemo : RigidBodyApplication
         // no need to rebuild?
         // BvhRebuild();
         _bvhNodesWindow.DebugRenderInScene(sh, _bvh);
-        _selectionManager.DebugRenderInScene(sh);
+        _selectionManagerWindow.DebugRenderInScene(sh);
     }
 
     protected void BvhRebuild()
@@ -181,19 +225,19 @@ public class BoxesDemo : RigidBodyApplication
         _bvhDictionary.Clear();
         int offset = 0;
 
-        for (int i = 0; i < _boxes.Length; i++)
+        foreach (var t in _boxes)
         {
-            _bvhDictionary[offset++] = _boxes[i];
+            _bvhDictionary[offset++] = t;
         }
 
-        for (int i = 0; i < _balls.Length; i++)
+        foreach (var t in _balls)
         {
-            _bvhDictionary[offset++] = _balls[i];
+            _bvhDictionary[offset++] = t;
         }
 
-        for (int i = 0; i < _cloths.Length; i++)
+        foreach (var t in _cloths)
         {
-            _bvhDictionary[offset++] = _cloths[i];
+            _bvhDictionary[offset++] = t;
         }
 
         foreach (var cloth in _cloths)
@@ -214,7 +258,7 @@ public class BoxesDemo : RigidBodyApplication
         _bvh = BVH.Build(_bvhDictionary);
     }
 
-    protected override long AvailableSteps
+    public override long AvailableSteps
     {
         get
         {
@@ -256,7 +300,9 @@ public class BoxesDemo : RigidBodyApplication
             float scaledX = relativeX * fbScale.X;
             float scaledY = relativeY * fbScale.Y;
             var viewportMousePos = new Vector2(scaledX, scaledY);
-            _selectionManager.HandleInput(viewportMousePos, _sceneWindow.Width, _sceneWindow.Height);
+
+            // Pass input to SceneManager, which handles Gizmos and Selection
+            _sceneManager.HandleInput(_inputProvider, viewportMousePos, new(_sceneWindow.Width, _sceneWindow.Height));
         }
     }
 
@@ -270,7 +316,6 @@ public class BoxesDemo : RigidBodyApplication
 
         BvhRebuild();
         ObjectSelectionHandling();
-
 
         // Process box-plane collisions
         foreach (var box in _boxes)
@@ -396,9 +441,16 @@ public class BoxesDemo : RigidBodyApplication
     /// <summary>
     /// Resets the position of all the objects.
     /// </summary>
-    protected override void Reset()
+    public override void Reset()
     {
         _forcebvhRebuildOnNoUpdate = true;
+
+        // If a scene was loaded, restore it instead of using hardcoded values
+        if (_sceneWasLoaded && _initialSceneState != null)
+        {
+            RestoreSceneState(_initialSceneState);
+            return;
+        }
 
         _forceRegistry.Clear();
         foreach (Cloth cloth in _cloths)
@@ -468,13 +520,81 @@ public class BoxesDemo : RigidBodyApplication
         _collisionData.ContactCount = 0;
     }
 
+    /// <summary>
+    /// Restore the scene from stored state - preserves object identity when possible to maintain selection/gizmos
+    /// </summary>
+    private void RestoreSceneState(SceneData sceneData)
+    {
+        ApplySceneData(sceneData);
+        _collisionData.ContactCount = 0;
+    }
+
+    /// <summary>
+    /// Apply scene data to the current scene.
+    /// Preserves object identity when possible to maintain selection/gizmos.
+    /// </summary>
+    public void ApplySceneData(SceneData sceneData)
+    {
+        var currentObjects = _sceneManager.GameObjects.ToList();
+        var currentPlane = _plane;
+
+        var updatedObjects = sceneData.ToGameObjectsWithUpdate(
+            _forceRegistry,
+            currentObjects,
+            out var plane,
+            out var collisionData,
+            out var objectsToRemove);
+
+        _collisionData.Friction = collisionData.Friction;
+        _collisionData.Restitution = collisionData.Restitution;
+        _collisionData.Tolerance = collisionData.Tolerance;
+
+        // Clear selection and gizmos if the selected object is being removed
+        if (_sceneManager.SelectionManager?.SelectedObject is GameObject selectedObject &&
+            objectsToRemove.Contains(selectedObject))
+        {
+            _sceneManager.ClearSelectionAndGizmos();
+        }
+
+        // Remove objects that are no longer in the scene
+        foreach (var obj in objectsToRemove)
+        {
+            if (obj is Cloth cloth)
+            {
+                cloth.EngineCloth.RemoveSpringsFromForceRegistry();
+            }
+
+            _sceneManager.RemoveGameObject(obj);
+            obj.Dispose();
+        }
+
+        // Add newly created objects to the scene
+        foreach (var obj in updatedObjects)
+        {
+            if (obj is not Visualisation.Core.GameObjects.Plane && !currentObjects.Contains(obj))
+            {
+                _sceneManager.AddGameObject(obj);
+            }
+        }
+
+        UpdateObjectArrays(updatedObjects);
+
+        if (plane != null && plane != currentPlane)
+        {
+            UpdatePlane(plane);
+        }
+    }
+
     protected override ApplicationState SaveState()
     {
         var state = base.SaveState();
         state.BvhNodes = _bvhNodesWindow.SaveState();
         state.CollisionParameters = _collisionParametersWindow.SaveState();
         state.ClothSettings = _boxesDemoSettingsWindow.SaveState();
-        state.SelectionSettings = _selectionManager.SaveState();
+        state.SelectionSettings = _selectionManagerWindow.SaveState();
+        state.GizmoSettings = _gizmoSettingsWindow.SaveState();
+        state.PhysicsControl = _physicsControlWindow.SaveState();
+        state.SceneManagement = _sceneManagementWindow.SaveState();
         return state;
     }
 
@@ -498,7 +618,75 @@ public class BoxesDemo : RigidBodyApplication
 
         if (state.SelectionSettings is not null)
         {
-            _selectionManager.RestoreState(state.SelectionSettings);
+            _selectionManagerWindow.RestoreState(state.SelectionSettings);
         }
+
+        if (state.GizmoSettings is not null)
+        {
+            _gizmoSettingsWindow.RestoreState(state.GizmoSettings);
+        }
+
+        if (state.PhysicsControl is not null)
+        {
+            _physicsControlWindow.RestoreState(state.PhysicsControl);
+        }
+
+        if (state.SceneManagement is not null)
+        {
+            _sceneManagementWindow.RestoreState(state.SceneManagement);
+        }
+    }
+
+    /// <summary>
+    /// Update object arrays after scene loading
+    /// </summary>
+    public void UpdateObjectArrays(List<GameObject> gameObjects)
+    {
+        var boxes = new List<Box>();
+        var balls = new List<Ball>();
+        var cloths = new List<Cloth>();
+
+        foreach (var obj in gameObjects)
+        {
+            switch (obj)
+            {
+                case Box box:
+                    boxes.Add(box);
+                    break;
+                case Ball ball:
+                    balls.Add(ball);
+                    break;
+                case Cloth cloth:
+                    cloths.Add(cloth);
+                    break;
+            }
+        }
+
+        _boxes = boxes.ToArray();
+        _balls = balls.ToArray();
+        _cloths = cloths.ToArray();
+
+        _forcebvhRebuildOnNoUpdate = true;
+    }
+
+    /// <summary>
+    /// Store the initial scene state for reset functionality
+    /// </summary>
+    public void StoreInitialSceneState(SceneData sceneData)
+    {
+        _initialSceneState = sceneData;
+        _sceneWasLoaded = true;
+    }
+
+    /// <summary>
+    /// Update plane reference after scene loading
+    /// </summary>
+    public void UpdatePlane(Plane plane)
+    {
+        _sceneManager.RemoveGameObject(_plane);
+        _plane.Dispose();
+
+        _plane = plane;
+        _sceneManager.AddGameObject(_plane);
     }
 }

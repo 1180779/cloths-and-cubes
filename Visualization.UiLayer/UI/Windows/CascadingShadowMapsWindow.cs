@@ -14,7 +14,7 @@ public sealed class CascadingShadowMapsWindow(
     IInputProvider inputProvider,
     SceneManager scene,
     Vector2i size
-) : IDisposable
+) : IDisposable, IWindow
 {
     private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
     private readonly IInputProvider _inputProvider = inputProvider; /* borrowed */
@@ -44,27 +44,34 @@ public sealed class CascadingShadowMapsWindow(
         }
     }
 
-    public void Draw()
+    public string Name => "Cascading Shadow Maps";
+
+    public void Draw(ref bool isOpen)
     {
-        ImGui.Begin("Cascading Shadow Maps");
+        if (!isOpen) return;
 
-        System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
-        var fbScale = _imGuiController.ScaleFactor;
-        int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
-        int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
-        _depthMapWindowFrb.Resize(fbWidth, fbHeight);
+        if (ImGui.Begin(Name, ref isOpen))
+        {
+            System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
+            var fbScale = _imGuiController.ScaleFactor;
+            int fbWidth = Math.Max(1, (int)Math.Round(viewportSize.X * fbScale.X));
+            int fbHeight = Math.Max(1, (int)Math.Round(viewportSize.Y * fbScale.Y));
+            _depthMapWindowFrb.Resize(fbWidth, fbHeight);
 
-        _depthMapWindowFrb.Bind();
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            _depthMapWindowFrb.Bind();
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        _quadCsmShader.Use();
-        _sceneManager.LightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader, DirectionalLightLayer);
-        _quadMesh.Render();
+            _quadCsmShader.Use();
+            _sceneManager.LightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader,
+                DirectionalLightLayer);
+            _quadMesh.Render();
 
-        _depthMapWindowFrb.Unbind();
+            _depthMapWindowFrb.Unbind();
 
-        ImGui.Image(_depthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
-            new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
+            ImGui.Image(_depthMapWindowFrb.TextureId, viewportSize, new System.Numerics.Vector2(0, 1),
+                new System.Numerics.Vector2(1, 0)); // Flipped Y for OpenGL texture
+        }
+
         ImGui.End();
     }
 
@@ -92,11 +99,14 @@ public sealed class CascadingShadowMapsWindow(
         _quadMesh.Dispose();
     }
 
-    public record State(int DirectionalLightLayer);
+    public sealed record State
+    {
+        public int DirectionalLightLayer { get; init; }
+    }
 
     public State SaveState()
     {
-        return new State(DirectionalLightLayer);
+        return new State { DirectionalLightLayer = DirectionalLightLayer };
     }
 
     public void RestoreState(State state)

@@ -1,4 +1,6 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Diagnostics;
+
+using OpenTK.Graphics.OpenGL4;
 
 namespace Visualisation.Core;
 
@@ -109,10 +111,7 @@ public sealed class Shader : IDisposable
 
     ~Shader()
     {
-        if (!_disposedValue)
-        {
-            Console.WriteLine("GPU Resource leak! Did you forget to call Dispose()?");
-        }
+        Debug.Assert(_disposedValue, "GPU Resource leak! Did you forget to call Dispose()?");
     }
 
 

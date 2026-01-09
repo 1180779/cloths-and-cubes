@@ -4,6 +4,8 @@ namespace Engine;
 
 public struct Quaternion
 {
+    public static readonly Quaternion Identity = new Quaternion(1, 0, 0, 0);
+
     public Real I, J, K, R;
 
     [Conditional("DEBUG")]
@@ -34,6 +36,26 @@ public struct Quaternion
         I = 0;
         J = 0;
         K = 0;
+    }
+
+    /// <summary>
+    /// Creates a quaternion representing a rotation around a given axis by a given angle.
+    /// </summary>
+    /// <param name="axis">The axis of rotation.</param>
+    /// <param name="angleDegrees">The angle of rotation in degrees.</param>
+    /// <returns>A new quaternion representing the rotation.</returns>
+    public static Quaternion FromAxisAngle(Vector3 axis, Real angleDegrees)
+    {
+        Real angleRad = angleDegrees * Real.Pi / 180.0f;
+        Real halfAngle = angleRad * 0.5f;
+        Real sinHalfAngle = Real.Sin(halfAngle);
+
+        return new Quaternion(
+            Real.Cos(halfAngle),
+            axis.X * sinHalfAngle,
+            axis.Y * sinHalfAngle,
+            axis.Z * sinHalfAngle
+        );
     }
 
     public Real this[uint key]
@@ -86,14 +108,6 @@ public struct Quaternion
     {
         R = q.R * s, I = q.I * s, J = q.J * s, K = q.K * s
     };
-
-    public static Quaternion operator +(Quaternion q, Vector3 v)
-    {
-        Quaternion t = new() { R = 0, I = v.X, J = v.Y, K = v.Z };
-        t *= q;
-        t *= 0.5f;
-        return t;
-    }
 
     public static Quaternion operator *(Quaternion q, Quaternion multiplier) =>
         new()

@@ -38,6 +38,16 @@ public interface IInputProvider
     public bool IsMouseButtonPressed(MouseButton button);
 
     /// <summary>
+    /// Determines if a specific mouse button is currently down (withing the window or uiWindow)
+    /// </summary>
+    /// <param name="button">The mouse button to check, represented as a <see cref="MouseButton"/>.</param>
+    /// <returns>
+    /// A <see cref="bool"/> indicating whether the specified mouse button is down.
+    /// Returns true if the button is down, otherwise false.
+    /// </returns>
+    public bool IsMouseButtonDown(MouseButton button);
+
+    /// <summary>
     /// Calculates and retrieves the difference between the current mouse position and the last recorded position.
     /// This allows tracking of mouse movement (delta) across frames. If this is the first call of the method after
     /// initialization, it will return zero to ensure no unintended deltas are reported.

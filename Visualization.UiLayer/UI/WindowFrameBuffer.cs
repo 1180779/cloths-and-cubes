@@ -10,16 +10,13 @@ public class WindowFrameBuffer : IDisposable, IBindable
     public int TextureId { get; private set; }
     public int DepthBufferId { get; private set; }
 
-    private int _width;
-    private int _height;
-
-    public int Width => _width;
-    public int Height => _height;
+    private Vector2i _size;
+    public int Width => _size.X;
+    public int Height => _size.Y;
 
     public WindowFrameBuffer(int width, int height)
     {
-        this._width = width;
-        this._height = height;
+        this._size = (width, height);
         SetupFbo();
     }
 
@@ -30,7 +27,7 @@ public class WindowFrameBuffer : IDisposable, IBindable
 
         TextureId = GL.GenTexture();
         GL.BindTexture(TextureTarget.Texture2D, TextureId);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, _width, _height, 0, PixelFormat.Rgba,
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, _size.X, _size.Y, 0, PixelFormat.Rgba,
             PixelType.UnsignedByte, IntPtr.Zero);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
@@ -41,7 +38,7 @@ public class WindowFrameBuffer : IDisposable, IBindable
 
         DepthBufferId = GL.GenRenderbuffer();
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, DepthBufferId);
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, _width, _height);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, _size.X, _size.Y);
         GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
             RenderbufferTarget.Renderbuffer, DepthBufferId);
 
@@ -58,18 +55,17 @@ public class WindowFrameBuffer : IDisposable, IBindable
 
     public void Resize(int width, int height)
     {
-        if (width == this._width && height == this._height) return;
+        if (width == this._size.X && height == this._size.Y) return;
 
-        this._width = width;
-        this._height = height;
+        this._size = (width, height);
 
         GL.BindTexture(TextureTarget.Texture2D, TextureId);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, this._width, this._height, 0,
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, this._size.X, this._size.Y, 0,
             PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, DepthBufferId);
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, this._width,
-            this._height);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, this._size.X,
+            this._size.Y);
 
         GL.BindTexture(TextureTarget.Texture2D, 0);
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
@@ -78,13 +74,13 @@ public class WindowFrameBuffer : IDisposable, IBindable
     public void Bind()
     {
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, FboId);
-        GL.Viewport(0, 0, _width, _height);
+        GL.Viewport(0, 0, _size.X, _size.Y);
     }
 
     public void Unbind()
     {
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        GL.Viewport(0, 0, _width, _height);
+        GL.Viewport(0, 0, _size.X, _size.Y);
     }
 
     public void Dispose()

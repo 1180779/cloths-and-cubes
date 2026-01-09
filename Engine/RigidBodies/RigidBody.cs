@@ -21,8 +21,6 @@ public class RigidBody
 
     private Quaternion orientation = new();
 
-    public ref Quaternion OrientationRef => ref orientation;
-    
     /// <summary>
     /// Holds the angular orientation of the rigid body in world space.
     /// </summary>
@@ -53,7 +51,7 @@ public class RigidBody
     /// getPointIn*Space functions.
     /// Matrix4 transformMatrix;
     /// </summary>
-    public Matrix3 InverseInertiaTensorWorld { get; private set; } = new();
+    public Matrix3 InverseInertiaTensorWorld = new();
 
     /// <summary>
     /// Holds the amount of motion of the body. This is a recency-
@@ -73,14 +71,14 @@ public class RigidBody
     /// User-controlled bodies, for example, should always be
     /// awake.
     /// </summary>
-    public bool CanSleep { get; set; }
+    public bool CanSleep = true;
 
     /// <summary>
     /// Holds a transform matrix for converting body space into
     /// world space and vice versa. This can be achieved by calling
     /// the getPointIn*Space functions.
     /// </summary>
-    public Matrix4 TransformMatrix { get; set; } = new();
+    public Matrix4 TransformMatrix = new();
 
 
     // TODO: remove?
@@ -119,18 +117,18 @@ public class RigidBody
     /// </summary>
     public Vector3 LastFrameAcceleration { get; private set; } = new();
 
-    public Real AngularDamping = 0.0f;
+    public Real AngularDamping = 0.8f;
 
     /// <summary>
     /// Holds the amount of damping applied to linear
     /// motion.  Damping is required to remove energy added
     /// through numerical instability in the integrator.
     /// </summary>
-    public Real LinearDamping = 0.001f;
+    public Real LinearDamping = 0.95f;
 
     public Matrix3 InverseInertiaTensor { get; set; } = new();
 
-    static void CalculateTransformMatrix(Matrix4 transformMatrix, Vector3 position, Quaternion orientation)
+    static void CalculateTransformMatrix(ref Matrix4 transformMatrix, Vector3 position, Quaternion orientation)
     {
         transformMatrix.Data[0] = 1 - 2 * orientation.J * orientation.J -
             2 * orientation.K * orientation.K;
@@ -160,13 +158,12 @@ public class RigidBody
     public void CalculateDerivedData()
     {
         orientation.Normalise();
-        // Orientation.Normalise(); // should be normalized all the time
 
         // Calculate the transform matrix for the body.
-        CalculateTransformMatrix(TransformMatrix, Position, Orientation);
+        CalculateTransformMatrix(ref TransformMatrix, Position, Orientation);
 
         // Calculate the inertiaTensor in world space.
-        TransformInertiaTensor(InverseInertiaTensorWorld, Orientation, InverseInertiaTensor, TransformMatrix);
+        TransformInertiaTensor(ref InverseInertiaTensorWorld, Orientation, InverseInertiaTensor, TransformMatrix);
     }
 
     public void SetInertiaTensor(Matrix3 inertiaTensor)
@@ -176,7 +173,7 @@ public class RigidBody
         //_checkInverseInertiaTensor(inverseInertiaTensor);
     }
 
-    private static void TransformInertiaTensor(Matrix3 iitWorld, Quaternion q, Matrix3 iitBody, Matrix4 rotmat)
+    private static void TransformInertiaTensor(ref Matrix3 iitWorld, Quaternion q, Matrix3 iitBody, Matrix4 rotmat)
     {
         Real t4 = rotmat.Data[0] * iitBody.Data[0] +
             rotmat.Data[1] * iitBody.Data[3] +
@@ -237,6 +234,7 @@ public class RigidBody
     public void AddForce(Vector3 force)
     {
         forceAccum += force;
+        SetAwake();
     }
 
     public void Integrate(Real duration)
@@ -269,7 +267,7 @@ public class RigidBody
         // Update angular position.
         orientation.AddScaledVector(Rotation, duration);
         orientation.Normalise();
-        
+
         // Normalize the orientation and update the matrices with the new
         // position and orientation
         CalculateDerivedData();
@@ -321,7 +319,7 @@ public class RigidBody
         forceAccum += force;
         torqueAccum += pt % force;
 
-        IsAwake = true;
+        SetAwake();
     }
 
     public void SetAwake(bool awake = true)

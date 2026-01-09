@@ -45,12 +45,14 @@ public sealed class SceneWindow(
         _isHovered = ImGui.IsWindowHovered();
         if (_isHovered)
         {
-            _sceneManager.ProcessInput(_inputProvider, dt);
+            _sceneManager.ProcessInputInFocus(_inputProvider, dt);
         }
         else
         {
             _sceneManager.ProcessInputOutOfFocus(_inputProvider, dt);
         }
+
+        _sceneManager.ProcessInputInAndOutOfFocus(_inputProvider, dt);
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
         var fbScale = _imGuiController.ScaleFactor;
@@ -64,9 +66,10 @@ public sealed class SceneWindow(
             Debug.Assert(_msaaFrameBuffer is not null);
             _msaaFrameBuffer.Resize(fbW, fbH);
             _msaaFrameBuffer.Bind();
-            _sceneManager.RenderSceneWindow(fbW, fbH, _msaaFrameBuffer);
+            _sceneManager.RenderSceneWindow(_msaaFrameBuffer);
             DrawDebug();
             _sceneManager.RenderSelectedObjectOnTop();
+            _sceneManager.RenderGizmo();
             _msaaFrameBuffer.Unbind();
 
             _msaaFrameBuffer.BlitTo(_sceneRenderWindowFrb);
@@ -74,9 +77,10 @@ public sealed class SceneWindow(
         else
         {
             _sceneRenderWindowFrb.Bind();
-            _sceneManager.RenderSceneWindow(fbW, fbH, _sceneRenderWindowFrb);
+            _sceneManager.RenderSceneWindow(_sceneRenderWindowFrb);
             DrawDebug();
             _sceneManager.RenderSelectedObjectOnTop();
+            _sceneManager.RenderGizmo();
             _sceneRenderWindowFrb.Unbind();
         }
 
@@ -101,7 +105,9 @@ public sealed class SceneWindow(
         _debugBasicShader.Use();
         _debugBasicShader.SetMatrix4("view", _sceneManager.CamerasManager.CurrentCamera.ViewMatrix);
         _debugBasicShader.SetMatrix4("projection", _sceneManager.CamerasManager.CurrentCamera.ProjectionMatrix);
+        GL.Disable(EnableCap.CullFace);
         DebugRenderInScene(_debugBasicShader);
+        GL.Enable(EnableCap.CullFace);
     }
 
     public void Dispose()
@@ -150,20 +156,10 @@ public sealed class SceneWindow(
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            if (_msaaFrameBuffer is not null)
-            {
-                _msaaFrameBuffer.Dispose();
-            }
-
-            if (samples == 0)
-            {
-                _msaaFrameBuffer = null;
-            }
-            else
-            {
-                _msaaFrameBuffer =
-                    new MsaaFrameBuffer(_sceneRenderWindowFrb.Width, _sceneRenderWindowFrb.Height, samples);
-            }
+            _msaaFrameBuffer?.Dispose();
+            _msaaFrameBuffer = samples == 0
+                ? null
+                : new MsaaFrameBuffer(_sceneRenderWindowFrb.Width, _sceneRenderWindowFrb.Height, samples);
         }
     }
 }

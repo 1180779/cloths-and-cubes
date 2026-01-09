@@ -362,6 +362,12 @@ void main()
         N = normal;
     }
 
+    // Two-sided rendering: flip normal for back faces
+    if (!gl_FrontFacing)
+    {
+        N = -N;
+    }
+
     PbrMaterial material = PbrMaterial(
     albedo,
     normal,

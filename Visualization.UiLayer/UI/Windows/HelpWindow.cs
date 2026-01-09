@@ -2,7 +2,7 @@ using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public static class HelpWindow
+public sealed class HelpWindow : IWindow
 {
     public const int ActionDescriptionWidth = 30;
 
@@ -59,33 +59,37 @@ public static class HelpWindow
             {"Performance", new(){{"Cap/Uncap FPS", "X"},} },
         };
 
-    public static void Draw()
+    public string Name => "Help";
+
+    public void Draw(ref bool isOpen)
     {
-        ImGui.Begin("Help");
-        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-        foreach (KeyValuePair<string, Dictionary<string, string>> pair in ActionKeyDictionary)
+        if (ImGui.Begin(Name, ref isOpen))
         {
-            ImGui.Text(pair.Key);
-            ImGui.Spacing();
-            foreach (KeyValuePair<string, string> action in pair.Value)
+            ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
+            foreach (KeyValuePair<string, Dictionary<string, string>> pair in ActionKeyDictionary)
             {
-                if (action.Value.Length > 0)
+                ImGui.Text(pair.Key);
+                ImGui.Spacing();
+                foreach (KeyValuePair<string, string> action in pair.Value)
                 {
-                    ImGui.Text($"{action.Key,ActionDescriptionWidth}: {action.Value}");
+                    if (action.Value.Length > 0)
+                    {
+                        ImGui.Text($"{action.Key,ActionDescriptionWidth}: {action.Value}");
+                    }
+                    else
+                    {
+                        // treat as an additional description instead
+                        ImGui.Spacing();
+                        ImGui.Text($"{action.Key}");
+                    }
                 }
-                else
-                {
-                    // treat as an additional description instead
-                    ImGui.Spacing();
-                    ImGui.Text($"{action.Key}");
-                }
+
+                ImGui.Spacing();
+                ImGui.Separator();
             }
 
-            ImGui.Spacing();
-            ImGui.Separator();
+            ImGui.PopTextWrapPos();
         }
-
-        ImGui.PopTextWrapPos();
         ImGui.End();
     }
 }

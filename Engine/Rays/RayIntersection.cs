@@ -20,7 +20,7 @@ public static class RayIntersection
     /// <returns>True if the ray intersects the box, false otherwise.</returns>
     public static bool IntersectRayAABB(Ray ray, BoundingBox box, out Real distance)
     {
-        distance = 0;
+        distance = float.MaxValue;
 
         Vector3 min = box.Center - box.HalfSize;
         Vector3 max = box.Center + box.HalfSize;
@@ -63,7 +63,7 @@ public static class RayIntersection
         // The equation is
         // t^2 + 2bt + c = 0.
         // The solutions are t = -b +- sqrt(b^2 - c).
-        distance = 0;
+        distance = float.MaxValue;
 
         Vector3 sphereCenter = sphere.GetAxis(3);
         Vector3 m = ray.Origin - sphereCenter;
@@ -112,7 +112,7 @@ public static class RayIntersection
     /// <returns>True if the ray intersects the box, false otherwise.</returns>
     public static bool IntersectRayOBB(Ray ray, CollisionBox box, out Real distance)
     {
-        distance = 0;
+        distance = float.MaxValue;
         Real tMin = 0.0f;
         Real tMax = Real.MaxValue;
 
@@ -146,7 +146,7 @@ public static class RayIntersection
 
     public static bool IntersectRayPlane(Ray ray, CollisionPlane plane, out Real distance)
     {
-        distance = 0;
+        distance = float.MaxValue;
         Real denominator = plane.Direction * ray.Direction;
 
         if (denominator > -1e-6 && denominator < 1e-6)
@@ -225,39 +225,267 @@ public static class RayIntersection
         }
     }
 
+    public static bool IntersectionRayCylinder(Ray ray, CollisionCylinder cylinder, out Real distance)
+    {
+        cylinder.Body.CalculateDerivedData();
+        cylinder.CalculateInternals();
+
+        distance = float.MaxValue;
+
+        //
+        // We transform the ray to the local coordinate system first. 
+        // Then check for the intersection with infinite cylinder described with the equation
+        // X^2 + Y^2 <= R^2
+        // Once we have found the intersection points (if any), we need to check that the Z coordinate
+        // is valid i.e., -H/2 <= Z <= H/2
+        // 
+
+        Ray localRay = new Ray(
+            cylinder.Transform.TransformInverse(ray.Origin),
+            cylinder.Transform.TransformInverseDirection(ray.Direction)
+        );
+
+        Vector3 d = localRay.Direction;
+        Vector3 o = localRay.Origin;
+        Real r = cylinder.Radius;
+        Real halfHeight = cylinder.Height / 2;
+
+        Real tMin = Real.PositiveInfinity;
+
+        Real a = d.X * d.X + d.Y * d.Y;
+        Real b = 2 * (o.X * d.X + o.Y * d.Y);
+        Real c = o.X * o.X + o.Y * o.Y - r * r;
+
+        // if a close to 0 then ray is parallel to Z axis
+        // in that case a check for being inside the cylinder is sufficient
+        if (a > 0)
+        {
+            Real disc = b * b - 4 * a * c;
+            if (disc >= 0)
+            {
+                Real sqrtDisc = (Real)Math.Sqrt(disc);
+                Real t1 = (-b - sqrtDisc) / (2 * a);
+                Real t2 = (-b + sqrtDisc) / (2 * a);
+
+                if (t1 > 0)
+                {
+                    Real z1 = o.Z + t1 * d.Z;
+                    if (z1 >= -halfHeight && z1 <= halfHeight)
+                    {
+                        tMin = Math.Min(tMin, t1);
+                    }
+                }
+
+                if (t2 > 0)
+                {
+                    Real z2 = o.Z + t2 * d.Z;
+                    if (z2 >= -halfHeight && z2 <= halfHeight)
+                    {
+                        tMin = Math.Min(tMin, t2);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (c <= 0)
+            {
+                // we need to check that the Z of the origin is inside the cylinder
+                if (-halfHeight <= localRay.Origin.Z && localRay.Origin.Z <= halfHeight)
+                {
+                    distance = 0;
+                    return true;
+                }
+            }
+        }
+
+        // lastly check the intersection with caps
+        // first find the point on the cap plane,
+        // then check that it lies within the cap circle on that plane
+        if (Math.Abs(d.Z) > 1e-6)
+        {
+            Real tTop = (halfHeight - o.Z) / d.Z;
+            if (tTop > 0)
+            {
+                Real x = o.X + tTop * d.X;
+                Real y = o.Y + tTop * d.Y;
+                if (x * x + y * y <= r * r)
+                {
+                    tMin = Math.Min(tMin, tTop);
+                }
+            }
+
+            Real tBottom = (-halfHeight - o.Z) / d.Z;
+            if (tBottom > 0)
+            {
+                Real x = o.X + tBottom * d.X;
+                Real y = o.Y + tBottom * d.Y;
+                if (x * x + y * y <= r * r)
+                {
+                    tMin = Math.Min(tMin, tBottom);
+                }
+            }
+        }
+
+        if (Real.IsInfinity(tMin))
+        {
+            return false;
+        }
+
+        distance = tMin;
+        return true;
+    }
+
+    public static bool IntersectionRayCone(Ray ray, CollisionCone cone, out Real distance)
+    {
+        cone.Body.CalculateDerivedData();
+        cone.CalculateInternals();
+
+        distance = float.MaxValue;
+
+        Ray localRay = new Ray(
+            cone.Transform.TransformInverse(ray.Origin),
+            cone.Transform.TransformInverseDirection(ray.Direction)
+        );
+
+        Vector3 d = localRay.Direction;
+        Vector3 o = localRay.Origin;
+        Real r = cone.Radius;
+        Real height = cone.Height;
+        Real halfHeight = height / 2;
+
+        Real k = r / height;
+        Real k2 = k * k;
+        Real h = halfHeight;
+
+        Real hMinusOz = h - o.Z;
+
+        Real a = d.X * d.X + d.Y * d.Y - k2 * d.Z * d.Z;
+        Real b = 2 * (o.X * d.X + o.Y * d.Y + k2 * d.Z * hMinusOz);
+        Real c = o.X * o.X + o.Y * o.Y - k2 * hMinusOz * hMinusOz;
+
+        Real tMin = Real.PositiveInfinity;
+
+        Real disc = b * b - 4 * a * c;
+        if (disc >= 0)
+        {
+            Real sqrtDisc = (Real)Math.Sqrt(disc);
+
+            if (Math.Abs(a) > 1e-6)
+            {
+                Real t1 = (-b - sqrtDisc) / (2 * a);
+                Real t2 = (-b + sqrtDisc) / (2 * a);
+
+                if (t1 > 0)
+                {
+                    Real z1 = o.Z + t1 * d.Z;
+                    if (z1 >= -halfHeight && z1 <= halfHeight)
+                    {
+                        tMin = Math.Min(tMin, t1);
+                    }
+                }
+
+                if (t2 > 0)
+                {
+                    Real z2 = o.Z + t2 * d.Z;
+                    if (z2 >= -halfHeight && z2 <= halfHeight)
+                    {
+                        tMin = Math.Min(tMin, t2);
+                    }
+                }
+            }
+            else
+            {
+                if (Math.Abs(b) > 1e-6)
+                {
+                    Real t = -c / b;
+                    if (t > 0)
+                    {
+                        Real z = o.Z + t * d.Z;
+                        if (z >= -halfHeight && z <= halfHeight)
+                        {
+                            tMin = Math.Min(tMin, t);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check base cap at z = -halfHeight
+        if (Math.Abs(d.Z) > 1e-6)
+        {
+            Real tBase = (-halfHeight - o.Z) / d.Z;
+            if (tBase > 0)
+            {
+                Real x = o.X + tBase * d.X;
+                Real y = o.Y + tBase * d.Y;
+                if (x * x + y * y <= r * r)
+                {
+                    tMin = Math.Min(tMin, tBase);
+                }
+            }
+        }
+
+        if (Real.IsInfinity(tMin))
+        {
+            return false;
+        }
+
+        distance = tMin;
+        return true;
+    }
+
+    /// <summary>
+    /// Tests if a ray intersects with a triangle in 3D space.
+    /// Uses the Möller–Trumbore intersection algorithm.
+    /// </summary>
+    /// <param name="ray">The ray to test against the triangle.</param>
+    /// <param name="triangle">The triangle to test for intersection.</param>
+    /// <param name="distance">The distance from the ray origin to the intersection point, if an intersection occurs.</param>
+    /// <returns>True if the ray intersects the triangle, false otherwise.</returns>
     public static bool IntersectRayTriangle(Ray ray, Triangle triangle, out Real distance)
     {
         Vector3 v0 = triangle.Vertex1;
         Vector3 v1 = triangle.Vertex2;
         Vector3 v2 = triangle.Vertex3;
-        distance = 0;
+        distance = float.MaxValue;
 
+        // Find vectors for two edges sharing v0
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
 
-        Vector3 h = Vector3.CrossProduct(ray.Direction, edge2);
-        Real a = edge1 * h;
+        // Begin calculating determinant - also used to calculate u parameter
+        Vector3 crossRayDirEdge2 = Vector3.CrossProduct(ray.Direction, edge2);
+        Real det = edge1 * crossRayDirEdge2;
 
+        // if the determinant is near zero, ray lies in plane of triangle
         Real eps = Core.Epsilon;
-        if (a > -eps && a < eps)
-            return false; // Ray is parallel to triangle
-
-        Real f = 1.0f / a;
-        Vector3 s = ray.Origin - v0;
-        Real u = f * (s * h);
-        if (u < 0.0f || u > 1.0f)
+        if (det > -eps && det < eps)
             return false;
 
-        Vector3 q = Vector3.CrossProduct(s, edge1);
-        Real v = f * (ray.Direction * q);
-        if (v < 0.0f || u + v > 1.0f)
+        Real invDet = 1.0f / det;
+
+        // Calculate distances from v0 to ray origin
+        Vector3 originMinusV0 = ray.Origin - v0;
+
+        // Calculate u parameter and test bounds
+        Real baryU = invDet * (originMinusV0 * crossRayDirEdge2);
+        if (baryU < 0.0f || baryU > 1.0f)
             return false;
 
-        // Compute t to find an intersection point
-        Real t = f * (edge2 * q);
-        if (t > eps) // Ray intersection
+        // Prepare to test V parameter
+        Vector3 crossOrigMinusV0 = Vector3.CrossProduct(originMinusV0, edge1);
+
+        // Calculate V parameter and test bounds
+        Real baryV = (ray.Direction * crossOrigMinusV0) * invDet;
+        if (baryV < 0.0f || baryU + baryV > 1.0f)
+            return false;
+
+        // Calculate V parameter and test bounds
+        Real rayT = (edge2 * crossOrigMinusV0) * invDet;
+        if (rayT >= 0)
         {
-            distance = t;
+            distance = rayT;
             return true;
         }
 

@@ -9,12 +9,35 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 using Visualisation.Core;
 
+//
 // based on
 // https://github.com/NogginBops/ImGui.NET_OpenTK_Sample
-
+// 
+// MIT License
+// 
+// Copyright (c) 2025 Julius Häger
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 namespace Visualization.UiLayer.UI;
 
-public class ImGuiController : IDisposable
+public sealed class ImGuiController : IDisposable
 {
     private readonly Shader _shader = new("imguiShader.vert", "imguiShader.frag");
 
@@ -27,6 +50,33 @@ public class ImGuiController : IDisposable
     private int _indexBufferSize;
 
     private int _fontTexture;
+    public ImFontPtr FontRegular { get; private set; }
+    public ImFontPtr FontBold { get; private set; }
+    public ImFontPtr FontItalic { get; private set; }
+    public ImFontPtr FontBoldItalic { get; private set; }
+
+    /// <summary>
+    /// Helper to use a specific font. Must be followed by PopFont() or wrapped in a using statement.
+    /// Example: ImGui.PushFont(controller.FontBold); ImGui.Text("Bold"); ImGui.PopFont();
+    /// </summary>
+    public void PushRegularFont() => ImGui.PushFont(FontRegular);
+
+    /// <summary>
+    /// Helper to use a specific font. Must be followed by PopFont() or wrapped in a using statement.
+    /// </summary>
+    public void PushBoldFont() => ImGui.PushFont(FontBold);
+
+    /// <summary>
+    /// Helper to use a specific font. Must be followed by PopFont() or wrapped in a using statement.
+    /// </summary>
+    public void PushItalicFont() => ImGui.PushFont(FontItalic);
+
+    /// <summary>
+    /// Helper to use a specific font. Must be followed by PopFont() or wrapped in a using statement.
+    /// </summary>
+    public void PushBoldItalicFont() => ImGui.PushFont(FontBoldItalic);
+
+
     public Vector2i FramebufferSize { get; private set; }
 
     // logical window size (in window units / logical pixels)
@@ -64,10 +114,23 @@ public class ImGuiController : IDisposable
         ImGui.SetCurrentContext(context);
         var io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-        io.Fonts.AddFontDefault();
+
+        string fontFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "JetBrainsMono-2.304", "fonts", "ttf");
+        if (Directory.Exists(fontFolder))
+        {
+            // The first loaded font becomes the default font
+            FontBold = io.Fonts.AddFontFromFileTTF(Path.Combine(fontFolder, "JetBrainsMono-Bold.ttf"), 16.0f);
+            FontRegular = io.Fonts.AddFontFromFileTTF(Path.Combine(fontFolder, "JetBrainsMono-Regular.ttf"), 16.0f);
+            FontItalic = io.Fonts.AddFontFromFileTTF(Path.Combine(fontFolder, "JetBrainsMono-Italic.ttf"), 16.0f);
+            FontBoldItalic =
+                io.Fonts.AddFontFromFileTTF(Path.Combine(fontFolder, "JetBrainsMono-BoldItalic.ttf"), 16.0f);
+        }
+        else
+        {
+            io.Fonts.AddFontDefault();
+        }
 
         io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
-        io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
         CreateDeviceResources();
 
@@ -187,7 +250,7 @@ public class ImGuiController : IDisposable
         GL.BindTexture(TextureTarget.Texture2D, prevTexture2D);
         GL.ActiveTexture((TextureUnit)prevActiveTexture);
 
-        io.Fonts.SetTexID((IntPtr)_fontTexture);
+        io.Fonts.SetTexID(_fontTexture);
 
         io.Fonts.ClearTexData();
     }

@@ -1,9 +1,14 @@
 using Engine.RigidBodies;
 
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
+using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Rotation;
+using Visualisation.Core.Display.Gizmos.Scale;
+using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Light;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
@@ -30,13 +35,17 @@ public abstract class SceneManager : IDisposable
             Position = new Vector3(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
         };
         CamerasManager.AddCamera(camera);
+
+        _translationGizmo = new TranslationGizmo(BasicShader);
+        _scaleGizmo = new ScaleGizmo(BasicShader);
+        _rotationGizmo = new RotationGizmo(BasicShader);
     }
 
     public const float OutlineSize = 0.05f;
     public const float OutlineFactor = 1f + OutlineSize;
 
     public readonly Shader PbrShader = new("scenePBRShader.vert", "scenePBRShader.frag");
-    public readonly Shader SolidColorShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
+    public readonly Shader BasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
     public readonly Shader OutlineShader = new("outline.vert", "sceneBasicShader.frag");
 
     public readonly Shader EquirectangularToCubemapShader =
@@ -57,6 +66,26 @@ public abstract class SceneManager : IDisposable
     protected List<GameObject> _gameObjects = [];
     public ICollection<GameObject> GameObjects => _gameObjects;
 
+    private readonly TranslationGizmo _translationGizmo;
+    private readonly ScaleGizmo _scaleGizmo;
+    private readonly RotationGizmo _rotationGizmo;
+    private IGizmo? _activeGizmo;
+    public IGizmo? ActiveGizmo => _activeGizmo;
+
+    public GizmoType ActiveGizmoType
+    {
+        get
+        {
+            return ActiveGizmo switch
+            {
+                Display.Gizmos.Translation.TranslationGizmo => GizmoType.Translation,
+                Display.Gizmos.Rotation.RotationGizmo => GizmoType.Rotation,
+                Display.Gizmos.Scale.ScaleGizmo => GizmoType.Scale,
+                _ => GizmoType.None
+            };
+        }
+    }
+
     public void AddGameObject(GameObject gameObject)
     {
         _gameObjects.Add(gameObject);
@@ -69,20 +98,82 @@ public abstract class SceneManager : IDisposable
 
     public abstract void SetUp();
 
-    public SelectionManager? SelectionManager { get; set; }
-    public Vector3 SelectionColor = new(0.0f, 1.0f, 0.0f);
+    private void SelectionChange(object? obj)
+    {
+        if (ActiveGizmo is not null)
+        {
+            if (obj is IGizmoTarget gizmoTarget)
+                ActiveGizmo.Target = gizmoTarget;
+            else
+                ActiveGizmo.Target = null;
+        }
+    }
+
+    private SelectionManager? _selectionManager;
+
+    public SelectionManager? SelectionManager
+    {
+        get => _selectionManager;
+        set
+        {
+            if (_selectionManager is not null)
+            {
+                _selectionManager.OnSelectionChanged -= SelectionChange;
+            }
+
+            _selectionManager = value;
+            if (_selectionManager is not null)
+            {
+                _selectionManager.OnSelectionChanged += SelectionChange;
+            }
+        }
+    }
+
+    public Vector4 SelectionColor = new(0.0f, 1.0f, 0.0f, 1.0f);
+
+    public void ProcessInputInAndOutOfFocus(IInputProvider input, float dt)
+    {
+        // Gizmo switching
+        if (input.IsKeyPressed(InputKey.T))
+        {
+            SetActiveGizmoType(GizmoType.Translation);
+        }
+        else if (input.IsKeyPressed(InputKey.Y))
+        {
+            SetActiveGizmoType(GizmoType.Scale);
+            _activeGizmo = _scaleGizmo;
+        }
+        else if (input.IsKeyPressed(InputKey.U))
+        {
+            SetActiveGizmoType(GizmoType.Rotation);
+        }
+    }
 
     public void ProcessInputOutOfFocus(IInputProvider input, float dt)
     {
         CamerasManager.ProcessInputOutOfFocus(input, dt);
     }
 
-    public void ProcessInput(IInputProvider input, float dt)
+    public void ProcessInputInFocus(IInputProvider input, float dt)
     {
         CamerasManager.ProcessInput(input, dt, SelectionManager?.SelectionEnabled ?? false);
     }
 
-    public void RenderSceneWindow(int screenWidth, int screenHeight, IBindable framebuffer)
+    public void HandleInput(IInputProvider input, Vector2 viewportMousePos, Vector2i screenSize)
+    {
+        bool gizmoHandled = false;
+        if (_activeGizmo != null)
+        {
+            gizmoHandled = _activeGizmo.HandleInput(input, viewportMousePos, CamerasManager.CurrentCamera, screenSize);
+        }
+
+        if (!gizmoHandled && SelectionManager != null)
+        {
+            SelectionManager.HandleInput(viewportMousePos, screenSize);
+        }
+    }
+
+    public void RenderSceneWindow(IBindable framebuffer)
     {
         LightsManager.RenderShadowsToMaps(_gameObjects);
 
@@ -111,8 +202,20 @@ public abstract class SceneManager : IDisposable
                 GL.StencilMask(0x00);
             }
 
+            // Disable backface culling for cloth to enable two-sided rendering
+            if (gameObject is Cloth)
+            {
+                GL.Disable(EnableCap.CullFace);
+            }
+
             gameObject.SetForShader(PbrShader);
             gameObject.Render(SelectionManager?.DrawInvisibleObjects ?? false);
+
+            // Re-enable backface culling after rendering cloth
+            if (gameObject is Cloth)
+            {
+                GL.Enable(EnableCap.CullFace);
+            }
 
             if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)
             {
@@ -129,9 +232,10 @@ public abstract class SceneManager : IDisposable
                 GL.Disable(EnableCap.DepthTest);
             }
 
-            SolidColorShader.Use();
-            CamerasManager.CurrentCamera.SetForSimpleShader(SolidColorShader);
-            SolidColorShader.SetVector3("color", SelectionColor);
+            BasicShader.Use();
+            CamerasManager.CurrentCamera.SetForSimpleShader(BasicShader);
+            BasicShader.SetVector3("color", SelectionColor.Xyz);
+            BasicShader.SetFloat("alpha", SelectionColor.W);
 
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
             var selectedObject = SelectionManager.SelectedObject;
@@ -142,7 +246,7 @@ public abstract class SceneManager : IDisposable
                         var originalHalfSize = box.EngineBox.HalfSize;
                         box.EngineBox.HalfSize *= OutlineFactor;
 
-                        box.SetForShaderNoMaterial(SolidColorShader);
+                        box.SetForShaderNoMaterial(BasicShader);
                         box.Render(SelectionManager.DrawInvisibleObjects);
 
                         box.EngineBox.HalfSize = originalHalfSize;
@@ -153,7 +257,7 @@ public abstract class SceneManager : IDisposable
                         var originalRadius = ball.EngineBall.Radius;
                         ball.EngineBall.Radius *= OutlineFactor;
 
-                        ball.SetForShaderNoMaterial(SolidColorShader);
+                        ball.SetForShaderNoMaterial(BasicShader);
                         ball.Render(SelectionManager.DrawInvisibleObjects);
 
                         ball.EngineBall.Radius = originalRadius;
@@ -161,24 +265,56 @@ public abstract class SceneManager : IDisposable
                     }
                 case Cloth cloth:
                     {
-                        GL.CullFace(TriangleFace.Front);
+                        // Disable culling for two-sided rendering
+                        GL.Disable(EnableCap.CullFace);
+
                         OutlineShader.Use();
                         CamerasManager.CurrentCamera.SetForSimpleShader(OutlineShader);
                         OutlineShader.SetFloat("outline_size", OutlineSize);
-                        OutlineShader.SetVector3("color", SelectionColor);
+                        OutlineShader.SetVector3("color", SelectionColor.Xyz);
                         cloth.SetForShaderNoMaterial(OutlineShader);
                         cloth.Render(SelectionManager.DrawInvisibleObjects);
-                        GL.CullFace(TriangleFace.Back);
+
+                        // Re-enable culling
+                        GL.Enable(EnableCap.CullFace);
                         break;
                     }
                 case RigidParticle particle:
                     {
                         var particleScale = RigidParticle.BoundingBoxHalfSize * 2;
                         var position = particle.GetAxis(3);
-                        SolidColorShader.SetMatrix4("model",
+                        BasicShader.SetMatrix4("model",
                             Matrix4.CreateScale(particleScale, particleScale, particleScale) *
                             Matrix4.CreateTranslation(position.X, position.Y, position.Z));
                         _cube.Render();
+                        break;
+                    }
+                case Cylinder cylinder:
+                    {
+                        var originalRadius = cylinder.EngineCylinder.Radius;
+                        cylinder.EngineCylinder.Radius *= OutlineFactor;
+                        var originalHeight = cylinder.EngineCylinder.Height;
+                        cylinder.EngineCylinder.Height *= OutlineFactor;
+
+                        cylinder.SetForShaderNoMaterial(BasicShader);
+                        cylinder.Render(SelectionManager.DrawInvisibleObjects);
+
+                        cylinder.EngineCylinder.Radius = originalRadius;
+                        cylinder.EngineCylinder.Height = originalHeight;
+                        break;
+                    }
+                case Cone cone:
+                    {
+                        var originalRadius = cone.EngineCone.Radius;
+                        cone.EngineCone.Radius *= OutlineFactor;
+                        var originalHeight = cone.EngineCone.Height;
+                        cone.EngineCone.Height *= OutlineFactor;
+
+                        cone.SetForShaderNoMaterial(BasicShader);
+                        cone.Render(SelectionManager.DrawInvisibleObjects);
+
+                        cone.EngineCone.Radius = originalRadius;
+                        cone.EngineCone.Height = originalHeight;
                         break;
                     }
             }
@@ -189,6 +325,14 @@ public abstract class SceneManager : IDisposable
         }
 
         GL.Disable(EnableCap.StencilTest);
+    }
+
+    public void RenderGizmo()
+    {
+        if (_activeGizmo != null)
+        {
+            _activeGizmo.Render(CamerasManager.CurrentCamera);
+        }
     }
 
     public void RenderSelectedObjectOnTop()
@@ -205,13 +349,15 @@ public abstract class SceneManager : IDisposable
 
     private void RenderSkybox()
     {
-        GL.DepthFunc(DepthFunction.Lequal);
         SkyboxShader.Use();
         SkyboxShader.SetMatrix4("view", CamerasManager.CurrentCamera.ViewMatrix);
         SkyboxShader.SetMatrix4("projection", CamerasManager.CurrentCamera.ProjectionMatrix);
         EnvironmentMap.SetForSkyBoxShader(SkyboxShader);
+        GL.DepthFunc(DepthFunction.Lequal);
+        GL.CullFace(TriangleFace.Front);
         _cube.Render();
-        GL.DepthFunc(DepthFunction.Less); // Reset
+        GL.CullFace(TriangleFace.Back);
+        GL.DepthFunc(DepthFunction.Less);
     }
 
 
@@ -222,12 +368,59 @@ public abstract class SceneManager : IDisposable
         LightsManager.SetForShader(PbrShader);
     }
 
+    /// <summary>
+    /// Sets the active gizmo type based on enum value.
+    /// </summary>
+    public void SetActiveGizmoType(GizmoType gizmoType)
+    {
+        _activeGizmo = gizmoType switch
+        {
+            GizmoType.None => null,
+            GizmoType.Translation => _translationGizmo,
+            GizmoType.Rotation => _rotationGizmo,
+            GizmoType.Scale => _scaleGizmo,
+            _ => null
+        };
+
+        if (_activeGizmo is not null && SelectionManager?.SelectedObject is IGizmoTarget gizmoTarget)
+        {
+            _activeGizmo.Target = gizmoTarget;
+        }
+    }
+
+    /// <summary>
+    /// Resets all gizmo handle sizes to 1.0.
+    /// </summary>
+    public void ResetAllGizmoScales()
+    {
+        _translationGizmo.HandleSize = 1.0f;
+        _rotationGizmo.HandleSize = 1.0f;
+        _scaleGizmo.HandleSize = 1.0f;
+    }
+
+    /// <summary>
+    /// Clears the current selection and deactivates any active gizmo.
+    /// Should be called when loading or resetting scenes to prevent stale references.
+    /// </summary>
+    public void ClearSelectionAndGizmos()
+    {
+        // Clear selection first (this will also trigger OnSelectionChanged event)
+        SelectionManager?.ClearSelection();
+
+        // Deactivate any active gizmo
+        _activeGizmo = null;
+    }
+
+    public TranslationGizmo TranslationGizmo => _translationGizmo;
+    public RotationGizmo RotationGizmo => _rotationGizmo;
+    public ScaleGizmo ScaleGizmo => _scaleGizmo;
+
 
     public void Dispose()
     {
         _cube.Dispose();
         PbrShader.Dispose();
-        SolidColorShader.Dispose();
+        BasicShader.Dispose();
         OutlineShader.Dispose();
         SkyboxShader.Dispose();
         EquirectangularToCubemapShader.Dispose();
@@ -237,5 +430,9 @@ public abstract class SceneManager : IDisposable
         {
             gameObject.Dispose();
         }
+
+        _translationGizmo.Dispose();
+        _scaleGizmo.Dispose();
+        _rotationGizmo.Dispose();
     }
 }

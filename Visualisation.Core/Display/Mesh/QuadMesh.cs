@@ -23,7 +23,7 @@ public sealed class QuadMesh : IMesh
 
     public void Dispose()
     {
-        MeshManager.FreeMesh(MeshName, (data) =>
+        MeshManager.FreeMesh(MeshName, data =>
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.DeleteBuffer(data.Vbo);

@@ -12,7 +12,7 @@ using MouseButton = Visualisation.Core.Inputs.MouseButton;
 
 namespace Visualization.UiLayer.Inputs;
 
-public class ImGuiInputProvider : IInputProvider
+public class OpenTKWithImGuiInputProvider : IInputProvider
 {
     private readonly ImGuiController _imGuiController;
     private readonly GameWindow _gameWindow;
@@ -21,7 +21,7 @@ public class ImGuiInputProvider : IInputProvider
     private CursorState _lastCursorState = CursorState.Normal;
     private float _mouseScrollDelta;
 
-    public ImGuiInputProvider(GameWindow gameWindow, ImGuiController imGuiController)
+    public OpenTKWithImGuiInputProvider(GameWindow gameWindow, ImGuiController imGuiController)
     {
         this._gameWindow = gameWindow;
         this._imGuiController = imGuiController;
@@ -45,6 +45,18 @@ public class ImGuiInputProvider : IInputProvider
             _ => throw new ArgumentOutOfRangeException(nameof(button), button, null)
         };
         return _gameWindow.MouseState.IsButtonPressed(mappedButton);
+    }
+
+    public bool IsMouseButtonDown(MouseButton button)
+    {
+        OpenTK.Windowing.GraphicsLibraryFramework.MouseButton mappedButton = button switch
+        {
+            MouseButton.Left => OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Left,
+            MouseButton.Right => OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Right,
+            MouseButton.Middle => OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Middle,
+            _ => throw new ArgumentOutOfRangeException(nameof(button), button, null)
+        };
+        return _gameWindow.MouseState.IsButtonDown(mappedButton);
     }
 
     public float GetMouseScroll()

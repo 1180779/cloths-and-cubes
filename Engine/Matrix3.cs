@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Engine;
 
@@ -30,6 +31,18 @@ public struct Matrix3 : ICloneable
         Real i8)
     {
         Data = [i0, i1, i2, i3, i4, i5, i6, i7, i8];
+    }
+
+    /// <summary>
+    /// Retrieves the specified axis of the matrix as a <see cref="Vector3"/>.
+    /// </summary>
+    /// <param name="index">The index of the axis to retrieve
+    /// (0 for the first column, 1 for the second column, 2 for the third column).</param>
+    /// <returns>A <see cref="Vector3"/> representing the axis of the matrix corresponding to the specified index.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector3 Axis(int index)
+    {
+        return new Vector3(Data[index], Data[index + 3], Data[index + 6]);
     }
 
     public Real this[int i]

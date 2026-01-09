@@ -302,7 +302,7 @@ public static class PbrTextureGenerator
                 mipWidth, mipHeight);
             GL.Viewport(0, 0, mipWidth, mipHeight);
 
-            float roughness = (float)mip / (float)(MaxMipLevels - 1);
+            float roughness = mip / (float)(MaxMipLevels - 1);
             prefilterShader.SetFloat("roughness", roughness);
 
             for (var i = 0; i < 6; ++i)

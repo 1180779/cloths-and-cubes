@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using ImageMagick;
 
@@ -20,44 +21,28 @@ public static class TexturesManager
     /// Encapsulates texture-related metadata and state information, including
     /// unique texture identification and file path.
     /// </summary>
-    public class TextureData
+    public sealed class TextureData
     {
-        /// <summary>
-        /// Unique identifier for the texture used in OpenGL operations. Volatile.
-        /// Can hold id of temporary texture if the texture from the path is not ready yet.
-        /// </summary>
-        public int TextureId
-        {
-            get => Volatile.Read(ref _textureId);
-            set => Volatile.Write(ref _textureId, value);
-        }
+        public int TextureId;
 
         /// <summary>
         /// Texture path. Used to identify the texture.
         /// </summary>
         public required string TexturePath { get; init; }
-
-        private int _textureId;
     }
 
     /// <summary>
     /// Represents an internal structure for managing texture-related data and states.
     /// </summary>
-    private class Entry
+    private sealed class Entry
     {
         public int UsagesCount;
-        public Task? LoadingTask;
+        public required Task LoadingTask;
         public CancellationTokenSource? LoadingCts;
         public required TextureData PublicTextureData { get; init; }
-        public InitTextureCallback? InitCallback { get; set; }
 
-        public bool IsLoaded
-        {
-            get => Volatile.Read(ref _isLoaded);
-            set => Volatile.Write(ref _isLoaded, value);
-        }
-
-        private bool _isLoaded;
+        public InitTextureCallback? InitCallback;
+        public bool IsLoaded;
     }
 
     private interface IPixelData
@@ -95,7 +80,7 @@ public static class TexturesManager
         }
     }
 
-    private class PixelDataFloat : IPixelData
+    private sealed class PixelDataFloat : IPixelData
     {
         private readonly float[] _data;
 
@@ -117,7 +102,7 @@ public static class TexturesManager
         }
     }
 
-    private class PendingLoadResult
+    private sealed class PendingLoadResult
     {
         public string Path = null!;
         public IPixelData PixelData = null!;
@@ -129,11 +114,26 @@ public static class TexturesManager
 
     private static readonly ConcurrentDictionary<string, Entry> TextureDataDict = new();
     private static readonly ConcurrentQueue<PendingLoadResult> PendingUploads = new();
-    public static int? PlaceholderTextureId;
+    private static readonly SemaphoreSlim LoadingSemaphore = new(1, 1);
 
+    private static readonly Lock PlaceholderCreateLock = new();
+    private static int s_placeholderTextureId = -1; // value of -1 means not created yet
+
+    public static int PlaceholderTextureId
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            EnsurePlaceholderCreated();
+            return s_placeholderTextureId;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsPlaceholderTexture(TextureData textureData)
     {
-        return PlaceholderTextureId is not null && textureData.TextureId == PlaceholderTextureId;
+        var result = s_placeholderTextureId != -1 && textureData.TextureId == s_placeholderTextureId;
+        return result;
     }
 
     /// <summary>
@@ -143,7 +143,7 @@ public static class TexturesManager
     public delegate void InitTextureCallback();
 
     /// <summary>
-    /// Call on the G thread each frame to finalize background loads.
+    /// Call on the GL thread each frame to finalize background loads.
     /// </summary>
     public static void ProcessPendingUploads()
     {
@@ -151,6 +151,7 @@ public static class TexturesManager
         {
             if (!TextureDataDict.TryGetValue(result.Path, out var entry))
             {
+                // No entry found for this texture path; it may have been freed already.
                 continue;
             }
 
@@ -179,30 +180,41 @@ public static class TexturesManager
 
     private static void EnsurePlaceholderCreated()
     {
-        if (PlaceholderTextureId.HasValue) return;
+        if (s_placeholderTextureId != -1)
+            return;
 
-        GL.CreateTextures(TextureTarget.Texture2D, 1, out int texId);
-        GL.BindTexture(TextureTarget.Texture2D, texId);
+        lock (PlaceholderCreateLock)
+        {
+            if (s_placeholderTextureId != -1)
+                return;
 
-        byte[] pixels =
-        [
-            255, 0, 255, 255, 0, 0, 0, 255,
-            0, 0, 0, 255, 255, 0, 255, 255
-        ];
+            GL.CreateTextures(TextureTarget.Texture2D, 1, out int texId);
+            GL.BindTexture(TextureTarget.Texture2D, texId);
 
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, 2, 2, 0,
-            PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
+            byte[] pixels =
+            [
+                255, 0, 255, 255, 0, 0, 0, 255,
+                0, 0, 0, 255, 255, 0, 255, 255
+            ];
 
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, 2, 2, 0,
+                PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
 
-        PlaceholderTextureId = texId;
-        GlHelper.CheckGlError("TexturesManager::EnsurePlaceholderCreated");
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
+                (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+                (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+
+            s_placeholderTextureId = texId;
+            GlHelper.CheckGlError("TexturesManager::EnsurePlaceholderCreated");
+        }
     }
 
-    private static PendingLoadResult LoadPixelData(string texturePath)
+    private static async Task<PendingLoadResult> LoadPixelDataAsync(
+        string texturePath,
+        CancellationToken cancellationToken)
     {
         var pathToLoad = texturePath;
 
@@ -214,7 +226,7 @@ public static class TexturesManager
                 Debug.WriteLine($"Converting PSD to PNG ({texturePath})");
                 using var magickImage = new MagickImage(texturePath);
                 magickImage.Format = MagickFormat.Png;
-                magickImage.Write(pngPath);
+                await magickImage.WriteAsync(pngPath, cancellationToken);
             }
             else
             {
@@ -232,7 +244,7 @@ public static class TexturesManager
                 Debug.WriteLine($"Converting EXR to HDR ({pathToLoad})");
                 using var magickImage = new MagickImage(pathToLoad);
                 magickImage.Format = MagickFormat.Hdr;
-                magickImage.Write(hdrPath);
+                await magickImage.WriteAsync(hdrPath, cancellationToken);
             }
             else
             {
@@ -245,8 +257,13 @@ public static class TexturesManager
         var extension = Path.GetExtension(pathToLoad);
         if (extension.Equals(".hdr", StringComparison.InvariantCultureIgnoreCase))
         {
-            using var stream = File.OpenRead(pathToLoad);
-            var image = ImageResultFloat.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+            await using var stream = new FileStream(pathToLoad, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
+                useAsync: true);
+            var buffer = new byte[stream.Length];
+            await stream.ReadExactlyAsync(buffer, 0, buffer.Length, cancellationToken);
+
+            using var memoryStream = new MemoryStream(buffer);
+            var image = ImageResultFloat.FromStream(memoryStream, ColorComponents.RedGreenBlueAlpha);
             return new PendingLoadResult
             {
                 Path = texturePath,
@@ -258,9 +275,14 @@ public static class TexturesManager
             };
         }
 
-        using (var stream = File.OpenRead(pathToLoad))
+        await using (var stream = new FileStream(pathToLoad, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
+            useAsync: true))
         {
-            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+            var buffer = new byte[stream.Length];
+            await stream.ReadExactlyAsync(buffer, 0, buffer.Length, cancellationToken);
+
+            using var memoryStream = new MemoryStream(buffer);
+            var image = ImageResult.FromStream(memoryStream, ColorComponents.RedGreenBlueAlpha);
 
             return new PendingLoadResult
             {
@@ -274,14 +296,20 @@ public static class TexturesManager
         }
     }
 
-
-    private static void PerformImmediateLoad(Entry entry, string path, InitTextureCallback initCallback)
+    private static PendingLoadResult LoadPixelData(string texturePath)
     {
+        return LoadPixelDataAsync(texturePath, CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+
+    private static int PerformImmediateLoad(string path, InitTextureCallback initCallback)
+    {
+        int textureId = -1;
         try
         {
             var result = LoadPixelData(path);
 
-            GL.CreateTextures(TextureTarget.Texture2D, 1, out int textureId);
+            GL.CreateTextures(TextureTarget.Texture2D, 1, out textureId);
             GL.BindTexture(TextureTarget.Texture2D, textureId);
             result.PixelData.UploadToGpu(TextureTarget.Texture2D, 0, result.InternalFormat, result.Width, result.Height,
                 0,
@@ -289,49 +317,63 @@ public static class TexturesManager
 
             initCallback.Invoke();
 
-            entry.PublicTextureData.TextureId = textureId;
-            entry.IsLoaded = true;
-
             GlHelper.CheckGlError("TexturesManager::PerformImmediateLoad");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Failed to load texture '{path}' immediately: {ex}");
         }
+
+        if (textureId == -1)
+        {
+            textureId = s_placeholderTextureId;
+        }
+
+        return textureId;
     }
 
     /// <summary>
     /// Starts the asynchronous loading process for a texture.
     /// Converts PSD files to PNG if necessary and prepares pixel data for rendering.
+    /// Loading is limited to one texture at a time to avoid overwhelming the system.
     /// </summary>
     /// <param name="texturePath">The file path of the texture to load.</param>
-    /// <param name="entry">The internal entry object that holds texture-related data and state.</param>
-    private static void EnqueueLoad(string texturePath, Entry entry)
+    private static (CancellationTokenSource cts, Task task) EnqueueLoad(string texturePath)
     {
-        entry.LoadingCts = new CancellationTokenSource();
-        var token = entry.LoadingCts.Token;
+        CancellationTokenSource cts = new();
+        var token = cts.Token;
 
-        entry.LoadingTask = Task.Run(() =>
+        var task = Task.Run(async () =>
         {
             try
             {
                 if (token.IsCancellationRequested)
                     return;
-                var result = LoadPixelData(texturePath);
-                if (token.IsCancellationRequested)
-                    return;
-                PendingUploads.Enqueue(result);
+
+                await LoadingSemaphore.WaitAsync(token);
+                try
+                {
+                    if (token.IsCancellationRequested)
+                        return;
+
+                    var result = await LoadPixelDataAsync(texturePath, token);
+
+                    if (token.IsCancellationRequested)
+                        return;
+
+                    PendingUploads.Enqueue(result);
+                }
+                finally
+                {
+                    LoadingSemaphore.Release();
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to load texture '{texturePath}': {ex}");
             }
-            finally
-            {
-                entry.LoadingCts?.Dispose();
-                entry.LoadingCts = null;
-            }
         }, token);
+        return (cts, task);
     }
 
     /// <summary>
@@ -344,18 +386,26 @@ public static class TexturesManager
 
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
+            var td = new TextureData { TextureId = s_placeholderTextureId, TexturePath = path };
 
+            var (cts, task) = EnqueueLoad(path);
             var e = new Entry
             {
-                PublicTextureData = td, UsagesCount = 0, InitCallback = initCallback, IsLoaded = false
+                PublicTextureData = td,
+                UsagesCount = 0,
+                InitCallback = initCallback,
+                IsLoaded = false,
+                LoadingTask = task,
+                LoadingCts = cts
             };
 
-            EnqueueLoad(path, e);
             return e;
         });
 
-        Interlocked.Increment(ref entry.UsagesCount);
+        lock (entry)
+        {
+            entry.UsagesCount++;
+        }
 
         return entry.PublicTextureData;
     }
@@ -369,64 +419,48 @@ public static class TexturesManager
     {
         EnsurePlaceholderCreated();
 
+        // Try to get or add the entry for the texture path
+        // If it doesn't exist, create a new entry and load the texture immediately
+        // If it exists, check if it's already loaded or wait for any ongoing load to complete
         var entry = TextureDataDict.GetOrAdd(texturePath, path =>
         {
-            var td = new TextureData { TextureId = PlaceholderTextureId!.Value, TexturePath = path };
-
+            int textureId = PerformImmediateLoad(path, initCallback);
+            var td = new TextureData { TextureId = textureId, TexturePath = path };
             var e = new Entry
             {
-                PublicTextureData = td, UsagesCount = 0, InitCallback = initCallback, IsLoaded = false
+                PublicTextureData = td,
+                UsagesCount = 0,
+                InitCallback = initCallback,
+                IsLoaded = true,
+                LoadingTask = Task.CompletedTask,
+                LoadingCts = null
             };
-
-            PerformImmediateLoad(e, path, initCallback);
 
             return e;
         });
 
-        /* if not loaded then it was being processed in the background */
-        if (!entry.IsLoaded)
+        // Bool and int32 operations are atomic, so we can check without locking first
+        if (entry.IsLoaded)
         {
-            Task? loadingTask;
-            lock (entry)
-            {
-                if (entry.IsLoaded)
-                {
-                    Interlocked.Increment(ref entry.UsagesCount);
-                    return entry.PublicTextureData;
-                }
-
-                loadingTask = entry.LoadingTask;
-            }
-
-            if (loadingTask != null)
-            {
-                try
-                {
-                    loadingTask.Wait();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Waiting on texture load task failed for '{texturePath}': {ex}");
-                }
-
-                ProcessPendingUploads();
-            }
-
-            /* TODO: check if this check is not excessive (it might be impossible to stumble into this state) */
-            if (!entry.IsLoaded)
-            {
-                lock (entry)
-                {
-                    if (!entry.IsLoaded)
-                    {
-                        entry.InitCallback = initCallback;
-                        PerformImmediateLoad(entry, texturePath, initCallback);
-                    }
-                }
-            }
+            entry.UsagesCount++;
+            return entry.PublicTextureData;
         }
 
-        Interlocked.Increment(ref entry.UsagesCount);
+        lock (entry)
+        {
+            var loadingTask = entry.LoadingTask;
+            try
+            {
+                loadingTask.Wait();
+            }
+            // TODO: what to do on failure here?
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Waiting on texture load task failed for '{texturePath}': {ex}");
+            }
+
+            ProcessPendingUploads();
+        }
 
         return entry.PublicTextureData;
     }
@@ -443,15 +477,13 @@ public static class TexturesManager
             throw new InvalidOperationException("Texture Not Initialized");
         }
 
-        var newCount = Interlocked.Decrement(ref entry.UsagesCount);
-
-        if (newCount < 0)
+        entry.UsagesCount--;
+        if (entry.UsagesCount < 0)
         {
-            Interlocked.Increment(ref entry.UsagesCount);
             throw new InvalidOperationException("Released more times than freed!");
         }
 
-        if (newCount != 0) return;
+        if (entry.UsagesCount != 0) return;
 
         // ensure single thread deletes resources
         lock (entry)
@@ -464,9 +496,8 @@ public static class TexturesManager
 
             if (entry.IsLoaded)
             {
-                // exchange to zero atomically if you want to avoid double-delete elsewhere:
                 var idToDelete = entry.PublicTextureData.TextureId;
-                if (idToDelete != PlaceholderTextureId)
+                if (idToDelete != s_placeholderTextureId)
                 {
                     GL.DeleteTexture(idToDelete);
                 }
@@ -480,7 +511,7 @@ public static class TexturesManager
     /// Abort all background loading tasks. 
     /// Cancels per-entry loading token sources and drains the pending upload queue.
     /// Does not delete GPU textures - GL deletions should still run on the GL thread if needed.
-    /// This can leave some texture in zombie like state, where they will not be loaded until all of its instances are manually freed. 
+    /// This can leave some texture in a zombie-like state, where they will not be loaded until all of its instances are manually freed. 
     /// </summary>
     public static void AbortAllLoads()
     {

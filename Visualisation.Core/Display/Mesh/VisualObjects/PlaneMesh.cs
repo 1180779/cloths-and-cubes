@@ -19,14 +19,14 @@ public sealed class PlaneMesh : IMesh
     private static readonly VertexData[] Vertices =
     [
         // Triangle 1
-        new(-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f),
-        new(0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f),
-        new(0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f),
+        new(new(-0.5f, 0.0f, -0.5f), Vector3.UnitY, new(0.0f, 0.0f)),
+        new(new(0.5f, 0.0f, 0.5f), Vector3.UnitY, new(1.0f, 1.0f)),
+        new(new(0.5f, 0.0f, -0.5f), Vector3.UnitY, new(1.0f, 0.0f)),
 
         // Triangle 2 
-        new(0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f),
-        new(-0.5f, 0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f),
-        new(-0.5f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f)
+        new(new(0.5f, 0.0f, 0.5f), Vector3.UnitY, new(1.0f, 1.0f)),
+        new(new(-0.5f, 0.0f, -0.5f), Vector3.UnitY, new(0.0f, 0.0f)),
+        new(new(-0.5f, 0.0f, 0.5f), Vector3.UnitY, new(0.0f, 1.0f))
     ];
 
     private void Init()

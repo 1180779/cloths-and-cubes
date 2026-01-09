@@ -18,4 +18,10 @@
     <ProjectReference Include="..\Visualisation.Core\Visualisation.Core.csproj"/>
   </ItemGroup>
 
+    <ItemGroup>
+        <None Update="JetBrainsMono-2.304\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

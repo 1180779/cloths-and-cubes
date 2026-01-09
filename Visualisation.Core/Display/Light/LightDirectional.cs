@@ -18,7 +18,9 @@ public class LightDirectional : LightPoint
     {
         GetCurrentCamera = getCurrentCamera;
         Direction = new(2, 2, 2);
+
         Init();
+        ResetShadowBiasToDefault();
     }
 
     public Func<CameraBase> GetCurrentCamera { get; set; }
@@ -45,10 +47,18 @@ public class LightDirectional : LightPoint
 
     private const int ShadowWidth = 1024, ShadowHeight = 1024;
 
-    private float _shadowBiasMin = 0.005f;
-    private float _shadowBiasMax = 0.05f;
-    private float _shadowBiasModifier = 0.31f;
+    private float _shadowBiasMin;
+    private float _shadowBiasMax;
+    private float _shadowBiasModifier;
     private bool _shadowsBiasChanged = true;
+
+    public void ResetShadowBiasToDefault()
+    {
+        ShadowBiasMin = 0.0f;
+        ShadowBiasMax = 0.015f;
+        ShadowBiasModifier = 5.0f;
+        ZMult = 4.0f;
+    }
 
     public float ShadowBiasMin
     {
@@ -81,7 +91,7 @@ public class LightDirectional : LightPoint
     }
 
     // Tune this parameter according to the scene
-    public float ZMult { get; set; } = 10.0f;
+    public float ZMult { get; set; }
 
     public Matrix4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
@@ -102,10 +112,16 @@ public class LightDirectional : LightPoint
 
         center /= corners.Count;
 
+        var up = Vector3.UnitY;
+        if (Math.Abs(Vector3.Dot(Direction, Vector3.UnitY)) > 0.9f)
+        {
+            up = Vector3.UnitZ;
+        }
+
         var lightView = Matrix4.LookAt(
             center - Direction, // always place parallel to what the camera sees
             center,
-            Vector3.UnitY);
+            up);
 
         float minX, minY, minZ;
         minX = minY = minZ = float.MaxValue;
@@ -301,8 +317,17 @@ public class LightDirectional : LightPoint
         get => _direction;
         set
         {
-            var normalized = value.Normalized();
-            _direction = normalized;
+            if (float.IsNaN(value.X) || float.IsNaN(value.Y) || float.IsNaN(value.Z))
+                return;
+
+            var max = Math.Max(Math.Abs(value.X), Math.Max(Math.Abs(value.Y), Math.Abs(value.Z)));
+            if (max > 1e10f)
+                value /= max;
+
+            if (value.LengthSquared <= 1e-6f)
+                return;
+
+            _direction = value.Normalized();
         }
     }
 
@@ -310,7 +335,7 @@ public class LightDirectional : LightPoint
     {
         sh.SetVector3Member(structShName + ".direction", -Direction);
 
-        sh.SetTexture($"shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
+        sh.SetTexture("shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
         sh.SetInt("cascadeCount", ShadowCascadeLevels.Length);
 
         var matrices = GetLightSpaceMatrices();
