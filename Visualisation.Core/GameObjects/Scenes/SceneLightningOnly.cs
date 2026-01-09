@@ -1,4 +1,5 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.Light;
@@ -18,9 +19,11 @@ public class SceneLightningOnly : SceneRenderer
         Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
         Func<Plane> planeProvider,
         Func<float> positionEpsilonProvider,
-        Func<IEnumerable<Box>> boxesProvider)
+        Func<IEnumerable<Box>> boxesProvider,
+        Func<GlobalJointsList> globalJointsProvider)
         : base(aspectRatio, inputProvider, getGameObjects, cameraProvider, bvhProvider,
-            bvhDictionaryProvider, clothsProvider, planeProvider, positionEpsilonProvider, boxesProvider)
+            bvhDictionaryProvider, clothsProvider, planeProvider, positionEpsilonProvider, boxesProvider,
+            globalJointsProvider)
     {
     }
 

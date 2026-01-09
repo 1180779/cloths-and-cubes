@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 using Engine.Rays;
 using Engine.RigidBodies;
 
@@ -14,12 +15,10 @@ namespace Visualisation.Core.GameObjects;
 public sealed class StaticDragManager(
     Func<object?> getHoveredObject,
     Func<CameraBase> cameraProvider,
-    Func<IEnumerable<Box>> boxesProvider
+    Func<IEnumerable<Box>> boxesProvider,
+    Func<GlobalJointsList> globalJointsProvider
 )
 {
-    // public bool UseSpring = false;
-    // public Real Stiffness = (Real)50.0;
-
     public float Sensitivity = 1.0f;
     public bool Enabled = false;
     public MouseButton DragButton = MouseButton.Left;
@@ -84,12 +83,6 @@ public sealed class StaticDragManager(
         bool isButtonDown = inputProvider.IsMouseButtonDown(DragButton);
         if (IsDragging && !isButtonDown)
         {
-            // End dragging - restore particle mass if it's a cloth particle
-            if (DraggedObject is ClothParticleWrapper clothParticle)
-            {
-                clothParticle.EndDrag();
-            }
-
             DraggedObject = null;
             return false;
         }
@@ -150,7 +143,6 @@ public sealed class StaticDragManager(
             HandleClothParticlePinning(wrapper);
         }
 
-
         // TODO: check if this is of any use 
         // // Zero out velocity and rotation to prevent physics fighting the drag
         // if (DraggedObject is GameObjectCollisionPrimitive gameObjectCollisionPrimitive)
@@ -174,25 +166,18 @@ public sealed class StaticDragManager(
     private void HandleClothParticlePinning(ClothParticleWrapper particleWrapper)
     {
         var boxes = _boxesProvider().ToList(); // Materialize to avoid multiple enumeration
-        if (!boxes.Any())
-        {
-            // No boxes in the scene, unpin if pinned
-            if (particleWrapper.IsPinned)
-            {
-                particleWrapper.Unpin();
-            }
 
-            return;
-        }
-
+        // TODO: optimize to only the boxes that are close enough i.e. potentially in range of the particle?
         Dictionary<int, IBoxable> bvhDictionary = new();
         int idCounter = 0;
         foreach (var box in boxes)
         {
-            var cornerPositions = box.EngineBox.GetCorners();
+            var localCornerPositions = box.EngineBox.GetCornersInLocalSpace();
+            var cornerPositions = box.EngineBox.GetCornersInWorldSpace();
             for (int i = 0; i < cornerPositions.Length; i++)
             {
-                bvhDictionary.Add(idCounter + i, new BoxCorner(cornerPositions[i], box.EngineBox, i));
+                bvhDictionary.Add(idCounter + i,
+                    new BoxCorner(localCornerPositions[i], cornerPositions[i], box.EngineBox, i));
             }
 
             idCounter += 8;
@@ -200,19 +185,43 @@ public sealed class StaticDragManager(
 
         BVH bvh = BVH.BuildSynchronous(bvhDictionary);
         int? firstContact = BVH.GetFirstContact(particleWrapper, bvh.root);
+
         var collidingCorner = firstContact.HasValue ? (BoxCorner?)bvhDictionary[firstContact.Value] : null;
+
         if (collidingCorner != null)
         {
-            // Collision detected - pin or update pin position
-            particleWrapper.Pin(collidingCorner.Position);
+            // Collision detected - add joint between particle and box corner
+            // check if particle already has a joint
+            if (particleWrapper.Particle.ConnectedJoint.IsSet)
+            {
+                return;
+            }
+
+            var joint = new Joint(
+                particleWrapper.Particle,
+                new(),
+                collidingCorner.Box,
+                collidingCorner.LocalPosition
+            );
+            var globalJoints = globalJointsProvider();
+
+            int jointIndex = globalJoints.AddJoint(joint);
+            var jointData = new ConnectedJointData(joint, jointIndex);
+
+            particleWrapper.Particle.ConnectedJoint = jointData;
+            collidingCorner.Box.ConnectedJoints.Add(jointData);
         }
         else
         {
             // No collision - unpin if currently pinned
-            if (particleWrapper.IsPinned)
-            {
-                particleWrapper.Unpin();
-            }
+            // It is assumed that both ends are correctly tracked, so only one side check is needed
+            if (!particleWrapper.Particle.ConnectedJoint.IsSet)
+                return;
+
+            var globalJoints = globalJointsProvider();
+            var jointToRemove = particleWrapper.Particle.ConnectedJoint;
+            jointToRemove.Joint?.RemoveFromTrackables();
+            globalJoints.RemoveJoint(jointToRemove);
         }
     }
 }

@@ -1,4 +1,5 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 using Engine.RigidBodies;
 
 using OpenTK.Graphics.OpenGL4;
@@ -25,7 +26,8 @@ public abstract class SceneRenderer : IDisposable
         Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
         Func<Plane> planeProvider,
         Func<float> positionEpsilonProvider,
-        Func<IEnumerable<Box>> boxesProvider)
+        Func<IEnumerable<Box>> boxesProvider,
+        Func<GlobalJointsList> globalJointsProvider)
     {
         _getGameObjects = getGameObjects;
 
@@ -45,7 +47,8 @@ public abstract class SceneRenderer : IDisposable
             clothsProvider,
             planeProvider,
             positionEpsilonProvider,
-            boxesProvider);
+            boxesProvider,
+            globalJointsProvider);
 
         CamerasManager = new CamerasManager(inputProvider);
         LightsManager = new LightsManager(CamerasManager);

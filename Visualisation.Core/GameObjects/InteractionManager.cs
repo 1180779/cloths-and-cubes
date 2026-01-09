@@ -1,4 +1,5 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 
 using OpenTK.Mathematics;
 
@@ -33,7 +34,8 @@ public sealed class InteractionManager : IDisposable
         Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
         Func<Plane> planeProvider,
         Func<float> positionEpsilonProvider,
-        Func<IEnumerable<Box>> boxesProvider)
+        Func<IEnumerable<Box>> boxesProvider,
+        Func<GlobalJointsList> globalJointsProvider)
     {
         _translationGizmo = new TranslationGizmo(shader);
         _scaleGizmo = new ScaleGizmo(shader);
@@ -41,7 +43,8 @@ public sealed class InteractionManager : IDisposable
 
         _cameraProvider = cameraProvider;
 
-        StaticDragManager = new(() => SelectionManager?.HoveredObject ?? null, cameraProvider, boxesProvider);
+        StaticDragManager = new(() => SelectionManager?.HoveredObject ?? null, cameraProvider, boxesProvider,
+            globalJointsProvider);
         SelectionManager = new(
             inputProvider,
             cameraProvider,

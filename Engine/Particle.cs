@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+
 using Engine.Collision.Bounding_Volume_Hierarchy;
 
 namespace Engine;
@@ -96,6 +97,5 @@ public class Particle : IBoxable
     public void AddForce(Vector3 force)
     {
         forceAccum += force;
-        if (Core.Debug) Console.WriteLine($"[DEBUG]: Adding force {force} to particle at {position}");
     }
 }

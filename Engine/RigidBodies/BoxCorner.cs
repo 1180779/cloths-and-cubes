@@ -15,6 +15,11 @@ public sealed record BoxCorner : IBoxable
     public Vector3 Position { get; init; }
 
     /// <summary>
+    /// The position of this corner in the box space.
+    /// </summary>
+    public Vector3 LocalPosition { get; init; }
+
+    /// <summary>
     /// The box this corner belongs to.
     /// </summary>
     public Box Box { get; init; }
@@ -30,8 +35,9 @@ public sealed record BoxCorner : IBoxable
     /// </summary>
     public const float BoundingBoxHalfSize = 0.55f;
 
-    public BoxCorner(Vector3 position, Box box, int cornerIndex)
+    public BoxCorner(Vector3 localPosition, Vector3 position, Box box, int cornerIndex)
     {
+        LocalPosition = localPosition;
         Position = position;
         Box = box;
         CornerIndex = cornerIndex;

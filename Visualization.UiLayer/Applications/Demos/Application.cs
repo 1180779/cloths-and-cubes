@@ -95,17 +95,7 @@ public class Application : GameWindow
     /// </summary>
     public IEnumerable<GameObject> GameObjects => [_plane, .._boxes, .._balls, .._cloths];
 
-    // TODO: change to other data structure if needed
-    /// <summary>
-    /// The global list of joints in the scene. 
-    /// If a joint is created between two bodies, it should be added to this list.
-    /// If a joint is removed, it should be removed from this list as well
-    /// (ex. when one of the connecting bodies is removed from the scene).
-    /// </summary>
-    /// <note>
-    /// <see cref="ConnectedJointData"/> can be used to track connected joints within bodies.
-    /// </note>
-    protected List<Joint> _joints = [];
+    protected GlobalJointsList _joints = new();
 
     /// <summary>
     /// Stores the initial scene state when a scene is loaded from a file.
@@ -150,7 +140,6 @@ public class Application : GameWindow
         _imGuiController.HookToWindow(this);
         _inputProvider = new OpenTKWithImGuiInputProvider(this, _imGuiController);
 
-        // Initialize SceneRenderer with all required providers
         _sceneRenderer = new SceneLightningOnly(
             Size.X / (float)Size.Y,
             _inputProvider,
@@ -161,7 +150,9 @@ public class Application : GameWindow
             () => _cloths.ToDictionary(c => c.EngineCloth, c => c),
             () => _plane,
             () => _contactResolver.PositionEpsilon,
-            () => _boxes);
+            () => _boxes,
+            () => _joints
+        );
 
         _sceneWindow = new SceneWindow(_imGuiController, _sceneRenderer, _inputProvider, Size);
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
@@ -197,54 +188,55 @@ public class Application : GameWindow
         _contactsInspectorWindow = new(() => _collisionData.ContactList);
         _windowsManager.AddManuallyDrawn(_contactsInspectorWindow);
 
-        _boxesDemoSettingsWindow = new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length)
-        {
-            SetBoxesCount = newCount =>
+        _boxesDemoSettingsWindow =
+            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
             {
-                Random random = new();
-                int length = _boxes.Length;
-
-                var toBeRemoved = _boxes.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
-                _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
-
-                for (int i = newCount; i < length; ++i)
+                SetBoxesCount = newCount =>
                 {
-                    _boxes[i].Dispose();
-                }
+                    Random random = new();
+                    int length = _boxes.Length;
 
-                Array.Resize(ref _boxes, newCount);
+                    var toBeRemoved = _boxes.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
+                    _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
 
-                for (int i = length; i < newCount; ++i)
+                    for (int i = newCount; i < length; ++i)
+                    {
+                        _boxes[i].Dispose();
+                    }
+
+                    Array.Resize(ref _boxes, newCount);
+
+                    for (int i = length; i < newCount; ++i)
+                    {
+                        _boxes[i] = new Box();
+                        _boxes[i].EngineBox.Random(random);
+                    }
+
+                    _forceBVHRebuildOnNoUpdate = true;
+                },
+                SetSpheresCount = newCount =>
                 {
-                    _boxes[i] = new Box();
-                    _boxes[i].EngineBox.Random(random);
+                    Random random = new();
+                    int length = _balls.Length;
+
+                    var toBeRemoved = _balls.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
+                    _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
+
+                    for (int i = newCount; i < length; ++i)
+                    {
+                        _balls[i].Dispose();
+                    }
+
+                    Array.Resize(ref _balls, newCount);
+                    for (int i = length; i < newCount; ++i)
+                    {
+                        _balls[i] = new Ball();
+                        _balls[i].EngineBall.Random(random);
+                    }
+
+                    _forceBVHRebuildOnNoUpdate = true;
                 }
-
-                _forceBVHRebuildOnNoUpdate = true;
-            },
-            SetSpheresCount = newCount =>
-            {
-                Random random = new();
-                int length = _balls.Length;
-
-                var toBeRemoved = _balls.Skip(newCount).Take(length - newCount).Select(b => (object)b).ToArray();
-                _sceneRenderer.InteractionManager.RemoveObjects(toBeRemoved);
-
-                for (int i = newCount; i < length; ++i)
-                {
-                    _balls[i].Dispose();
-                }
-
-                Array.Resize(ref _balls, newCount);
-                for (int i = length; i < newCount; ++i)
-                {
-                    _balls[i] = new Ball();
-                    _balls[i].EngineBall.Random(random);
-                }
-
-                _forceBVHRebuildOnNoUpdate = true;
-            }
-        };
+            };
         _boxesDemoSettingsWindow.SetClothsCount = newCount =>
         {
             int length = _cloths.Length;
@@ -533,19 +525,6 @@ public class Application : GameWindow
     }
 
     /// <summary>
-    /// Generates contacts from joints in the scene.
-    /// </summary>
-    protected void GenerateContactsFromJoints()
-    {
-        foreach (var joint in _joints)
-        {
-            if (!_collisionData.HasMoreContacts())
-                return;
-            joint.AddContacts(_collisionData);
-        }
-    }
-
-    /// <summary>
     /// Advances the physics simulation by the given time step.
     /// </summary>
     /// <param name="deltaTime"></param>
@@ -576,7 +555,7 @@ public class Application : GameWindow
 
         // Perform the contact generation
         GenerateContactsFromCollisions();
-        GenerateContactsFromJoints();
+        _joints.GenerateContactsFromJoints(_collisionData);
 
         // Draw out of order to allow inspection of contacts before they are resolved
         // This does cause the window not to be in the same dockspace as other windows, but
@@ -705,6 +684,7 @@ public class Application : GameWindow
             return;
         }
 
+        _joints.Clear();
         _forceRegistry.Clear();
         foreach (Cloth cloth in _cloths)
         {

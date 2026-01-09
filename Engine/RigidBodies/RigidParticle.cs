@@ -7,7 +7,7 @@ namespace Engine.RigidBodies;
 /// <summary>
 /// Rigid particle that is part of a spring-based cloth.
 /// </summary>
-public class ClothRigidParticle : RigidParticle
+public class ClothRigidParticle : RigidParticle, IBodyWithSingleJoint
 {
     /// <summary>
     /// The X index of this particle in the cloth grid.
@@ -27,7 +27,7 @@ public class ClothRigidParticle : RigidParticle
     /// <summary>
     /// The connected joint data for this particle. 
     /// </summary>
-    public ConnectedJointData ConnectedJointData = new();
+    public ConnectedJointData ConnectedJoint { get; set; } = new();
 }
 
 public class RigidParticle : CollisionParticle, IBoxable

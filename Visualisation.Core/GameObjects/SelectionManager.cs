@@ -226,7 +226,7 @@ public sealed class SelectionManager(
 
                     // Create a wrapper for the specific particle
                     var particleWrapper =
-                        new ClothParticleWrapper(cloth, particleX, particleY, () => Engine.Vector3.Gravity);
+                        new ClothParticleWrapper(cloth, particleX, particleY);
 
                     var positionEpsilon = positionEpsilonProvider();
                     // adjust to account for position epsilon
@@ -256,7 +256,7 @@ public sealed class SelectionManager(
                         return (false, 0, null);
 
                     var particleWrapper = new ClothParticleWrapper(gameCloth, particle.ClothParticleX,
-                        particle.ClothParticleY, () => Engine.Vector3.Gravity);
+                        particle.ClothParticleY);
                     return (true, distance, particleWrapper);
                 }
 

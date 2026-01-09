@@ -506,20 +506,20 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
 
         if (ImGui.CollapsingHeader("Particle Controls"))
         {
-            if (isAnchor)
-            {
-                if (ImGui.Button("Release Anchor"))
-                {
-                    wrapper.RestoreDefaultMass();
-                }
-            }
-            else
-            {
-                if (ImGui.Button("Make Anchor"))
-                {
-                    wrapper.MakeAnchor();
-                }
-            }
+            // if (isAnchor)
+            // {
+            //     if (ImGui.Button("Release Anchor"))
+            //     {
+            //         wrapper.RestoreDefaultMass();
+            //     }
+            // }
+            // else
+            // {
+            //     if (ImGui.Button("Make Anchor"))
+            //     {
+            //         wrapper.MakeAnchor();
+            //     }
+            // }
 
             ImGui.Separator();
             ImGui.TextWrapped(
@@ -533,17 +533,17 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
             ImGui.TextWrapped(
                 "Move the particle close to an immovable box corner to pin it. Move it away to unpin.");
 
-            if (wrapper.IsPinned)
-            {
-                ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f),
-                    "Currently PINNED to a box corner");
-                ImGui.Text($"Pinned position: {wrapper.PinnedPosition}");
-            }
-            else
-            {
-                ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
-                    "Not pinned");
-            }
+            // if (wrapper.IsPinned)
+            // {
+            //     ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+            //         "Currently PINNED to a box corner");
+            //     ImGui.Text($"Pinned position: {wrapper.PinnedPosition}");
+            // }
+            // else
+            // {
+            //     ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+            //         "Not pinned");
+            // }
         }
 
         ImGui.Separator();

@@ -7,59 +7,60 @@ public class BoxesMaterialsDemo : Application
 {
     public BoxesMaterialsDemo()
     {
-        _boxesDemoSettingsWindow = new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length)
-        {
-            SetBoxesCount = count =>
+        _boxesDemoSettingsWindow =
+            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
             {
-                int length = _boxes.Length;
-                for (int i = count; i < length; ++i)
+                SetBoxesCount = count =>
                 {
-                    _boxes[i].Dispose();
-                }
+                    int length = _boxes.Length;
+                    for (int i = count; i < length; ++i)
+                    {
+                        _boxes[i].Dispose();
+                    }
 
-                Array.Resize(ref _boxes, count);
-                int rowCount = _balls.Length + length;
-                for (int i = length; i < count; ++i)
+                    Array.Resize(ref _boxes, count);
+                    int rowCount = _balls.Length + length;
+                    for (int i = length; i < count; ++i)
+                    {
+                        _boxes[i] = new Box();
+                        var row = rowCount / _nrOfRows;
+                        var col = rowCount % _nrOfRows;
+                        _boxes[i].EngineBox.SetState(
+                            position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
+                            orientation: new Engine.Quaternion(),
+                            extents: new Engine.Vector3(1.0f, 1.0f, 1.0f),
+                            velocity: new Engine.Vector3()
+                        );
+                        _boxes[i].Material = Materials[i % Materials.Length].TypedClone();
+                        rowCount++;
+                    }
+                },
+                SetSpheresCount = count =>
                 {
-                    _boxes[i] = new Box();
-                    var row = rowCount / _nrOfRows;
-                    var col = rowCount % _nrOfRows;
-                    _boxes[i].EngineBox.SetState(
-                        position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
-                        orientation: new Engine.Quaternion(),
-                        extents: new Engine.Vector3(1.0f, 1.0f, 1.0f),
-                        velocity: new Engine.Vector3()
-                    );
-                    _boxes[i].Material = Materials[i % Materials.Length].TypedClone();
-                    rowCount++;
-                }
-            },
-            SetSpheresCount = count =>
-            {
-                int length = _balls.Length;
-                for (int i = count; i < length; ++i)
-                {
-                    _balls[i].Dispose();
-                }
+                    int length = _balls.Length;
+                    for (int i = count; i < length; ++i)
+                    {
+                        _balls[i].Dispose();
+                    }
 
-                Array.Resize(ref _balls, count);
-                int rowCount = _boxes.Length + length;
-                for (int i = length; i < count; ++i)
-                {
-                    _balls[i] = new Ball();
-                    var row = rowCount / _nrOfRows;
-                    var col = rowCount % _nrOfRows;
-                    _balls[i].EngineBall.SetState(
-                        position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
-                        orientation: new Engine.Quaternion(),
-                        radius: 1.0f,
-                        velocity: new Engine.Vector3()
-                    );
-                    _balls[i].Material = Materials[i % Materials.Length].TypedClone();
-                    rowCount++;
+                    Array.Resize(ref _balls, count);
+                    int rowCount = _boxes.Length + length;
+                    for (int i = length; i < count; ++i)
+                    {
+                        _balls[i] = new Ball();
+                        var row = rowCount / _nrOfRows;
+                        var col = rowCount % _nrOfRows;
+                        _balls[i].EngineBall.SetState(
+                            position: new Engine.Vector3(col * 2.5f - 2.5f, row * 2.5f + 5.0f, 0.0f),
+                            orientation: new Engine.Quaternion(),
+                            radius: 1.0f,
+                            velocity: new Engine.Vector3()
+                        );
+                        _balls[i].Material = Materials[i % Materials.Length].TypedClone();
+                        rowCount++;
+                    }
                 }
-            }
-        };
+            };
         _boxesDemoSettingsWindow.SetClothsCount = count =>
         {
             int length = _cloths.Length;
