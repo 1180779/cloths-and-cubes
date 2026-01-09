@@ -1,4 +1,4 @@
-using Engine;
+ using Engine;
 using Engine.Collision;
 
 using OpenTK.Windowing.Common;
@@ -24,6 +24,7 @@ public abstract class RigidBodyApplication : Application
     protected abstract void Reset();
 
     protected virtual void OnNoPhysicsUpdate() { }
+    protected abstract void CorrectCloths();
 
     protected override void Update(float deltaTime)
     {
@@ -53,6 +54,7 @@ public abstract class RigidBodyApplication : Application
             _collisionData.ContactCount,
             deltaTime
         );
+        CorrectCloths();
 #if DEBUG
 
 #if FRAMESAVER

@@ -1,9 +1,11 @@
-﻿using Engine.Collision.Bounding_Volume_Hierarchy;
+﻿using Engine;
+using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
+using System.Collections.Generic;
 
 namespace Visualisation.Core.GameObjects;
 
@@ -12,6 +14,9 @@ public sealed class Cloth : GameObject, IBoxable
     public Engine.Cloth EngineCloth { get; set; }
     public SpringMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
+
+    // Now stores checked/saved triangles per square (top-left index)
+    public Dictionary<(int x, int y), Triangle[]> SavedTriangles { get; } = new();
 
     public Cloth(ForceRegistry registry)
     {

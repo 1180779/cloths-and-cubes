@@ -26,10 +26,10 @@ public class BoxesDemo : RigidBodyApplication
     protected Ball[] _balls = [];
     protected Cloth[] _cloths = [];
     protected ForceRegistry _forceRegistry = new();
-
+    
     protected BVH _bvh = BVH.Build([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
-
+    protected Dictionary<RigidParticle,Box> corrections = [];
     protected SelectionManager _selectionManager;
     protected BvhNodesWindow _bvhNodesWindow = new();
     protected CollisionParametersWindow _collisionParametersWindow;
@@ -296,10 +296,10 @@ public class BoxesDemo : RigidBodyApplication
                 CollisionDetector.ParticleAndHalfSpace(particle, _plane.EnginePlane, _collisionData);
             }
         }
-
+        corrections.Clear();
         List<(int, int)> potentialCollisions = new();
         BVH.GetPotentialContacts(ref potentialCollisions, _bvh.root);
-
+        
         foreach (var pair in potentialCollisions)
         {
             if (!_collisionData.HasMoreContacts()) return;
@@ -355,6 +355,8 @@ public class BoxesDemo : RigidBodyApplication
             var contacts = CollisionDetector.BoxAndParticle(b.EngineBox, p, _collisionData);
             if (contacts > 0)
                 b.EngineBox.IsOverlapping = true;
+            if(! corrections.ContainsKey(p)) corrections.Add(p,b);
+
         }
     }
 
@@ -384,6 +386,13 @@ public class BoxesDemo : RigidBodyApplication
         }
     }
 
+    /// <summary>
+    /// Trying to correct the look of the cloths
+    /// </summary>
+    protected override void CorrectCloths()
+    {
+        
+    }
     /// <summary>
     /// Resets the position of all the objects.
     /// </summary>
