@@ -293,10 +293,16 @@ public class LightDirectional : LightPoint
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.Clear(ClearBufferMask.DepthBufferBit);
 
+        // Create a minimal context for shadow rendering
+        var shadowContext = new RenderContext
+        {
+            PbrShader = sh, // We use the shadow shader as the "PbrShader" for the strategy to use
+            SkipMaterial = true, // Don't set material uniforms for shadow pass
+        };
+
         foreach (var o in objects)
         {
-            sh.SetMatrix4("model", o.Model);
-            o.Render();
+            o.RenderStrategy.Render(shadowContext, o.Model);
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

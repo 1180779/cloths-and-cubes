@@ -254,7 +254,7 @@ public class Application : GameWindow
 
             for (int i = length; i < newCount; ++i)
             {
-                _cloths[i] = new Cloth(_forceRegistry, () => _contactResolver.PositionEpsilon,
+                _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
                     _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                     _boxesDemoSettingsWindow.ParticleMass);

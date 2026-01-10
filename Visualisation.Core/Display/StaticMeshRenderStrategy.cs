@@ -16,14 +16,28 @@ public sealed class StaticMeshRenderStrategy : IRenderStrategy
 
     public void Render(RenderContext context, Matrix4 model)
     {
+        if (context.PbrShader == null)
+        {
+            return;
+        }
+
         context.PbrShader.Use();
         context.PbrShader.SetMatrix4("model", model);
-        _material.SetForPbrShader(context.PbrShader);
+        if (!context.SkipMaterial)
+        {
+            _material.SetForPbrShader(context.PbrShader);
+        }
+
         _mesh.Render();
     }
 
     public void DrawOutline(RenderContext context, Matrix4 model)
     {
+        if (context.DefaultShader == null || context.Camera == null)
+        {
+            return;
+        }
+
         context.DefaultShader.Use();
         context.Camera.SetForSimpleShader(context.DefaultShader);
 

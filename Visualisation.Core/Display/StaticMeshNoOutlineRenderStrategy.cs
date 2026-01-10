@@ -16,9 +16,18 @@ public sealed class StaticMeshNoOutlineRenderStrategy : IRenderStrategy
 
     public void Render(RenderContext context, Matrix4 model)
     {
+        if (context.PbrShader == null)
+        {
+            return;
+        }
+
         context.PbrShader.Use();
         context.PbrShader.SetMatrix4("model", model);
-        _material.SetForPbrShader(context.PbrShader);
+        if (!context.SkipMaterial)
+        {
+            _material.SetForPbrShader(context.PbrShader);
+        }
+
         _mesh.Render();
     }
 

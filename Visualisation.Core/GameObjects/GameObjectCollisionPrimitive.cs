@@ -18,4 +18,9 @@ public abstract class GameObjectCollisionPrimitive : GameObject
             return _renderStrategy;
         }
     }
+
+    protected override void OnMaterialChanged()
+    {
+        _renderStrategy = null;
+    }
 }

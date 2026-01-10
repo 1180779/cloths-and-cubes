@@ -400,7 +400,7 @@ public static class SceneDataMappers
     {
         var cloth = new Cloth(
             forceRegistry,
-            positionEpsilonProvider,
+            positionEpsilonProvider(),
             data.EngineCloth.SizeX,
             data.EngineCloth.SizeY,
             data.EngineCloth.SpringLength,

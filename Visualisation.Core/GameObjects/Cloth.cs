@@ -1,8 +1,5 @@
-﻿#define CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
-
-using Engine.Collision.Bounding_Volume_Hierarchy;
+﻿using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
-using Engine.RigidBodies;
 
 using Visualisation.Core.Display;
 using Visualisation.Core.Display.Materials;
@@ -16,19 +13,13 @@ public sealed class Cloth : GameObject, IBoxable
     public Engine.Cloth EngineCloth { get; set; }
     public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
-    private readonly Func<float> _positionEpsilonProvider;
     private IRenderStrategy? _renderStrategy;
 
-    public Cloth(ForceRegistry registry, Func<float> positionEpsilonProvider)
+    public Cloth(ForceRegistry registry, float positionEpsilon)
     {
-        _positionEpsilonProvider = positionEpsilonProvider;
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry);
-#if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
-#else
-    Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-#endif
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(positionEpsilon));
         VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
@@ -37,48 +28,34 @@ public sealed class Cloth : GameObject, IBoxable
 
     public Cloth(
         ForceRegistry registry,
-        Func<float> positionEpsilonProvider,
+        float positionEpsilon,
         int sizeX = 21,
         int sizeY = 21,
         float springLength = 0.25f,
         float springConstant = 1.0f,
         float particleMass = 0.1f)
     {
-        _positionEpsilonProvider = positionEpsilonProvider;
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry, sizeX, sizeY, springLength, springConstant, particleMass);
-#if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
-#else
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-#endif
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(positionEpsilon));
         VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
         Material = MaterialConstant.BlueRubber;
     }
 
-    protected override void PreRender()
-    {
-        // This is now handled by ClothRenderStrategy, but we keep it for now if Render() is called directly
-        // However, Render() calls PreRender() then Mesh.Render().
-        // If we switch to using RenderStrategy, this won't be called by the strategy.
-        // But for backward compatibility during refactor, we leave it.
-#if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
-#else
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
-#endif
-        VisualCloth.UpdatePoints(pts);
-    }
-
     public override IRenderStrategy RenderStrategy
     {
         get
         {
-            _renderStrategy ??= new ClothRenderStrategy(VisualCloth, Material, EngineCloth, _positionEpsilonProvider);
+            _renderStrategy ??= new ClothRenderStrategy(VisualCloth, Material, EngineCloth);
             return _renderStrategy;
         }
+    }
+
+    protected override void OnMaterialChanged()
+    {
+        _renderStrategy = null;
     }
 
     public BoundingBox GetBoundingBox()
@@ -111,27 +88,6 @@ public sealed class Cloth : GameObject, IBoxable
 
     public override Matrix4 Model => Matrix4.Identity;
 
-    /// <summary>
-    /// Retrieves the indices of a specific particle within the cloth simulation's particle grid.
-    /// </summary>
-    /// <param name="particle">The rigid particle to locate within the grid.</param>
-    /// <returns>A tuple containing the row and column indices of the particle. Returns (-1, -1) if the particle is not found.</returns>
-    public (int, int) GetParticleIndices(RigidParticle particle)
-    {
-        for (int i = 0; i < EngineCloth.SizeX; i++)
-        {
-            for (int j = 0; j < EngineCloth.SizeY; j++)
-            {
-                if (EngineCloth.Particles[i, j] == particle)
-                {
-                    return (i, j);
-                }
-            }
-        }
-
-        return (-1, -1);
-    }
-
     private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
     {
         int sx = enginePoints.GetLength(0);
@@ -160,8 +116,6 @@ public sealed class Cloth : GameObject, IBoxable
         EngineCloth.RegenerateGridPreservingTheCenter(newSizeX, newSizeY, newSpringLength, newSpringConstant,
             newParticleMass);
 
-        // Update the mesh
-        var pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth.UpdatePoints(pts);
+        // The render strategy will take care of updating the mesh points
     }
 }

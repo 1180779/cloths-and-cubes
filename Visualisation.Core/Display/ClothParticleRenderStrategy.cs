@@ -18,6 +18,11 @@ public sealed class ClothParticleRenderStrategy : IRenderStrategy
 
     public void DrawOutline(RenderContext context, Matrix4 model)
     {
+        if (context.DefaultShader == null || context.Camera == null)
+        {
+            return;
+        }
+
         context.DefaultShader.Use();
         context.Camera.SetForSimpleShader(context.DefaultShader);
 

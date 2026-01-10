@@ -11,28 +11,33 @@ public sealed class ClothRenderStrategy : IRenderStrategy
 {
     private readonly ClothMesh _mesh;
     private readonly IMaterial _material;
-    private readonly Func<float> _positionEpsilonProvider;
     private readonly Cloth _engineCloth;
 
     public ClothRenderStrategy(
         ClothMesh mesh,
         IMaterial material,
-        Cloth engineCloth,
-        Func<float> positionEpsilonProvider)
+        Cloth engineCloth)
     {
         _mesh = mesh;
         _material = material;
         _engineCloth = engineCloth;
-        _positionEpsilonProvider = positionEpsilonProvider;
     }
 
     public void Render(RenderContext context, Matrix4 model)
     {
-        UpdateMeshPoints();
+        if (context.PbrShader == null)
+        {
+            return;
+        }
+
+        UpdateMeshPoints(context.PositionEpsilon);
 
         context.PbrShader.Use();
         context.PbrShader.SetMatrix4("model", model);
-        _material.SetForPbrShader(context.PbrShader);
+        if (!context.SkipMaterial)
+        {
+            _material.SetForPbrShader(context.PbrShader);
+        }
 
         GL.Disable(EnableCap.CullFace);
         GL.Enable(EnableCap.PolygonOffsetFill);
@@ -47,6 +52,11 @@ public sealed class ClothRenderStrategy : IRenderStrategy
 
     public void DrawOutline(RenderContext context, Matrix4 model)
     {
+        if (context.OutlineShader == null || context.Camera == null)
+        {
+            return;
+        }
+
         GL.Disable(EnableCap.CullFace);
 
         context.OutlineShader.Use();
@@ -61,9 +71,9 @@ public sealed class ClothRenderStrategy : IRenderStrategy
         GL.Enable(EnableCap.CullFace);
     }
 
-    private void UpdateMeshPoints()
+    private void UpdateMeshPoints(float positionEpsilon)
     {
-        var enginePoints = _engineCloth.PointsVelocityAdjusted(_positionEpsilonProvider());
+        var enginePoints = _engineCloth.PointsVelocityAdjusted(positionEpsilon);
         int sx = enginePoints.GetLength(0);
         int sy = enginePoints.GetLength(1);
         var result = new Vector3[sx, sy];

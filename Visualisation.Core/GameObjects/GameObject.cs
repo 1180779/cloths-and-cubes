@@ -14,11 +14,8 @@ public abstract class GameObject : IIdentifiable, IDisposable, IHasRenderStrateg
         Matrix4.CreateTranslation(position);
 
     protected abstract IMesh Mesh { get; set; }
-    public abstract Matrix4 Model { get; }
-
-    public abstract IRenderStrategy RenderStrategy { get; }
-
     public abstract object PhysicsObject { get; }
+    public abstract Matrix4 Model { get; }
     public virtual Vector3 Position => Vector3.Zero;
 
     private IMaterial? _material;
@@ -36,31 +33,17 @@ public abstract class GameObject : IIdentifiable, IDisposable, IHasRenderStrateg
             value.EnsureLoaded();
             _material = value;
             oldMaterial?.Dispose();
+            OnMaterialChanged();
         }
     }
+
+    protected virtual void OnMaterialChanged() { }
 
     public Guid Id { get; set; } = Guid.NewGuid();
 
     private bool _isDisposed;
 
-    public void SetForShaderNoMaterial(Shader sh)
-    {
-        sh.SetMatrix4("model", Model);
-    }
-
-    public void SetForShader(Shader sh)
-    {
-        sh.SetMatrix4("model", Model);
-        Material.SetForPbrShader(sh);
-    }
-
-    protected virtual void PreRender() { }
-
-    public void Render(bool drawEvenInvisible = false)
-    {
-        PreRender();
-        Mesh.Render();
-    }
+    public abstract IRenderStrategy RenderStrategy { get; }
 
     ~GameObject()
     {
