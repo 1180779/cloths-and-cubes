@@ -47,7 +47,7 @@ public sealed class StaticDragManager(
     /// <summary>
     /// Size of the hover indicator relative to the object. Default is 1.02 (2% larger).
     /// </summary>
-    public float HoverIndicatorScale { get; set; } = 1.02f;
+    public float HoverIndicatorScale { get; set; } = 0.02f;
 
     /// <summary>
     /// Whether to show the hover indicator when enabled and a valid object is under cursor.

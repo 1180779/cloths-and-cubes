@@ -1,10 +1,10 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.ContactGenerators;
-using Engine.RigidBodies;
 
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Gizmos;
@@ -122,7 +122,7 @@ public abstract class SceneRenderer : IDisposable
 
     public void ProcessInputInFocus(IInputProvider input, float dt)
     {
-        CamerasManager.ProcessInput(input, dt, SelectionManager?.SelectionEnabled ?? false);
+        CamerasManager.ProcessInput(input, dt, SelectionManager.SelectionEnabled);
     }
 
     public void HandleInput(IInputProvider input, Vector2 viewportMousePos, Vector2i screenSize)
@@ -147,6 +147,19 @@ public abstract class SceneRenderer : IDisposable
         PbrShader.Use();
         SetSharedPbrUniforms();
 
+        // Create RenderContext
+        var renderContext = new RenderContext
+        {
+            Camera = CamerasManager.CurrentCamera,
+            DefaultShader = BasicShader,
+            OutlineShader = OutlineShader,
+            PbrShader = PbrShader,
+            EnvironmentMap = EnvironmentMap,
+            LightsManager = LightsManager,
+            OutlineSize = OutlineSize,
+            PositionEpsilon = PositionEpsilonProvider?.Invoke() ?? 0.0f
+        };
+
         GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
         GL.StencilMask(0xFF);
         foreach (var gameObject in gameObjects)
@@ -161,26 +174,10 @@ public abstract class SceneRenderer : IDisposable
                 GL.StencilMask(0x00);
             }
 
-            // Also enable polygon offset to prevent Z-fighting with coplanar surfaces
-            // The offset is dynamically scaled based on physics positionEpsilon
-            if (gameObject is Cloth)
-            {
-                GL.Disable(EnableCap.CullFace);
-                GL.Enable(EnableCap.PolygonOffsetFill);
-                // Negative values pull cloth toward camera
-                float offset = -(PositionEpsilonProvider?.Invoke() ?? 0) * 1000.0f;
-                GL.PolygonOffset(offset, offset);
-            }
+            if (gameObject.Invisible && !DrawInvisibleObjects)
+                continue;
 
-            gameObject.SetForShader(PbrShader);
-            gameObject.Render(DrawInvisibleObjects);
-
-            // Re-enable backface culling and disable polygon offset after rendering cloth
-            if (gameObject is Cloth)
-            {
-                GL.Enable(EnableCap.CullFace);
-                GL.Disable(EnableCap.PolygonOffsetFill);
-            }
+            gameObject.RenderStrategy.Render(renderContext, gameObject.Model);
 
             if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)
             {
@@ -188,6 +185,7 @@ public abstract class SceneRenderer : IDisposable
             }
         }
 
+        // Handle outline for selection
         if (SelectionManager?.SelectedObject is not null)
         {
             GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
@@ -199,7 +197,10 @@ public abstract class SceneRenderer : IDisposable
 
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
 
-            RenderObjectOutline(SelectionManager.SelectedObject, SelectionColor, OutlineFactor, DrawInvisibleObjects);
+            if (SelectionManager.SelectedObject is IHasRenderStrategy renderable)
+            {
+                renderable.RenderStrategy.DrawOutline(renderContext, renderable.Model);
+            }
 
             GL.StencilMask(0xFF);
             GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
@@ -217,136 +218,45 @@ public abstract class SceneRenderer : IDisposable
     /// <summary>
     /// Renders an outline around the specified object.
     /// </summary>
-    /// <param name="obj">The object to outline (GameObject or RigidParticle)</param>
-    /// <param name="color">The color of the outline</param>
-    /// <param name="scaleFactor">How much to scale the object for the outline (e.g., 1.02 for 2% larger)</param>
-    /// <param name="drawInvisible">Whether to draw even if the object is marked invisible</param>
     public void RenderObjectOutline(
         object obj,
         Vector4 color,
-        float scaleFactor = OutlineFactor,
+        float scaleFactor = OutlineSize,
         bool drawInvisible = false)
     {
-        BasicShader.Use();
-        CamerasManager.CurrentCamera.SetForSimpleShader(BasicShader);
-        BasicShader.SetVector3("color", color.Xyz);
-        BasicShader.SetFloat("alpha", color.W);
-
-        switch (obj)
+        if (obj is IHasRenderStrategy renderable)
         {
-            case Box box:
-                {
-                    var originalHalfSize = box.EngineBox.HalfSize;
-                    box.EngineBox.HalfSize *= scaleFactor;
-
-                    box.SetForShaderNoMaterial(BasicShader);
-                    box.Render(drawInvisible);
-
-                    box.EngineBox.HalfSize = originalHalfSize;
-                    break;
-                }
-            case Ball ball:
-                {
-                    var originalRadius = ball.EngineBall.Radius;
-                    ball.EngineBall.Radius *= scaleFactor;
-
-                    ball.SetForShaderNoMaterial(BasicShader);
-                    ball.Render(drawInvisible);
-
-                    ball.EngineBall.Radius = originalRadius;
-                    break;
-                }
-            case Cloth cloth:
-                {
-                    // Disable culling for two-sided rendering
-                    GL.Disable(EnableCap.CullFace);
-
-                    OutlineShader.Use();
-                    CamerasManager.CurrentCamera.SetForSimpleShader(OutlineShader);
-                    OutlineShader.SetFloat("outline_size", OutlineSize);
-                    OutlineShader.SetVector3("color", color.Xyz);
-                    cloth.SetForShaderNoMaterial(OutlineShader);
-                    cloth.Render(drawInvisible);
-
-                    // Re-enable culling
-                    GL.Enable(EnableCap.CullFace);
-                    break;
-                }
-            case ClothParticleWrapper particleWrapper:
-                {
-                    var innerParticle = particleWrapper.Particle;
-                    switch (innerParticle)
-                    {
-                        case ClothRigidParticleInCorner particleInCorner:
-                            {
-                                var particleScale = particleInCorner.BoundingBoxHalfSize * 2.0f;
-                                var position = particleInCorner.GetAxis(3);
-                                BasicShader.SetMatrix4("model",
-                                    Matrix4.CreateScale(particleScale, particleScale, particleScale) *
-                                    Matrix4.CreateTranslation(position.X, position.Y, position.Z));
-                                _cube.Render();
-                                break;
-                            }
-                        case { } particle:
-                            {
-                                var particleScale = RigidParticle.BoundingBoxHalfSize * 2.0f;
-                                var position = particle.GetAxis(3);
-                                BasicShader.SetMatrix4("model",
-                                    Matrix4.CreateScale(particleScale, particleScale, particleScale) *
-                                    Matrix4.CreateTranslation(position.X, position.Y, position.Z));
-                                _cube.Render();
-                                break;
-                            }
-                    }
-
-                    break;
-                }
-            case Cylinder cylinder:
-                {
-                    var originalRadius = cylinder.EngineCylinder.Radius;
-                    cylinder.EngineCylinder.Radius *= scaleFactor;
-                    var originalHeight = cylinder.EngineCylinder.Height;
-                    cylinder.EngineCylinder.Height *= scaleFactor;
-
-                    cylinder.SetForShaderNoMaterial(BasicShader);
-                    cylinder.Render(drawInvisible);
-
-                    cylinder.EngineCylinder.Radius = originalRadius;
-                    cylinder.EngineCylinder.Height = originalHeight;
-                    break;
-                }
-            case Cone cone:
-                {
-                    var originalRadius = cone.EngineCone.Radius;
-                    cone.EngineCone.Radius *= scaleFactor;
-                    var originalHeight = cone.EngineCone.Height;
-                    cone.EngineCone.Height *= scaleFactor;
-
-                    cone.SetForShaderNoMaterial(BasicShader);
-                    cone.Render(drawInvisible);
-
-                    cone.EngineCone.Radius = originalRadius;
-                    cone.EngineCone.Height = originalHeight;
-                    break;
-                }
+            var renderContext = new RenderContext
+            {
+                Camera = CamerasManager.CurrentCamera,
+                DefaultShader = BasicShader,
+                OutlineShader = OutlineShader,
+                PbrShader = PbrShader,
+                EnvironmentMap = EnvironmentMap,
+                LightsManager = LightsManager,
+                OutlineSize = scaleFactor,
+                OutlineColor = color,
+                PositionEpsilon = PositionEpsilonProvider?.Invoke() ?? 0.0f
+            };
+            renderable.RenderStrategy.DrawOutline(renderContext, renderable.Model);
         }
     }
 
     /// <summary>
     /// Renders the hover indicator for the drag manager to show which object can be dragged.
-    /// Only shows when: drag manager is enabled, object is hovered, not currently dragging,
+    /// Only shows when: drag manager is enabled, an object is hovered, not currently dragging,
     /// and the object is not selected for gizmo manipulation.
     /// </summary>
     public void RenderDragHoverIndicator()
     {
-        if (InteractionManager?.StaticDragManager.Enabled != true ||
+        if (InteractionManager.StaticDragManager.Enabled != true ||
             !InteractionManager.StaticDragManager.ShowHoverIndicator ||
             InteractionManager.StaticDragManager.HoverTarget == null ||
             InteractionManager.StaticDragManager.IsDragging)
             return;
 
         // Don't show the hover indicator if the object is selected for gizmo manipulation
-        if (SelectionManager?.SelectedObject != null &&
+        if (SelectionManager.SelectedObject != null &&
             SelectionManager.SelectedObject == InteractionManager.StaticDragManager.HoverTarget)
             return;
 
@@ -362,13 +272,24 @@ public abstract class SceneRenderer : IDisposable
     public void RenderSelectedObjectOnTop()
     {
         if (DrawSelectedObjectWithoutDepthTesting == true &&
-            InteractionManager.SelectionManager.SelectedObject is GameObject gameObject)
+            InteractionManager.SelectionManager.SelectedObject is IHasRenderStrategy renderable)
         {
             GL.Clear(ClearBufferMask.DepthBufferBit);
-            PbrShader.Use();
-            SetSharedPbrUniforms();
-            gameObject.SetForShader(PbrShader);
-            gameObject.Render(DrawInvisibleObjects);
+
+            // Use RenderStrategy for this too
+            var renderContext = new RenderContext
+            {
+                Camera = CamerasManager.CurrentCamera,
+                DefaultShader = BasicShader,
+                OutlineShader = OutlineShader,
+                PbrShader = PbrShader,
+                EnvironmentMap = EnvironmentMap,
+                LightsManager = LightsManager,
+                OutlineSize = OutlineSize,
+                PositionEpsilon = PositionEpsilonProvider?.Invoke() ?? 0.0f
+            };
+
+            renderable.RenderStrategy.Render(renderContext, renderable.Model);
         }
     }
 

@@ -1,12 +1,13 @@
 using System.Diagnostics;
 
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public abstract class GameObject : IIdentifiable, IDisposable
+public abstract class GameObject : IIdentifiable, IDisposable, IHasRenderStrategy
 {
     protected static Matrix4 GenerateModelMatrix(Vector3 position, Vector3 scale, Quaternion rotation) =>
         Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rotation) *
@@ -14,8 +15,11 @@ public abstract class GameObject : IIdentifiable, IDisposable
 
     public bool Invisible = false;
     protected abstract IMesh Mesh { get; set; }
-    public abstract object PhysicsObject { get; }
     public abstract Matrix4 Model { get; }
+
+    public abstract IRenderStrategy RenderStrategy { get; }
+
+    public abstract object PhysicsObject { get; }
     public virtual Vector3 Position => Vector3.Zero;
 
     private IMaterial? _material;

@@ -4,6 +4,7 @@ using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 using Engine.RigidBodies;
 
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Gizmos.Rotation;
 using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Materials;
@@ -12,12 +13,13 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRotationGizmoTarget
+public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRotationGizmoTarget, IHasRenderStrategy
 {
     public Engine.Cloth EngineCloth { get; set; }
     public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
     private readonly Func<float> _positionEpsilonProvider;
+    private IRenderStrategy? _renderStrategy;
 
     public Cloth(ForceRegistry registry, Func<float> positionEpsilonProvider)
     {
@@ -60,12 +62,25 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
     protected override void PreRender()
     {
+        // This is now handled by ClothRenderStrategy, but we keep it for now if Render() is called directly
+        // However, Render() calls PreRender() then Mesh.Render().
+        // If we switch to using RenderStrategy, this won't be called by the strategy.
+        // But for backward compatibility during refactor, we leave it.
 #if CLOTH_POINTS_POSITION_EPSILON_VELOCITY_ADJUSTMENT
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(_positionEpsilonProvider()));
 #else
         Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
 #endif
         VisualCloth.UpdatePoints(pts);
+    }
+
+    public override IRenderStrategy RenderStrategy
+    {
+        get
+        {
+            _renderStrategy ??= new ClothRenderStrategy(VisualCloth, Material, EngineCloth, _positionEpsilonProvider);
+            return _renderStrategy;
+        }
     }
 
     public BoundingBox GetBoundingBox()

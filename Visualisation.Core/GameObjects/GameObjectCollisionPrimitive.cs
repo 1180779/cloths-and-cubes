@@ -1,16 +1,29 @@
 using Engine.Collision;
 
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Gizmos.Rotation;
 using Visualisation.Core.Display.Gizmos.Translation;
 
 namespace Visualisation.Core.GameObjects;
 
-public abstract class GameObjectCollisionPrimitive : GameObject, ITranslationGizmoTarget, IRotationGizmoTarget
+public abstract class GameObjectCollisionPrimitive : GameObject, ITranslationGizmoTarget, IRotationGizmoTarget,
+    IHasRenderStrategy
 {
     public abstract CollisionPrimitive EngineCollisionPrimitive { get; }
 
     public Vector3 AxisPosition => EngineCollisionPrimitive.Body.Position.ToOpenTK();
     public Quaternion AxisOrientation => EngineCollisionPrimitive.Body.Orientation.ToOpenTK();
+
+    private IRenderStrategy? _renderStrategy;
+
+    public override IRenderStrategy RenderStrategy
+    {
+        get
+        {
+            _renderStrategy ??= new StaticMeshRenderStrategy(Mesh, Material);
+            return _renderStrategy;
+        }
+    }
 
     Vector3 ITranslationGizmoTarget.Position
     {

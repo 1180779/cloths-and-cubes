@@ -1,5 +1,6 @@
 using Engine.Collision;
 
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
@@ -23,6 +24,17 @@ public sealed class Plane : GameObject //, ITranslationGizmoTarget, IRotationGiz
             var scale = new Vector3(1000.0f, 1000.0f, 1000.0f);
 
             return GenerateModelMatrix(position, scale, Orientation);
+        }
+    }
+
+    private IRenderStrategy? _renderStrategy;
+
+    public override IRenderStrategy RenderStrategy
+    {
+        get
+        {
+            _renderStrategy ??= new StaticMeshNoOutlineRenderStrategy(Mesh, Material);
+            return _renderStrategy;
         }
     }
 

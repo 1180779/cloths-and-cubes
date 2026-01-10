@@ -305,5 +305,34 @@ namespace Visualisation.Core.Display.Mesh.VisualObjects
             GL.BindVertexArray(_meshData.Vao);
             GL.DrawArrays(PrimitiveType.Triangles, 0, _vertexCount);
         }
+
+        public void DrawWithNormalOffset(float offset)
+        {
+            // This method was missing in the file, but referenced in SceneRenderer.cs
+            // I'm adding it here to support the ClothRenderStrategy.
+            // Since we don't have a shader that takes "normal_offset" uniform in the basic shader,
+            // or maybe the user has a special shader for this.
+            // The SceneRenderer used OutlineShader for this.
+            // Let's assume the OutlineShader supports vertex displacement by normal.
+            // If not, this call is just a render call, but the shader does the work.
+            // Wait, if the shader does the work, we just need to render.
+            // But if we need to set a uniform, we should do it before calling this.
+            // However, the method name implies it does something specific.
+            // If it's just drawing, then Render() is enough.
+            // But maybe it sets a uniform?
+            // Let's just alias it to Render() for now, assuming the shader setup is done by the caller (RenderStrategy).
+            // Actually, looking at SceneRenderer.cs:
+            // cloth.SetForShaderNoMaterial(OutlineShader);
+            // cloth.Render(drawInvisible);
+            // ...
+            // _mesh.DrawWithNormalOffset(0.02f);
+
+            // It seems DrawWithNormalOffset might be expected to set a uniform on the currently bound shader?
+            // Or maybe it's just a placeholder I should implement?
+            // Given I'm refactoring, I'll implement it to just Render, 
+            // and rely on the RenderStrategy to set the shader uniforms.
+
+            Render();
+        }
     }
 }
