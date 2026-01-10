@@ -1,3 +1,5 @@
+using Engine.Collision.ContactGraph;
+
 namespace Engine;
 
 public class ContactResolver
@@ -57,6 +59,9 @@ public class ContactResolver
         }
     }
 
+    // For performance comparison purposes, we can switch between the standard loop or the contact graph
+    private const bool USE_CONTACT_GRAPH = true;
+
     protected void AdjustVelocities(Contact[] contacts, uint numContacts, Real duration)
     {
         Vector3[] velocityChange = [new(), new()];
@@ -64,6 +69,14 @@ public class ContactResolver
 
         // iteratively handle impacts in order of severity.
         VelocityIterationsUsed = 0;
+
+        if (USE_CONTACT_GRAPH)
+        {
+            ContactGraph graph = ContactGraph.Build(contacts, numContacts);
+            graph.ResolveVelocities(velocityIterations, velocityEpsilon, duration);
+            return;
+        }
+
         while (VelocityIterationsUsed < velocityIterations)
         {
             // Find contact with maximum magnitude of probable velocity change.
@@ -131,6 +144,13 @@ public class ContactResolver
 
         // iteratively resolve interpenetrations in order of severity.
         PositionIterationsUsed = 0;
+        if (USE_CONTACT_GRAPH)
+        {        
+            ContactGraph graph = ContactGraph.Build(contacts, numContacts);
+            graph.ResolvePositions(positionIterations, positionEpsilon);
+            return;
+        }
+
         while (PositionIterationsUsed < positionIterations)
         {
             // Find biggest penetration
