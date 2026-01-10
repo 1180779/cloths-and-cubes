@@ -81,13 +81,17 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
                 _interactionManager.SelectionManager.SelectionEnabled = selection;
             }
 
-            ImGui.Checkbox("Enable gizmos", ref _interactionManager.SelectionManager.GizmosEnabled);
-
             ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
             // ImGui.Checkbox("Draw invisible objects", ref _interactionManager.SelectionManager.DrawInvisibleObjects);
             // ImGui.Checkbox("Draw selected object even behind other objects",
             // ref _interactionManager.SelectionManager.DrawSelectedObjectWithoutDepthTesting);
-            ImGui.Checkbox("Unselect objects", ref _interactionManager.SelectionManager.Unselect);
+            var unselectOnSelectedObjectClick = _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick;
+            if (ImGui.Checkbox("Unselect objects",
+                ref unselectOnSelectedObjectClick))
+            {
+                _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick = unselectOnSelectedObjectClick;
+            }
+
             ImGui.Separator();
             ImGui.Spacing();
 
@@ -124,9 +128,6 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
         {
             if (ImGui.CollapsingHeader("Game Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                ImGui.Indent();
-                ImGui.Checkbox("Invisible", ref gameObject.Invisible);
-
                 ImGui.Spacing();
                 ImGui.Text($"Current Material: {gameObject.Material.Name}");
 
@@ -768,6 +769,7 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
     {
         public bool DrawDebugRay { get; init; }
         public bool Unselect { get; init; }
+        public bool DraggingEnabled { get; init; }
         public bool SelectionEnabled { get; init; }
         public bool Lsctpm { get; init; }
         public Real LsctpmScale { get; init; }
@@ -782,7 +784,8 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
         return new State
         {
             DrawDebugRay = _debugRayDraw,
-            Unselect = _interactionManager.SelectionManager.Unselect,
+            Unselect = _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick,
+            DraggingEnabled = _interactionManager.StaticDragManager.Enabled,
             SelectionEnabled = _interactionManager.SelectionManager.SelectionEnabled,
             Lsctpm = _lsctpm,
             LsctpmScale = _lsctpmScale,
@@ -797,8 +800,9 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
     {
         _debugRayDraw = state.DrawDebugRay;
 
-        _interactionManager.SelectionManager.Unselect = state.Unselect;
+        _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick = state.Unselect;
         _interactionManager.SelectionManager.SelectionEnabled = state.SelectionEnabled;
+        _interactionManager.StaticDragManager.Enabled = state.DraggingEnabled;
 
         _lsctpm = state.Lsctpm;
         _lsctpmScale = state.LsctpmScale;

@@ -13,7 +13,6 @@ public abstract class GameObject : IIdentifiable, IDisposable, IHasRenderStrateg
         Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rotation) *
         Matrix4.CreateTranslation(position);
 
-    public bool Invisible = false;
     protected abstract IMesh Mesh { get; set; }
     public abstract Matrix4 Model { get; }
 
@@ -59,9 +58,6 @@ public abstract class GameObject : IIdentifiable, IDisposable, IHasRenderStrateg
 
     public void Render(bool drawEvenInvisible = false)
     {
-        if (Invisible && !drawEvenInvisible)
-            return;
-
         PreRender();
         Mesh.Render();
     }

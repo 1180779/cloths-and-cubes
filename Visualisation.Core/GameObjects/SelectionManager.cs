@@ -6,6 +6,7 @@ using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Inputs;
+using Visualisation.Core.State;
 
 namespace Visualisation.Core.GameObjects;
 
@@ -23,46 +24,48 @@ public sealed class SelectionManager(
     Func<float> positionEpsilonProvider
 )
 {
-    public bool IsEnabled = true;
-
-    private object? _selectedObject;
+    private readonly SelectionState _state = new();
     private readonly IInputProvider _inputProvider = inputProvider;
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
-    public Ray? LastRay { get; private set; }
-    public Real SelectedObjectDistance { get; set; }
+
+    public SelectionState State => _state;
+
+    public bool IsEnabled
+    {
+        get => _state.IsEnabled;
+        set => _state.IsEnabled = value;
+    }
+
+    public Ray? LastRay => _state.LastRay;
+    public Real SelectedObjectDistance => _state.SelectedObjectDistance;
 
     /// <summary>
     /// The object currently under the mouse cursor (updated every frame).
     /// </summary>
-    public object? HoveredObject { get; private set; }
+    public object? HoveredObject => _state.HoveredObject;
 
     /// <summary>
     /// The explicitly selected object (selected for gizmo manipulation).
     /// </summary>
     public object? SelectedObject
     {
-        get => _selectedObject;
+        get => _state.SelectedObject;
         set
         {
-            if (!_selectionEnabled)
+            if (!_state.IsEnabled)
                 return;
-            if (_selectedObject != value)
+            if (_state.SelectedObject != value)
             {
-                _selectedObject = value;
-                OnSelectionChanged?.Invoke(_selectedObject);
+                _state.SelectedObject = value;
+                OnSelectionChanged?.Invoke(_state.SelectedObject);
             }
         }
     }
 
-    public bool Unselect = true;
-    private bool _selectionEnabled = true;
-
-    public bool GizmosEnabled;
-
     public bool SelectionEnabled
     {
-        get => _selectionEnabled;
+        get => _state.IsEnabled;
         set
         {
             if (!value)
@@ -70,7 +73,7 @@ public sealed class SelectionManager(
                 SelectedObject = null;
             }
 
-            _selectionEnabled = value;
+            _state.IsEnabled = value;
         }
     }
 
@@ -89,7 +92,7 @@ public sealed class SelectionManager(
     {
         if (!IsEnabled)
         {
-            HoveredObject = null;
+            _state.HoveredObject = null;
             return;
         }
 
@@ -102,9 +105,26 @@ public sealed class SelectionManager(
     /// </summary>
     public bool SelectHoveredObject()
     {
-        if (HoveredObject != null)
+        if (_state.UnselectOnSelectedObjectClick)
         {
-            SelectedObject = HoveredObject;
+            if (_state.HoveredObject == SelectedObject)
+            {
+                SelectedObject = null;
+                return true;
+            }
+
+            if (SelectedObject != HoveredObject)
+            {
+                SelectedObject = HoveredObject;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (_state.HoveredObject != null)
+        {
+            SelectedObject = _state.HoveredObject;
             return true;
         }
 
@@ -156,7 +176,7 @@ public sealed class SelectionManager(
     private void PerformHoverDetection(Vector2 mousePos, Vector2i screenSize)
     {
         var ray = GetRayFromMouse(mousePos, _cameraProvider(), screenSize);
-        LastRay = ray;
+        _state.LastRay = ray;
 
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
@@ -181,8 +201,8 @@ public sealed class SelectionManager(
             closestObject = planeObj;
         }
 
-        HoveredObject = closestObject;
-        SelectedObjectDistance = closestDistance;
+        _state.HoveredObject = closestObject;
+        _state.SelectedObjectDistance = closestDistance;
     }
 
     private (bool, Real, object?) TestRayIntersection(Ray ray, int index)
@@ -276,8 +296,8 @@ public sealed class SelectionManager(
 
     public void ClearHover()
     {
-        HoveredObject = null;
-        LastRay = null;
+        _state.HoveredObject = null;
+        _state.LastRay = null;
     }
 
     /// <summary>
@@ -286,7 +306,7 @@ public sealed class SelectionManager(
     public void ClearSelection()
     {
         SelectedObject = null;
-        LastRay = null;
-        SelectedObjectDistance = 0;
+        _state.LastRay = null;
+        _state.SelectedObjectDistance = 0;
     }
 }

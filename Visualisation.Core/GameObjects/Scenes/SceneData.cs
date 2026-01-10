@@ -68,7 +68,6 @@ public sealed record EngineBoxData : CollisionBoxData;
 public sealed record GameObjectSpecificData
 {
     public Guid Id { get; init; }
-    public bool Invisible { get; init; }
     public MaterialData Material { get; init; } = new();
 }
 

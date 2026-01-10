@@ -180,17 +180,13 @@ public static class SceneDataMappers
         return new BoxData
         {
             EngineBox = box.EngineBox.ToData(),
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = box.Id, Invisible = box.Invisible, Material = box.Material.ToData()
-            }
+            GameObjectSpecific = new GameObjectSpecificData { Id = box.Id, Material = box.Material.ToData() }
         };
     }
 
     public static void UpdateFromData(this Box box, BoxData data)
     {
         box.Id = data.GameObjectSpecific.Id;
-        box.Invisible = data.GameObjectSpecific.Invisible;
         box.Material = data.GameObjectSpecific.Material.ToMaterial();
         box.EngineBox.UpdateFromData(data.EngineBox);
     }
@@ -200,7 +196,6 @@ public static class SceneDataMappers
         return new Box
         {
             Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
             Material = data.GameObjectSpecific.Material.ToMaterial(),
             EngineBox = data.EngineBox.ToEngineBox()
         };
@@ -255,10 +250,7 @@ public static class SceneDataMappers
     {
         return new BallData
         {
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = ball.Id, Invisible = ball.Invisible, Material = ball.Material.ToData()
-            },
+            GameObjectSpecific = new GameObjectSpecificData { Id = ball.Id, Material = ball.Material.ToData() },
             CollisionSphere = ball.EngineBall.ToData()
         };
     }
@@ -266,7 +258,6 @@ public static class SceneDataMappers
     public static void UpdateFromData(this Ball ball, BallData data)
     {
         ball.Id = data.GameObjectSpecific.Id;
-        ball.Invisible = data.GameObjectSpecific.Invisible;
         ball.Material = data.GameObjectSpecific.Material.ToMaterial();
         ball.EngineBall.UpdateFromData(data.CollisionSphere);
     }
@@ -276,7 +267,6 @@ public static class SceneDataMappers
         return new Ball
         {
             Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
             Material = data.GameObjectSpecific.Material.ToMaterial(),
             EngineBall = data.CollisionSphere.ToEngineSphere()
         };
@@ -345,17 +335,13 @@ public static class SceneDataMappers
         return new ClothData
         {
             EngineCloth = cloth.EngineCloth.ToData(includeParticleStates),
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = cloth.Id, Invisible = cloth.Invisible, Material = cloth.Material.ToData()
-            }
+            GameObjectSpecific = new GameObjectSpecificData { Id = cloth.Id, Material = cloth.Material.ToData() }
         };
     }
 
     public static void UpdateFromData(this Cloth cloth, ClothData data, ForceRegistry forceRegistry)
     {
         cloth.Id = data.GameObjectSpecific.Id;
-        cloth.Invisible = data.GameObjectSpecific.Invisible;
         cloth.Material = data.GameObjectSpecific.Material.ToMaterial();
 
         // Check if cloth dimensions match - if not, we need to regenerate
@@ -421,9 +407,7 @@ public static class SceneDataMappers
             data.EngineCloth.SpringConstant,
             data.EngineCloth.ParticleMass)
         {
-            Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
-            Material = data.GameObjectSpecific.Material.ToMaterial()
+            Id = data.GameObjectSpecific.Id, Material = data.GameObjectSpecific.Material.ToMaterial()
         };
 
         // Set the origin position
@@ -481,17 +465,13 @@ public static class SceneDataMappers
         return new PlaneData
         {
             CollisionPlane = plane.EnginePlane.ToData(),
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = plane.Id, Invisible = plane.Invisible, Material = plane.Material.ToData()
-            }
+            GameObjectSpecific = new GameObjectSpecificData { Id = plane.Id, Material = plane.Material.ToData() }
         };
     }
 
     public static void UpdateFromData(this Plane plane, PlaneData data)
     {
         plane.Id = data.GameObjectSpecific.Id;
-        plane.Invisible = data.GameObjectSpecific.Invisible;
         plane.Material = data.GameObjectSpecific.Material.ToMaterial();
         plane.EnginePlane = data.CollisionPlane.ToCollisionPlane();
     }
@@ -501,7 +481,6 @@ public static class SceneDataMappers
         var plane = new Plane
         {
             Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
             Material = data.GameObjectSpecific.Material.ToMaterial(),
             EnginePlane = data.CollisionPlane.ToCollisionPlane()
         };

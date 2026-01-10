@@ -62,7 +62,6 @@ public abstract class SceneRenderer : IDisposable
     }
 
     public bool DrawSelectedObjectWithoutDepthTesting;
-    public bool DrawInvisibleObjects;
 
     protected readonly Func<IEnumerable<GameObject>> _getGameObjects;
     public InteractionManager InteractionManager { get; set; }
@@ -70,7 +69,6 @@ public abstract class SceneRenderer : IDisposable
     public Func<float>? PositionEpsilonProvider { get; set; }
 
     public const float OutlineSize = 0.05f;
-    public const float OutlineFactor = 1f + OutlineSize;
 
     public readonly Shader PbrShader = new("scenePBRShader.vert", "scenePBRShader.frag");
     public readonly Shader BasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
@@ -174,9 +172,6 @@ public abstract class SceneRenderer : IDisposable
                 GL.StencilMask(0x00);
             }
 
-            if (gameObject.Invisible && !DrawInvisibleObjects)
-                continue;
-
             gameObject.RenderStrategy.Render(renderContext, gameObject.Model);
 
             if (SelectionManager is not null && gameObject == SelectionManager.SelectedObject)
@@ -271,7 +266,7 @@ public abstract class SceneRenderer : IDisposable
 
     public void RenderSelectedObjectOnTop()
     {
-        if (DrawSelectedObjectWithoutDepthTesting == true &&
+        if (DrawSelectedObjectWithoutDepthTesting &&
             InteractionManager.SelectionManager.SelectedObject is IHasRenderStrategy renderable)
         {
             GL.Clear(ClearBufferMask.DepthBufferBit);
