@@ -58,6 +58,7 @@ public class ContactResolver
             contacts[i].CalculateInternals(duration);
         }
     }
+    private const bool USE_CONTACT_GRAPH = false;
 
     protected void AdjustVelocities(Contact[] contacts, uint numContacts, Real duration)
     {
@@ -66,10 +67,13 @@ public class ContactResolver
 
         // iteratively handle impacts in order of severity.
         VelocityIterationsUsed = 0;
-        ContactGraph graph = ContactGraph.Build(contacts);
-        graph.ResolveVelocities(velocityIterations, velocityEpsilon, duration);
-        return;
 
+        if (USE_CONTACT_GRAPH)
+        {
+            ContactGraph graph = ContactGraph.Build(contacts, numContacts);
+            graph.ResolveVelocities(velocityIterations, velocityEpsilon, duration);
+            return;
+        }
 
         while (VelocityIterationsUsed < velocityIterations)
         {
@@ -138,10 +142,12 @@ public class ContactResolver
 
         // iteratively resolve interpenetrations in order of severity.
         PositionIterationsUsed = 0;
-
-        ContactGraph graph = ContactGraph.Build(contacts);
-        graph.ResolvePositions(positionIterations, positionEpsilon);
-        return;
+        if (USE_CONTACT_GRAPH)
+        {        
+            ContactGraph graph = ContactGraph.Build(contacts, numContacts);
+            graph.ResolvePositions(positionIterations, positionEpsilon);
+            return;
+        }
 
         while (PositionIterationsUsed < positionIterations)
         {

@@ -11,7 +11,7 @@ namespace Engine.Collision.ContactGraph
     {
         // Margin of error when determining if two contacts are close enough to affect each other; needs to be fine-tuned
         //private const float _tolerance = 1.0f;
-        private List<ContactGraphComponent> _components = new List<ContactGraphComponent>();
+        private List<ContactGraphComponent> _components = [];
         public List<ContactGraphComponent> Components => _components;
         public ContactGraph()
         {
@@ -46,16 +46,21 @@ namespace Engine.Collision.ContactGraph
                 int compAIndex = -1;
                 int compBIndex = -1;
                 // Check existing components to see if either body is already represented
-                foreach (var item in _components)
+                for(int i = 0; i < _components.Count; i++)
                 {
+                    var item = _components[i];
                     if (item.Bodies.Contains(contact.Body[0]!))
                     {
-                        compAIndex = _components.IndexOf(item);
+                        compAIndex = i;
                     }
                     if (item.Bodies.Contains(contact.Body[1]!))
                     {
-                        compBIndex = _components.IndexOf(item);
+                        compBIndex = i;
                     }
+                    if(compAIndex != -1 && compBIndex != -1)
+                    {
+                        break;
+                    }   
                 }
                 if(compAIndex != -1 && compBIndex != -1)
                 {
@@ -96,12 +101,12 @@ namespace Engine.Collision.ContactGraph
             _components.Add(newComponent);
         }
 
-        public static ContactGraph Build(Contact[] contacts)
+        public static ContactGraph Build(Contact[] contacts, uint numContacts)
         {
             ContactGraph graph = new ContactGraph();
-            foreach (var contact in contacts)
+            for(int i = 0; i<numContacts; i++)
             {
-                graph.AddContact(contact);
+                graph.AddContact(contacts[i]);
             }
             return graph;
         }
