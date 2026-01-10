@@ -47,7 +47,6 @@ public sealed class InteractionManager : IDisposable
 
 
         SelectionManager = new(
-            inputProvider,
             cameraProvider,
             bvhProvider,
             bvhDictionaryProvider,

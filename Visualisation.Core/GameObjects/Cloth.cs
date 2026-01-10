@@ -117,5 +117,12 @@ public sealed class Cloth : GameObject, IBoxable
             newParticleMass);
 
         // The render strategy will take care of updating the mesh points
+
+        // TODO: think about whether we want to do this here or leave it to the render strategy
+        // Update the visual mesh immediately to match the new engine cloth dimensions
+        // This prevents a mismatch between the visual mesh (used for raycasting) and the engine cloth (used for particle lookup)
+        // until the next render frame.
+        // Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(0)); // Using 0 epsilon for immediate update, or pass epsilon if available
+        // VisualCloth.UpdatePoints(pts);
     }
 }

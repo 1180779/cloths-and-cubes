@@ -14,7 +14,7 @@ namespace Engine.RigidBodies;
 /// </remarks>
 public sealed class ClothRigidParticleInCorner : ClothRigidParticle
 {
-    public new float BoundingBoxHalfSize => AttachedToCloth.SpringLength / 2.0f + RigidParticle.BoundingBoxHalfSize;
+    public new float BoundingBoxHalfSize => Cloth.SpringLength / 2.0f + RigidParticle.BoundingBoxHalfSize;
 
     public override BoundingBox GetBoundingBox()
     {

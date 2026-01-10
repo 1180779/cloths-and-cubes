@@ -7,14 +7,6 @@ namespace EngineTests;
 [TestFixture]
 public class ClothTests
 {
-    private ForceRegistry _registry;
-
-    [SetUp]
-    public void Setup()
-    {
-        _registry = new ForceRegistry();
-    }
-
     [Test]
     [TestCaseSource(nameof(CylinderIntersectionTestCases))]
     public void TestClothParticleRegeneration_PreservingCenter_CornersAreCorrect(
@@ -55,6 +47,17 @@ public class ClothTests
                 {
                     cornerCount++;
                 }
+            }
+        }
+
+        // Check indices for each particle
+        for (int i = 0; i < newSizeX; i++)
+        {
+            for (int j = 0; j < newSizeY; j++)
+            {
+                var particle = cloth.Particles[i, j];
+                Assert.That(particle.XIndex, Is.EqualTo(i), $"Particle at ({i},{j}) has incorrect X index");
+                Assert.That(particle.YIndex, Is.EqualTo(j), $"Particle at ({i},{j}) has incorrect Y index");
             }
         }
 

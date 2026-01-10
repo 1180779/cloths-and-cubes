@@ -5,7 +5,6 @@ using Engine.RigidBodies;
 using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Inputs;
 using Visualisation.Core.State;
 
 namespace Visualisation.Core.GameObjects;
@@ -15,7 +14,6 @@ namespace Visualisation.Core.GameObjects;
 /// Handles converting mouse coordinates to world-space rays and detecting intersections.
 /// </summary>
 public sealed class SelectionManager(
-    IInputProvider inputProvider,
     Func<CameraBase> cameraProvider,
     Func<BVH> bvhProvider,
     Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
@@ -25,7 +23,6 @@ public sealed class SelectionManager(
 )
 {
     private readonly SelectionState _state = new();
-    private readonly IInputProvider _inputProvider = inputProvider;
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
 
@@ -254,29 +251,15 @@ public sealed class SelectionManager(
                 }
 
                 break;
-            // unnecessary, overrides the one in ClothRigidParticle
-            // case ClothRigidParticleInCorner particleInCorner:
-            //     if (RayIntersection.IntersectRayAABB(ray, particleInCorner.GetBoundingBox(), out distance))
-            //     {
-            //         clothsDictionary.TryGetValue(particleInCorner.AttachedToCloth, out var gameCloth);
-            //         if (gameCloth is null)
-            //             return (false, 0, null);
-            //         
-            //         var particleWrapper = new ClothParticleWrapper(gameCloth, particleInCorner.ClothParticleX,
-            //             particleInCorner.ClothParticleY);
-            //         return (true, distance, particleWrapper);
-            //     }
-            //
-            //     break;
             case ClothRigidParticle particle:
                 if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
                 {
-                    clothsDictionary.TryGetValue(particle.AttachedToCloth, out var gameCloth);
+                    clothsDictionary.TryGetValue(particle.Cloth, out var gameCloth);
                     if (gameCloth is null)
                         return (false, 0, null);
 
-                    var particleWrapper = new ClothParticleWrapper(gameCloth, particle.ClothParticleX,
-                        particle.ClothParticleY);
+                    var particleWrapper = new ClothParticleWrapper(gameCloth, particle.XIndex,
+                        particle.YIndex);
                     return (true, distance, particleWrapper);
                 }
 

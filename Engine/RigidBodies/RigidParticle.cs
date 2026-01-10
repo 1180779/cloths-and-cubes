@@ -12,17 +12,17 @@ public class ClothRigidParticle : RigidParticle, IBodyWithSingleJoint
     /// <summary>
     /// The X index of this particle in the cloth grid.
     /// </summary>
-    public required int ClothParticleX { get; init; }
+    public required int XIndex { get; init; }
 
     /// <summary>
     /// The Y index of this particle in the cloth grid.
     /// </summary>
-    public required int ClothParticleY { get; init; }
+    public required int YIndex { get; init; }
 
     /// <summary>
-    /// The cloth to which this particle belongs.
+    /// The cloth of which this particle is part of.
     /// </summary>
-    public required Cloth AttachedToCloth { get; init; }
+    public required Cloth Cloth { get; init; }
 
     /// <summary>
     /// The connected joint data for this particle. 

@@ -291,9 +291,9 @@ public static class SceneDataMappers
 
     public static ClothRigidParticle ToEngineParticle(this ClothParticleData data, Engine.Cloth cloth)
     {
-        var particle = new ClothRigidParticle()
+        var particle = new ClothRigidParticle
         {
-            AttachedToCloth = cloth, ClothParticleX = data.ClothParticleX, ClothParticleY = data.ClothParticleY
+            Cloth = cloth, XIndex = data.ClothParticleX, YIndex = data.ClothParticleY
         };
         particle.UpdateFromData(data);
         return particle;

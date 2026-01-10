@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.RigidBodies;
 
@@ -25,6 +27,8 @@ public sealed class ClothParticleWrapper : IBoxable, IHasRenderStrategy
         _parentCloth = parentCloth;
         _particleX = particleX;
         _particleY = particleY;
+        Debug.Assert(_particleX < parentCloth.EngineCloth.SizeX);
+        Debug.Assert(_particleY < parentCloth.EngineCloth.SizeY);
     }
 
     public ClothRigidParticle Particle => _parentCloth.EngineCloth.Particles[_particleX, _particleY];
