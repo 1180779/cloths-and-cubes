@@ -13,7 +13,6 @@ public sealed class SceneManagementWindow : IWindow
 
     private string _newSceneName = "New Scene";
     private string _sceneDescription = "";
-    private bool _includeParticleStates;
     private string _statusMessage = "";
     private float _statusMessageTimer;
     private bool _isError;
@@ -62,12 +61,6 @@ public sealed class SceneManagementWindow : IWindow
                 ImGui.InputText("Scene Name", ref _newSceneName, 256);
                 ImGui.InputTextMultiline("Description", ref _sceneDescription, 1024,
                     new System.Numerics.Vector2(-1, 60));
-
-                ImGui.Checkbox("Include Particle States", ref _includeParticleStates);
-
-                UiControls.SetTooltip("Saves exact positions/velocities of all cloth particles.\n" +
-                    "Unchecked: Only saves cloth parameters.\n" +
-                    "Checked: Saves full particle state.");
 
                 ImGui.Spacing();
 
@@ -230,9 +223,9 @@ public sealed class SceneManagementWindow : IWindow
             var sceneData = SceneSerializer.SerializeScene(
                 _application.GameObjects,
                 _application.CollisionData,
+                _application.Joints,
                 _newSceneName,
-                _sceneDescription,
-                _includeParticleStates);
+                _sceneDescription);
             SceneSerializer.SaveToFile(sceneData, filePath);
 
             ShowStatus($"Scene saved: {fileName}", false);
@@ -312,30 +305,23 @@ public sealed class SceneManagementWindow : IWindow
     {
         _statusMessage = message;
         _isError = isError;
-        _statusMessageTimer = 5f; // Show for 5 seconds
+        _statusMessageTimer = 5f;
     }
 
     public sealed record State
     {
         public string? NewSceneName { get; init; }
         public string? SceneDescription { get; init; }
-        public bool IncludeParticleStates { get; init; }
     }
 
     public State SaveState()
     {
-        return new State
-        {
-            NewSceneName = _newSceneName,
-            SceneDescription = _sceneDescription,
-            IncludeParticleStates = _includeParticleStates
-        };
+        return new State { NewSceneName = _newSceneName, SceneDescription = _sceneDescription, };
     }
 
     public void RestoreState(State state)
     {
         _newSceneName = state.NewSceneName ?? "New Scene";
         _sceneDescription = state.SceneDescription ?? "";
-        _includeParticleStates = state.IncludeParticleStates;
     }
 }

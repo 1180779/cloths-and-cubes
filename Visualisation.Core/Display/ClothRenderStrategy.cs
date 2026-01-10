@@ -30,7 +30,8 @@ public sealed class ClothRenderStrategy : IRenderStrategy
             return;
         }
 
-        UpdateMeshPoints(context.PositionEpsilon);
+        var points = GameObjects.Cloth.ConvertToOpenTk(_engineCloth.PointsVelocityAdjusted(context.PositionEpsilon));
+        _mesh.UpdatePoints(points);
 
         context.PbrShader.Use();
         context.PbrShader.SetMatrix4("model", model);
@@ -69,24 +70,5 @@ public sealed class ClothRenderStrategy : IRenderStrategy
         _mesh.Render();
 
         GL.Enable(EnableCap.CullFace);
-    }
-
-    private void UpdateMeshPoints(float positionEpsilon)
-    {
-        var enginePoints = _engineCloth.PointsVelocityAdjusted(positionEpsilon);
-        int sx = enginePoints.GetLength(0);
-        int sy = enginePoints.GetLength(1);
-        var result = new Vector3[sx, sy];
-
-        for (int x = 0; x < sx; x++)
-        {
-            for (int y = 0; y < sy; y++)
-            {
-                var e = enginePoints[x, y];
-                result[x, y] = new Vector3(e.X, e.Y, e.Z);
-            }
-        }
-
-        _mesh.UpdatePoints(result);
     }
 }

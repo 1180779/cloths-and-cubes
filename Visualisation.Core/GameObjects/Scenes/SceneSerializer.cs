@@ -2,13 +2,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Engine.Collision;
+using Engine.ContactGenerators;
 
 namespace Visualisation.Core.GameObjects.Scenes;
 
 /// <summary>
-/// Serializes SceneManager state to SceneData for saving to disk
+/// Serializes scene state to SceneData
 /// </summary>
-public class SceneSerializer
+public static class SceneSerializer
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -23,11 +24,11 @@ public class SceneSerializer
     public static SceneData SerializeScene(
         IEnumerable<GameObject> gameObjects,
         CollisionData collisionData,
+        GlobalJointsList globalJoints,
         string sceneName = "Untitled Scene",
-        string description = "",
-        bool includeParticleStates = false)
+        string description = "")
     {
-        return gameObjects.ToSceneData(collisionData, sceneName, description, includeParticleStates);
+        return gameObjects.ToSceneData(collisionData, globalJoints, sceneName, description);
     }
 
     /// <summary>
@@ -39,7 +40,7 @@ public class SceneSerializer
     }
 
     /// <summary>
-    /// Save scene to file
+    /// Save the scene to file
     /// </summary>
     public static void SaveToFile(SceneData sceneData, string filePath)
     {

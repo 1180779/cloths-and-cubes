@@ -84,7 +84,6 @@ public sealed class SceneWindow(
             _msaaFrameBuffer.Bind();
             _sceneRenderer.RenderSceneWindow(_msaaFrameBuffer);
             DrawDebug();
-            _sceneRenderer.RenderSelectedObjectOnTop();
             _sceneRenderer.RenderGizmo();
             _sceneRenderer.RenderDragHoverIndicator();
             _msaaFrameBuffer.Unbind();
@@ -96,7 +95,6 @@ public sealed class SceneWindow(
             _sceneRenderWindowFrb.Bind();
             _sceneRenderer.RenderSceneWindow(_sceneRenderWindowFrb);
             DrawDebug();
-            _sceneRenderer.RenderSelectedObjectOnTop();
             _sceneRenderer.RenderGizmo();
             _sceneRenderer.RenderDragHoverIndicator();
             _sceneRenderWindowFrb.Unbind();

@@ -44,7 +44,7 @@ public sealed class StaticDragManager(
     /// <summary>
     /// Color for the hover indicator. Default is semi-transparent cyan.
     /// </summary>
-    public Vector4 HoverIndicatorColor { get; set; } = new Vector4(0.0f, 1.0f, 1.0f, 0.6f);
+    public Vector4 HoverIndicatorColor { get; set; } = new Vector4(0.0f, 1.0f, 1.0f, 0.1f);
 
     /// <summary>
     /// Size of the hover indicator relative to the object. Default is 1.02 (2% larger).
@@ -85,6 +85,17 @@ public sealed class StaticDragManager(
         bool isButtonDown = inputProvider.IsMouseButtonDown(DragButton);
         if (IsDragging && !isButtonDown)
         {
+            // When dragging ends, if we were dragging a cloth particle, reset its mass
+            if (DraggedObject is ClothParticleWrapperGizmoAdapter endDragAdapter)
+            {
+                // Reset mass to the original particle mass
+                endDragAdapter.Wrapper.Particle.Body.Mass = endDragAdapter.Wrapper.ParentCloth.EngineCloth.ParticleMass;
+
+                // Clear accumulators to prevent "explosion" from accumulated forces during drag
+                endDragAdapter.Wrapper.Particle.Body.Velocity = Engine.Vector3.Zero;
+                endDragAdapter.Wrapper.Particle.Body.ClearAccumulators();
+            }
+
             DraggedObject = null;
             return false;
         }
@@ -104,14 +115,16 @@ public sealed class StaticDragManager(
                 {
                     DraggedObject = translationAdapter;
                     _planeOffset = Vector3.Dot(camera.Front, DraggedObject.Position - camera.Position);
-                    return true;
-                }
 
-                // Fallback: check if object implements interface directly (legacy support before full removal)
-                if (hoveredObject is ITranslationGizmoTarget directTarget)
-                {
-                    DraggedObject = directTarget;
-                    _planeOffset = Vector3.Dot(camera.Front, DraggedObject.Position - camera.Position);
+                    // If we start dragging a cloth particle, set its mass to infinite
+                    // so it acts as a fixed anchor point while dragging
+                    if (DraggedObject is ClothParticleWrapperGizmoAdapter startDragAdapter)
+                    {
+                        startDragAdapter.Wrapper.Particle.Body.InverseMass = 0;
+                        startDragAdapter.Wrapper.Particle.Body.Velocity = Engine.Vector3.Zero;
+                        startDragAdapter.Wrapper.Particle.Body.ClearAccumulators();
+                    }
+
                     return true;
                 }
             }
@@ -153,9 +166,13 @@ public sealed class StaticDragManager(
         DraggedObject.Position = targetPosition;
 
         // Handle automatic pinning for cloth particles
-        if (DraggedObject is ClothParticleWrapperGizmoAdapter particleAdapter)
+        if (DraggedObject is ClothParticleWrapperGizmoAdapter draggingAdapter)
         {
-            HandleClothParticlePinning(particleAdapter.Wrapper);
+            // While dragging, ensure velocity and forces are zeroed out to prevent fighting
+            draggingAdapter.Wrapper.Particle.Body.Velocity = Engine.Vector3.Zero;
+            draggingAdapter.Wrapper.Particle.Body.ClearAccumulators();
+
+            HandleClothParticlePinning(draggingAdapter.Wrapper);
         }
 
         OnObjectDragged?.Invoke();
@@ -167,7 +184,7 @@ public sealed class StaticDragManager(
     /// </summary>
     private void HandleClothParticlePinning(ClothParticleWrapper particleWrapper)
     {
-        var boxes = _boxesProvider();
+        var boxes = _boxesProvider().ToList(); // Materialize to avoid multiple enumeration
 
         // TODO: optimize to only the boxes that are close enough i.e. potentially in range of the particle?
         Dictionary<int, IBoxable> bvhDictionary = new();

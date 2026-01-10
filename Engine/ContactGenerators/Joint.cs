@@ -39,6 +39,12 @@ public sealed class Joint : IContactGenerator
     /// </summary>
     private Real _error;
 
+    public IJointTrackable? TrackableA => _trackables[0];
+    public IJointTrackable? TrackableB => _trackables[1];
+    public Vector3 RelativePositionA => _relativePositions[0];
+    public Vector3 RelativePositionB => _relativePositions[1];
+    public Real Error => _error;
+
     public Joint(
         CollisionPrimitive primitive1,
         Vector3 relativePosition1,

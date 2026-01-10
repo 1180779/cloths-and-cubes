@@ -53,15 +53,18 @@ public abstract class SceneRenderer : IDisposable
         CamerasManager = new CamerasManager(inputProvider);
         LightsManager = new LightsManager(CamerasManager);
 
-        // TODO: remove magic numbers
+        Matrix4.LookAt(new(10, 10, 10), Vector3.Zero, Vector3.UnitY);
+        var cameraPosition = new Vector3(10.0f, 10.0f, 10.0f);
+        var lookAtPosition = Vector3.Zero;
+        var lookDirection = lookAtPosition - cameraPosition;
+        float pitch = MathF.Asin(lookDirection.Y / lookDirection.Length);
+        float yaw = MathF.Atan2(lookDirection.X, lookDirection.Z);
         var camera = new FreeMovingCamera(aspectRatio)
         {
-            Position = new Vector3(-6.5f, 3.2f, 6.6f), PitchDegrees = 6.3f, YawDegrees = -777.8f,
+            Position = cameraPosition, PitchRadians = pitch, YawRadians = yaw
         };
         CamerasManager.AddCamera(camera);
     }
-
-    public bool DrawSelectedObjectWithoutDepthTesting;
 
     protected readonly Func<IEnumerable<GameObject>> _getGameObjects;
     public InteractionManager InteractionManager { get; set; }
@@ -185,10 +188,6 @@ public abstract class SceneRenderer : IDisposable
         {
             GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
             GL.StencilMask(0x00);
-            if (DrawSelectedObjectWithoutDepthTesting)
-            {
-                GL.Disable(EnableCap.DepthTest);
-            }
 
             GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
 
@@ -199,7 +198,6 @@ public abstract class SceneRenderer : IDisposable
 
             GL.StencilMask(0xFF);
             GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
-            GL.Enable(EnableCap.DepthTest);
         }
 
         GL.Disable(EnableCap.StencilTest);
@@ -255,37 +253,16 @@ public abstract class SceneRenderer : IDisposable
             SelectionManager.SelectedObject == InteractionManager.StaticDragManager.HoverTarget)
             return;
 
-        GL.Disable(EnableCap.DepthTest);
+        // GL.Disable(EnableCap.DepthTest);
+        GL.Enable(EnableCap.Blend);
+        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         RenderObjectOutline(InteractionManager.StaticDragManager.HoverTarget,
             InteractionManager.StaticDragManager.HoverIndicatorColor,
             InteractionManager.StaticDragManager.HoverIndicatorScale, drawInvisible: true);
 
-        GL.Enable(EnableCap.DepthTest);
-    }
-
-    public void RenderSelectedObjectOnTop()
-    {
-        if (DrawSelectedObjectWithoutDepthTesting &&
-            InteractionManager.SelectionManager.SelectedObject is IHasRenderStrategy renderable)
-        {
-            GL.Clear(ClearBufferMask.DepthBufferBit);
-
-            // Use RenderStrategy for this too
-            var renderContext = new RenderContext
-            {
-                Camera = CamerasManager.CurrentCamera,
-                DefaultShader = BasicShader,
-                OutlineShader = OutlineShader,
-                PbrShader = PbrShader,
-                EnvironmentMap = EnvironmentMap,
-                LightsManager = LightsManager,
-                OutlineSize = OutlineSize,
-                PositionEpsilon = PositionEpsilonProvider?.Invoke() ?? 0.0f
-            };
-
-            renderable.RenderStrategy.Render(renderContext, renderable.Model);
-        }
+        GL.Disable(EnableCap.Blend);
+        // GL.Enable(EnableCap.DepthTest);
     }
 
     private void RenderSkybox()

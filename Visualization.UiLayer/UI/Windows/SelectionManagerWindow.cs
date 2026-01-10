@@ -102,20 +102,6 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
                 DrawGameObjectProperties(_interactionManager.SelectionManager.SelectedObject, "SelectedObject");
                 ImGui.Unindent();
             }
-
-            if (ImGui.CollapsingHeader("Hovered Object Properties"))
-            {
-                ImGui.Indent();
-                DrawGameObjectProperties(_interactionManager.SelectionManager.HoveredObject, "HoveredObject");
-                ImGui.Unindent();
-            }
-
-            if (ImGui.CollapsingHeader("Dragged Object Properties"))
-            {
-                ImGui.Indent();
-                DrawGameObjectProperties(_interactionManager.StaticDragManager.DraggedObject, "DraggedObject");
-                ImGui.Unindent();
-            }
         }
 
         ImGui.End();
@@ -128,6 +114,7 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
         {
             if (ImGui.CollapsingHeader("Game Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
             {
+                ImGui.Indent();
                 ImGui.Spacing();
                 ImGui.Text($"Current Material: {gameObject.Material.Name}");
 

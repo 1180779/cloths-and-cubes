@@ -37,7 +37,8 @@ public sealed class ClothParticleRenderStrategy : IRenderStrategy
 
         context.DefaultShader.SetMatrix4("model", outlineModel);
         context.DefaultShader.SetVector3("color", context.OutlineColor.Xyz);
-        context.DefaultShader.SetFloat("alpha", context.OutlineColor.W);
+        // For the cloth particle set the alpha to a higher constant value to ensure visibility
+        context.DefaultShader.SetFloat("alpha", 0.8f);
 
         _cubeMesh.Render();
     }

@@ -95,6 +95,7 @@ public class Application : GameWindow
     /// </summary>
     public IEnumerable<GameObject> GameObjects => [_plane, .._boxes, .._balls, .._cloths];
 
+    public GlobalJointsList Joints => _joints;
     protected GlobalJointsList _joints = new();
 
     /// <summary>
@@ -688,10 +689,13 @@ public class Application : GameWindow
         _forceRegistry.Clear();
         foreach (Cloth cloth in _cloths)
         {
-            cloth.EngineCloth = new Engine.Cloth(_forceRegistry, _boxesDemoSettingsWindow.SizeX,
+            cloth.EngineCloth.RegenerateGridPreservingTheCenter(
+                _boxesDemoSettingsWindow.SizeX,
                 _boxesDemoSettingsWindow.SizeY,
-                _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+                _boxesDemoSettingsWindow.SpringLength,
+                _boxesDemoSettingsWindow.SpringConstant,
                 _boxesDemoSettingsWindow.ParticleMass);
+            cloth.EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
         }
 
         // reset plane
@@ -775,6 +779,7 @@ public class Application : GameWindow
             _forceRegistry,
             currentObjects,
             () => _contactResolver.PositionEpsilon,
+            _joints,
             out var plane,
             out var collisionData,
             out var objectsToRemove);

@@ -88,7 +88,7 @@ public sealed class Cloth : GameObject, IBoxable
 
     public override Matrix4 Model => Matrix4.Identity;
 
-    private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
+    public static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
     {
         int sx = enginePoints.GetLength(0);
         int sy = enginePoints.GetLength(1);
