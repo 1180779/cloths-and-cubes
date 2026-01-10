@@ -86,18 +86,23 @@ public class Cloth
             {
                 if (IsCorner(i, j))
                 {
-                    Particles[i, j] ??= new ClothRigidParticleInCorner
+                    if (Particles[i, j] is not ClothRigidParticleInCorner)
                     {
-                        AttachedToCloth = this, ClothParticleX = i, ClothParticleY = j
-                    };
+                        Particles[i, j] = new ClothRigidParticleInCorner
+                        {
+                            AttachedToCloth = this, ClothParticleX = i, ClothParticleY = j
+                        };
+                    }
                 }
                 else
                 {
-                    Particles[i, j] ??=
-                        new ClothRigidParticle
+                    if (Particles[i, j] is null || Particles[i, j] is ClothRigidParticleInCorner)
+                    {
+                        Particles[i, j] = new ClothRigidParticle
                         {
                             AttachedToCloth = this, ClothParticleX = i, ClothParticleY = j
-                        }; // Create a new particle if null
+                        };
+                    }
                 }
 
                 Particles[i, j].SetState(
