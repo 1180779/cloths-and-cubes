@@ -56,6 +56,7 @@ public class BoxesDemo : RigidBodyApplication
     protected ContactsInspectorWindow _contactsInspectorWindow;
 
     protected BoxesDemoSettingsWindow _boxesDemoSettingsWindow;
+    public object? SelectedObject => _selectionManager.SelectedObject;
 
     public BoxesDemo()
     {
@@ -316,6 +317,10 @@ public class BoxesDemo : RigidBodyApplication
 
         BvhRebuild();
         ObjectSelectionHandling();
+        if(SelectedObject is not null)
+        {
+            var collisionObject = SelectedObject as CollisionPrimitive;
+        }
 
         // Process box-plane collisions
         foreach (var box in _boxes)

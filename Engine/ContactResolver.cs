@@ -1,3 +1,5 @@
+using Engine.Collision.ContactGraph;
+
 namespace Engine;
 
 public class ContactResolver
@@ -131,6 +133,11 @@ public class ContactResolver
 
         // iteratively resolve interpenetrations in order of severity.
         PositionIterationsUsed = 0;
+
+        ContactGraph graph = ContactGraph.Build(contacts);
+        graph.ResolveGraph(positionIterations, positionEpsilon);
+        return;
+
         while (PositionIterationsUsed < positionIterations)
         {
             // Find biggest penetration

@@ -1,0 +1,119 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Engine.Collision.ContactGraph
+{
+    public class ContactGraph
+    {
+        // Margin of error when determining if two contacts are close enough to affect each other; needs to be fine-tuned
+        //private const float _tolerance = 1.0f;
+        private List<ContactGraphComponent> _components = new List<ContactGraphComponent>();
+        public List<ContactGraphComponent> Components => _components;
+        public ContactGraph()
+        {
+        }
+
+        public void AddContact(Contact contact)
+        {
+            // If either body is null, handle as a static contact
+            if (contact.Body[0] == null || contact.Body[1] == null)
+            {
+                if (contact.Body[0] == null && contact.Body[1] == null)
+                {
+                    return;
+                }
+                foreach (var item in _components)
+                {
+                    // Check if either body in the contact is already represented in this component
+                    if ((contact.Body[0] != null && item.Bodies.Contains(contact.Body[0]!)) || (contact.Body[1] != null && item.Bodies.Contains(contact.Body[1]!)))
+                    {
+                        item.AddStaticContact(contact);
+                        return;
+                    }
+                }
+
+                ContactGraphComponent newComponentStatic = new ContactGraphComponent();
+                newComponentStatic.AddStaticContact(contact);
+                _components.Add(newComponentStatic);
+                return;
+            }
+            else
+            {
+                int compAIndex = -1;
+                int compBIndex = -1;
+                // Check existing components to see if either body is already represented
+                foreach (var item in _components)
+                {
+                    if (item.Bodies.Contains(contact.Body[0]!))
+                    {
+                        compAIndex = _components.IndexOf(item);
+                    }
+                    if (item.Bodies.Contains(contact.Body[1]!))
+                    {
+                        compBIndex = _components.IndexOf(item);
+                    }
+                }
+                if(compAIndex != -1 && compBIndex != -1)
+                {
+                    if (compAIndex != compBIndex)
+                    {
+                        // Merge the two components
+                        var compA = _components[compAIndex];
+                        var compB = _components[compBIndex];
+                        compA.AddContact(contact);
+                        compA += compB;
+                        _components.RemoveAt(compBIndex);
+                    }
+                    else
+                    {
+                        // Both bodies are already in the same component
+                        _components[compAIndex].AddContact(contact);
+                    }
+                    return;
+                }
+                else if (compAIndex != -1)
+                {
+                    // Only body A is represented; add contact to that component
+                    _components[compAIndex].AddContact(contact);
+                    return;
+                }
+                else if (compBIndex != -1)
+                {
+                    // Only body B is represented; add contact to that component
+                    _components[compBIndex].AddContact(contact);
+                    return;
+                }
+            }
+
+
+            // If neither body is represented in any existing component, create a new component
+            ContactGraphComponent newComponent = new ContactGraphComponent();
+            newComponent.AddContact(contact);
+            _components.Add(newComponent);
+        }
+
+        public static ContactGraph Build(Contact[] contacts)
+        {
+            ContactGraph graph = new ContactGraph();
+            foreach (var contact in contacts)
+            {
+                graph.AddContact(contact);
+            }
+            return graph;
+        }
+
+        public void ResolveGraph(uint maxPositionIterations, float positionEpsilon)
+        {
+            Parallel.ForEach(Components, comp => comp.ResolveComponent(maxPositionIterations, positionEpsilon));
+        }
+
+        //public static (Vector3 min, Vector3 max) GetContactBounds(Contact contact)
+        //{
+
+        //}
+    }
+}
