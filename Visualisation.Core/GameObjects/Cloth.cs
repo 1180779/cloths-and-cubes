@@ -5,15 +5,13 @@ using Engine.Force;
 using Engine.RigidBodies;
 
 using Visualisation.Core.Display;
-using Visualisation.Core.Display.Gizmos.Rotation;
-using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRotationGizmoTarget, IHasRenderStrategy
+public sealed class Cloth : GameObject, IBoxable
 {
     public Engine.Cloth EngineCloth { get; set; }
     public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
@@ -165,40 +163,5 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
         // Update the mesh
         var pts = ConvertToOpenTk(EngineCloth.Points());
         VisualCloth.UpdatePoints(pts);
-    }
-
-    public Vector3 AxisPosition => EngineCloth.Center.ToOpenTK();
-    public Quaternion AxisOrientation => Quaternion.Identity;
-
-    Vector3 ITranslationGizmoTarget.Position
-    {
-        get => EngineCloth.Center.ToOpenTK();
-        set
-        {
-            EngineCloth.Center = value.ToEngine();
-            EngineCloth.ClearAccumulators();
-        }
-    }
-
-    private Quaternion _previousOrientation = Quaternion.Identity;
-
-    public Quaternion Orientation
-    {
-        get => _previousOrientation;
-        set
-        {
-            var deltaRotation = value * Quaternion.Invert(_previousOrientation);
-            _previousOrientation = value;
-
-            var axisAngle = deltaRotation.ToAxisAngle();
-            var axis = axisAngle.Xyz;
-            var angle = axisAngle.W;
-
-            // Convert axis-angle to a rotation vector (scaled axis)
-            var rotationVector = axis * angle;
-
-            EngineCloth.RotateAroundCenter(rotationVector.ToEngine());
-            EngineCloth.ClearAccumulators();
-        }
     }
 }

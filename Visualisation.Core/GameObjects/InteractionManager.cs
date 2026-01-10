@@ -92,9 +92,21 @@ public sealed class InteractionManager : IDisposable
             _ => null
         };
 
-        if (_activeGizmo is not null && SelectionManager?.SelectedObject is IGizmoTarget gizmoTarget)
+        UpdateActiveGizmoTarget();
+    }
+
+    private void UpdateActiveGizmoTarget()
+    {
+        if (_activeGizmo is not null && SelectionManager.SelectedObject is not null)
         {
-            _activeGizmo.Target = gizmoTarget;
+            var adapter = GizmoAdapterFactory.CreateAdapter(SelectionManager.SelectedObject, ActiveGizmoType);
+            _activeGizmo.Target = adapter ??
+                // If we can't adapt the object for this gizmo, clear the target
+                null;
+        }
+        else if (_activeGizmo is not null)
+        {
+            _activeGizmo.Target = null;
         }
     }
 
@@ -112,7 +124,17 @@ public sealed class InteractionManager : IDisposable
     {
         SelectionManager.ClearSelection();
         SelectionManager.ClearHover();
-        if (ActiveGizmo?.Target == obj)
+
+        // We need to check if the active gizmo target is an adapter for this object
+        // But since we clear selection, UpdateActiveGizmoTarget will clear the target anyway
+        // if we call it.
+
+        // However, the original code checked ActiveGizmo.Target == obj.
+        // Now ActiveGizmo.Target is an Adapter.
+        // So we can't easily check equality.
+        // But since we cleared selection, we should just clear the gizmo target.
+
+        if (ActiveGizmo != null)
         {
             ActiveGizmo.Target = null;
             SetActiveGizmoType(GizmoType.None);
@@ -200,17 +222,22 @@ public sealed class InteractionManager : IDisposable
         bool gizmoTookMouseInput = false;
         if ((SelectionManager?.GizmosEnabled ?? false) && ActiveGizmo is not null)
         {
-            if (SelectionManager?.SelectedObject is IGizmoTarget translationGizmoTarget)
+            if (ActiveGizmo.Target == null && SelectionManager.SelectedObject != null)
             {
-                ActiveGizmo.Target = translationGizmoTarget;
+                UpdateActiveGizmoTarget();
             }
 
             gizmoTookMouseInput = ActiveGizmo?.HandleInput(input, raycastPos, camera, screenSize) ?? false;
         }
 
         // Attempt to select hovered object if gizmo didn't take input
-        _ = !gizmoTookMouseInput && input.IsMouseButtonPressed(MouseButton.Left) &&
+        bool selectionChanged = !gizmoTookMouseInput && input.IsMouseButtonPressed(MouseButton.Left) &&
             (SelectionManager?.SelectHoveredObject() ?? false);
+
+        if (selectionChanged)
+        {
+            UpdateActiveGizmoTarget();
+        }
 
         // Check if the drag manager can use the hovered object
         if (!gizmoTookMouseInput && StaticDragManager.Enabled == true)

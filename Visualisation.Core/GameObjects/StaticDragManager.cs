@@ -7,6 +7,8 @@ using Engine.Rays;
 using Engine.RigidBodies;
 
 using Visualisation.Core.Display.Cameras;
+using Visualisation.Core.Display.Gizmos;
+using Visualisation.Core.Display.Gizmos.Adapters;
 using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Inputs;
 
@@ -94,11 +96,24 @@ public sealed class StaticDragManager(
         if (!IsDragging)
         {
             var hoveredObject = HoverTarget;
-            if (hoveredObject is ITranslationGizmoTarget translationGizmoTarget && hoveredObject is not Plane)
+            if (hoveredObject != null)
             {
-                DraggedObject = translationGizmoTarget;
-                _planeOffset = Vector3.Dot(camera.Front, DraggedObject.Position - camera.Position);
-                return true;
+                // Try to create an adapter for the hovered object
+                var adapter = GizmoAdapterFactory.CreateAdapter(hoveredObject, GizmoType.Translation);
+                if (adapter is ITranslationGizmoTarget translationAdapter)
+                {
+                    DraggedObject = translationAdapter;
+                    _planeOffset = Vector3.Dot(camera.Front, DraggedObject.Position - camera.Position);
+                    return true;
+                }
+
+                // Fallback: check if object implements interface directly (legacy support before full removal)
+                if (hoveredObject is ITranslationGizmoTarget directTarget)
+                {
+                    DraggedObject = directTarget;
+                    _planeOffset = Vector3.Dot(camera.Front, DraggedObject.Position - camera.Position);
+                    return true;
+                }
             }
 
             DraggedObject = null;
@@ -138,23 +153,10 @@ public sealed class StaticDragManager(
         DraggedObject.Position = targetPosition;
 
         // Handle automatic pinning for cloth particles
-        if (DraggedObject is ClothParticleWrapper wrapper)
+        if (DraggedObject is ClothParticleWrapperGizmoAdapter particleAdapter)
         {
-            HandleClothParticlePinning(wrapper);
+            HandleClothParticlePinning(particleAdapter.Wrapper);
         }
-
-        // TODO: check if this is of any use 
-        // // Zero out velocity and rotation to prevent physics fighting the drag
-        // if (DraggedObject is GameObjectCollisionPrimitive gameObjectCollisionPrimitive)
-        // {
-        //     gameObjectCollisionPrimitive.EngineCollisionPrimitive.Body.Velocity = Engine.Vector3.Zero;
-        //     gameObjectCollisionPrimitive.EngineCollisionPrimitive.Body.Rotation = Engine.Vector3.Zero;
-        //     gameObjectCollisionPrimitive.EngineCollisionPrimitive.Body.ClearAccumulators();
-        // }
-        // else if (DraggedObject is Cloth cloth)
-        // {
-        //     cloth.EngineCloth.ClearAccumulators();
-        // }
 
         OnObjectDragged?.Invoke();
         return true;
@@ -165,7 +167,7 @@ public sealed class StaticDragManager(
     /// </summary>
     private void HandleClothParticlePinning(ClothParticleWrapper particleWrapper)
     {
-        var boxes = _boxesProvider().ToList(); // Materialize to avoid multiple enumeration
+        var boxes = _boxesProvider();
 
         // TODO: optimize to only the boxes that are close enough i.e. potentially in range of the particle?
         Dictionary<int, IBoxable> bvhDictionary = new();

@@ -394,7 +394,7 @@ public class Application : GameWindow
         // above it, which leads to no collision resolution in that case.
         // (In the future spring version this would make the desired position 
         // to be outside the scene and probably cause issues with the spring force.) 
-        var draggedObject = _sceneRenderer.InteractionManager.StaticDragManager.DraggedObject;
+        var draggedObject = (object?)_sceneRenderer.InteractionManager.StaticDragManager.DraggedObject;
         if (draggedObject != null)
         {
             _collisionData.Reset(MaxContacts);

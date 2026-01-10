@@ -5,12 +5,10 @@ namespace Visualisation.Core.Display;
 public sealed class ClothParticleRenderStrategy : IRenderStrategy
 {
     private readonly CubeMesh _cubeMesh;
-    private readonly float _scale;
 
-    public ClothParticleRenderStrategy(CubeMesh cubeMesh, float scale)
+    public ClothParticleRenderStrategy(CubeMesh cubeMesh)
     {
         _cubeMesh = cubeMesh;
-        _scale = scale;
     }
 
     public void Render(RenderContext context, Matrix4 model)

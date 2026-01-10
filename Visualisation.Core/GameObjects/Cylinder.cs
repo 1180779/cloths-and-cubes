@@ -1,8 +1,6 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
 
-using Visualisation.Core.Display.Gizmos;
-using Visualisation.Core.Display.Gizmos.Scale;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
@@ -10,7 +8,7 @@ using Visualisation.Core.Display.Mesh.VisualObjects;
 namespace Visualisation.Core.GameObjects;
 
 // TODO: implement cylinder interactions on the engine side
-public sealed class Cylinder : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTarget
+public sealed class Cylinder : GameObjectCollisionPrimitive, IBoxable
 {
     public Cylinder()
     {
@@ -47,33 +45,4 @@ public sealed class Cylinder : GameObjectCollisionPrimitive, IBoxable, IScaleGiz
     }
 
     public override CollisionPrimitive EngineCollisionPrimitive => EngineCylinder;
-
-    public Vector3 Scale
-    {
-        get => new(EngineCylinder.Radius, EngineCylinder.Radius, EngineCylinder.Height);
-        set
-        {
-            EngineCylinder.Height = value.Z;
-            EngineCylinder.Radius = value.X;
-            EngineCylinder.Body.SetAwake();
-            EngineCylinder.Body.CalculateDerivedData();
-            EngineCylinder.CalculateInternals();
-        }
-    }
-
-    public Vector3 Offset => new(EngineCylinder.Radius, EngineCylinder.Radius, EngineCylinder.Height / 2.0f);
-
-    public Vector3 GetTargetScale(Vector3 scale, float factor, GizmoAxis axis)
-    {
-        if (axis == GizmoAxis.Z)
-        {
-            scale.Z *= factor;
-        }
-        else
-        {
-            scale.X *= factor;
-        }
-
-        return scale;
-    }
 }
