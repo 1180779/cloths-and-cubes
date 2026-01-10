@@ -1,17 +1,20 @@
+using Engine.Collision.ContactGraph;
+
 namespace Engine;
 
 public class ContactResolver
 {
-    public uint VelocityIterations;
-    public uint PositionIterations;
-    public Real VelocityEpsilon;
-    public Real PositionEpsilon;
+    private uint velocityIterations;
+    private uint positionIterations;
+    private Real velocityEpsilon;
+    private Real positionEpsilon;
+    private bool validSettings = false;
 
-    public uint VelocityIterationsUsed { get; private set; }
-    public uint PositionIterationsUsed { get; private set; }
+    public uint VelocityIterationsUsed { get; set; } = 0;
+    public uint PositionIterationsUsed { get; set; } = 0;
 
     public bool IsValid =>
-        VelocityIterations > 0 && PositionIterations > 0 && PositionEpsilon >= 0 && VelocityEpsilon >= 0;
+        velocityIterations > 0 && positionIterations > 0 && positionEpsilon >= 0 && velocityEpsilon >= 0;
 
     public ContactResolver()
     {
@@ -19,10 +22,10 @@ public class ContactResolver
 
     public ContactResolver(uint iterations, Real velocityEpsilon = (Real)0.01, Real positionEpsilon = (Real)0.01)
     {
-        PositionIterations = iterations;
-        VelocityIterations = iterations;
-        this.VelocityEpsilon = velocityEpsilon;
-        this.PositionEpsilon = positionEpsilon;
+        positionIterations = iterations;
+        velocityIterations = iterations;
+        this.velocityEpsilon = velocityEpsilon;
+        this.positionEpsilon = positionEpsilon;
     }
 
     public ContactResolver(
@@ -31,10 +34,10 @@ public class ContactResolver
         Real velocityEpsilon = (Real)0.01,
         Real positionEpsilon = (Real)0.01)
     {
-        this.PositionIterations = positionIterations;
-        this.VelocityIterations = velocityIterations;
-        this.VelocityEpsilon = velocityEpsilon;
-        this.PositionEpsilon = positionEpsilon;
+        this.positionIterations = positionIterations;
+        this.velocityIterations = velocityIterations;
+        this.velocityEpsilon = velocityEpsilon;
+        this.positionEpsilon = positionEpsilon;
     }
 
     public void ResolveContacts(Contact[] contacts, uint numContacts, Real duration)
@@ -56,6 +59,9 @@ public class ContactResolver
         }
     }
 
+    // For performance comparison purposes, we can switch between the standard loop or the contact graph
+    private const bool USE_CONTACT_GRAPH = true;
+
     protected void AdjustVelocities(Contact[] contacts, uint numContacts, Real duration)
     {
         Vector3[] velocityChange = [new(), new()];
@@ -63,10 +69,18 @@ public class ContactResolver
 
         // iteratively handle impacts in order of severity.
         VelocityIterationsUsed = 0;
-        while (VelocityIterationsUsed < VelocityIterations)
+
+        if (USE_CONTACT_GRAPH)
+        {
+            ContactGraph graph = ContactGraph.Build(contacts, numContacts);
+            graph.ResolveVelocities(velocityIterations, velocityEpsilon, duration);
+            return;
+        }
+
+        while (VelocityIterationsUsed < velocityIterations)
         {
             // Find contact with maximum magnitude of probable velocity change.
-            var max = VelocityEpsilon;
+            var max = velocityEpsilon;
             var index = numContacts;
             for (uint i = 0; i < numContacts; i++)
             {
@@ -121,17 +135,27 @@ public class ContactResolver
 
     protected void AdjustPositions(Contact[] contacts, uint numContacts, Real duration)
     {
+        uint i = 0;
+        uint index = 0;
         Vector3[] linearChange = [new(), new()];
         Vector3[] angularChange = [new(), new()];
+        Real max = 0;
+        Vector3 deltaPosition = new();
 
         // iteratively resolve interpenetrations in order of severity.
         PositionIterationsUsed = 0;
-        while (PositionIterationsUsed < PositionIterations)
+        if (USE_CONTACT_GRAPH)
+        {        
+            ContactGraph graph = ContactGraph.Build(contacts, numContacts);
+            graph.ResolvePositions(positionIterations, positionEpsilon);
+            return;
+        }
+
+        while (PositionIterationsUsed < positionIterations)
         {
             // Find biggest penetration
-            Real max = PositionEpsilon;
-            uint index = numContacts;
-            uint i;
+            max = positionEpsilon;
+            index = numContacts;
             for (i = 0; i < numContacts; i++)
             {
                 if (contacts[i].Penetration > max)
@@ -166,7 +190,7 @@ public class ContactResolver
                         {
                             if (contacts[i].Body[b] == contacts[index].Body[d])
                             {
-                                Vector3 deltaPosition = linearChange[d] +
+                                deltaPosition = linearChange[d] +
                                     angularChange[d].VectorProduct(
                                         contacts[i].RelativeContactPosition[b]);
 
