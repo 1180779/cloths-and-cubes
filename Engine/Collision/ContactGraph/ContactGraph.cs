@@ -106,9 +106,14 @@ namespace Engine.Collision.ContactGraph
             return graph;
         }
 
-        public void ResolveGraph(uint maxPositionIterations, float positionEpsilon)
+        public void ResolvePositions(uint maxPositionIterations, float positionEpsilon)
         {
-            Parallel.ForEach(Components, comp => comp.ResolveComponent(maxPositionIterations, positionEpsilon));
+            Parallel.ForEach(Components, comp => comp.ResolvePositions(maxPositionIterations, positionEpsilon));
+        }
+
+        public void ResolveVelocities(uint maxVelocityIterations, float velocityEpsilon, Real duration)
+        {
+            Parallel.ForEach(Components, comp => comp.ResolveVelocities(maxVelocityIterations, velocityEpsilon, duration));
         }
 
         //public static (Vector3 min, Vector3 max) GetContactBounds(Contact contact)

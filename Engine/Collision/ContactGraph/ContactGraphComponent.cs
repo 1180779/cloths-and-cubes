@@ -112,7 +112,7 @@ namespace Engine.Collision.ContactGraph
 
         }
 
-        public void ResolveComponent(uint maxPositionIterations, float positionEpsilon)
+        public void ResolvePositions(uint maxPositionIterations, float positionEpsilon)
         {
             PriorityQueue<ContactGraphEdge, Real> edgeQueue = new PriorityQueue<ContactGraphEdge, Real>();
             Vector3[] linearChange = [new(), new()];
@@ -189,5 +189,93 @@ namespace Engine.Collision.ContactGraph
             }
         }
 
+        public void ResolveVelocities(uint maxVelocityIterations, Real velocityEpsilon, Real duration)
+        {
+            PriorityQueue<ContactGraphEdge, Real> edgeQueue = new PriorityQueue<ContactGraphEdge, Real>();
+            Vector3[] velocityChange = [new(), new()];
+            Vector3[] rotationChange = [new(), new()];
+            Vector3 deltaPosition = new();
+
+            // iteratively resolve interpenetrations in order of severity.
+            int VelocityIterationsUsed = 0;
+            foreach (var edge in Edges)
+            {
+                // Since PriorityQueue returns minimal priority element, we use negative penetration
+                edgeQueue.Enqueue(edge, -edge.Data.DesiredDeltaVelocity);
+            }
+            while (edgeQueue.Count > 0 && VelocityIterationsUsed < maxVelocityIterations)
+            {
+                var edge = edgeQueue.Dequeue();
+                if (edge.Data.DesiredDeltaVelocity < velocityEpsilon)
+                {
+                    break;
+                }
+
+                var contact = edge.Data;
+                contact.MatchAwakeState();
+
+                contact.ApplyVelocityChange(velocityChange, rotationChange);
+
+                // Update adjacent edges
+
+                // Get edges adjacent to contact.Body[0]
+                var adjacentEdgesA = edge.GetAdjacentEdgesA();
+                // Get edges adjacent to contact.Body[1] (an empty list if the aforementioned object is null)
+                var adjacentEdgesB = edge.GetAdjacentEdgesB();
+
+                // Set d to 0, because edge.NodeA = contact.Body[0]
+                int d = 0;
+                foreach (var adjacentEdge in adjacentEdgesA)
+                {
+                    // b is the index of the matching body
+                    int b = (adjacentEdge.NodeA == edge.NodeA) ? 0 : 1;
+
+                    Vector3 deltaVel = velocityChange[d] +
+                                    rotationChange[d].VectorProduct(
+                                        adjacentEdge.Data.RelativeContactPosition[b]);
+
+                    // The sign of the change is negative if we're dealing
+                    // with the second body in a contact.
+                    adjacentEdge.Data.ContactVelocity +=
+                        adjacentEdge.Data.ContactToWorld.TransformTranspose(deltaVel)
+                        * (b != 0 ? -1 : 1);
+                    adjacentEdge.Data.CalculateDesiredDeltaVelocity(duration);
+                    //TODO: CHECK IF THERE IS A BETTER WAY TO UPDATE THE QUEUE
+                    ContactGraphEdge actuallyRemoved;
+                    float removedPriority;
+                    var _ = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
+                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
+
+                }
+
+                // Set d to 1, edge.NodeB = contact.Body[1]
+                d = 1;
+                foreach (var adjacentEdge in adjacentEdgesB)
+                {
+                    int b = (adjacentEdge.NodeA == edge.NodeB) ? 0 : 1;
+                    Vector3 deltaVel = velocityChange[d] +
+                                     rotationChange[d].VectorProduct(
+                                         adjacentEdge.Data.RelativeContactPosition[b]);
+
+                    // The sign of the change is negative if we're dealing
+                    // with the second body in a contact.
+                    adjacentEdge.Data.ContactVelocity +=
+                        adjacentEdge.Data.ContactToWorld.TransformTranspose(deltaVel)
+                        * (b != 0 ? -1 : 1);
+                    adjacentEdge.Data.CalculateDesiredDeltaVelocity(duration);
+                    ContactGraphEdge actuallyRemoved;
+                    float removedPriority;
+                    var _ = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
+                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
+                }
+                VelocityIterationsUsed++;
+                Edges.Remove(edge);
+                edge.NodeA?.Edges.Remove(edge);
+                edge.NodeB?.Edges.Remove(edge);
+            }
+        }
+
     }
+
+
 }

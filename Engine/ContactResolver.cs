@@ -66,6 +66,11 @@ public class ContactResolver
 
         // iteratively handle impacts in order of severity.
         VelocityIterationsUsed = 0;
+        ContactGraph graph = ContactGraph.Build(contacts);
+        graph.ResolveVelocities(velocityIterations, velocityEpsilon, duration);
+        return;
+
+
         while (VelocityIterationsUsed < velocityIterations)
         {
             // Find contact with maximum magnitude of probable velocity change.
@@ -135,7 +140,7 @@ public class ContactResolver
         PositionIterationsUsed = 0;
 
         ContactGraph graph = ContactGraph.Build(contacts);
-        graph.ResolveGraph(positionIterations, positionEpsilon);
+        graph.ResolvePositions(positionIterations, positionEpsilon);
         return;
 
         while (PositionIterationsUsed < positionIterations)
