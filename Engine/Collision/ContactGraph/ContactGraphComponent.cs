@@ -28,13 +28,6 @@ namespace Engine.Collision.ContactGraph
             result.Nodes.AddRange(right.Nodes);
             result.Edges.AddRange(left.Edges);
             result.Edges.AddRange(right.Edges);
-            //var minX = float.Min(left.Bounds.min.X, right.Bounds.min.X);
-            //var minY = float.Min(left.Bounds.min.Y, right.Bounds.min.Y);
-            //var minZ = float.Min(left.Bounds.min.Z, right.Bounds.min.Z);
-            //var maxX = float.Max(left.Bounds.max.X, right.Bounds.max.X);
-            //var maxY = float.Max(left.Bounds.max.Y, right.Bounds.max.Y);
-            //var maxZ = float.Max(left.Bounds.max.Z, right.Bounds.max.Z);
-            //result.Bounds = (new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ));
             return result;
         }
 

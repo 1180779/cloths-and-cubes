@@ -58,7 +58,9 @@ public class ContactResolver
             contacts[i].CalculateInternals(duration);
         }
     }
-    private const bool USE_CONTACT_GRAPH = false;
+
+    // For performance comparison purposes, we can switch between the standard loop or the contact graph
+    private const bool USE_CONTACT_GRAPH = true;
 
     protected void AdjustVelocities(Contact[] contacts, uint numContacts, Real duration)
     {

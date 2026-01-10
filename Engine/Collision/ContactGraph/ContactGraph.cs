@@ -5,100 +5,102 @@ using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
 
+using Engine.RigidBodies;
+
 namespace Engine.Collision.ContactGraph
 {
     public class ContactGraph
     {
-        // Margin of error when determining if two contacts are close enough to affect each other; needs to be fine-tuned
-        //private const float _tolerance = 1.0f;
-        private List<ContactGraphComponent> _components = [];
-        public List<ContactGraphComponent> Components => _components;
+        public Dictionary<int, ContactGraphComponent> Components = [];
+        private Dictionary<RigidBody, int> _bodyToIdx = [];
+        private UnionFind _unionFind;
         public ContactGraph()
         {
+            _unionFind = new UnionFind();
         }
 
         public void AddContact(Contact contact)
         {
-            // If either body is null, handle as a static contact
-            if (contact.Body[0] == null || contact.Body[1] == null)
-            {
-                if (contact.Body[0] == null && contact.Body[1] == null)
-                {
-                    return;
-                }
-                foreach (var item in _components)
-                {
-                    // Check if either body in the contact is already represented in this component
-                    if ((contact.Body[0] != null && item.Bodies.Contains(contact.Body[0]!)) || (contact.Body[1] != null && item.Bodies.Contains(contact.Body[1]!)))
-                    {
-                        item.AddStaticContact(contact);
-                        return;
-                    }
-                }
+            bool bodyAnull = contact.Body[0] == null;
+            bool bodyBnull = contact.Body[1] == null;
+            bool isStaticContact = bodyAnull || bodyBnull;
 
-                ContactGraphComponent newComponentStatic = new ContactGraphComponent();
-                newComponentStatic.AddStaticContact(contact);
-                _components.Add(newComponentStatic);
+            if (bodyAnull && bodyBnull)
+            {
                 return;
+            }
+
+            // Get or create body IDs
+            int idA = GetOrCreateBodyId(contact.Body[0]);
+            int idB = GetOrCreateBodyId(contact.Body[1]);
+
+            if (isStaticContact)
+            {
+                // Static contact - add to existing component or create new
+                int rootId = bodyAnull ? _unionFind.Find(idB) : _unionFind.Find(idA);
+                GetOrCreateComponent(rootId).AddStaticContact(contact);
+                return; 
+            }
+
+            // Find current roots
+            int rootA = _unionFind.Find(idA);
+            int rootB = _unionFind.Find(idB);
+
+            if (rootA == rootB)
+            {
+                // Same component - add contact to existing component
+                GetOrCreateComponent(rootA).AddContact(contact);
             }
             else
             {
-                int compAIndex = -1;
-                int compBIndex = -1;
-                // Check existing components to see if either body is already represented
-                for(int i = 0; i < _components.Count; i++)
+                // Merge components
+                _unionFind.Union(idA, idB);
+                int newRoot = _unionFind.Find(idA);
+
+                // Get or create components for both roots
+                var compA = GetOrCreateComponent(rootA);
+                var compB = GetOrCreateComponent(rootB);
+
+                // Merge the smaller into the larger
+                if (compA.Bodies.Count >= compB.Bodies.Count)
                 {
-                    var item = _components[i];
-                    if (item.Bodies.Contains(contact.Body[0]!))
-                    {
-                        compAIndex = i;
-                    }
-                    if (item.Bodies.Contains(contact.Body[1]!))
-                    {
-                        compBIndex = i;
-                    }
-                    if(compAIndex != -1 && compBIndex != -1)
-                    {
-                        break;
-                    }   
+                    compA += compB;
+                    compA.AddContact(contact);
+                    Components[newRoot] = compA;
+                    Components.Remove(rootB);
                 }
-                if(compAIndex != -1 && compBIndex != -1)
+                else
                 {
-                    if (compAIndex != compBIndex)
-                    {
-                        // Merge the two components
-                        var compA = _components[compAIndex];
-                        var compB = _components[compBIndex];
-                        compA.AddContact(contact);
-                        compA += compB;
-                        _components.RemoveAt(compBIndex);
-                    }
-                    else
-                    {
-                        // Both bodies are already in the same component
-                        _components[compAIndex].AddContact(contact);
-                    }
-                    return;
-                }
-                else if (compAIndex != -1)
-                {
-                    // Only body A is represented; add contact to that component
-                    _components[compAIndex].AddContact(contact);
-                    return;
-                }
-                else if (compBIndex != -1)
-                {
-                    // Only body B is represented; add contact to that component
-                    _components[compBIndex].AddContact(contact);
-                    return;
+                    compB += compA;
+                    compB.AddContact(contact);
+                    Components[newRoot] = compB;
+                    Components.Remove(rootA);
                 }
             }
 
+        }
 
-            // If neither body is represented in any existing component, create a new component
-            ContactGraphComponent newComponent = new ContactGraphComponent();
-            newComponent.AddContact(contact);
-            _components.Add(newComponent);
+        private int GetOrCreateBodyId(RigidBody body)
+        {
+            if (body == null) return -1;
+
+            if (!_bodyToIdx.TryGetValue(body, out int id))
+            {
+                id = _bodyToIdx.Count;
+                _bodyToIdx[body] = id;
+                _unionFind.MakeSet(id);
+            }
+            return id;
+        }
+
+        private ContactGraphComponent GetOrCreateComponent(int rootId)
+        {
+            if (!Components.TryGetValue(rootId, out var component))
+            {
+                component = new ContactGraphComponent();
+                Components[rootId] = component;
+            }
+            return component;
         }
 
         public static ContactGraph Build(Contact[] contacts, uint numContacts)
@@ -113,17 +115,13 @@ namespace Engine.Collision.ContactGraph
 
         public void ResolvePositions(uint maxPositionIterations, float positionEpsilon)
         {
-            Parallel.ForEach(Components, comp => comp.ResolvePositions(maxPositionIterations, positionEpsilon));
+            Parallel.ForEach(Components, comp => comp.Value.ResolvePositions(maxPositionIterations, positionEpsilon));
         }
 
         public void ResolveVelocities(uint maxVelocityIterations, float velocityEpsilon, Real duration)
         {
-            Parallel.ForEach(Components, comp => comp.ResolveVelocities(maxVelocityIterations, velocityEpsilon, duration));
+            Parallel.ForEach(Components, comp => comp.Value.ResolveVelocities(maxVelocityIterations, velocityEpsilon, duration));
         }
 
-        //public static (Vector3 min, Vector3 max) GetContactBounds(Contact contact)
-        //{
-
-        //}
     }
 }
