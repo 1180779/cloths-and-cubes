@@ -1,7 +1,8 @@
 namespace Engine.Collision;
 
-public class CollisionPlane
+public class CollisionPlane: IFrictionProvider
 {
+    public static Real CollisionPlaneFriction = 0.9f;
     private Vector3 direction = new();
 
     /// <summary>
@@ -18,6 +19,8 @@ public class CollisionPlane
             direction.Normalize();
         }
     }
+
+    public float Friction => 0.9f;
 
     /// <summary>
     /// The distance of the plane from the origin.

@@ -10,6 +10,9 @@ public class ContactResolver
     private Real positionEpsilon;
     private bool validSettings = false;
 
+    public Real PositionEpsilon => positionEpsilon;
+    public Real VelocityEpsilon => velocityEpsilon;
+
     public uint VelocityIterationsUsed { get; set; } = 0;
     public uint PositionIterationsUsed { get; set; } = 0;
 

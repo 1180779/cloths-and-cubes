@@ -95,6 +95,7 @@ public class Contact
     }
 
 
+
     /// <summary>
     /// Calculates internal data from state data. This is called before
     /// the resolution algorithm tries to do any resolution. It should

@@ -1,8 +1,10 @@
 using System.Diagnostics;
 
+using Engine.Collision;
+
 namespace Engine.RigidBodies;
 
-public class RigidBody
+public class RigidBody : IFrictionProvider
 {
     /// <summary>
     /// Holds the inverse of the mass of the rigid body. It is more
@@ -357,6 +359,8 @@ public class RigidBody
             InverseMass = (Real)1.0 / value;
         }
     }
+
+    public virtual float Friction => 0.95f;
 
     /// <summary>
     /// Sets the rigid body to a static state by making its inverse mass zero.

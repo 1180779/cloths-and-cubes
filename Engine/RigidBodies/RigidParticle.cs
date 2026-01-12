@@ -30,10 +30,12 @@ public class ClothRigidParticle : RigidParticle, IBodyWithSingleJoint
     public ConnectedJointData ConnectedJoint { get; set; } = new();
 }
 
-public class RigidParticle : CollisionParticle, IBoxable
+public class RigidParticle : CollisionParticle, IBoxable, IFrictionProvider
 {
     public const float BoundingBoxHalfSize = 0.04f;
     public const float BoxScale = 2 * BoundingBoxHalfSize;
+
+    public float Friction => 0.85f;
 
     public virtual BoundingBox GetBoundingBox()
     {
