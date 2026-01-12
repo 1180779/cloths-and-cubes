@@ -30,33 +30,23 @@ public sealed class GizmoSettingsWindow : IWindow
             ImGui.Spacing();
 
             // Gizmo Settings
-            if (_interactionManager.ActiveGizmo == null)
-            {
-                ImGui.TextColored(new System.Numerics.Vector4(0.6f, 0.6f, 0.6f, 1.0f),
-                    "No active gizmo. Select an object and choose a gizmo type.");
-            }
-            else
+            if (_interactionManager.ActiveGizmo != null)
             {
                 DrawGizmo();
+                ImGui.Spacing();
+                ImGui.Separator();
+                ImGui.Spacing();
             }
         }
 
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        // Quick Actions
-        if (ImGui.CollapsingHeader("Quick Actions"))
+        if (ImGui.Button("Reset All Gizmo Scales"))
         {
-            if (ImGui.Button("Reset All Gizmo Scales"))
-            {
-                _interactionManager.ResetAllGizmoScales();
-            }
-
-            ImGui.SameLine();
-            ImGui.TextColored(new System.Numerics.Vector4(0.6f, 0.6f, 0.6f, 1.0f),
-                "(Sets all handle sizes to 1.0)");
+            _interactionManager.ResetAllGizmoScales();
         }
+
+        ImGui.SameLine();
+        ImGui.TextColored(new System.Numerics.Vector4(0.6f, 0.6f, 0.6f, 1.0f),
+            "(Sets all handle sizes to 1.0)");
 
         ImGui.End();
     }
@@ -132,7 +122,7 @@ public sealed class GizmoSettingsWindow : IWindow
 
         var previousType = _interactionManager.ActiveGizmoType;
         var selectedGizmoType = _interactionManager.ActiveGizmoType;
-        if (ImGui.RadioButton("None", selectedGizmoType == GizmoType.None))
+        if (ImGui.RadioButton("None (I)", selectedGizmoType == GizmoType.None))
         {
             selectedGizmoType = GizmoType.None;
         }

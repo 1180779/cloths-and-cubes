@@ -19,50 +19,50 @@ public sealed class SelectionManager(
     Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
     Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
     Func<Plane> planeProvider,
-    Func<float> positionEpsilonProvider
+    Func<float> positionEpsilonProvider,
+    SelectionState selectionState
 )
 {
-    private readonly SelectionState _state = new();
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
+    public SelectionState SelectionState { get; } = selectionState;
 
-    public SelectionState State => _state;
-
-    public bool IsEnabled
+    public bool IsSelectionEnabled
     {
-        get => _state.IsEnabled;
-        set => _state.IsEnabled = value;
+        get => SelectionState.IsSelectionEnabled;
+        set => SelectionState.IsSelectionEnabled = value;
     }
 
-    public Ray? LastRay => _state.LastRay;
-    public Real SelectedObjectDistance => _state.SelectedObjectDistance;
+    public Ray? HoverRay => SelectionState.HoverRay;
+    public Ray? SelectionRay => SelectionState.SelectionRay;
+    public Real SelectedObjectDistance => SelectionState.SelectionDistance;
 
     /// <summary>
     /// The object currently under the mouse cursor (updated every frame).
     /// </summary>
-    public object? HoveredObject => _state.HoveredObject;
+    public object? HoveredObject => SelectionState.HoveredObject;
 
     /// <summary>
     /// The explicitly selected object (selected for gizmo manipulation).
     /// </summary>
     public object? SelectedObject
     {
-        get => _state.SelectedObject;
+        get => SelectionState.SelectedObject;
         set
         {
-            if (!_state.IsEnabled)
+            if (!SelectionState.IsSelectionEnabled)
                 return;
-            if (_state.SelectedObject != value)
+            if (SelectionState.SelectedObject != value)
             {
-                _state.SelectedObject = value;
-                OnSelectionChanged?.Invoke(_state.SelectedObject);
+                SelectionState.SelectedObject = value;
+                OnSelectionChanged?.Invoke(SelectionState.SelectedObject);
             }
         }
     }
 
     public bool SelectionEnabled
     {
-        get => _state.IsEnabled;
+        get => SelectionState.IsSelectionEnabled;
         set
         {
             if (!value)
@@ -70,14 +70,14 @@ public sealed class SelectionManager(
                 SelectedObject = null;
             }
 
-            _state.IsEnabled = value;
+            SelectionState.IsSelectionEnabled = value;
         }
     }
 
     /// <summary>
     /// Event raised when the selected object changes.
     /// </summary>
-    public event Action<object?>? OnSelectionChanged;
+    public event Action<object?> OnSelectionChanged = delegate { };
 
     /// <summary>
     /// Updates which object is currently hovered by the mouse cursor.
@@ -87,12 +87,6 @@ public sealed class SelectionManager(
     /// <param name="screenSize">The dimensions of the viewport in framebuffer coordinates</param>
     public void UpdateHover(Vector2 viewportMousePos, Vector2i screenSize)
     {
-        if (!IsEnabled)
-        {
-            _state.HoveredObject = null;
-            return;
-        }
-
         PerformHoverDetection(viewportMousePos, screenSize);
     }
 
@@ -102,26 +96,31 @@ public sealed class SelectionManager(
     /// </summary>
     public bool SelectHoveredObject()
     {
-        if (_state.UnselectOnSelectedObjectClick)
+        if (SelectionState.UnselectOnSelectedObjectClick)
         {
-            if (_state.HoveredObject == SelectedObject)
+            if (SelectionState.HoveredObject == SelectedObject)
             {
                 SelectedObject = null;
+                SelectionState.SelectionRay = null;
                 return true;
             }
 
             if (SelectedObject != HoveredObject)
             {
                 SelectedObject = HoveredObject;
+                SelectionState.SelectionRay = SelectionState.HoverRay;
+                SelectionState.SelectionDistance = SelectionState.HoverDistance;
                 return true;
             }
 
             return false;
         }
 
-        if (_state.HoveredObject != null)
+        if (SelectionState.HoveredObject != null)
         {
-            SelectedObject = _state.HoveredObject;
+            SelectedObject = HoveredObject;
+            SelectionState.SelectionRay = SelectionState.HoverRay;
+            SelectionState.SelectionDistance = SelectionState.HoverDistance;
             return true;
         }
 
@@ -173,7 +172,7 @@ public sealed class SelectionManager(
     private void PerformHoverDetection(Vector2 mousePos, Vector2i screenSize)
     {
         var ray = GetRayFromMouse(mousePos, _cameraProvider(), screenSize);
-        _state.LastRay = ray;
+        SelectionState.HoverRay = ray;
 
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
@@ -198,8 +197,8 @@ public sealed class SelectionManager(
             closestObject = planeObj;
         }
 
-        _state.HoveredObject = closestObject;
-        _state.SelectedObjectDistance = closestDistance;
+        SelectionState.HoveredObject = closestObject;
+        SelectionState.HoverDistance = closestDistance;
     }
 
     private (bool, Real, object?) TestRayIntersection(Ray ray, int index)
@@ -277,19 +276,63 @@ public sealed class SelectionManager(
         return (false, 0, null);
     }
 
-    public void ClearHover()
+    /// <summary>
+    /// Removes the specified object from the selection context, clearing selection and hover status if applicable.
+    /// </summary>
+    /// <param name="obj">The object to be removed from the interaction context.</param>
+    public void RemoveObject(object obj)
     {
-        _state.HoveredObject = null;
-        _state.LastRay = null;
+        if (HoveredObject == obj)
+        {
+            ClearHover();
+        }
+
+        if (SelectedObject == obj)
+        {
+            ClearSelection();
+        }
     }
 
     /// <summary>
-    /// Clears the current selection and resets the selection state.
+    /// Clears the current hover.
+    /// </summary>
+    public void ClearHover()
+    {
+        SelectionState.HoveredObject = null;
+        SelectionState.HoverRay = null;
+        SelectionState.HoverDistance = 0;
+    }
+
+    /// <summary>
+    /// Clears the current selection.
     /// </summary>
     public void ClearSelection()
     {
-        SelectedObject = null;
-        _state.LastRay = null;
-        _state.SelectedObjectDistance = 0;
+        var selectedObject = SelectionState.SelectedObject;
+        SelectionState.SelectedObject = null;
+        SelectionState.SelectionRay = null;
+        SelectionState.SelectionDistance = 0;
+        if (selectedObject != null)
+        {
+            OnSelectionChanged.Invoke(selectedObject);
+        }
+    }
+
+    /// <summary>
+    /// Clears the current selection and hover state, except for the specified object.
+    /// If the given object is currently hovered or selected, its state is preserved.
+    /// </summary>
+    /// <param name="obj">The object to exclude from being cleared from hover or selection state.</param>
+    public void ClearExcept(object obj)
+    {
+        if (HoveredObject != obj)
+        {
+            ClearHover();
+        }
+
+        if (SelectedObject != obj)
+        {
+            ClearSelection();
+        }
     }
 }

@@ -9,8 +9,10 @@ using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.Display.EnvironmentMaps;
 using Visualisation.Core.Display.Gizmos;
 using Visualisation.Core.Display.Light;
+using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 using Visualisation.Core.Inputs;
+using Visualisation.Core.State;
 
 namespace Visualisation.Core.GameObjects.Scenes;
 
@@ -32,7 +34,7 @@ public abstract class SceneRenderer : IDisposable
         _getGameObjects = getGameObjects;
 
         EnvironmentMap = new(
-            Hdr,
+            DefaultEnvironmentMapFile,
             EquirectangularToCubemapShader,
             IrradianceConvolutionShader,
             PrefilterShader,
@@ -76,6 +78,7 @@ public abstract class SceneRenderer : IDisposable
     public readonly Shader PbrShader = new("scenePBRShader.vert", "scenePBRShader.frag");
     public readonly Shader BasicShader = new("sceneBasicShader.vert", "sceneBasicShader.frag");
     public readonly Shader OutlineShader = new("outline.vert", "sceneBasicShader.frag");
+    public readonly Shader ScreenSpaceShader = new("screenSpace.vert", "sceneBasicShader.frag");
 
     public readonly Shader EquirectangularToCubemapShader =
         new("cubemap.vert", "equirectangularToCubemapShader.frag");
@@ -86,7 +89,22 @@ public abstract class SceneRenderer : IDisposable
     public readonly Shader SkyboxShader = new("sceneSkyboxShader.vert", "sceneSkyboxShader.frag");
 
     public readonly Shader BrdfLutShader = new("depthMapShader.vert", "brdfLUTShader.frag");
-    private const string Hdr = "Hdr/symmetrical_garden_02_4k.exr";
+
+    public static EnvMapFileDescription DefaultEnvironmentMapFile { get; set; } =
+        new(Path.Join(MaterialsAndEnvironmentMapsHelper.EnvironmentMapsFolder, "leibstadt_2k.hdr"));
+
+    public void SetCurrentEnvironmentMap(EnvMapFileDescription newMap)
+    {
+        var oldMap = EnvironmentMap;
+        EnvironmentMap = new(
+            newMap,
+            EquirectangularToCubemapShader,
+            IrradianceConvolutionShader,
+            PrefilterShader,
+            BrdfLutShader);
+        oldMap.Dispose();
+    }
+
     public EnvironmentMap EnvironmentMap { get; set; }
     private CubeMesh _cube = new();
 
@@ -113,6 +131,10 @@ public abstract class SceneRenderer : IDisposable
         else if (input.IsKeyPressed(InputKey.U))
         {
             InteractionManager.SetActiveGizmoType(GizmoType.Rotation);
+        }
+        else if (input.IsKeyPressed(InputKey.I))
+        {
+            InteractionManager.SetActiveGizmoType(GizmoType.None);
         }
     }
 
@@ -214,8 +236,7 @@ public abstract class SceneRenderer : IDisposable
     public void RenderObjectOutline(
         object obj,
         Vector4 color,
-        float scaleFactor = OutlineSize,
-        bool drawInvisible = false)
+        float scaleFactor = OutlineSize)
     {
         if (obj is IHasRenderStrategy renderable)
         {
@@ -232,6 +253,33 @@ public abstract class SceneRenderer : IDisposable
                 PositionEpsilon = PositionEpsilonProvider?.Invoke() ?? 0.0f
             };
             renderable.RenderStrategy.DrawOutline(renderContext, renderable.Model);
+        }
+    }
+
+    public void RenderDragCrosshair()
+    {
+        if (InteractionManager.StaticDragManager.Enabled)
+        {
+            GL.Disable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            var scale = InteractionManager.EditorState.DraggingState.CrosshairSize *
+                DraggingState.CrosshairSizeModifier;
+
+            ScreenSpaceShader.Use();
+            // Position at the center (0,0) with scale - already in NDC space
+            // Account for the aspect ratio to make the sphere appear circular
+            var aspectRatio = CameraBase.AspectRatio;
+            Matrix4.CreateScale(scale / aspectRatio, scale, scale, out Matrix4 scaleMatrix);
+            ScreenSpaceShader.SetMatrix4("model", scaleMatrix);
+            ScreenSpaceShader.SetVector3("color", InteractionManager.EditorState.DraggingState.CrosshairColor.Xyz);
+            ScreenSpaceShader.SetFloat("alpha", InteractionManager.EditorState.DraggingState.CrosshairColor.W);
+
+            InteractionManager.EditorState.DraggingState.CrosshairMesh.Render();
+
+            GL.Disable(EnableCap.Blend);
+            GL.Enable(EnableCap.DepthTest);
         }
     }
 
@@ -253,16 +301,14 @@ public abstract class SceneRenderer : IDisposable
             SelectionManager.SelectedObject == InteractionManager.StaticDragManager.HoverTarget)
             return;
 
-        // GL.Disable(EnableCap.DepthTest);
         GL.Enable(EnableCap.Blend);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         RenderObjectOutline(InteractionManager.StaticDragManager.HoverTarget,
             InteractionManager.StaticDragManager.HoverIndicatorColor,
-            InteractionManager.StaticDragManager.HoverIndicatorScale, drawInvisible: true);
+            InteractionManager.StaticDragManager.HoverIndicatorScale);
 
         GL.Disable(EnableCap.Blend);
-        // GL.Enable(EnableCap.DepthTest);
     }
 
     private void RenderSkybox()
@@ -290,14 +336,13 @@ public abstract class SceneRenderer : IDisposable
     {
         _cube.Dispose();
         PbrShader.Dispose();
+        ScreenSpaceShader.Dispose();
         BasicShader.Dispose();
         OutlineShader.Dispose();
         SkyboxShader.Dispose();
         EquirectangularToCubemapShader.Dispose();
 
         LightsManager.Dispose();
-
-        // Note: GameObjects are owned by the application/demo, not by SceneRenderer
-        // Note: InteractionManager is owned by the application/demo, not by SceneRenderer
+        InteractionManager.Dispose();
     }
 }

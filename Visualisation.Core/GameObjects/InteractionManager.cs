@@ -15,7 +15,6 @@ namespace Visualisation.Core.GameObjects;
 
 /// <summary>
 /// Manages all user interaction with the scene: selection, dragging, and gizmo manipulation.
-/// Consolidates SelectionManager, StaticDragManager, and all gizmo instances.
 /// </summary>
 public sealed class InteractionManager : IDisposable
 {
@@ -45,17 +44,17 @@ public sealed class InteractionManager : IDisposable
 
         _cameraProvider = cameraProvider;
 
-
         SelectionManager = new(
             cameraProvider,
             bvhProvider,
             bvhDictionaryProvider,
             clothsProvider,
             planeProvider,
-            positionEpsilonProvider);
+            positionEpsilonProvider,
+            _editorState.Selection);
 
         StaticDragManager = new(() => SelectionManager.HoveredObject, cameraProvider, boxesProvider,
-            globalJointsProvider);
+            globalJointsProvider, _editorState.DraggingState);
     }
 
     public SelectionManager SelectionManager { get; set; }
@@ -91,7 +90,7 @@ public sealed class InteractionManager : IDisposable
 
     private void UpdateActiveGizmoTarget()
     {
-        if (_editorState.Gizmo.ActiveGizmo is not null && SelectionManager?.SelectedObject is not null)
+        if (_editorState.Gizmo.ActiveGizmo is not null && SelectionManager.SelectedObject is not null)
         {
             var adapter = GizmoAdapterFactory.CreateAdapter(SelectionManager.SelectedObject, ActiveGizmoType);
             _editorState.Gizmo.ActiveGizmo.Target = adapter ??
@@ -114,23 +113,30 @@ public sealed class InteractionManager : IDisposable
         _scaleGizmo.HandleSize = 1.0f;
     }
 
+    /// <summary>
+    /// Removes the specified object from the interaction context, clearing selection,
+    /// hover status, and gizmo associations if applicable.
+    /// </summary>
+    /// <param name="obj">The object to be removed from the interaction context.</param>
     public void RemoveObject(object obj)
     {
-        SelectionManager.ClearSelection();
-        SelectionManager.ClearHover();
+        SelectionManager.RemoveObject(obj);
+        StaticDragManager.RemoveObject(obj);
 
-        if (ActiveGizmo != null)
-        {
-            ActiveGizmo.Target = null;
-            SetActiveGizmoType(GizmoType.None);
-        }
-
-        if (StaticDragManager.DraggedObject == obj)
-        {
-            StaticDragManager.Clear();
-        }
+        // Clear the gizmo target for all the gizmos just to be safe
+        if (_translationGizmo.Target == obj)
+            _translationGizmo.Target = null;
+        if (_rotationGizmo.Target == obj)
+            _rotationGizmo.Target = null;
+        if (_scaleGizmo.Target == obj)
+            _scaleGizmo.Target = null;
     }
 
+    /// <summary>
+    /// Removes multiple objects from the interaction context, clearing selection,
+    /// hover status, and gizmo associations if applicable.
+    /// </summary>
+    /// <param name="objs">A collection of objects to be removed from the interaction context.</param>
     public void RemoveObjects(IEnumerable<object> objs)
     {
         foreach (var obj in objs)
@@ -140,15 +146,35 @@ public sealed class InteractionManager : IDisposable
     }
 
     /// <summary>
-    /// Clears the current selection and deactivates any active gizmo.
-    /// Should be called when loading or resetting scenes to prevent stale references.
+    /// Clears all selections, dragged objects, and gizmo targets except for the specified object.
     /// </summary>
-    public void ClearSelectionAndGizmos()
+    /// <param name="obj">The object to be preserved while other selections, dragged objects,
+    /// and gizmo targets are cleared.</param>
+    public void ClearExcept(object obj)
     {
-        // Clear selection first
-        SelectionManager.ClearSelection();
+        SelectionManager.ClearExcept(obj);
+        StaticDragManager.ClearDraggedObjectExcept(obj);
 
-        // Deactivate any active gizmo
+        // Clear the gizmo target for all the gizmos just to be safe
+        if (_translationGizmo.Target != obj)
+            _translationGizmo.Target = null;
+        if (_rotationGizmo.Target != obj)
+            _rotationGizmo.Target = null;
+        if (_scaleGizmo.Target != obj)
+            _scaleGizmo.Target = null;
+    }
+
+    /// <summary>
+    /// Clears the current selection and drag and resets active gizmos.
+    /// Should be invoked during scene changes or when it is known that current selections
+    /// will become invalid, to ensure internal state consistency and avoid dangling references.
+    /// </summary>
+    public void Clear()
+    {
+        SelectionManager.ClearHover();
+        SelectionManager.ClearSelection();
+        StaticDragManager.ClearDraggedObject();
+
         _editorState.Gizmo.ActiveGizmo = null;
         _editorState.Gizmo.ActiveGizmoType = GizmoType.None;
     }
@@ -231,5 +257,7 @@ public sealed class InteractionManager : IDisposable
         _translationGizmo.Dispose();
         _scaleGizmo.Dispose();
         _rotationGizmo.Dispose();
+
+        EditorState.Dispose();
     }
 }

@@ -59,9 +59,10 @@ public sealed class SceneManagementWindow : IWindow
             if (ImGui.CollapsingHeader("Save Current Scene", ImGuiTreeNodeFlags.DefaultOpen))
             {
                 ImGui.InputText("Scene Name", ref _newSceneName, 256);
-                ImGui.InputTextMultiline("Description", ref _sceneDescription, 1024,
+                ImGui.PushID("DescriptionInput");
+                ImGui.InputTextMultiline("", ref _sceneDescription, 1024,
                     new System.Numerics.Vector2(-1, 60));
-
+                ImGui.PopID();
                 ImGui.Spacing();
 
                 const string saveSceneText = "Save Scene";
@@ -78,7 +79,7 @@ public sealed class SceneManagementWindow : IWindow
             ImGui.Separator();
             ImGui.Spacing();
 
-            if (ImGui.CollapsingHeader("Load Scene", ImGuiTreeNodeFlags.DefaultOpen))
+            if (ImGui.CollapsingHeader("Scenes", ImGuiTreeNodeFlags.DefaultOpen))
             {
                 const string refreshText = "Refresh List";
                 if (ImGui.Button(refreshText, UiControls.Style.ButtonSizes.Small(refreshText)))

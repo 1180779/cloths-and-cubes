@@ -1,4 +1,8 @@
+using Engine.Collision;
+
 using ImGuiNET;
+
+using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.UI.Windows;
 
@@ -6,19 +10,36 @@ public sealed class BoxesDemoSettingsWindow(
     Func<int> getBoxesCount,
     Func<int> getSpheresCount,
     Func<int> getClothsCount,
-    Func<int> getJointsCount
+    Func<int> getJointsCount,
+    Func<EnvMapFileDescription> getCurrentEnvironmentMap,
+    Action<EnvMapFileDescription> setCurrentEnvironmentMap,
+    Func<EnvMapFileDescription> getDefaultEnvironmentMap,
+    CollisionData collisionData
 ) : IWindow
 {
-    public Func<int> GetBoxesCount { get; set; } = getBoxesCount;
-    public Func<int> GetSpheresCount { get; set; } = getSpheresCount;
-    public Func<int> GetClothsCount { get; set; } = getClothsCount;
-    public Func<int> JointsCount { get; set; } = getJointsCount;
+    private CollisionData _collisionData = collisionData; /* borrowed */
+
+    public Func<EnvMapFileDescription> GetCurrentEnvironmentMap { get; init; } = getCurrentEnvironmentMap;
+    public Action<EnvMapFileDescription> SetCurrentEnvironmentMap { get; init; } = setCurrentEnvironmentMap;
+    public Func<EnvMapFileDescription> GetDefaultEnvironmentMap { get; init; } = getDefaultEnvironmentMap;
+    public Func<int> GetBoxesCount { get; init; } = getBoxesCount;
+    public Func<int> GetSpheresCount { get; init; } = getSpheresCount;
+    public Func<int> GetClothsCount { get; init; } = getClothsCount;
+    public Func<int> JointsCount { get; init; } = getJointsCount;
 
     public delegate void SetObjectCount(int count);
 
-    public SetObjectCount? SetBoxesCount { get; set; }
-    public SetObjectCount? SetSpheresCount { get; set; }
-    public SetObjectCount? SetClothsCount { get; set; }
+    public delegate void SetClothCount(
+        int count,
+        int sizeX,
+        int sizeY,
+        Real springLength,
+        Real springConstant,
+        Real particleMass);
+
+    public SetObjectCount? SetBoxesCount { get; init; }
+    public SetObjectCount? SetSpheresCount { get; init; }
+    public SetClothCount? SetClothsCount { get; init; }
 
     private int _sizeX = 21;
     public int SizeX => _sizeX;
@@ -41,14 +62,46 @@ public sealed class BoxesDemoSettingsWindow(
         {
             DrawClothGeneral();
             DrawCounts();
+            DrawCollision();
+            SelectEnvironmentMap();
         }
 
         ImGui.End();
     }
 
+    private void SelectEnvironmentMap()
+    {
+        if (ImGui.CollapsingHeader("Environment Map"))
+        {
+            ImGui.Indent();
+            const string resetToDefaultText = "Reset to Default";
+            if (ImGui.Button(resetToDefaultText, UiControls.Style.ButtonSizes.Medium(resetToDefaultText)))
+            {
+                SetCurrentEnvironmentMap(GetDefaultEnvironmentMap());
+            }
+
+            ImGui.Spacing();
+            ImGui.Separator();
+            ImGui.Spacing();
+
+
+            var environmentMapFiles = MaterialsAndEnvironmentMapsHelper.AllEnvironmentMapFiles;
+            foreach (var envMap in environmentMapFiles)
+            {
+                var fileName = envMap.FileName;
+                if (ImGui.Button(fileName, UiControls.Style.ButtonSizes.SmallFillX(fileName)))
+                {
+                    SetCurrentEnvironmentMap(envMap);
+                }
+            }
+
+            ImGui.Unindent();
+        }
+    }
+
     private void DrawClothGeneral()
     {
-        ImGui.SeparatorText("Cloth parameters");
+        ImGui.SeparatorText("New cloth parameters");
 
         ImGui.SliderInt("Size X", ref _sizeX, 1, 100);
         ImGui.SliderInt("Size Y", ref _sizeY, 1, 100);
@@ -76,15 +129,32 @@ public sealed class BoxesDemoSettingsWindow(
         int clothsCount = GetClothsCount();
         if (ImGui.SliderInt("Cloths", ref clothsCount, 0, 5))
         {
-            SetClothsCount?.Invoke(clothsCount);
+            SetClothsCount?.Invoke(clothsCount, SizeX, SizeY, SpringLength, SpringConstant, ParticleMass);
         }
 
         int jointsCount = JointsCount();
         ImGui.Text($"Joints: {jointsCount}");
     }
 
+    private void DrawCollision()
+    {
+        ImGui.SeparatorText("Collision parameters");
+        ImGui.SliderFloat("Friction", ref _collisionData.Friction, 0.0f, 1.0f);
+        ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
+        ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
+    }
+
+    public sealed record CollisionState
+    {
+        public Real Friction { get; init; }
+        public Real Restitution { get; init; }
+        public Real Tolerance { get; init; }
+    }
+
     public sealed record State
     {
+        public CollisionState? CollisionState { get; init; }
+        public EnvMapFileDescription? EnvironmentMapFileDescription { get; init; }
         public int SizeX { get; init; }
         public int SizeY { get; init; }
         public Real SpringLength { get; init; }
@@ -99,6 +169,14 @@ public sealed class BoxesDemoSettingsWindow(
     {
         return new State
         {
+            CollisionState =
+                new CollisionState
+                {
+                    Friction = _collisionData.Friction,
+                    Restitution = _collisionData.Restitution,
+                    Tolerance = _collisionData.Tolerance
+                },
+            EnvironmentMapFileDescription = GetCurrentEnvironmentMap(),
             SizeX = SizeX,
             SizeY = SizeY,
             SpringLength = SpringLength,
@@ -112,6 +190,21 @@ public sealed class BoxesDemoSettingsWindow(
 
     public void RestoreState(State state)
     {
+        if (state.EnvironmentMapFileDescription is not null)
+        {
+            // Setting the loaded one to the renderers default one will not work as the renderer constructor has already run. 
+            // Would need to refactor the renderer to call some Init() method to initialize the environment map, 
+            // which would be skipped in the constructor in that case. This, however, creates more complexity. 
+            SetCurrentEnvironmentMap(state.EnvironmentMapFileDescription);
+        }
+
+        if (state.CollisionState is not null)
+        {
+            _collisionData.Friction = state.CollisionState.Friction;
+            _collisionData.Restitution = state.CollisionState.Restitution;
+            _collisionData.Tolerance = state.CollisionState.Tolerance;
+        }
+
         _sizeX = state.SizeX;
         _sizeY = state.SizeY;
 
@@ -119,10 +212,9 @@ public sealed class BoxesDemoSettingsWindow(
         _springConstant = state.SpringConstant;
         _particleMass = state.ParticleMass;
 
-
         SetBoxesCount?.Invoke(state.BoxesCount);
         SetSpheresCount?.Invoke(state.SpheresCount);
-        SetClothsCount?.Invoke(state.ClothsCount);
+        SetClothsCount?.Invoke(state.ClothsCount, SizeX, SizeY, SpringLength, SpringConstant, ParticleMass);
     }
 
     public string Name => "Boxes Demo Settings";

@@ -4,7 +4,7 @@ using Visualisation.Core.Display.Mesh;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Line : IMesh
+public sealed class LineMesh : IMesh
 {
     private readonly Vector3 _start;
     private readonly Vector3 _end;
@@ -12,7 +12,7 @@ public sealed class Line : IMesh
 
     private MeshManager.MeshData? _meshData;
 
-    public Line(Vector3 start, Vector3 end, string? meshName = null)
+    public LineMesh(Vector3 start, Vector3 end, string? meshName = null)
     {
         _start = start;
         _end = end;

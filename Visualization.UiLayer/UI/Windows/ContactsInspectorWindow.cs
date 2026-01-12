@@ -4,6 +4,8 @@ using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
 
+#if DEBUG
+
 /// <summary>
 /// A specialized inspector window for Contact arrays that filters and displays only valid contacts
 /// (where both Body elements are not null)
@@ -243,3 +245,5 @@ public sealed class ContactsInspectorWindow(Func<Contact[]> contactProvider) : I
         ImGui.Unindent(10);
     }
 }
+
+#endif

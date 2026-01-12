@@ -53,9 +53,7 @@ uniform sampler2D   brdfLUT;
 
 uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
-uniform sampler2D aoMap;
+uniform sampler2D armMap;
 
 uniform vec3 albedoValue;
 uniform float metallicValue;
@@ -344,12 +342,13 @@ void main()
     vec3 N;
     vec3 V = normalize(TangentViewPos - TangentFragPosition);
     if (useMaps) {
+        vec3 armRbg = texture(armMap, TexCoords).rgb;
         vec3 albedoRgb = texture(albedoMap, TexCoords).rgb;
         albedo    = pow(albedoRgb, vec3(2.2));
         normal    = texture(normalMap, TexCoords).rgb;
-        metallic  = texture(metallicMap, TexCoords).r;
-        roughness = texture(roughnessMap, TexCoords).r;
-        ao        = texture(aoMap, TexCoords).r;
+        metallic  = armRbg.b;
+        roughness = armRbg.g;
+        ao        = armRbg.r;
 
         N = normalize(normal * 2.0 - 1.0);// this normal is in tangent space, so is the light direction
     } else {

@@ -207,7 +207,5 @@ public sealed record MaterialData
     // For textured materials
     public string? AlbedoTexturePath { get; init; }
     public string? NormalTexturePath { get; init; }
-    public string? MetallicTexturePath { get; init; }
-    public string? RoughnessTexturePath { get; init; }
-    public string? AoTexturePath { get; init; }
+    public string? ArmTexturePath { get; init; }
 }
