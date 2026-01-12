@@ -11,18 +11,19 @@ namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class GraphicsSettingsWindow(
     Func<LightDirectional?> getDirectionalLight,
-    SceneManager sceneManager,
+    SceneRenderer sceneRenderer,
     SceneWindow sceneWindow
 ) : IWindow, IDisposable
 {
-    private SceneManager _sceneManager = sceneManager; /* borrowed */
+    private SceneRenderer _sceneRenderer = sceneRenderer; /* borrowed */
     private SceneWindow _sceneWindow = sceneWindow; /* borrowed */
     private Func<LightDirectional?> _getDirectionalLight = getDirectionalLight;
 
     private DirectionArrowControl? _arrowControl;
     private bool _disposed;
 
-    public string Name => "Graphics Settings";
+    public const string WindowName = "Graphics Settings";
+    public string Name => WindowName;
 
     public void Draw(ref bool isOpen)
     {
@@ -73,7 +74,7 @@ public sealed class GraphicsSettingsWindow(
         if (ImGui.CollapsingHeader("Light direction control"))
         {
             ImGui.Indent();
-            _arrowControl ??= new DirectionArrowControl(_sceneManager.BasicShader);
+            _arrowControl ??= new DirectionArrowControl(_sceneRenderer.BasicShader);
             _arrowControl.Draw(ref direction, light);
             UiControls.SetTooltip("Use the arrows to visually adjust the light direction. "
                 + "The arrows represent the X (red), Y (green), and Z (blue) axes.");
@@ -93,7 +94,7 @@ public sealed class GraphicsSettingsWindow(
         if (ImGui.CollapsingHeader("Environment Map Settings"))
         {
             ImGui.Indent();
-            int currentDisplayType = (int)_sceneManager.EnvironmentMap.DisplayType;
+            int currentDisplayType = (int)_sceneRenderer.EnvironmentMap.DisplayType;
             ImGui.Text("Display Type:");
             ImGui.RadioButton("Skybox", ref currentDisplayType,
                 (int)EnvironmentMap.EnvironmentMapDisplayType.EnvironmentCubemap);
@@ -103,20 +104,20 @@ public sealed class GraphicsSettingsWindow(
             ImGui.SameLine();
             ImGui.RadioButton("Prefiltered Map", ref currentDisplayType,
                 (int)EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap);
-            _sceneManager.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
+            _sceneRenderer.EnvironmentMap.DisplayType = (EnvironmentMap.EnvironmentMapDisplayType)currentDisplayType;
 
-            if (_sceneManager.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
+            if (_sceneRenderer.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
             {
                 ImGui.BeginDisabled();
             }
 
-            float roughness = _sceneManager.EnvironmentMap.PrefilterMapValue;
+            float roughness = _sceneRenderer.EnvironmentMap.PrefilterMapValue;
             if (ImGui.SliderFloat("Roughness", ref roughness, 1.0f, 5.0f))
             {
-                _sceneManager.EnvironmentMap.PrefilterMapValue = roughness;
+                _sceneRenderer.EnvironmentMap.PrefilterMapValue = roughness;
             }
 
-            if (_sceneManager.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
+            if (_sceneRenderer.EnvironmentMap.DisplayType != EnvironmentMap.EnvironmentMapDisplayType.PrefilterMap)
             {
                 ImGui.EndDisabled();
             }
@@ -186,8 +187,8 @@ public sealed class GraphicsSettingsWindow(
                 : null,
             EnvironmentMap = new EnvironmentMapState
             {
-                EnvironmentMapDisplayType = _sceneManager.EnvironmentMap.DisplayType,
-                PrefilterMapValue = _sceneManager.EnvironmentMap.PrefilterMapValue,
+                EnvironmentMapDisplayType = _sceneRenderer.EnvironmentMap.DisplayType,
+                PrefilterMapValue = _sceneRenderer.EnvironmentMap.PrefilterMapValue,
             },
             SceneWindow = new SceneWindowState { Antialiasing = _sceneWindow.Antialiasing }
         };
@@ -207,8 +208,8 @@ public sealed class GraphicsSettingsWindow(
 
         if (state.EnvironmentMap is not null)
         {
-            _sceneManager.EnvironmentMap.DisplayType = state.EnvironmentMap.EnvironmentMapDisplayType;
-            _sceneManager.EnvironmentMap.PrefilterMapValue = state.EnvironmentMap.PrefilterMapValue;
+            _sceneRenderer.EnvironmentMap.DisplayType = state.EnvironmentMap.EnvironmentMapDisplayType;
+            _sceneRenderer.EnvironmentMap.PrefilterMapValue = state.EnvironmentMap.PrefilterMapValue;
         }
 
         if (state.SceneWindow is not null)

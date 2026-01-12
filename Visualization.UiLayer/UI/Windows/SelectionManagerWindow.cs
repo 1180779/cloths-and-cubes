@@ -13,9 +13,10 @@ using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class SelectionManagerWindow(SelectionManager selectionManager) : IWindow
+public sealed class SelectionManagerWindow(InteractionManager interactionManager)
+    : IWindow
 {
-    private SelectionManager _selectionManager = selectionManager;
+    private InteractionManager _interactionManager = interactionManager;
 
     private bool _debugRayDraw;
     private Line? _debugRay;
@@ -40,20 +41,23 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
     private System.Numerics.Vector3 _initialCenterPosition;
     private System.Numerics.Vector3 _accumulatedRotation;
 
+    // Track previously selected cloth particle for pinning
+    private ClothParticleWrapper? _previouslySelectedParticle;
+
     public string Name => "Selected Object";
 
     public void DebugRenderInScene(Shader shader)
     {
         if (!_debugRayDraw)
             return;
-        if (_selectionManager.LastRay is not null &&
-            (_lastRay is null || _lastRay.Value != _selectionManager.LastRay.Value))
+        if (_interactionManager.SelectionManager.LastRay is not null &&
+            (_lastRay is null || _lastRay.Value != _interactionManager.SelectionManager.LastRay.Value))
         {
-            _lastRay = _selectionManager.LastRay;
-            var ray = _selectionManager.LastRay.Value;
+            _lastRay = _interactionManager.SelectionManager.LastRay;
+            var ray = _interactionManager.SelectionManager.LastRay.Value;
             var rayDirection = new Vector3(ray.Direction.X, ray.Direction.Y, ray.Direction.Z);
             var rayOriginInWorld = new Vector3(ray.Origin.X, ray.Origin.Y, ray.Origin.Z);
-            Vector3 end = rayOriginInWorld + rayDirection * _selectionManager.SelectedObjectDistance;
+            Vector3 end = rayOriginInWorld + rayDirection * _interactionManager.SelectionManager.SelectedObjectDistance;
 
             _debugRay?.Dispose();
             _debugRay = new Line(rayOriginInWorld, end);
@@ -65,72 +69,101 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
 
     public void Draw(ref bool isOpen)
     {
-        if (ImGui.Begin("Selected Object", ref isOpen))
+        if (ImGui.Begin("Selected/Dragged Object", ref isOpen))
         {
-            bool selection = _selectionManager.SelectionEnabled;
+            ImGui.Checkbox("Enable static drag", ref _interactionManager.StaticDragManager.Enabled);
+            ImGui.SliderFloat("Static drag sensitivity", ref _interactionManager.StaticDragManager.Sensitivity, 0.1f,
+                10.0f);
+
+            bool selection = _interactionManager.SelectionManager.SelectionEnabled;
             if (ImGui.Checkbox("Enable selection", ref selection))
             {
-                _selectionManager.SelectionEnabled = selection;
+                _interactionManager.SelectionManager.SelectionEnabled = selection;
             }
 
             ImGui.Checkbox("Draw selection ray", ref _debugRayDraw);
-            ImGui.Checkbox("Draw invisible objects", ref _selectionManager.DrawInvisibleObjects);
-            ImGui.Checkbox("Draw selected object even behind other objects",
-                ref _selectionManager.DrawSelectedObjectWithoutDepthTesting);
-            ImGui.Checkbox("Unselect objects", ref _selectionManager.Unselect);
+            // ImGui.Checkbox("Draw invisible objects", ref _interactionManager.SelectionManager.DrawInvisibleObjects);
+            // ImGui.Checkbox("Draw selected object even behind other objects",
+            // ref _interactionManager.SelectionManager.DrawSelectedObjectWithoutDepthTesting);
+            var unselectOnSelectedObjectClick = _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick;
+            if (ImGui.Checkbox("Unselect objects",
+                ref unselectOnSelectedObjectClick))
+            {
+                _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick = unselectOnSelectedObjectClick;
+            }
+
             ImGui.Separator();
             ImGui.Spacing();
 
             // Game Object Properties section - only if a GameObject is selected
-            if (_selectionManager.SelectedObject is GameObject gameObject)
+            if (ImGui.CollapsingHeader("Selected Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
             {
-                if (ImGui.CollapsingHeader("Game Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
-                {
-                    ImGui.Indent();
-                    ImGui.Checkbox("Invisible", ref gameObject.Invisible);
-
-                    ImGui.Spacing();
-                    ImGui.Text($"Current Material: {gameObject.Material.Name}");
-
-                    ImGui.Text("Change Material:");
-                    DrawMaterialSelectors(gameObject);
-                    ImGui.Unindent();
-                }
-            }
-            else
-            {
-                ImGui.BeginDisabled();
-                ImGui.CollapsingHeader("Game Object Properties");
-                ImGui.EndDisabled();
-            }
-
-            switch (_selectionManager.SelectedObject)
-            {
-                case Box box:
-                    DrawBox(box);
-                    break;
-                case Ball ball:
-                    DrawSphere(ball);
-                    break;
-                case Cloth cloth:
-                    DrawCloth(cloth);
-                    break;
-                case RigidParticle particle:
-                    DrawParticle(particle);
-                    break;
-                case Plane plane:
-                    DrawPlane(plane);
-                    break;
-                case Cylinder cylinder:
-                    DrawCylinder(cylinder);
-                    break;
-                case Cone cone:
-                    DrawCone(cone);
-                    break;
+                ImGui.Indent();
+                DrawGameObjectProperties(_interactionManager.SelectionManager.SelectedObject, "SelectedObject");
+                ImGui.Unindent();
             }
         }
 
         ImGui.End();
+    }
+
+    private void DrawGameObjectProperties(object? targetObject, string id)
+    {
+        ImGui.PushID(id);
+        if (targetObject is GameObject gameObject)
+        {
+            if (ImGui.CollapsingHeader("Game Object Properties", ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                ImGui.Indent();
+                ImGui.Spacing();
+                ImGui.Text($"Current Material: {gameObject.Material.Name}");
+
+                ImGui.Text("Change Material:");
+                DrawMaterialSelectors(gameObject);
+                ImGui.Unindent();
+            }
+        }
+        else
+        {
+            ImGui.BeginDisabled();
+            ImGui.CollapsingHeader("Game Object Properties");
+            ImGui.EndDisabled();
+        }
+
+        ImGui.PopID();
+
+        switch (targetObject)
+        {
+            case ClothParticleWrapper particleWrapper:
+                // Track the selected cloth particle for potential pinning
+                _previouslySelectedParticle = particleWrapper;
+                DrawClothParticleWrapper(particleWrapper);
+                break;
+            case Box box:
+                DrawBox(box);
+                break;
+            case Ball ball:
+                DrawSphere(ball);
+                break;
+            case Cloth cloth:
+                DrawCloth(cloth);
+                break;
+            case ClothRigidParticleInCorner particleInCorner:
+                DrawParticle(particleInCorner);
+                break;
+            case RigidParticle particle:
+                DrawParticle(particle);
+                break;
+            case Plane plane:
+                DrawPlane(plane);
+                break;
+            case Cylinder cylinder:
+                DrawCylinder(cylinder);
+                break;
+            case Cone cone:
+                DrawCone(cone);
+                break;
+        }
     }
 
     private void DrawMaterialSelectors(GameObject gameObject)
@@ -244,6 +277,22 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         if (ImGui.CollapsingHeader("Transformation", ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Indent();
+
+            if (body.InverseMass == 0)
+            {
+                ImGui.Text("This body is static and immovable by physic interactions.");
+                ImGui.BeginDisabled();
+                ImGui.Button("Make static", UiControls.Style.ButtonSizes.Small("Make static"));
+                ImGui.EndDisabled();
+            }
+            else
+            {
+                ImGui.Text("This body is dynamic.");
+                if (ImGui.Button("Make static", UiControls.Style.ButtonSizes.Small("Make static")))
+                {
+                    body.MakeStatic();
+                }
+            }
 
             bool returnValue = false;
             returnValue |= DrawVector3(ref body.Position, "Position");
@@ -423,6 +472,80 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         }
     }
 
+    private void DrawClothParticleWrapper(ClothParticleWrapper wrapper)
+    {
+        ImGui.Text($"Cloth Particle [{wrapper.ParticleX}, {wrapper.ParticleY}]");
+        ImGui.Separator();
+
+        var particle = wrapper.Particle;
+        var body = particle.Body;
+
+        ImGui.Text($"Position: ({body.Position.X:F2}, {body.Position.Y:F2}, {body.Position.Z:F2})");
+        ImGui.Text($"Velocity: ({body.Velocity.X:F2}, {body.Velocity.Y:F2}, {body.Velocity.Z:F2})");
+        ImGui.Text($"Rotation: ({body.Rotation.X:F2}, {body.Rotation.Y:F2}, {body.Rotation.Z:F2})");
+        ImGui.Text($"Acceleration: ({body.Acceleration.X:F2}, {body.Acceleration.Y:F2}, {body.Acceleration.Z:F2})");
+        ImGui.Text($"Mass: {body.Mass:F4}");
+        ImGui.Text($"Inverse mass: {body.InverseMass:F4}");
+
+        bool isAnchor = body.InverseMass == 0;
+        ImGui.Text($"Is Anchor: {(isAnchor ? "Yes" : "No")}");
+
+        ImGui.Separator();
+
+        if (ImGui.CollapsingHeader("Particle Controls"))
+        {
+            // if (isAnchor)
+            // {
+            //     if (ImGui.Button("Release Anchor"))
+            //     {
+            //         wrapper.RestoreDefaultMass();
+            //     }
+            // }
+            // else
+            // {
+            //     if (ImGui.Button("Make Anchor"))
+            //     {
+            //         wrapper.MakeAnchor();
+            //     }
+            // }
+
+            ImGui.Separator();
+            ImGui.TextWrapped(
+                "Tip: Drag the particle with the gizmo to move it. The particle will automatically become an anchor while dragging.");
+        }
+
+        if (ImGui.CollapsingHeader("Automatic Pinning to Box Corners"))
+        {
+            ImGui.TextWrapped(
+                "When dragging this particle, it will automatically pin to nearby immovable box corners.");
+            ImGui.TextWrapped(
+                "Move the particle close to an immovable box corner to pin it. Move it away to unpin.");
+
+            // if (wrapper.IsPinned)
+            // {
+            //     ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f),
+            //         "Currently PINNED to a box corner");
+            //     ImGui.Text($"Pinned position: {wrapper.PinnedPosition}");
+            // }
+            // else
+            // {
+            //     ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
+            //         "Not pinned");
+            // }
+        }
+
+        ImGui.Separator();
+
+        if (ImGui.CollapsingHeader("Parent Cloth Info"))
+        {
+            var cloth = wrapper.ParentCloth;
+            ImGui.Text($"Cloth Size: {cloth.EngineCloth.SizeX} x {cloth.EngineCloth.SizeY}");
+            ImGui.Text($"Spring Constant: {cloth.EngineCloth.SpringConstant:F2}");
+            ImGui.Text($"Spring Length: {cloth.EngineCloth.SpringLength:F2}");
+            ImGui.Text($"Particle Mass: {cloth.EngineCloth.ParticleMass:F4}");
+        }
+    }
+
     private bool DrawClothLsctpm(ref Real springConstant, ref Real particleMass)
     {
         bool changed = false;
@@ -449,7 +572,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         }
 
         ImGui.PushID("Scale (particle mass)");
-        if (ImGui.DragFloat("Scale", ref _lsctpmScale, 0.5f, 0.0f, 100.0f))
+        if (ImGui.DragFloat("Scale", ref _lsctpmScale, 0.5f, 0.0f, 100_000.0f))
         {
             springConstant = _lsctpmScale * particleMass + _lsctpmBias;
             changed = true;
@@ -458,7 +581,7 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
         ImGui.PopID();
 
         ImGui.PushID("Bias (particle mass)");
-        if (ImGui.DragFloat("Bias", ref _lsctpmBias, 0.5f, 0.0f, 100.0f))
+        if (ImGui.DragFloat("Bias", ref _lsctpmBias, 0.5f, 0.0f, 100_000.0f))
         {
             springConstant = _lsctpmScale * particleMass + _lsctpmBias;
             changed = true;
@@ -579,6 +702,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
 
     private void DrawParticle(RigidParticle particle, int x = 0, int y = 0)
     {
+        // Note: Automatic pinning to box corners now happens during dragging.
+        // The old manual pinning interface has been removed.
+
         if (ImGui.CollapsingHeader("Transformation", ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Indent();
@@ -628,10 +754,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
 
     public sealed record State
     {
-        public bool DrawInvisibleObjects { get; init; }
         public bool DrawDebugRay { get; init; }
-        public bool DrawSelectedObjectWithoutDepthTesting { get; init; }
         public bool Unselect { get; init; }
+        public bool DraggingEnabled { get; init; }
         public bool SelectionEnabled { get; init; }
         public bool Lsctpm { get; init; }
         public Real LsctpmScale { get; init; }
@@ -645,11 +770,10 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
     {
         return new State
         {
-            DrawInvisibleObjects = _selectionManager.DrawInvisibleObjects,
             DrawDebugRay = _debugRayDraw,
-            DrawSelectedObjectWithoutDepthTesting = _selectionManager.DrawSelectedObjectWithoutDepthTesting,
-            Unselect = _selectionManager.Unselect,
-            SelectionEnabled = _selectionManager.SelectionEnabled,
+            Unselect = _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick,
+            DraggingEnabled = _interactionManager.StaticDragManager.Enabled,
+            SelectionEnabled = _interactionManager.SelectionManager.SelectionEnabled,
             Lsctpm = _lsctpm,
             LsctpmScale = _lsctpmScale,
             LsctpmBias = _lsctpmBias,
@@ -663,10 +787,9 @@ public sealed class SelectionManagerWindow(SelectionManager selectionManager) : 
     {
         _debugRayDraw = state.DrawDebugRay;
 
-        _selectionManager.DrawInvisibleObjects = state.DrawInvisibleObjects;
-        _selectionManager.DrawSelectedObjectWithoutDepthTesting = state.DrawSelectedObjectWithoutDepthTesting;
-        _selectionManager.Unselect = state.Unselect;
-        _selectionManager.SelectionEnabled = state.SelectionEnabled;
+        _interactionManager.EditorState.Selection.UnselectOnSelectedObjectClick = state.Unselect;
+        _interactionManager.SelectionManager.SelectionEnabled = state.SelectionEnabled;
+        _interactionManager.StaticDragManager.Enabled = state.DraggingEnabled;
 
         _lsctpm = state.Lsctpm;
         _lsctpmScale = state.LsctpmScale;

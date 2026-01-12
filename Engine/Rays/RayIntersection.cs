@@ -442,8 +442,9 @@ public static class RayIntersection
     /// <param name="ray">The ray to test against the triangle.</param>
     /// <param name="triangle">The triangle to test for intersection.</param>
     /// <param name="distance">The distance from the ray origin to the intersection point, if an intersection occurs.</param>
-    /// <returns>True if the ray intersects the triangle, false otherwise.</returns>
-    public static bool IntersectRayTriangle(Ray ray, Triangle triangle, out Real distance)
+    /// <returns>(True, int) if the ray intersects the triangle, (false, -1) otherwise, where int is the
+    /// index of the vertex that is the closest to the intersection point (0 thorough 2).</returns>
+    public static (bool, int) IntersectRayTriangle(Ray ray, Triangle triangle, out Real distance)
     {
         Vector3 v0 = triangle.Vertex1;
         Vector3 v1 = triangle.Vertex2;
@@ -461,7 +462,7 @@ public static class RayIntersection
         // if the determinant is near zero, ray lies in plane of triangle
         Real eps = Core.Epsilon;
         if (det > -eps && det < eps)
-            return false;
+            return (false, -1);
 
         Real invDet = 1.0f / det;
 
@@ -471,7 +472,7 @@ public static class RayIntersection
         // Calculate u parameter and test bounds
         Real baryU = invDet * (originMinusV0 * crossRayDirEdge2);
         if (baryU < 0.0f || baryU > 1.0f)
-            return false;
+            return (false, -1);
 
         // Prepare to test V parameter
         Vector3 crossOrigMinusV0 = Vector3.CrossProduct(originMinusV0, edge1);
@@ -479,37 +480,65 @@ public static class RayIntersection
         // Calculate V parameter and test bounds
         Real baryV = (ray.Direction * crossOrigMinusV0) * invDet;
         if (baryV < 0.0f || baryU + baryV > 1.0f)
-            return false;
+            return (false, -1);
 
         // Calculate V parameter and test bounds
         Real rayT = (edge2 * crossOrigMinusV0) * invDet;
         if (rayT >= 0)
         {
             distance = rayT;
-            return true;
+
+            // Calculate w
+            Real baryW = 1.0f - baryU - baryV;
+
+            // Find closest vertex
+            int closestIndex = 0;
+            Real maxBary = baryW;
+
+            if (baryU > maxBary)
+            {
+                maxBary = baryU;
+                closestIndex = 1;
+            }
+
+            if (baryV > maxBary)
+            {
+                closestIndex = 2;
+            }
+
+            return (true, closestIndex);
         }
 
         // Line intersection but not a ray intersection
-        return false;
+        return (false, -1);
     }
 
-    public static bool IntersectRayCloth(Ray ray, Triangle[] triangles, out Real distance)
+    public static (bool hit, int Vertexidx, int triangleIdx) IntersectRayCloth(
+        Ray ray,
+        Triangle[] triangles,
+        out Real distance)
     {
         distance = Real.MaxValue;
         bool hit = false;
+        int vertexIdx = -1;
+        int triangleIdx = -1;
 
-        foreach (var triangle in triangles)
+        for (int i = 0; i < triangles.Length; i++)
         {
-            if (IntersectRayTriangle(ray, triangle, out Real triDistance))
+            var triangle = triangles[i];
+            var (triHit, idx) = IntersectRayTriangle(ray, triangle, out Real triDistance);
+            if (triHit)
             {
                 if (triDistance < distance)
                 {
+                    triangleIdx = i;
+                    vertexIdx = idx;
                     distance = triDistance;
                     hit = true;
                 }
             }
         }
 
-        return hit;
+        return (hit, vertexIdx, triangleIdx);
     }
 }

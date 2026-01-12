@@ -9,17 +9,19 @@ using Visualisation.Core.Display.Cameras;
 using Visualisation.Core.GameObjects.Scenes;
 using Visualisation.Core.Inputs;
 
+using Visualization.UiLayer.Inputs;
+
 namespace Visualization.UiLayer.UI.Windows;
 
 public sealed class SceneWindow(
     ImGuiController imGuiController,
-    SceneManager sceneManagerManager,
+    SceneRenderer sceneRendererRenderer,
     IInputProvider inputProvider,
     Vector2i size
 ) : IDisposable
 {
     private readonly ImGuiController _imGuiController = imGuiController; /* borrowed */
-    private readonly SceneManager _sceneManager = sceneManagerManager; /* borrowed */
+    private readonly SceneRenderer _sceneRenderer = sceneRendererRenderer; /* borrowed */
     private readonly IInputProvider _inputProvider = inputProvider; /* borrowed */
 
     private bool _disposed;
@@ -43,16 +45,29 @@ public sealed class SceneWindow(
         ImGui.Begin("Game Viewport");
 
         _isHovered = ImGui.IsWindowHovered();
-        if (_isHovered)
+        // Keep input processing active during drag even if hover state is lost
+        bool isDragging = _sceneRenderer.InteractionManager.StaticDragManager.IsDragging;
+        bool isGizmoActive = _sceneRenderer.InteractionManager.ActiveGizmo?.IsActive ?? false;
+        bool viewportIsActive = _isHovered || _inputProvider.GetCursorState() == CursorState.Grabbed || isDragging ||
+            isGizmoActive;
+
+        // When viewport is active, bypass ImGui keyboard capture so all keyboard input works
+        // Note: This is also set in OnUpdateFrame for timing, but we keep it here for consistency
+        if (_inputProvider is OpenTKWithImGuiInputProvider imguiProvider)
         {
-            _sceneManager.ProcessInputInFocus(_inputProvider, dt);
+            imguiProvider.BypassImGuiKeyboardCapture = viewportIsActive;
+        }
+
+        if (viewportIsActive)
+        {
+            _sceneRenderer.ProcessInputInFocus(_inputProvider, dt);
         }
         else
         {
-            _sceneManager.ProcessInputOutOfFocus(_inputProvider, dt);
+            _sceneRenderer.ProcessInputOutOfFocus(_inputProvider, dt);
         }
 
-        _sceneManager.ProcessInputInAndOutOfFocus(_inputProvider, dt);
+        _sceneRenderer.ProcessInputInAndOutOfFocus(_inputProvider, dt);
 
         System.Numerics.Vector2 viewportSize = ImGui.GetContentRegionAvail();
         var fbScale = _imGuiController.ScaleFactor;
@@ -64,12 +79,13 @@ public sealed class SceneWindow(
         if (_antialiasingType != AntialiasingType.None)
         {
             Debug.Assert(_msaaFrameBuffer is not null);
+
             _msaaFrameBuffer.Resize(fbW, fbH);
             _msaaFrameBuffer.Bind();
-            _sceneManager.RenderSceneWindow(_msaaFrameBuffer);
+            _sceneRenderer.RenderSceneWindow(_msaaFrameBuffer);
             DrawDebug();
-            _sceneManager.RenderSelectedObjectOnTop();
-            _sceneManager.RenderGizmo();
+            _sceneRenderer.RenderGizmo();
+            _sceneRenderer.RenderDragHoverIndicator();
             _msaaFrameBuffer.Unbind();
 
             _msaaFrameBuffer.BlitTo(_sceneRenderWindowFrb);
@@ -77,10 +93,10 @@ public sealed class SceneWindow(
         else
         {
             _sceneRenderWindowFrb.Bind();
-            _sceneManager.RenderSceneWindow(_sceneRenderWindowFrb);
+            _sceneRenderer.RenderSceneWindow(_sceneRenderWindowFrb);
             DrawDebug();
-            _sceneManager.RenderSelectedObjectOnTop();
-            _sceneManager.RenderGizmo();
+            _sceneRenderer.RenderGizmo();
+            _sceneRenderer.RenderDragHoverIndicator();
             _sceneRenderWindowFrb.Unbind();
         }
 
@@ -103,8 +119,8 @@ public sealed class SceneWindow(
             return;
 
         _debugBasicShader.Use();
-        _debugBasicShader.SetMatrix4("view", _sceneManager.CamerasManager.CurrentCamera.ViewMatrix);
-        _debugBasicShader.SetMatrix4("projection", _sceneManager.CamerasManager.CurrentCamera.ProjectionMatrix);
+        _debugBasicShader.SetMatrix4("view", _sceneRenderer.CamerasManager.CurrentCamera.ViewMatrix);
+        _debugBasicShader.SetMatrix4("projection", _sceneRenderer.CamerasManager.CurrentCamera.ProjectionMatrix);
         GL.Disable(EnableCap.CullFace);
         DebugRenderInScene(_debugBasicShader);
         GL.Enable(EnableCap.CullFace);

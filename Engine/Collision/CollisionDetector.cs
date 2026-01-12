@@ -114,8 +114,10 @@ public static class CollisionDetector
                 contact.Penetration = plane.Offset - vertexDistance;
 
                 // Write the appropriate data
+
+                var frictionFromBodies = MathF.Max(box.Friction, Collision.CollisionPlane.CollisionPlaneFriction);
                 contact.SetBodyData(box.Body, null,
-                    data.Friction, data.Restitution);
+                    frictionFromBodies, data.Restitution);
 
                 // Move onto the next contact
                 data.NextContactIndex++;
@@ -313,7 +315,8 @@ public static class CollisionDetector
         contact.Penetration = pen;
         contact.ContactNormal = axis;
         contact.ContactPoint = vertex;
-        contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
+        var frictionFromBodies = MathF.Max(one.Friction, two.Friction);
+        contact.SetBodyData(one.Body, two.Body, frictionFromBodies, data.Restitution);
         data.AddContacts(1);
         data.NextContactIndex++;
         return 1;
@@ -359,11 +362,13 @@ public static class CollisionDetector
         contact.ContactPoint = point;
         contact.Penetration = minDepth;
 
+        var frictionFromBodies = MathF.Max(box.Friction, Collision.CollisionPlane.CollisionPlaneFriction);
+
         // Note that we don't know what rigid body the point
         // belongs to, so we just use NULL. Where this is called,
         // this value can be left or filled in.
         contact.SetBodyData(box.Body, null,
-            data.Friction, data.Restitution);
+            frictionFromBodies, data.Restitution);
 
         data.AddContacts(1);
         data.NextContactIndex++;
@@ -404,11 +409,13 @@ public static class CollisionDetector
         contact.ContactPoint = point;
         contact.Penetration = minDepth;
 
+        var frictionFromBodies = MathF.Max(box.Friction, particle.Friction);
+
         // Note that we don't know what rigid body the point
         // belongs to, so we just use NULL. Where this is called,
         // this value can be left or filled in.
         contact.SetBodyData(box.Body, particle.Body,
-            data.Friction, data.Restitution);
+            frictionFromBodies, data.Restitution);
 
         data.NextContactIndex++;
         data.AddContacts(1);
@@ -436,7 +443,9 @@ public static class CollisionDetector
             contact.ContactNormal = plane.Direction;
             contact.Penetration = plane.Offset - particleDistance;
 
-            contact.SetBodyData(particle.Body, null, data.Friction, data.Restitution);
+            var frictionFromBodies = MathF.Max(Collision.CollisionPlane.CollisionPlaneFriction, particle.Friction);
+
+            contact.SetBodyData(particle.Body, null, frictionFromBodies, data.Restitution);
 
             data.NextContactIndex++;
             data.AddContacts(1);
@@ -492,7 +501,9 @@ public static class CollisionDetector
 
         two.CalculateInternals();
         contact.ContactPoint = two.Transform * vertex;
-        contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
+
+        var frictionFromBodies = MathF.Max(one.Friction, two.Friction);
+        contact.SetBodyData(one.Body, two.Body, frictionFromBodies, data.Restitution);
     }
 
     /// <summary>
@@ -605,7 +616,9 @@ public static class CollisionDetector
         contact.ContactPoint = closestPtWorld;
         contact.Penetration = engineBall.Radius - (Real)Math.Sqrt(distSq);
 
-        contact.SetBodyData(engineBox.Body, engineBall.Body, collisionData.Friction, collisionData.Restitution);
+        var frictionFromBodies = MathF.Max(engineBox.Friction, engineBall.Friction);
+
+        contact.SetBodyData(engineBox.Body, engineBall.Body, frictionFromBodies, collisionData.Restitution);
         collisionData.AddContacts(1);
         collisionData.NextContactIndex++;
 
@@ -642,7 +655,10 @@ public static class CollisionDetector
         contact.ContactNormal = normal;
         contact.ContactPoint = one.GetAxis(3) + midline * 0.5f;
         contact.Penetration = (one.Radius + two.Radius - size);
-        contact.SetBodyData(one.Body, two.Body, data.Friction, data.Restitution);
+
+        var frictionFromBodies = MathF.Max(one.Friction, two.Friction);
+
+        contact.SetBodyData(one.Body, two.Body, frictionFromBodies, data.Restitution);
         data.AddContacts(1);
         data.NextContactIndex++;
         return true;
@@ -673,7 +689,10 @@ public static class CollisionDetector
         contact.ContactNormal = plane.Direction;
         contact.Penetration = -ballDistance;
         contact.ContactPoint = position - plane.Direction * (ballDistance + sphere.Radius);
-        contact.SetBodyData(sphere.Body, null, data.Friction, data.Restitution);
+
+        var frictionFromBodies = MathF.Max(sphere.Friction, Collision.CollisionPlane.CollisionPlaneFriction);
+
+        contact.SetBodyData(sphere.Body, null, frictionFromBodies, data.Restitution);
         data.AddContacts(1);
         data.NextContactIndex++;
         return true;

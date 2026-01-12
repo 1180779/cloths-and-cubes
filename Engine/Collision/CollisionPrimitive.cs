@@ -2,7 +2,7 @@ using Engine.RigidBodies;
 
 namespace Engine.Collision;
 
-public class CollisionPrimitive
+public class CollisionPrimitive: IFrictionProvider
 {
     public RigidBody Body = new();
     public Matrix4 Offset = new();
@@ -13,6 +13,8 @@ public class CollisionPrimitive
     /// with the transform of the rigid body.
     /// </summary>
     public Matrix4 Transform { get; private set; } = new();
+
+    public virtual float Friction => 0.9f;
 
     public void CalculateInternals()
     {
@@ -32,3 +34,8 @@ public class CollisionPrimitive
         return Transform.GetAxisVector(index);
     }
 };
+
+public interface IFrictionProvider
+{
+    Real Friction { get; }
+}

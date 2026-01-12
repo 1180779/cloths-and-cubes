@@ -7,7 +7,7 @@ namespace Engine;
 
 public class Cloth
 {
-    public RigidParticle[,] Particles;
+    public ClothRigidParticle[,] Particles;
     public ForceRegistry Registry;
     public int SizeX;
     public int SizeY;
@@ -47,22 +47,6 @@ public class Cloth
 
     private readonly List<ParticleSpringAssociation> _particleSpringAssociations = [];
 
-    // https://stackoverflow.com/questions/6539571/how-to-resize-multidimensional-2d-array-in-c
-    /// <summary>
-    /// Resizes a 2D array, preserving existing elements where dimensions overlap.
-    /// </summary>
-    private T[,] ResizeArray<T>(T[,] original, int x, int y)
-    {
-        T[,] newArray = new T[x, y];
-        int minX = Math.Min(original.GetLength(0), newArray.GetLength(0));
-        int minY = Math.Min(original.GetLength(1), newArray.GetLength(1));
-
-        for (int i = 0; i < minY; ++i)
-            Array.Copy(original, i * original.GetLength(0), newArray, i * newArray.GetLength(0), minX);
-
-        return newArray;
-    }
-
     public Cloth(
         ForceRegistry registry,
         int sizeX = 6,
@@ -81,11 +65,18 @@ public class Cloth
         this.SpringConstant = springConstant;
         this.ParticleMass = particleMass;
         this.Particle0Pos = particle0Pos.Value;
-        Particles = new RigidParticle[sizeX, sizeY];
+        Particles = new ClothRigidParticle[sizeX, sizeY];
         ResetToInitialPosition();
 
         CreateSprings();
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IsCorner(int i, int j) =>
+        (i == 0 && j == 0) ||
+        (i == 0 && j == SizeY - 1) ||
+        (i == SizeX - 1 && j == 0) ||
+        (i == SizeX - 1 && j == SizeY - 1);
 
     private void ResetToInitialPosition()
     {
@@ -93,7 +84,17 @@ public class Cloth
         {
             for (int j = 0; j < SizeY; j++)
             {
-                Particles[i, j] ??= new RigidParticle(); // Create a new particle if null
+                // Create a new particle each time as the indices might not have
+                // valid indices in the old particles, which are init only.
+                if (IsCorner(i, j))
+                {
+                    Particles[i, j] = new ClothRigidParticleInCorner { Cloth = this, XIndex = i, YIndex = j };
+                }
+                else
+                {
+                    Particles[i, j] = new ClothRigidParticle { Cloth = this, XIndex = i, YIndex = j };
+                }
+
                 Particles[i, j].SetState(
                     Particle0Pos + new Vector3(SpringLength * i, 0, SpringLength * j),
                     0,
@@ -128,7 +129,7 @@ public class Cloth
         SpringConstant = newSpringConstant;
         ParticleMass = newParticleMass;
 
-        Particles = ResizeArray(Particles, SizeX, SizeY);
+        Particles = Utilities.ResizeArray(Particles, SizeX, SizeY);
         ResetToInitialPosition();
         CreateSprings();
     }
@@ -229,6 +230,21 @@ public class Cloth
         return points;
     }
 
+    public Vector3[,] PointsVelocityAdjusted(float positionEpsilon)
+    {
+        Vector3[,] points = new Vector3[SizeX, SizeY];
+        for (int i = 0; i < SizeX; i++)
+        {
+            for (int j = 0; j < SizeY; j++)
+            {
+                points[i, j] = Particles[i, j].Body.Position -
+                    Particles[i, j].Body.Velocity.Normalized() * positionEpsilon;
+            }
+        }
+
+        return points;
+    }
+
     public void Pin(uint x, uint y, Vector3 pos)
     {
         if (x >= SizeX | y >= SizeY)
@@ -320,5 +336,18 @@ public class Cloth
 
         // Update Particle0Pos
         Particle0Pos = Particles[0, 0].Body.Position;
+    }
+
+    public void ClearAccumulators()
+    {
+        for (int i = 0; i < SizeX; i++)
+        {
+            for (int j = 0; j < SizeY; j++)
+            {
+                Particles[i, j].Body.ClearAccumulators();
+                Particles[i, j].Body.Velocity = Vector3.Zero;
+                Particles[i, j].Body.Rotation = Vector3.Zero;
+            }
+        }
     }
 }

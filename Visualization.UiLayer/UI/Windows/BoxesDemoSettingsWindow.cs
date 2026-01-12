@@ -5,12 +5,14 @@ namespace Visualization.UiLayer.UI.Windows;
 public sealed class BoxesDemoSettingsWindow(
     Func<int> getBoxesCount,
     Func<int> getSpheresCount,
-    Func<int> getClothsCount
+    Func<int> getClothsCount,
+    Func<int> getJointsCount
 ) : IWindow
 {
     public Func<int> GetBoxesCount { get; set; } = getBoxesCount;
     public Func<int> GetSpheresCount { get; set; } = getSpheresCount;
     public Func<int> GetClothsCount { get; set; } = getClothsCount;
+    public Func<int> JointsCount { get; set; } = getJointsCount;
 
     public delegate void SetObjectCount(int count);
 
@@ -52,7 +54,7 @@ public sealed class BoxesDemoSettingsWindow(
         ImGui.SliderInt("Size Y", ref _sizeY, 1, 100);
 
         ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f);
-        ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 100.0f);
+        ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);
         ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f);
     }
 
@@ -76,6 +78,9 @@ public sealed class BoxesDemoSettingsWindow(
         {
             SetClothsCount?.Invoke(clothsCount);
         }
+
+        int jointsCount = JointsCount();
+        ImGui.Text($"Joints: {jointsCount}");
     }
 
     public sealed record State

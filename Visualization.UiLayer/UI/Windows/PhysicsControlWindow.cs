@@ -1,13 +1,18 @@
 using ImGuiNET;
 
-using Visualization.UiLayer.Applications;
+using Visualization.UiLayer.Applications.Demos;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class PhysicsControlWindow(RigidBodyApplication application) : IWindow
+public sealed class PhysicsControlWindow : IWindow
 {
-    private readonly RigidBodyApplication _application = application;
+    private readonly Application _application;
     private int _stepCount = 1;
+
+    public PhysicsControlWindow(Application application)
+    {
+        _application = application;
+    }
 
     public string Name => "Physics Control";
 

@@ -4,15 +4,14 @@ using System.Runtime.CompilerServices;
 
 using ImGuiNET;
 
-using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.GameObjects.Scenes;
+using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class ObjectInspectorWindow(SceneManager sceneManager) : IWindow
+public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObjectProvider) : IWindow
 {
-    private readonly SceneManager _sceneManager = sceneManager;
-    
+    private readonly Func<IEnumerable<GameObject>> _gameObjectProvider = gameObjectProvider;
+
     private static readonly System.Numerics.Vector4 HeaderColor = new(0.2f, 0.5f, 0.8f, 1.0f);
     private static readonly System.Numerics.Vector4 SeparatorColor = new(0.5f, 0.5f, 0.5f, 0.5f);
 
@@ -22,15 +21,7 @@ public sealed class ObjectInspectorWindow(SceneManager sceneManager) : IWindow
     {
         if (!isOpen) return;
 
-        if (_sceneManager.CamerasManager.CurrentCamera is FollowingCamera followingCamera)
-        {
-            var o = _sceneManager.GameObjects.First(g => g == followingCamera.TargetObject);
-            DrawInternal([o.PhysicsObject], ref isOpen);
-        }
-        else
-        {
-            DrawInternal(_sceneManager.GameObjects.Select(g => g.PhysicsObject).ToArray(), ref isOpen);
-        }
+        DrawInternal(_gameObjectProvider().Select(g => g.PhysicsObject).ToArray(), ref isOpen);
     }
 
     private void DrawInternal(object?[] objects, ref bool isOpen, String windowName = "Scene Objects Inspector")
@@ -72,7 +63,8 @@ public sealed class ObjectInspectorWindow(SceneManager sceneManager) : IWindow
                 ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new System.Numerics.Vector4(0.3f, 0.6f, 0.9f, 1.0f));
                 ImGui.PushStyleColor(ImGuiCol.HeaderActive, new System.Numerics.Vector4(0.25f, 0.55f, 0.85f, 1.0f));
 
-                var isHeaderOpen = ImGui.CollapsingHeader($"[{i}] {typeName} (ID: {hashCode})", ImGuiTreeNodeFlags.DefaultOpen);
+                var isHeaderOpen =
+                    ImGui.CollapsingHeader($"[{i}] {typeName} (ID: {hashCode})", ImGuiTreeNodeFlags.DefaultOpen);
 
                 ImGui.PopStyleColor(3);
 
@@ -96,6 +88,7 @@ public sealed class ObjectInspectorWindow(SceneManager sceneManager) : IWindow
                 }
             }
         }
+
         ImGui.End();
     }
 
