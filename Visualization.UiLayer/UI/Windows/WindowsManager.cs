@@ -39,7 +39,10 @@ public sealed class WindowsManager : IDisposable
     /// </summary>
     public void Draw()
     {
-        _windows.ForEach(window => window.Window.Draw(ref window.IsOpen));
+        _windows.ForEach(window =>
+        {
+            if (window.IsOpen) window.Window.Draw(ref window.IsOpen);
+        });
     }
 
     /// <summary>

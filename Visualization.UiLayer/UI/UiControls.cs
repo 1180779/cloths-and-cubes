@@ -43,8 +43,14 @@ public static class UiControls
             public static System.Numerics.Vector2 Small(string text) =>
                 CalculateButtonSize(text, 10f, 6f);
 
+            public static System.Numerics.Vector2 SmallFillX(string text) =>
+                new(-1f, CalculateButtonSize(text, 10f, 6f).Y);
+
             public static System.Numerics.Vector2 Medium(string text) =>
                 CalculateButtonSize(text, 20f, 10f);
+
+            public static System.Numerics.Vector2 MediumFillX(string text) =>
+                new(-1f, CalculateButtonSize(text, 20f, 10f).Y);
 
             public static System.Numerics.Vector2 Large(string text) =>
                 CalculateButtonSize(text, 40f, 20f);

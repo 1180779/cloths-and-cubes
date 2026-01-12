@@ -11,6 +11,7 @@ using Visualisation.Core.Display.Gizmos;
 using Visualisation.Core.Display.Gizmos.Adapters;
 using Visualisation.Core.Display.Gizmos.Translation;
 using Visualisation.Core.Inputs;
+using Visualisation.Core.State;
 
 namespace Visualisation.Core.GameObjects;
 
@@ -18,16 +19,41 @@ public sealed class StaticDragManager(
     Func<object?> getHoveredObject,
     Func<CameraBase> cameraProvider,
     Func<IEnumerable<Box>> boxesProvider,
-    Func<GlobalJointsList> globalJointsProvider
+    Func<GlobalJointsList> globalJointsProvider,
+    DraggingState draggingState
 )
 {
-    public float Sensitivity = 1.0f;
-    public bool Enabled = false;
-    public MouseButton DragButton = MouseButton.Left;
-    public float MinOffset = 1.0f;
-    public float MaxOffset = 1000_000.0f;
+    public DraggingState DraggingState { get; } = draggingState;
+    public float Sensitivity { get => DraggingState.Sensitivity; set => DraggingState.Sensitivity = value; }
+    public bool Enabled { get => DraggingState.IsDraggingEnabled; set => DraggingState.IsDraggingEnabled = value; }
+    public MouseButton DragButton { get => DraggingState.DragButton; set => DraggingState.DragButton = value; }
+    public float MinOffset { get => DraggingState.MinOffset; set => DraggingState.MinOffset = value; }
+    public float MaxOffset { get => DraggingState.MaxOffset; set => DraggingState.MaxOffset = value; }
+    public bool IsDragging => DraggingState.IsDragging;
 
-    public bool IsDragging => DraggedObject != null;
+    public Vector4 HoverIndicatorColor
+    {
+        get => DraggingState.HoverIndicatorColor;
+        set => DraggingState.HoverIndicatorColor = value;
+    }
+
+    public float HoverIndicatorScale
+    {
+        get => DraggingState.HoverIndicatorScale;
+        set => DraggingState.HoverIndicatorScale = value;
+    }
+
+    public bool ShowHoverIndicator
+    {
+        get => DraggingState.ShowHoverIndicator;
+        set => DraggingState.ShowHoverIndicator = value;
+    }
+
+    public ITranslationGizmoTarget? DraggedObject
+    {
+        get => DraggingState.DraggedObject;
+        private set => DraggingState.DraggedObject = value;
+    }
 
     /// <summary>
     /// Event fired when an object's position is updated during dragging.
@@ -41,22 +67,6 @@ public sealed class StaticDragManager(
     /// </summary>
     public object? HoverTarget => _getHoveredObject();
 
-    /// <summary>
-    /// Color for the hover indicator. Default is semi-transparent cyan.
-    /// </summary>
-    public Vector4 HoverIndicatorColor { get; set; } = new Vector4(0.0f, 1.0f, 1.0f, 0.1f);
-
-    /// <summary>
-    /// Size of the hover indicator relative to the object. Default is 1.02 (2% larger).
-    /// </summary>
-    public float HoverIndicatorScale { get; set; } = 0.02f;
-
-    /// <summary>
-    /// Whether to show the hover indicator when enabled and a valid object is under cursor.
-    /// </summary>
-    public bool ShowHoverIndicator { get; set; } = true;
-
-    public ITranslationGizmoTarget? DraggedObject { get; private set; }
 
     private Func<object?> _getHoveredObject = getHoveredObject;
     private Func<CameraBase> _cameraProvider = cameraProvider;
@@ -67,9 +77,36 @@ public sealed class StaticDragManager(
     /// </summary>
     private float _planeOffset = 0.1f;
 
-    public void Clear()
+    /// <summary>
+    /// Clears the currently dragged object. 
+    /// </summary>
+    public void ClearDraggedObject()
     {
         DraggedObject = null;
+    }
+
+    /// <summary>
+    /// Clears the currently dragged object, except for the specified object.
+    /// </summary>
+    /// <param name="obj">The object to exclude from being cleared from dragging state.</param>
+    public void ClearDraggedObjectExcept(object obj)
+    {
+        if (DraggedObject != obj)
+        {
+            ClearDraggedObject();
+        }
+    }
+
+    /// <summary>
+    /// Removes the specified object from the selection context, clearing selection and hover status if applicable.
+    /// </summary>
+    /// <param name="obj">The object to be removed from the interaction context.</param>
+    public void RemoveObject(object obj)
+    {
+        if (DraggedObject == obj)
+        {
+            ClearDraggedObject();
+        }
     }
 
     /// <summary>

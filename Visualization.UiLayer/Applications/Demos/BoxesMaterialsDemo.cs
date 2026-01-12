@@ -1,5 +1,6 @@
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.GameObjects;
+using Visualisation.Core.GameObjects.Scenes;
 
 using Visualization.UiLayer.UI.Windows;
 
@@ -10,7 +11,12 @@ public class BoxesMaterialsDemo : Application
     public BoxesMaterialsDemo()
     {
         _boxesDemoSettingsWindow =
-            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
+            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count,
+                () => _sceneRenderer.EnvironmentMap.FileDescription,
+                _sceneRenderer.SetCurrentEnvironmentMap,
+                () => SceneRenderer.DefaultEnvironmentMapFile,
+                _collisionData
+            )
             {
                 GetClothsData = () =>
                 {
@@ -121,7 +127,7 @@ public class BoxesMaterialsDemo : Application
 
     protected int _nrOfRows = 5;
 
-    protected IMaterial[] Materials => MaterialsHelper.AllTexturedMaterials;
+    protected IMaterial[] Materials => MaterialsAndEnvironmentMapsHelper.AllTexturedMaterials;
 
     public override void Reset()
     {

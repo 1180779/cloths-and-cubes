@@ -13,7 +13,7 @@ public sealed class HelpWindow : IWindow
                 "Camera",
                 new()
                 {
-                    { "Enter camera mode", "Mouse click on the scene" },
+                    { "Enter camera mode", "L / Click on the scene while selection and dragging are not enabled" },
                     { "Disable camera mode", "Esc" },
                     { "Next camera", "C" },
                     { "Move camera up", "Space" },
@@ -43,9 +43,19 @@ public sealed class HelpWindow : IWindow
             },
             { "Scene", new() { { "Reset demo", "R" }, } },
             { "Performance", new() { { "Cap/Uncap FPS", "X" }, } },
+            {
+                "Gizmos", new()
+                {
+                    { "Change to translation gizmo", "T" },
+                    { "Change to scale gizmo", "Y" },
+                    { "Change to rotation gizmo", "U" },
+                    { "Change gizmo to none", "I" },
+                }
+            },
         };
 
-    public string Name => "Help";
+    public const string StaticName = "Help";
+    public string Name => StaticName;
 
     public void Draw(ref bool isOpen)
     {

@@ -8,6 +8,8 @@ using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.UI.Windows;
 
+#if DEBUG
+
 public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObjectProvider) : IWindow
 {
     private readonly Func<IEnumerable<GameObject>> _gameObjectProvider = gameObjectProvider;
@@ -327,3 +329,5 @@ public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObje
         public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
     }
 }
+
+#endif

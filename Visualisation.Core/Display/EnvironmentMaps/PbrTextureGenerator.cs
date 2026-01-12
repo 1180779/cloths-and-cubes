@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using OpenTK.Graphics.OpenGL4;
 
 using Visualisation.Core.Display.Mesh;
@@ -74,46 +76,56 @@ public static class PbrTextureGenerator
         Shader irradianceConvolutionShader,
         Shader prefilterShader)
     {
-        using var cube = new CubeMesh();
+        var glState = GlHelper.SaveGlState();
+        SetGlStateForPbrGeneration();
 
-        var captureFbo = GL.GenFramebuffer();
-        var captureRbo = GL.GenRenderbuffer();
+        try
+        {
+            using var cube = new CubeMesh();
 
-        var captureProjection = CreateCaptureProjection();
-        var captureViews = CreateCaptureViews();
+            var captureFbo = GL.GenFramebuffer();
+            var captureRbo = GL.GenRenderbuffer();
 
-        var envCubemap = GenerateEnvironmentCubemap(
-            hdrTextureId,
-            equirectangularToCubemapShader,
-            captureFbo,
-            captureRbo,
-            captureProjection,
-            captureViews,
-            cube);
+            var captureProjection = CreateCaptureProjection();
+            var captureViews = CreateCaptureViews();
 
-        var irradianceMap = GenerateIrradianceMap(
-            envCubemap,
-            irradianceConvolutionShader,
-            captureFbo,
-            captureRbo,
-            captureProjection,
-            captureViews,
-            cube);
+            var envCubemap = GenerateEnvironmentCubemap(
+                hdrTextureId,
+                equirectangularToCubemapShader,
+                captureFbo,
+                captureRbo,
+                captureProjection,
+                captureViews,
+                cube);
 
-        var prefilterMap = GeneratePrefilterMap(
-            envCubemap,
-            prefilterShader,
-            captureFbo,
-            captureRbo,
-            captureProjection,
-            captureViews,
-            cube);
+            var irradianceMap = GenerateIrradianceMap(
+                envCubemap,
+                irradianceConvolutionShader,
+                captureFbo,
+                captureRbo,
+                captureProjection,
+                captureViews,
+                cube);
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        GL.DeleteFramebuffer(captureFbo);
-        GL.DeleteRenderbuffer(captureRbo);
+            var prefilterMap = GeneratePrefilterMap(
+                envCubemap,
+                prefilterShader,
+                captureFbo,
+                captureRbo,
+                captureProjection,
+                captureViews,
+                cube);
 
-        return new PbrTextures(envCubemap, irradianceMap, prefilterMap);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.DeleteFramebuffer(captureFbo);
+            GL.DeleteRenderbuffer(captureRbo);
+
+            return new PbrTextures(envCubemap, irradianceMap, prefilterMap);
+        }
+        finally
+        {
+            GlHelper.RestoreGlState(glState);
+        }
     }
 
     /// <summary>
@@ -152,23 +164,45 @@ public static class PbrTextureGenerator
         return new PbrTexturesMonocolor(new HdrMonocolor(texId), textures);
     }
 
+    private static void SetGlStateForPbrGeneration()
+    {
+        GL.Disable(EnableCap.ScissorTest);
+        GL.Disable(EnableCap.Blend);
+        GL.Enable(EnableCap.DepthTest);
+        GL.Disable(EnableCap.CullFace);
+        GL.Disable(EnableCap.StencilTest);
+        GL.DepthMask(true);
+        GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+        GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
     /// <summary>
     /// Generates only the BRDF LUT texture. This is independent of any environment map.
     /// </summary>
     public static int GenerateBrdfLutOnly(Shader brdfShader)
     {
-        var captureFbo = GL.GenFramebuffer();
-        var captureRbo = GL.GenRenderbuffer();
+        var glState = GlHelper.SaveGlState();
+        SetGlStateForPbrGeneration();
 
         try
         {
-            return GenerateBrdfLut(brdfShader, captureFbo, captureRbo);
+            var captureFbo = GL.GenFramebuffer();
+            var captureRbo = GL.GenRenderbuffer();
+
+            try
+            {
+                return GenerateBrdfLut(brdfShader, captureFbo, captureRbo);
+            }
+            finally
+            {
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.DeleteFramebuffer(captureFbo);
+                GL.DeleteRenderbuffer(captureRbo);
+            }
         }
         finally
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.DeleteFramebuffer(captureFbo);
-            GL.DeleteRenderbuffer(captureRbo);
+            GlHelper.RestoreGlState(glState);
         }
     }
 
@@ -198,6 +232,12 @@ public static class PbrTextureGenerator
             EnvCubemapSize, EnvCubemapSize);
         GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment,
             RenderbufferTarget.Renderbuffer, captureRbo);
+
+        var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != FramebufferErrorCode.FramebufferComplete)
+        {
+            Debug.WriteLine($"GenerateEnvironmentCubemap FBO incomplete: {status}");
+        }
 
         equirectangularToCubemapShader.Use();
         equirectangularToCubemapShader.SetTexture("equirectangularMap", TextureTarget.Texture2D,
@@ -243,6 +283,12 @@ public static class PbrTextureGenerator
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, captureRbo);
         GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24,
             IrradianceMapSize, IrradianceMapSize);
+
+        var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != FramebufferErrorCode.FramebufferComplete)
+        {
+            Debug.WriteLine($"GenerateIrradianceMap FBO incomplete: {status}");
+        }
 
         irradianceConvolutionShader.Use();
         irradianceConvolutionShader.SetTexture("environmentMap", TextureTarget.TextureCubeMap,
@@ -300,6 +346,13 @@ public static class PbrTextureGenerator
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, captureRbo);
             GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24,
                 mipWidth, mipHeight);
+
+            var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            if (status != FramebufferErrorCode.FramebufferComplete)
+            {
+                Debug.WriteLine($"GeneratePrefilterMap FBO incomplete (mip {mip}): {status}");
+            }
+
             GL.Viewport(0, 0, mipWidth, mipHeight);
 
             float roughness = mip / (float)(MaxMipLevels - 1);
@@ -343,6 +396,12 @@ public static class PbrTextureGenerator
             BrdfLutSize, BrdfLutSize);
         GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
             TextureTarget.Texture2D, brdfLutTexture, 0);
+
+        var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != FramebufferErrorCode.FramebufferComplete)
+        {
+            Debug.WriteLine($"GenerateBrdfLut FBO incomplete: {status}");
+        }
 
         GL.Viewport(0, 0, BrdfLutSize, BrdfLutSize);
 

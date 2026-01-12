@@ -36,10 +36,6 @@ public class Application : GameWindow
     protected readonly ImGuiController _imGuiController;
     protected readonly IInputProvider _inputProvider;
     protected readonly SettingsSaverLoader _settingsSaverLoader = new();
-    protected readonly WindowsManager _windowsManager = new();
-    protected readonly SceneWindow _sceneWindow;
-    protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
-
     protected SceneRenderer _sceneRenderer; // initialized in constructor
 
     /// <summary>
@@ -113,18 +109,22 @@ public class Application : GameWindow
     protected BVH _bvh = BVH.BuildSynchronous([]);
     protected Dictionary<int, IBoxable> _bvhDictionary = [];
 
-    protected SelectionManagerWindow _selectionManagerWindow;
-    protected GizmoSettingsWindow _gizmoSettingsWindow;
-    protected PhysicsControlWindow _physicsControlWindow;
-    protected SceneManagementWindow _sceneManagementWindow;
-    protected BvhNodesWindow _bvhNodesWindow = new();
+    protected readonly SceneWindow _sceneWindow;
+    protected readonly WindowsManager _windowsManager = new();
+    protected readonly SelectionManagerWindow _selectionManagerWindow;
+    protected readonly GizmoSettingsWindow _gizmoSettingsWindow;
+    protected readonly PhysicsControlWindow _physicsControlWindow;
+    protected readonly SceneManagementWindow _sceneManagementWindow;
+    protected readonly BvhNodesWindow _bvhNodesWindow = new();
+#if DEBUG
+    protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
+    protected ContactsInspectorWindow _contactsInspectorWindow;
+#endif
 
     // Public accessors for scene management
     public SceneRenderer SceneRenderer => _sceneRenderer;
     public CollisionData CollisionData => _collisionData;
     public ForceRegistry ForceRegistry => _forceRegistry;
-    protected CollisionParametersWindow _collisionParametersWindow;
-    protected ContactsInspectorWindow _contactsInspectorWindow;
 
     protected BoxesDemoSettingsWindow _boxesDemoSettingsWindow;
 
@@ -141,7 +141,7 @@ public class Application : GameWindow
         _imGuiController.HookToWindow(this);
         _inputProvider = new OpenTKWithImGuiInputProvider(this, _imGuiController);
 
-        _sceneRenderer = new SceneLightningOnly(
+        _sceneRenderer = new SceneRendererWithLightningOnly(
             Size.X / (float)Size.Y,
             _inputProvider,
             () => GameObjects,
@@ -158,8 +158,10 @@ public class Application : GameWindow
         _sceneWindow = new SceneWindow(_imGuiController, _sceneRenderer, _inputProvider, Size);
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
 
+#if DEBUG
         _cascadingShadowMapsWindow =
             new CascadingShadowMapsWindow(_imGuiController, _sceneRenderer.LightsManager, Size);
+#endif
 
         // GL setup
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
@@ -171,11 +173,13 @@ public class Application : GameWindow
         // Initialize windows
         _windowsManager.Add(new StatsWindow(_sceneRenderer));
         _windowsManager.Add(new HelpWindow());
+#if DEBUG
         _windowsManager.Add(new ObjectInspectorWindow(() => GameObjects));
+        _windowsManager.Add(_cascadingShadowMapsWindow);
+#endif
         _windowsManager.Add(new GraphicsSettingsWindow(
             () => _sceneRenderer.LightsManager.DirectionalLight,
             _sceneRenderer, _sceneWindow));
-        _windowsManager.Add(_cascadingShadowMapsWindow);
 
         _sceneRenderer.PositionEpsilonProvider = () => _contactResolver.PositionEpsilon;
         _sceneRenderer.InteractionManager.StaticDragManager.OnObjectDragged += BvhRebuild;
@@ -183,14 +187,18 @@ public class Application : GameWindow
         // Physics-specific windows
         _windowsManager.Add(_bvhNodesWindow);
 
-        _collisionParametersWindow = new(_collisionData);
-        _windowsManager.Add(_collisionParametersWindow);
-
+#if DEBUG
         _contactsInspectorWindow = new(() => _collisionData.ContactList);
         _windowsManager.AddManuallyDrawn(_contactsInspectorWindow);
+#endif
 
         _boxesDemoSettingsWindow =
-            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
+            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count,
+                () => _sceneRenderer.EnvironmentMap.FileDescription,
+                _sceneRenderer.SetCurrentEnvironmentMap,
+                () => SceneRenderer.DefaultEnvironmentMapFile,
+                _collisionData
+            )
             {
                 GetClothsData = () =>
                 {
@@ -586,11 +594,12 @@ public class Application : GameWindow
         GenerateContactsFromCollisions();
         _joints.GenerateContactsFromJoints(_collisionData);
 
+#if DEBUG
         // Draw out of order to allow inspection of contacts before they are resolved
         // This does cause the window not to be in the same dockspace as other windows, but
         // it is acceptable for debugging purposes.
         _windowsManager.DrawManualWindow(ContactsInspectorWindow.WindowName);
-
+#endif
         _contactResolver.ResolveContacts(
             _collisionData.ContactList,
             _collisionData.ContactCount,
@@ -849,7 +858,7 @@ public class Application : GameWindow
         if (_sceneRenderer.SelectionManager.SelectedObject is GameObject selectedObject &&
             objectsToRemove.Contains(selectedObject))
         {
-            _sceneRenderer.InteractionManager.ClearSelectionAndGizmos();
+            _sceneRenderer.InteractionManager.Clear();
         }
 
         // Remove objects that are no longer in the scene
@@ -987,9 +996,10 @@ public class Application : GameWindow
             WindowsState = _windowsManager.SaveState(),
             GraphicsSettings =
                 ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.WindowName)).SaveState(),
+#if DEBUG
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState(),
+#endif
             BvhNodes = _bvhNodesWindow.SaveState(),
-            CollisionParameters = _collisionParametersWindow.SaveState(),
             ClothSettings = _boxesDemoSettingsWindow.SaveState(),
             SelectionSettings = _selectionManagerWindow.SaveState(),
             GizmoSettings = _gizmoSettingsWindow.SaveState(),
@@ -1011,20 +1021,17 @@ public class Application : GameWindow
                 state.GraphicsSettings);
         }
 
+#if DEBUG
         if (state.CascadingShadowMaps is not null)
         {
             _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);
         }
+#endif
 
         // Restore BoxesDemo-specific state
         if (state.BvhNodes is not null)
         {
             _bvhNodesWindow.RestoreState(state.BvhNodes);
-        }
-
-        if (state.CollisionParameters is not null)
-        {
-            _collisionParametersWindow.RestoreState(state.CollisionParameters);
         }
 
         if (state.ClothSettings is not null)
@@ -1080,14 +1087,16 @@ public class Application : GameWindow
             }
         }
 
+        // Resize arrays to match new counts
         Array.Resize(ref _boxes, boxes.Count);
-        Array.Copy(_boxes, boxes.ToArray(), boxes.Count);
-
         Array.Resize(ref _balls, balls.Count);
-        Array.Copy(_balls, balls.ToArray(), balls.Count);
-
         Array.Resize(ref _cloths, cloths.Count);
-        Array.Copy(_cloths, cloths.ToArray(), cloths.Count);
+
+        // Copy new objects into resized arrays
+        // Array.Copy signature: Array.Copy(sourceArray, destinationArray, length)
+        Array.Copy(boxes.ToArray(), _boxes, boxes.Count);
+        Array.Copy(balls.ToArray(), _balls, balls.Count);
+        Array.Copy(cloths.ToArray(), _cloths, cloths.Count);
 
         _forceBVHRebuildOnNoUpdate = true;
     }
