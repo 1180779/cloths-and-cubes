@@ -1,6 +1,8 @@
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.GameObjects;
 
+using Visualization.UiLayer.UI.Windows;
+
 namespace Visualization.UiLayer.Applications.Demos;
 
 public class BoxesMaterialsDemo : Application
@@ -10,6 +12,23 @@ public class BoxesMaterialsDemo : Application
         _boxesDemoSettingsWindow =
             new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
             {
+                GetClothsData = () =>
+                {
+                    var clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
+                    foreach (var cloth in _cloths)
+                    {
+                        var engineCloth = cloth.EngineCloth;
+                        clothsData.Add(new BoxesDemoSettingsWindow.ClothParams
+                        {
+                            SizeX = engineCloth.SizeX,
+                            SizeY = engineCloth.SizeY,
+                            SpringLength = engineCloth.SpringLength,
+                            SpringConstant = engineCloth.SpringConstant,
+                            ParticleMass = engineCloth.ParticleMass
+                        });
+                    }
+                    return clothsData;
+                },
                 SetBoxesCount = count =>
                 {
                     int length = _boxes.Length;
@@ -61,7 +80,7 @@ public class BoxesMaterialsDemo : Application
                     }
                 }
             };
-        _boxesDemoSettingsWindow.SetClothsCount = count =>
+        _boxesDemoSettingsWindow.SetClothsCount = (count, clothsData) =>
         {
             int length = _cloths.Length;
             for (int i = count; i < length; ++i)
@@ -71,12 +90,31 @@ public class BoxesMaterialsDemo : Application
             }
 
             Array.Resize(ref _cloths, count);
+            if(clothsData == null)
+            {
+                return;
+            }
             for (int i = length; i < count; ++i)
             {
-                _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
-                    _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
-                    _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-                    _boxesDemoSettingsWindow.ParticleMass);
+                //_cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
+                //    _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+                //    _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+                //    _boxesDemoSettingsWindow.ParticleMass);
+                if(i < clothsData.Count)
+                {
+                    var data = clothsData[i];
+                    _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
+                        data.SizeX, data.SizeY,
+                        data.SpringLength, data.SpringConstant,
+                        data.ParticleMass);
+                }
+                else
+                {
+                    _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
+                        _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+                        _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+                        _boxesDemoSettingsWindow.ParticleMass);
+                }
             }
         };
     }

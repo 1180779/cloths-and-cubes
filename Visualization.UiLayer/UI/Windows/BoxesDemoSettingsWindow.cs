@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 using ImGuiNET;
 
 namespace Visualization.UiLayer.UI.Windows;
@@ -13,12 +15,13 @@ public sealed class BoxesDemoSettingsWindow(
     public Func<int> GetSpheresCount { get; set; } = getSpheresCount;
     public Func<int> GetClothsCount { get; set; } = getClothsCount;
     public Func<int> JointsCount { get; set; } = getJointsCount;
+    public Func<List<ClothParams>>? GetClothsData { get; set; }
 
     public delegate void SetObjectCount(int count);
 
     public SetObjectCount? SetBoxesCount { get; set; }
     public SetObjectCount? SetSpheresCount { get; set; }
-    public SetObjectCount? SetClothsCount { get; set; }
+    public Action<int, List<ClothParams>>? SetClothsCount { get; set; }
 
     private int _sizeX = 21;
     public int SizeX => _sizeX;
@@ -56,6 +59,15 @@ public sealed class BoxesDemoSettingsWindow(
         ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f);
         ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);
         ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f);
+
+        if(ImGui.Button("Add Cloth"))
+        {
+            SetClothsCount?.Invoke(GetClothsCount() + 1, GetClothsData!());
+        } 
+        if(ImGui.Button("Clear Cloths"))
+        {
+            SetClothsCount?.Invoke(0, []);
+        }
     }
 
     private void DrawCounts()
@@ -74,13 +86,19 @@ public sealed class BoxesDemoSettingsWindow(
         }
 
         int clothsCount = GetClothsCount();
-        if (ImGui.SliderInt("Cloths", ref clothsCount, 0, 5))
-        {
-            SetClothsCount?.Invoke(clothsCount);
-        }
+        ImGui.Text($"Cloths: {clothsCount}");
 
         int jointsCount = JointsCount();
         ImGui.Text($"Joints: {jointsCount}");
+    }
+
+    public sealed record ClothParams
+    {
+        public int SizeX { get; init; }
+        public int SizeY { get; init; }
+        public Real SpringLength { get; init; }
+        public Real SpringConstant { get; init; }
+        public Real ParticleMass { get; init; }
     }
 
     public sealed record State
@@ -93,6 +111,7 @@ public sealed class BoxesDemoSettingsWindow(
         public int BoxesCount { get; init; }
         public int SpheresCount { get; init; }
         public int ClothsCount { get; init; }
+        public List<ClothParams> ClothsData { get; init; } = [];
     }
 
     public State SaveState()
@@ -107,6 +126,7 @@ public sealed class BoxesDemoSettingsWindow(
             BoxesCount = GetBoxesCount(),
             SpheresCount = GetSpheresCount(),
             ClothsCount = GetClothsCount(),
+            ClothsData = GetClothsData!=null ? GetClothsData() : [],
         };
     }
 
@@ -122,7 +142,7 @@ public sealed class BoxesDemoSettingsWindow(
 
         SetBoxesCount?.Invoke(state.BoxesCount);
         SetSpheresCount?.Invoke(state.SpheresCount);
-        SetClothsCount?.Invoke(state.ClothsCount);
+        SetClothsCount?.Invoke(state.ClothsCount, state.ClothsData);
     }
 
     public string Name => "Boxes Demo Settings";

@@ -192,6 +192,24 @@ public class Application : GameWindow
         _boxesDemoSettingsWindow =
             new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
             {
+                GetClothsData = () =>
+                {
+                    var clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
+                    foreach (var cloth in _cloths)
+                    {
+                        if (cloth == null) continue;
+                        var engineCloth = cloth.EngineCloth;
+                        clothsData.Add(new BoxesDemoSettingsWindow.ClothParams
+                        {
+                            SizeX = engineCloth.SizeX,
+                            SizeY = engineCloth.SizeY,
+                            SpringLength = engineCloth.SpringLength,
+                            SpringConstant = engineCloth.SpringConstant,
+                            ParticleMass = engineCloth.ParticleMass
+                        });
+                    }
+                    return clothsData;
+                },
                 SetBoxesCount = newCount =>
                 {
                     Random random = new();
@@ -238,7 +256,7 @@ public class Application : GameWindow
                     _forceBVHRebuildOnNoUpdate = true;
                 }
             };
-        _boxesDemoSettingsWindow.SetClothsCount = newCount =>
+        _boxesDemoSettingsWindow.SetClothsCount = (newCount, clothsData) =>
         {
             int length = _cloths.Length;
 
@@ -253,9 +271,19 @@ public class Application : GameWindow
 
             Array.Resize(ref _cloths, newCount);
 
+            if (clothsData == null) return;
             for (int i = length; i < newCount; ++i)
             {
-                _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
+                if(i<clothsData.Count)
+                {
+                    var data = clothsData[i];
+                    _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
+                        data.SizeX, data.SizeY,
+                        data.SpringLength, data.SpringConstant,
+                        data.ParticleMass);
+                }
+                else
+                    _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
                     _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
                     _boxesDemoSettingsWindow.ParticleMass);
@@ -687,16 +715,45 @@ public class Application : GameWindow
 
         _joints.Clear();
         _forceRegistry.Clear();
-        foreach (Cloth cloth in _cloths)
+
+        var clothsData = _boxesDemoSettingsWindow.GetClothsData();
+        if(clothsData==null) clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
+        int j = 0;
+        for(; j < clothsData.Count; j++)
         {
-            cloth.EngineCloth.RegenerateGridPreservingTheCenter(
-                _boxesDemoSettingsWindow.SizeX,
-                _boxesDemoSettingsWindow.SizeY,
-                _boxesDemoSettingsWindow.SpringLength,
-                _boxesDemoSettingsWindow.SpringConstant,
-                _boxesDemoSettingsWindow.ParticleMass);
-            cloth.EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
+            var data = clothsData[j];
+            _cloths[j].EngineCloth.RegenerateGridPreservingTheCenter(
+                data.SizeX,
+                data.SizeY,
+                data.SpringLength,
+                data.SpringConstant,
+                data.ParticleMass);
+            _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
         }
+        if(j < _cloths.Length)
+        {
+            for (; j < _cloths.Length; j++)
+            {
+                _cloths[j].EngineCloth.RegenerateGridPreservingTheCenter(
+                    _boxesDemoSettingsWindow.SizeX,
+                    _boxesDemoSettingsWindow.SizeY,
+                    _boxesDemoSettingsWindow.SpringLength,
+                    _boxesDemoSettingsWindow.SpringConstant,
+                    _boxesDemoSettingsWindow.ParticleMass);
+                _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
+            }
+        }
+
+        //foreach (Cloth cloth in _cloths)
+        //{
+        //    cloth.EngineCloth.RegenerateGridPreservingTheCenter(
+        //        _boxesDemoSettingsWindow.SizeX,
+        //        _boxesDemoSettingsWindow.SizeY,
+        //        _boxesDemoSettingsWindow.SpringLength,
+        //        _boxesDemoSettingsWindow.SpringConstant,
+        //        _boxesDemoSettingsWindow.ParticleMass);
+        //    cloth.EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
+        //}
 
         // reset plane
         _plane.EnginePlane.Direction = Engine.Vector3.Up;
