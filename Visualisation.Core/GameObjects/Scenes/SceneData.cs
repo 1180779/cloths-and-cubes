@@ -11,6 +11,7 @@ public sealed record SceneData
     public List<BoxData> Boxes { get; init; } = new();
     public List<BallData> Balls { get; init; } = new();
     public List<ClothData> Cloths { get; init; } = new();
+    public List<JointData> Joints { get; init; } = new();
 }
 
 /// <summary>
@@ -68,7 +69,6 @@ public sealed record EngineBoxData : CollisionBoxData;
 public sealed record GameObjectSpecificData
 {
     public Guid Id { get; init; }
-    public bool Invisible { get; init; }
     public MaterialData Material { get; init; } = new();
 }
 
@@ -101,9 +101,7 @@ public sealed record EngineClothData
     public float ParticleMass { get; init; }
 
     public Vector3Data Particle0Position { get; init; } = new(0, 0, 0);
-
-    // Optional: store all particle states for exact recreation
-    public List<ParticleData>? ParticleStates { get; init; }
+    public List<ClothParticleData> ParticleStates { get; init; }
 }
 
 public record CollisionParticleData
@@ -112,7 +110,11 @@ public record CollisionParticleData
     public Vector3Data Radius { get; init; } = new(0, 0, 0);
 }
 
-public sealed record ParticleData : CollisionParticleData;
+public sealed record ClothParticleData : CollisionParticleData
+{
+    public int ClothParticleX { get; init; }
+    public int ClothParticleY { get; init; }
+}
 
 public sealed record ClothData
 {
@@ -130,6 +132,28 @@ public sealed record PlaneData
 {
     public CollisionPlaneData CollisionPlane { get; init; } = new();
     public GameObjectSpecificData GameObjectSpecific { get; init; } = new();
+}
+
+public sealed record BodyReferenceData
+{
+    public enum BodyType { GameObject, ClothParticle }
+
+    public BodyType Type { get; init; }
+
+    public Guid GameObjectId { get; init; }
+
+    // For particles
+    public int ParticleX { get; init; }
+    public int ParticleY { get; init; }
+}
+
+public sealed record JointData
+{
+    public BodyReferenceData Body1 { get; init; } = new();
+    public BodyReferenceData Body2 { get; init; } = new();
+    public Vector3Data RelativePosition1 { get; init; } = new(0, 0, 0);
+    public Vector3Data RelativePosition2 { get; init; } = new(0, 0, 0);
+    public float Error { get; init; }
 }
 
 public sealed record Matrix3Data(

@@ -1,15 +1,18 @@
 using Engine.Collision;
 using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 
 namespace Engine.RigidBodies;
 
-public class Box : CollisionBox, IBoxable
+public class Box : CollisionBox, IBoxable, IBodyWithJoints
 {
     public bool IsOverlapping { get; set; } // previously used for some rendering (???)
     static readonly Vector3 MinPos = new(-15, 5, -15);
     static readonly Vector3 MaxPos = new(15, 10, 15);
     static readonly Vector3 MinSize = new(0.5f, 0.5f, 0.5f);
     static readonly Vector3 MaxSize = new(4.5f, 1.5f, 1.5f);
+
+    public List<ConnectedJointData> ConnectedJoints { get; set; } = new();
 
     /// <summary>
     /// Positions the box at a random location.
@@ -54,21 +57,6 @@ public class Box : CollisionBox, IBoxable
         Body.CalculateDerivedData();
     }
 
-    /// <summary>
-    /// Refreshes the physics state of the box by recalculating the inertia tensor,
-    /// adjusting damping values, updating the awake status, and calculating the derived physics data.
-    /// This method ensures that the physics body reflects its current state and properties accurately.
-    /// </summary>
-    public void RefreshPhysicsState()
-    {
-        RecalculateInertiaTensor();
-        Body.LinearDamping = 0.95f;
-        Body.AngularDamping = 0.8f;
-        Body.SetAwake();
-        Body.CalculateDerivedData();
-        CalculateInternals();
-    }
-
     public void SetAutoMass()
     {
         float mass = (float)(HalfSize.X * HalfSize.Y * HalfSize.Z * 8.0f);
@@ -104,5 +92,52 @@ public class Box : CollisionBox, IBoxable
         return new BoundingBox(
             center: Body.Position,
             halfSize: worldHalfSize);
+    }
+
+    /// <summary>
+    /// Get all 8 corners of the box in the box local space.
+    /// </summary>
+    /// <returns></returns>
+    public Vector3[] GetCornersInLocalSpace()
+    {
+        Vector3[] corners = new Vector3[8];
+        corners[0] = new Vector3(-HalfSize.X, -HalfSize.Y, -HalfSize.Z);
+        corners[1] = new Vector3(HalfSize.X, -HalfSize.Y, -HalfSize.Z);
+        corners[2] = new Vector3(-HalfSize.X, HalfSize.Y, -HalfSize.Z);
+        corners[3] = new Vector3(HalfSize.X, HalfSize.Y, -HalfSize.Z);
+        corners[4] = new Vector3(-HalfSize.X, -HalfSize.Y, HalfSize.Z);
+        corners[5] = new Vector3(HalfSize.X, -HalfSize.Y, HalfSize.Z);
+        corners[6] = new Vector3(-HalfSize.X, HalfSize.Y, HalfSize.Z);
+        corners[7] = new Vector3(HalfSize.X, HalfSize.Y, HalfSize.Z);
+        return corners;
+    }
+
+    /// <summary>
+    /// Gets all 8 corners of the box in world space.
+    /// </summary>
+    public Vector3[] GetCornersInWorldSpace()
+    {
+        CalculateInternals();
+
+        // Get the three local axes in world space
+        Vector3 axisX = GetAxis(0);
+        Vector3 axisY = GetAxis(1);
+        Vector3 axisZ = GetAxis(2);
+
+        // Center position
+        Vector3 center = Body.Position;
+
+        // Calculate all 8 corners with dot products with the local axes
+        Vector3[] corners = new Vector3[8];
+        corners[0] = center - axisX * HalfSize.X - axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[1] = center + axisX * HalfSize.X - axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[2] = center - axisX * HalfSize.X + axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[3] = center + axisX * HalfSize.X + axisY * HalfSize.Y - axisZ * HalfSize.Z;
+        corners[4] = center - axisX * HalfSize.X - axisY * HalfSize.Y + axisZ * HalfSize.Z;
+        corners[5] = center + axisX * HalfSize.X - axisY * HalfSize.Y + axisZ * HalfSize.Z;
+        corners[6] = center - axisX * HalfSize.X + axisY * HalfSize.Y + axisZ * HalfSize.Z;
+        corners[7] = center + axisX * HalfSize.X + axisY * HalfSize.Y + axisZ * HalfSize.Z;
+
+        return corners;
     }
 }

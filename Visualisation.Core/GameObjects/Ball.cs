@@ -2,8 +2,6 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.RigidBodies;
 
-using Visualisation.Core.Display.Gizmos;
-using Visualisation.Core.Display.Gizmos.Scale;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
@@ -11,7 +9,7 @@ using Sphere = Engine.RigidBodies.Sphere;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Ball : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTarget
+public sealed class Ball : GameObjectCollisionPrimitive, IBoxable
 {
     public Sphere EngineBall { get; init; } = new();
     public override RigidBody PhysicsObject => EngineBall.Body;
@@ -47,21 +45,4 @@ public sealed class Ball : GameObjectCollisionPrimitive, IBoxable, IScaleGizmoTa
     }
 
     public override CollisionPrimitive EngineCollisionPrimitive => EngineBall;
-
-    public Vector3 Scale
-    {
-        get => new(EngineBall.Radius);
-        set
-        {
-            EngineBall.Radius = value.X;
-        }
-    }
-
-    public Vector3 Offset => new(EngineBall.Radius);
-
-    public Vector3 GetTargetScale(Vector3 scale, float factor, GizmoAxis axis)
-    {
-        scale.X *= factor;
-        return scale;
-    }
 }

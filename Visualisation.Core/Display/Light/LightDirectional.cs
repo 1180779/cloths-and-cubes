@@ -26,18 +26,33 @@ public class LightDirectional : LightPoint
     public Func<CameraBase> GetCurrentCamera { get; set; }
 
     // TODO: change the shader associated with the shadow to allow for specification of number of cascades before compilation
+    public const int CascadeCount = 4;
+    public const float CascadeSplitLambda = 0.5f;
+
     public float[] ShadowCascadeLevels
     {
         get
         {
             var camera = GetCurrentCamera();
-            return
-            [
-                camera.FarPlane / 50,
-                camera.FarPlane / 25,
-                camera.FarPlane / 10,
-                camera.FarPlane / 2
-            ];
+            var near = camera.NearPlane;
+            var far = camera.FarPlane;
+            var splits = new float[CascadeCount - 1];
+
+            // Based pm the practical split scheme
+            // originally proposed in
+            // https://www.researchgate.net/publication/220805307_Parallel-split_shadow_maps_for_large-scale_virtual_environments
+            //
+            // Adapted to use a CascadeSplitLambda parameter to control between logarithmic and uniform split
+            // For 0.5f it's the same as the practical split scheme
+            for (var i = 0; i < splits.Length; i++)
+            {
+                float p = (i + 1) / (float)CascadeCount;
+                float log = near * (float)Math.Pow(far / near, p);
+                float lin = near + (far - near) * p;
+                splits[i] = CascadeSplitLambda * log + (1 - CascadeSplitLambda) * lin;
+            }
+
+            return splits;
         }
     }
 
@@ -45,7 +60,7 @@ public class LightDirectional : LightPoint
     private const float CasterMargin = 0f;
 #endif
 
-    private const int ShadowWidth = 1024, ShadowHeight = 1024;
+    private const int ShadowWidth = 2 * 1024, ShadowHeight = 2 * 1024;
 
     private float _shadowBiasMin;
     private float _shadowBiasMax;
@@ -282,7 +297,7 @@ public class LightDirectional : LightPoint
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    public void RenderToDepthMap(Shader sh, ICollection<GameObject> objects)
+    public void RenderToDepthMap(Shader sh, IEnumerable<GameObject> objects)
     {
         GL.Viewport(0, 0, ShadowWidth, ShadowHeight);
         sh.Use();
@@ -293,10 +308,16 @@ public class LightDirectional : LightPoint
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.Clear(ClearBufferMask.DepthBufferBit);
 
+        // Create a minimal context for shadow rendering
+        var shadowContext = new RenderContext
+        {
+            PbrShader = sh, // We use the shadow shader as the "PbrShader" for the strategy to use
+            SkipMaterial = true, // Don't set material uniforms for shadow pass
+        };
+
         foreach (var o in objects)
         {
-            sh.SetMatrix4("model", o.Model);
-            o.Render();
+            o.RenderStrategy.Render(shadowContext, o.Model);
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

@@ -1,5 +1,4 @@
-﻿using Visualization.UiLayer.Applications;
-using Visualization.UiLayer.Applications.Demos;
+﻿using Visualization.UiLayer.Applications.Demos;
 
 namespace Visualization.UiLayer
 {
@@ -7,7 +6,7 @@ namespace Visualization.UiLayer
     {
         private static void Main(string[] args)
         {
-            using Application application = new BoxesDemo();
+            using Application application = new Application();
             application.Run();
             application.Focus();
         }

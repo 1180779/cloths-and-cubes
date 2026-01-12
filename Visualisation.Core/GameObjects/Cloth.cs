@@ -1,30 +1,25 @@
-﻿using Engine;
-using Engine.Collision.Bounding_Volume_Hierarchy;
+﻿using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Force;
 
-using Visualisation.Core.Display.Gizmos.Rotation;
-using Visualisation.Core.Display.Gizmos.Translation;
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
-using System.Collections.Generic;
 
 namespace Visualisation.Core.GameObjects;
 
-public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRotationGizmoTarget
+public sealed class Cloth : GameObject, IBoxable
 {
     public Engine.Cloth EngineCloth { get; set; }
     public ClothMesh VisualCloth { get; set; } // borrowed (does not own the data) from Mesh interface here
     public ForceRegistry ForceRegistry { get; set; }
+    private IRenderStrategy? _renderStrategy;
 
-    // Now stores checked/saved triangles per square (top-left index)
-    public Dictionary<(int x, int y), Triangle[]> SavedTriangles { get; } = new();
-
-    public Cloth(ForceRegistry registry)
+    public Cloth(ForceRegistry registry, float positionEpsilon)
     {
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry);
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(positionEpsilon));
         VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
@@ -33,6 +28,7 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
     public Cloth(
         ForceRegistry registry,
+        float positionEpsilon,
         int sizeX = 21,
         int sizeY = 21,
         float springLength = 0.25f,
@@ -41,17 +37,25 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
     {
         ForceRegistry = registry;
         EngineCloth = new Engine.Cloth(ForceRegistry, sizeX, sizeY, springLength, springConstant, particleMass);
-        Vector3[,] pts = ConvertToOpenTk(EngineCloth.Points());
+        Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(positionEpsilon));
         VisualCloth = new ClothMesh(pts);
         Mesh = VisualCloth;
 
         Material = MaterialConstant.BlueRubber;
     }
 
-    protected override void PreRender()
+    public override IRenderStrategy RenderStrategy
     {
-        var pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth.UpdatePoints(pts);
+        get
+        {
+            _renderStrategy ??= new ClothRenderStrategy(VisualCloth, Material, EngineCloth);
+            return _renderStrategy;
+        }
+    }
+
+    protected override void OnMaterialChanged()
+    {
+        _renderStrategy = null;
     }
 
     public BoundingBox GetBoundingBox()
@@ -61,7 +65,6 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
         foreach (var particle in EngineCloth.Particles)
         {
-            if (particle == null || particle.Body == null) continue;
             var pos = particle.Body.Position;
             min.X = Math.Min(min.X, pos.X);
             min.Y = Math.Min(min.Y, pos.Y);
@@ -71,8 +74,8 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
             max.Z = Math.Max(max.Z, pos.Z);
         }
 
-        var center = new Engine.Vector3((min.X + max.X) / 2, (min.Y + max.Y) / 2, (min.Z + max.Z) / 2);
-        var halfSize = new Engine.Vector3((max.X - min.X) / 2, (max.Y - min.Y) / 2, (max.Z - min.Z) / 2);
+        var center = (min + max) / 2;
+        var halfSize = (max - min) / 2;
         return new BoundingBox(center, halfSize);
     }
 
@@ -82,9 +85,10 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
 
     protected override IMesh Mesh { get; set; }
     public override object PhysicsObject => EngineCloth;
+
     public override Matrix4 Model => Matrix4.Identity;
 
-    private static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
+    public static Vector3[,] ConvertToOpenTk(Engine.Vector3[,] enginePoints)
     {
         int sx = enginePoints.GetLength(0);
         int sy = enginePoints.GetLength(1);
@@ -112,41 +116,13 @@ public sealed class Cloth : GameObject, IBoxable, ITranslationGizmoTarget, IRota
         EngineCloth.RegenerateGridPreservingTheCenter(newSizeX, newSizeY, newSpringLength, newSpringConstant,
             newParticleMass);
 
-        // Update the mesh
-        var pts = ConvertToOpenTk(EngineCloth.Points());
-        VisualCloth.UpdatePoints(pts);
-    }
+        // The render strategy will take care of updating the mesh points
 
-    public Vector3 AxisPosition => EngineCloth.Center.ToOpenTK();
-    public Quaternion AxisOrientation => Quaternion.Identity;
-
-    Vector3 ITranslationGizmoTarget.Position
-    {
-        get => EngineCloth.Center.ToOpenTK();
-        set
-        {
-            EngineCloth.Center = value.ToEngine();
-        }
-    }
-
-    private Quaternion _previousOrientation = Quaternion.Identity;
-
-    public Quaternion Orientation
-    {
-        get => _previousOrientation;
-        set
-        {
-            var deltaRotation = value * Quaternion.Invert(_previousOrientation);
-            _previousOrientation = value;
-
-            var axisAngle = deltaRotation.ToAxisAngle();
-            var axis = axisAngle.Xyz;
-            var angle = axisAngle.W;
-
-            // Convert axis-angle to a rotation vector (scaled axis)
-            var rotationVector = axis * angle;
-
-            EngineCloth.RotateAroundCenter(rotationVector.ToEngine());
-        }
+        // TODO: think about whether we want to do this here or leave it to the render strategy
+        // Update the visual mesh immediately to match the new engine cloth dimensions
+        // This prevents a mismatch between the visual mesh (used for raycasting) and the engine cloth (used for particle lookup)
+        // until the next render frame.
+        // Vector3[,] pts = ConvertToOpenTk(EngineCloth.PointsVelocityAdjusted(0)); // Using 0 epsilon for immediate update, or pass epsilon if available
+        // VisualCloth.UpdatePoints(pts);
     }
 }

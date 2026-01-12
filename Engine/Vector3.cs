@@ -59,6 +59,13 @@ public struct Vector3 : IEquatable<Vector3>
     public Real SqMagnitude => X * X + Y * Y + Z * Z;
     public Real Magnitude => Real.Sqrt(X * X + Y * Y + Z * Z);
 
+    public Vector3 Normalized()
+    {
+        var copy = this;
+        copy.Normalize();
+        return copy;
+    }
+
     public Vector3 Normalize()
     {
         var mag = Magnitude;
@@ -66,15 +73,15 @@ public struct Vector3 : IEquatable<Vector3>
         X /= mag;
         Y /= mag;
         Z /= mag;
-        
+
         return this;
     }
-    
+
     public Vector3 Normalise()
     {
         return Normalize();
     }
-    
+
     public Vector3 Abs()
     {
         X = MathF.Abs(X);
@@ -91,7 +98,7 @@ public struct Vector3 : IEquatable<Vector3>
             v1.Z < v2.Z ? v1.Z : v2.Z
         );
     }
-    
+
     public static Vector3 ComponentMax(Vector3 v1, Vector3 v2)
     {
         return new Vector3(
@@ -100,7 +107,7 @@ public struct Vector3 : IEquatable<Vector3>
             v1.Z > v2.Z ? v1.Z : v2.Z
         );
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 operator *(Vector3 v, Real scalar)
     {
@@ -108,7 +115,7 @@ public struct Vector3 : IEquatable<Vector3>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3 operator *(Real scalar, Vector3 v) => v * scalar; 
+    public static Vector3 operator *(Real scalar, Vector3 v) => v * scalar;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Real operator *(Vector3 v, Vector3 u)

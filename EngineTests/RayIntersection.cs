@@ -247,7 +247,7 @@ public sealed class RayIntersection
     [TestCaseSource(nameof(TriangleIntersectionTestCases))]
     public void TriangleIntersection_Test(Ray ray, Triangle triangle, bool expectedHit, float expectedDistance)
     {
-        var actualHit = Engine.Rays.RayIntersection.IntersectRayTriangle(ray, triangle, out var actualDistance);
+        var (actualHit, _) = Engine.Rays.RayIntersection.IntersectRayTriangle(ray, triangle, out var actualDistance);
 
         Assert.That(actualHit, Is.EqualTo(expectedHit));
         if (expectedHit)

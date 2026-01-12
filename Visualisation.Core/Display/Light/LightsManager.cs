@@ -77,7 +77,7 @@ public class LightsManager : IDisposable
     public bool FlashlightOn = false;
     public bool Day = true;
 
-    public void RenderShadowsToMaps(ICollection<GameObject> objects)
+    public void RenderShadowsToMaps(IEnumerable<GameObject> objects)
     {
         if (DirectionalLight is null) return;
         GL.CullFace(TriangleFace.Front);

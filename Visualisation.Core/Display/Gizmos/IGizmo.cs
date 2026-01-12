@@ -35,6 +35,11 @@ public interface IGizmo : IDisposable
 
     public IGizmoTarget? Target { get; set; }
 
+    /// <summary>
+    /// Returns true if the gizmo is currently in use
+    /// </summary>
+    public bool IsActive { get; }
+
     public void Render(CameraBase camera);
     public bool HandleInput(IInputProvider input, Vector2 mousePos, CameraBase camera, Vector2i screenSize);
 }

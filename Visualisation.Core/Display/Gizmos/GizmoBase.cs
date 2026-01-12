@@ -20,6 +20,11 @@ public abstract class GizmoBase(Shader shader)
     protected GizmoAxis _selectedAxis = GizmoAxis.None;
     protected GizmoAxis _hoveredAxis = GizmoAxis.None;
 
+    /// <summary>
+    /// Returns true if a gizmo axis is currently in use
+    /// </summary>
+    public bool IsActive => _selectedAxis != GizmoAxis.None;
+
     protected abstract IGizmoArrow Arrow { get; }
     protected readonly Shader _shader = shader;
 

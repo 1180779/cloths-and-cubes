@@ -21,6 +21,14 @@ public class OpenTKWithImGuiInputProvider : IInputProvider
     private CursorState _lastCursorState = CursorState.Normal;
     private float _mouseScrollDelta;
 
+    /// <summary>
+    /// When true, bypasses ImGui's WantCaptureKeyboard check.
+    /// Set this to true when the 3D viewport is active and should receive all keyboard input.
+    /// </summary>
+    public bool BypassImGuiKeyboardCapture { get; set; } = false;
+
+    private bool _hasLoggedKeyboardBlock = false;
+
     public OpenTKWithImGuiInputProvider(GameWindow gameWindow, ImGuiController imGuiController)
     {
         this._gameWindow = gameWindow;
@@ -61,20 +69,28 @@ public class OpenTKWithImGuiInputProvider : IInputProvider
 
     public float GetMouseScroll()
     {
-        return _mouseScrollDelta;
-    }
-
-    public void ResetMouseScroll()
-    {
+        var delta = _mouseScrollDelta;
         _mouseScrollDelta = 0;
+        return delta;
     }
 
     public bool IsKeyDown(InputKey key)
     {
-        if (ImGui.GetIO().WantCaptureKeyboard)
+        var io = ImGui.GetIO();
+
+        // Allow keyboard input when interacting with 3D viewport
+        if (!BypassImGuiKeyboardCapture && io.WantCaptureKeyboard)
         {
+            if (!_hasLoggedKeyboardBlock)
+            {
+                _hasLoggedKeyboardBlock = true;
+            }
+
             return false;
         }
+
+        if (BypassImGuiKeyboardCapture)
+            _hasLoggedKeyboardBlock = false;
 
         if (!KeyMap.OpenTkKeysMap.TryGetValue(key, out var mappedKey))
         {
@@ -86,7 +102,10 @@ public class OpenTKWithImGuiInputProvider : IInputProvider
 
     public bool IsKeyPressed(InputKey key)
     {
-        if (ImGui.GetIO().WantCaptureKeyboard)
+        var io = ImGui.GetIO();
+
+        // Allow keyboard input when interacting with 3D viewport
+        if (!BypassImGuiKeyboardCapture && io.WantCaptureKeyboard)
         {
             return false;
         }

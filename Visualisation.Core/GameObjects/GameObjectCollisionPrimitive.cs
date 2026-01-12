@@ -1,38 +1,26 @@
 using Engine.Collision;
 
-using Visualisation.Core.Display.Gizmos.Rotation;
-using Visualisation.Core.Display.Gizmos.Translation;
+using Visualisation.Core.Display;
 
 namespace Visualisation.Core.GameObjects;
 
-public abstract class GameObjectCollisionPrimitive : GameObject, ITranslationGizmoTarget, IRotationGizmoTarget
+public abstract class GameObjectCollisionPrimitive : GameObject
 {
     public abstract CollisionPrimitive EngineCollisionPrimitive { get; }
 
-    public Vector3 AxisPosition => EngineCollisionPrimitive.Body.Position.ToOpenTK();
-    public Quaternion AxisOrientation => EngineCollisionPrimitive.Body.Orientation.ToOpenTK();
+    private IRenderStrategy? _renderStrategy;
 
-    Vector3 ITranslationGizmoTarget.Position
+    public override IRenderStrategy RenderStrategy
     {
-        get => EngineCollisionPrimitive.Body.Position.ToOpenTK();
-        set
+        get
         {
-            EngineCollisionPrimitive.Body.Position = value.ToEngine();
-            EngineCollisionPrimitive.Body.CalculateDerivedData();
-            EngineCollisionPrimitive.Body.SetAwake();
-            EngineCollisionPrimitive.CalculateInternals();
+            _renderStrategy ??= new StaticMeshRenderStrategy(Mesh, Material);
+            return _renderStrategy;
         }
     }
 
-    public Quaternion Orientation
+    protected override void OnMaterialChanged()
     {
-        get => EngineCollisionPrimitive.Body.Orientation.ToOpenTK();
-        set
-        {
-            EngineCollisionPrimitive.Body.Orientation = value.ToEngine();
-            EngineCollisionPrimitive.Body.CalculateDerivedData();
-            EngineCollisionPrimitive.Body.SetAwake();
-            EngineCollisionPrimitive.CalculateInternals();
-        }
+        _renderStrategy = null;
     }
 }

@@ -77,7 +77,6 @@ public class FollowingCamera : CameraBase
         }
 
         Distance -= input.GetMouseScroll() * 0.5f;
-        input.ResetMouseScroll();
         UpdatePositionFromTarget();
     }
 }

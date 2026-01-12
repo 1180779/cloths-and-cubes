@@ -1,8 +1,10 @@
 using System.Diagnostics;
 
+using Engine.Collision;
+
 namespace Engine.RigidBodies;
 
-public class RigidBody
+public class RigidBody : IFrictionProvider
 {
     /// <summary>
     /// Holds the inverse of the mass of the rigid body. It is more
@@ -153,6 +155,7 @@ public class RigidBody
         transformMatrix.Data[10] = 1 - 2 * orientation.I * orientation.I -
             2 * orientation.J * orientation.J;
         transformMatrix.Data[11] = position.Z;
+        transformMatrix.DebugAssertNotNan();
     }
 
     public void CalculateDerivedData()
@@ -355,5 +358,21 @@ public class RigidBody
             Debug.Assert(value != 0);
             InverseMass = (Real)1.0 / value;
         }
+    }
+
+    public virtual float Friction => 0.95f;
+
+    /// <summary>
+    /// Sets the rigid body to a static state by making its inverse mass zero.
+    /// A static rigid body will not respond to forces effectively rendering it immovable.
+    /// </summary>
+    public void MakeStatic()
+    {
+        SetInertiaTensor(new());
+        InverseMass = 0;
+        Acceleration = Vector3.Zero;
+        Rotation = Vector3.Zero;
+        ClearAccumulators();
+        CalculateDerivedData();
     }
 }

@@ -1,18 +1,18 @@
 using System.Diagnostics;
 
+using Visualisation.Core.Display;
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Mesh;
 using Visualisation.Core.Display.Mesh.VisualObjects;
 
 namespace Visualisation.Core.GameObjects;
 
-public abstract class GameObject : IIdentifiable, IDisposable
+public abstract class GameObject : IIdentifiable, IDisposable, IHasRenderStrategy
 {
     protected static Matrix4 GenerateModelMatrix(Vector3 position, Vector3 scale, Quaternion rotation) =>
         Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rotation) *
         Matrix4.CreateTranslation(position);
 
-    public bool Invisible = false;
     protected abstract IMesh Mesh { get; set; }
     public abstract object PhysicsObject { get; }
     public abstract Matrix4 Model { get; }
@@ -33,34 +33,17 @@ public abstract class GameObject : IIdentifiable, IDisposable
             value.EnsureLoaded();
             _material = value;
             oldMaterial?.Dispose();
+            OnMaterialChanged();
         }
     }
+
+    protected virtual void OnMaterialChanged() { }
 
     public Guid Id { get; set; } = Guid.NewGuid();
 
     private bool _isDisposed;
 
-    public void SetForShaderNoMaterial(Shader sh)
-    {
-        sh.SetMatrix4("model", Model);
-    }
-
-    public void SetForShader(Shader sh)
-    {
-        sh.SetMatrix4("model", Model);
-        Material.SetForPbrShader(sh);
-    }
-
-    protected virtual void PreRender() { }
-
-    public void Render(bool drawEvenInvisible = false)
-    {
-        if (Invisible && !drawEvenInvisible)
-            return;
-
-        PreRender();
-        Mesh.Render();
-    }
+    public abstract IRenderStrategy RenderStrategy { get; }
 
     ~GameObject()
     {

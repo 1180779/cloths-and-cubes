@@ -1,10 +1,11 @@
 using Engine.Collision.Bounding_Volume_Hierarchy;
 using Engine.Rays;
+using Engine.RigidBodies;
 
 using OpenTK.Mathematics;
 
 using Visualisation.Core.Display.Cameras;
-using Visualisation.Core.Inputs;
+using Visualisation.Core.State;
 
 namespace Visualisation.Core.GameObjects;
 
@@ -13,59 +14,65 @@ namespace Visualisation.Core.GameObjects;
 /// Handles converting mouse coordinates to world-space rays and detecting intersections.
 /// </summary>
 public sealed class SelectionManager(
-    IInputProvider inputProvider,
     Func<CameraBase> cameraProvider,
     Func<BVH> bvhProvider,
-    Func<Ray, int, (bool, Real, object?)> testBvhIndexRayIntersection
+    Func<Dictionary<int, IBoxable>> bvhDictionaryProvider,
+    Func<Dictionary<Engine.Cloth, Cloth>> clothsProvider,
+    Func<Plane> planeProvider,
+    Func<float> positionEpsilonProvider
 )
 {
-    private object? _selectedObject;
-    private readonly IInputProvider _inputProvider = inputProvider;
+    private readonly SelectionState _state = new();
     private readonly Func<CameraBase> _cameraProvider = cameraProvider;
     private readonly Func<BVH> _bvhProvider = bvhProvider;
-    private readonly Func<Ray, int, (bool, Real, object?)> _testBvhIndexRayIntersection = testBvhIndexRayIntersection;
-    public Ray? LastRay { get; private set; }
-    public Real SelectedObjectDistance { get; set; }
 
+    public SelectionState State => _state;
+
+    public bool IsEnabled
+    {
+        get => _state.IsEnabled;
+        set => _state.IsEnabled = value;
+    }
+
+    public Ray? LastRay => _state.LastRay;
+    public Real SelectedObjectDistance => _state.SelectedObjectDistance;
+
+    /// <summary>
+    /// The object currently under the mouse cursor (updated every frame).
+    /// </summary>
+    public object? HoveredObject => _state.HoveredObject;
+
+    /// <summary>
+    /// The explicitly selected object (selected for gizmo manipulation).
+    /// </summary>
     public object? SelectedObject
     {
-        get
+        get => _state.SelectedObject;
+        set
         {
-            return _selectedObject;
-        }
-        private set
-        {
-            if (_selectedObject != value)
+            if (!_state.IsEnabled)
+                return;
+            if (_state.SelectedObject != value)
             {
-                _selectedObject = value;
-                OnSelectionChanged?.Invoke(_selectedObject);
-            }
-            else if (Unselect && _selectedObject != null)
-            {
-                _selectedObject = null;
-                OnSelectionChanged?.Invoke(_selectedObject);
+                _state.SelectedObject = value;
+                OnSelectionChanged?.Invoke(_state.SelectedObject);
             }
         }
     }
 
-    public bool Unselect = true;
-    private bool _selectionEnabled = true;
-
     public bool SelectionEnabled
     {
-        get => _selectionEnabled;
+        get => _state.IsEnabled;
         set
         {
-            _selectionEnabled = value;
             if (!value)
             {
                 SelectedObject = null;
             }
+
+            _state.IsEnabled = value;
         }
     }
-
-    public bool DrawInvisibleObjects;
-    public bool DrawSelectedObjectWithoutDepthTesting = true;
 
     /// <summary>
     /// Event raised when the selected object changes.
@@ -73,19 +80,52 @@ public sealed class SelectionManager(
     public event Action<object?>? OnSelectionChanged;
 
     /// <summary>
-    /// Updates selection based on mouse input. 
+    /// Updates which object is currently hovered by the mouse cursor.
+    /// This should be called every frame to keep the hover state current.
     /// </summary>
     /// <param name="viewportMousePos">The mouse position relative to the viewport.</param>
     /// <param name="screenSize">The dimensions of the viewport in framebuffer coordinates</param>
-    public void HandleInput(Vector2 viewportMousePos, Vector2i screenSize)
+    public void UpdateHover(Vector2 viewportMousePos, Vector2i screenSize)
     {
-        if (!SelectionEnabled)
-            return;
-
-        if (_inputProvider.IsMouseButtonPressed(MouseButton.Left))
+        if (!IsEnabled)
         {
-            PerformSelection(viewportMousePos, screenSize);
+            _state.HoveredObject = null;
+            return;
         }
+
+        PerformHoverDetection(viewportMousePos, screenSize);
+    }
+
+    /// <summary>
+    /// Selects the currently hovered object (if any).
+    /// Returns true if an object was selected.
+    /// </summary>
+    public bool SelectHoveredObject()
+    {
+        if (_state.UnselectOnSelectedObjectClick)
+        {
+            if (_state.HoveredObject == SelectedObject)
+            {
+                SelectedObject = null;
+                return true;
+            }
+
+            if (SelectedObject != HoveredObject)
+            {
+                SelectedObject = HoveredObject;
+                return true;
+            }
+
+            return false;
+        }
+
+        if (_state.HoveredObject != null)
+        {
+            SelectedObject = _state.HoveredObject;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -127,12 +167,13 @@ public sealed class SelectionManager(
     }
 
     /// <summary>
-    /// Performs ray casting from the mouse position to detect object selection.
+    /// Performs ray casting from the mouse position to detect which object is under the cursor.
+    /// Updates HoveredObject but does not change selection.
     /// </summary>
-    private void PerformSelection(Vector2 mousePos, Vector2i screenSize)
+    private void PerformHoverDetection(Vector2 mousePos, Vector2i screenSize)
     {
         var ray = GetRayFromMouse(mousePos, _cameraProvider(), screenSize);
-        LastRay = ray;
+        _state.LastRay = ray;
 
         object? closestObject = null;
         var closestDistance = Real.MaxValue;
@@ -142,7 +183,7 @@ public sealed class SelectionManager(
 
         foreach (var hitIndex in potentialHits)
         {
-            var (hit, distance, obj) = _testBvhIndexRayIntersection(ray, hitIndex);
+            var (hit, distance, obj) = TestRayIntersection(ray, hitIndex);
             if (hit && distance < closestDistance && distance >= 0)
             {
                 closestDistance = distance;
@@ -150,15 +191,96 @@ public sealed class SelectionManager(
             }
         }
 
-        var (planeHit, planeDistance, planeObj) = _testBvhIndexRayIntersection(ray, -1);
+        var (planeHit, planeDistance, planeObj) = TestRayIntersection(ray, -1);
         if (planeHit && planeDistance < closestDistance && planeDistance >= 0)
         {
             closestDistance = planeDistance;
             closestObject = planeObj;
         }
 
-        SelectedObject = closestObject;
-        SelectedObjectDistance = closestDistance;
+        _state.HoveredObject = closestObject;
+        _state.SelectedObjectDistance = closestDistance;
+    }
+
+    private (bool, Real, object?) TestRayIntersection(Ray ray, int index)
+    {
+        var clothsDictionary = clothsProvider();
+        var bvhDictionary = bvhDictionaryProvider();
+        if (!bvhDictionary.TryGetValue(index, out var item))
+        {
+            if (index == -1)
+            {
+                var plane = planeProvider();
+                if (RayIntersection.IntersectRayPlane(ray, plane.EnginePlane, out var planeDistance))
+                {
+                    return (true, planeDistance, plane);
+                }
+            }
+
+            return (false, 0, null);
+        }
+
+        Real distance;
+        switch (item)
+        {
+            case Box box:
+                if (RayIntersection.IntersectRayOBB(ray, box.EngineBox, out distance))
+                    return (true, distance, box);
+                break;
+            case Ball ball:
+                if (RayIntersection.IntersectRaySphere(ray, ball.EngineBall, out distance))
+                    return (true, distance, ball);
+                break;
+            case Cloth cloth:
+                var triangles = cloth.VisualCloth.GetTriangles();
+                var (hit, vertexIdx, triangleIdx) =
+                    RayIntersection.IntersectRayCloth(ray, triangles, out distance);
+                if (hit)
+                {
+                    // Get the particle coordinates from the triangle and vertex index
+                    var (particleX, particleY) =
+                        cloth.VisualCloth.GetParticleCoordinatesFromTriangle(triangleIdx, vertexIdx);
+
+                    // Create a wrapper for the specific particle
+                    var particleWrapper =
+                        new ClothParticleWrapper(cloth, particleX, particleY);
+
+                    var positionEpsilon = positionEpsilonProvider();
+                    // adjust to account for position epsilon
+                    return (true, distance - positionEpsilon, particleWrapper);
+                }
+
+                break;
+            case ClothRigidParticle particle:
+                if (RayIntersection.IntersectRayAABB(ray, particle.GetBoundingBox(), out distance))
+                {
+                    clothsDictionary.TryGetValue(particle.Cloth, out var gameCloth);
+                    if (gameCloth is null)
+                        return (false, 0, null);
+
+                    var particleWrapper = new ClothParticleWrapper(gameCloth, particle.XIndex,
+                        particle.YIndex);
+                    return (true, distance, particleWrapper);
+                }
+
+                break;
+            case Cylinder cylinder:
+                if (RayIntersection.IntersectionRayCylinder(ray, cylinder.EngineCylinder, out distance))
+                    return (true, distance, cylinder);
+                break;
+            case Cone cone:
+                if (RayIntersection.IntersectionRayCone(ray, cone.EngineCone, out distance))
+                    return (true, distance, cone);
+                break;
+        }
+
+        return (false, 0, null);
+    }
+
+    public void ClearHover()
+    {
+        _state.HoveredObject = null;
+        _state.LastRay = null;
     }
 
     /// <summary>
@@ -167,7 +289,7 @@ public sealed class SelectionManager(
     public void ClearSelection()
     {
         SelectedObject = null;
-        LastRay = null;
-        SelectedObjectDistance = 0;
+        _state.LastRay = null;
+        _state.SelectedObjectDistance = 0;
     }
 }

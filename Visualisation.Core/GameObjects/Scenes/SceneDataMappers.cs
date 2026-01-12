@@ -1,5 +1,6 @@
 using Engine;
 using Engine.Collision;
+using Engine.ContactGenerators;
 using Engine.Force;
 using Engine.RigidBodies;
 
@@ -166,7 +167,6 @@ public static class SceneDataMappers
     {
         box.UpdateFromData(data.CollisionPrimitive);
         box.HalfSize = data.HalfSize.ToEngine();
-        box.RefreshPhysicsState();
     }
 
     public static Engine.RigidBodies.Box ToEngineBox(this EngineBoxData data)
@@ -181,17 +181,13 @@ public static class SceneDataMappers
         return new BoxData
         {
             EngineBox = box.EngineBox.ToData(),
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = box.Id, Invisible = box.Invisible, Material = box.Material.ToData()
-            }
+            GameObjectSpecific = new GameObjectSpecificData { Id = box.Id, Material = box.Material.ToData() }
         };
     }
 
     public static void UpdateFromData(this Box box, BoxData data)
     {
         box.Id = data.GameObjectSpecific.Id;
-        box.Invisible = data.GameObjectSpecific.Invisible;
         box.Material = data.GameObjectSpecific.Material.ToMaterial();
         box.EngineBox.UpdateFromData(data.EngineBox);
     }
@@ -201,7 +197,6 @@ public static class SceneDataMappers
         return new Box
         {
             Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
             Material = data.GameObjectSpecific.Material.ToMaterial(),
             EngineBox = data.EngineBox.ToEngineBox()
         };
@@ -243,7 +238,6 @@ public static class SceneDataMappers
     public static void UpdateFromData(this Sphere sphere, EngineSphereData data)
     {
         sphere.UpdateFromData((CollisionSphereData)data);
-        sphere.RefreshPhysicsState();
     }
 
     public static Sphere ToEngineSphere(this EngineSphereData data)
@@ -257,10 +251,7 @@ public static class SceneDataMappers
     {
         return new BallData
         {
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = ball.Id, Invisible = ball.Invisible, Material = ball.Material.ToData()
-            },
+            GameObjectSpecific = new GameObjectSpecificData { Id = ball.Id, Material = ball.Material.ToData() },
             CollisionSphere = ball.EngineBall.ToData()
         };
     }
@@ -268,7 +259,6 @@ public static class SceneDataMappers
     public static void UpdateFromData(this Ball ball, BallData data)
     {
         ball.Id = data.GameObjectSpecific.Id;
-        ball.Invisible = data.GameObjectSpecific.Invisible;
         ball.Material = data.GameObjectSpecific.Material.ToMaterial();
         ball.EngineBall.UpdateFromData(data.CollisionSphere);
     }
@@ -278,7 +268,6 @@ public static class SceneDataMappers
         return new Ball
         {
             Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
             Material = data.GameObjectSpecific.Material.ToMaterial(),
             EngineBall = data.CollisionSphere.ToEngineSphere()
         };
@@ -288,21 +277,24 @@ public static class SceneDataMappers
 
     #region CollisionParticle
 
-    public static ParticleData ToData(this RigidParticle particle)
+    public static ClothParticleData ToData(this RigidParticle particle)
     {
-        return new ParticleData { RigidBody = particle.Body.ToData(), Radius = particle.Radius.ToData() };
+        return new ClothParticleData { RigidBody = particle.Body.ToData(), Radius = particle.Radius.ToData() };
     }
 
-    public static void UpdateFromData(this RigidParticle particle, ParticleData data)
+    public static void UpdateFromData(this RigidParticle particle, ClothParticleData data)
     {
         particle.Body.UpdateFromData(data.RigidBody);
         particle.Radius = data.Radius.ToEngine();
         particle.RefreshPhysicsState();
     }
 
-    public static RigidParticle ToEngineParticle(this ParticleData data)
+    public static ClothRigidParticle ToEngineParticle(this ClothParticleData data, Engine.Cloth cloth)
     {
-        var particle = new RigidParticle();
+        var particle = new ClothRigidParticle
+        {
+            Cloth = cloth, XIndex = data.ClothParticleX, YIndex = data.ClothParticleY
+        };
         particle.UpdateFromData(data);
         return particle;
     }
@@ -311,19 +303,15 @@ public static class SceneDataMappers
 
     #region Cloth
 
-    public static EngineClothData ToData(this Engine.Cloth cloth, bool includeParticleStates = false)
+    public static EngineClothData ToData(this Engine.Cloth cloth)
     {
-        List<ParticleData>? particleStates = null;
-        if (includeParticleStates)
+        List<ClothParticleData> particleStates = new();
+        for (int i = 0; i < cloth.SizeX; i++)
         {
-            particleStates = new List<ParticleData>();
-            for (int i = 0; i < cloth.SizeX; i++)
+            for (int j = 0; j < cloth.SizeY; j++)
             {
-                for (int j = 0; j < cloth.SizeY; j++)
-                {
-                    var particle = cloth.Particles[i, j];
-                    particleStates.Add(particle.ToData());
-                }
+                var particle = cloth.Particles[i, j];
+                particleStates.Add(particle.ToData());
             }
         }
 
@@ -339,22 +327,18 @@ public static class SceneDataMappers
         };
     }
 
-    public static ClothData ToData(this Cloth cloth, bool includeParticleStates = false)
+    public static ClothData ToData(this Cloth cloth)
     {
         return new ClothData
         {
-            EngineCloth = cloth.EngineCloth.ToData(includeParticleStates),
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = cloth.Id, Invisible = cloth.Invisible, Material = cloth.Material.ToData()
-            }
+            EngineCloth = cloth.EngineCloth.ToData(),
+            GameObjectSpecific = new GameObjectSpecificData { Id = cloth.Id, Material = cloth.Material.ToData() }
         };
     }
 
-    public static void UpdateFromData(this Cloth cloth, ClothData data, ForceRegistry forceRegistry)
+    public static void UpdateFromData(this Cloth cloth, ClothData data)
     {
         cloth.Id = data.GameObjectSpecific.Id;
-        cloth.Invisible = data.GameObjectSpecific.Invisible;
         cloth.Material = data.GameObjectSpecific.Material.ToMaterial();
 
         // Check if cloth dimensions match - if not, we need to regenerate
@@ -363,10 +347,6 @@ public static class SceneDataMappers
 
         if (needsRegeneration)
         {
-            // Remove old springs from registry
-            cloth.EngineCloth.RemoveSpringsFromForceRegistry();
-
-            // Regenerate cloth with new dimensions
             cloth.RegenerateClothPreservingTheCenter(
                 data.EngineCloth.SizeX,
                 data.EngineCloth.SizeY,
@@ -382,46 +362,30 @@ public static class SceneDataMappers
             cloth.EngineCloth.Move(offset);
         }
 
-        // Restore particle states if available
-        if (data.EngineCloth.ParticleStates != null &&
-            data.EngineCloth.ParticleStates.Count == data.EngineCloth.SizeX * data.EngineCloth.SizeY)
+        // Restore particle states
+        int index = 0;
+        for (int i = 0; i < data.EngineCloth.SizeX; i++)
         {
-            int index = 0;
-            for (int i = 0; i < data.EngineCloth.SizeX; i++)
+            for (int j = 0; j < data.EngineCloth.SizeY; j++)
             {
-                for (int j = 0; j < data.EngineCloth.SizeY; j++)
-                {
-                    var particleData = data.EngineCloth.ParticleStates[index++];
-                    cloth.EngineCloth.Particles[i, j].UpdateFromData(particleData);
-                }
-            }
-        }
-        else
-        {
-            // Even without particle states, ensure all particles are awake
-            for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
-            {
-                for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
-                {
-                    cloth.EngineCloth.Particles[i, j].Body.SetAwake();
-                }
+                var particleData = data.EngineCloth.ParticleStates[index++];
+                cloth.EngineCloth.Particles[i, j].UpdateFromData(particleData);
             }
         }
     }
 
-    public static Cloth ToCloth(this ClothData data, ForceRegistry forceRegistry)
+    public static Cloth ToCloth(this ClothData data, ForceRegistry forceRegistry, Func<float> positionEpsilonProvider)
     {
         var cloth = new Cloth(
             forceRegistry,
+            positionEpsilonProvider(),
             data.EngineCloth.SizeX,
             data.EngineCloth.SizeY,
             data.EngineCloth.SpringLength,
             data.EngineCloth.SpringConstant,
             data.EngineCloth.ParticleMass)
         {
-            Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
-            Material = data.GameObjectSpecific.Material.ToMaterial()
+            Id = data.GameObjectSpecific.Id, Material = data.GameObjectSpecific.Material.ToMaterial()
         };
 
         // Set the origin position
@@ -431,29 +395,13 @@ public static class SceneDataMappers
             cloth.EngineCloth.Move(offset);
         }
 
-        // Restore particle states if available
-        if (data.EngineCloth.ParticleStates != null &&
-            data.EngineCloth.ParticleStates.Count == data.EngineCloth.SizeX * data.EngineCloth.SizeY)
+        int index = 0;
+        for (int i = 0; i < data.EngineCloth.SizeX; i++)
         {
-            int index = 0;
-            for (int i = 0; i < data.EngineCloth.SizeX; i++)
+            for (int j = 0; j < data.EngineCloth.SizeY; j++)
             {
-                for (int j = 0; j < data.EngineCloth.SizeY; j++)
-                {
-                    var particleData = data.EngineCloth.ParticleStates[index++];
-                    cloth.EngineCloth.Particles[i, j] = particleData.ToEngineParticle();
-                }
-            }
-        }
-        else
-        {
-            // Even without particle states, ensure all particles are awake
-            for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
-            {
-                for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
-                {
-                    cloth.EngineCloth.Particles[i, j].Body.SetAwake();
-                }
+                var particleData = data.EngineCloth.ParticleStates[index++];
+                cloth.EngineCloth.Particles[i, j] = particleData.ToEngineParticle(cloth.EngineCloth);
             }
         }
 
@@ -479,17 +427,13 @@ public static class SceneDataMappers
         return new PlaneData
         {
             CollisionPlane = plane.EnginePlane.ToData(),
-            GameObjectSpecific = new GameObjectSpecificData
-            {
-                Id = plane.Id, Invisible = plane.Invisible, Material = plane.Material.ToData()
-            }
+            GameObjectSpecific = new GameObjectSpecificData { Id = plane.Id, Material = plane.Material.ToData() }
         };
     }
 
     public static void UpdateFromData(this Plane plane, PlaneData data)
     {
         plane.Id = data.GameObjectSpecific.Id;
-        plane.Invisible = data.GameObjectSpecific.Invisible;
         plane.Material = data.GameObjectSpecific.Material.ToMaterial();
         plane.EnginePlane = data.CollisionPlane.ToCollisionPlane();
     }
@@ -499,7 +443,6 @@ public static class SceneDataMappers
         var plane = new Plane
         {
             Id = data.GameObjectSpecific.Id,
-            Invisible = data.GameObjectSpecific.Invisible,
             Material = data.GameObjectSpecific.Material.ToMaterial(),
             EnginePlane = data.CollisionPlane.ToCollisionPlane()
         };
@@ -571,33 +514,79 @@ public static class SceneDataMappers
     #region Scene-level Mapping
 
     public static SceneData ToSceneData(
-        this ICollection<GameObject> gameObjects,
+        this IEnumerable<GameObject> gameObjects,
         CollisionData collisionData,
+        GlobalJointsList globalJoints,
         string sceneName = "Untitled Scene",
-        string description = "",
-        bool includeParticleStates = false)
+        string description = "")
     {
         var boxes = new List<BoxData>();
         var balls = new List<BallData>();
         var cloths = new List<ClothData>();
         PlaneData? plane = null;
 
+        // Build lookup for joint serialization
+        var trackableLookup = new Dictionary<IJointTrackable, BodyReferenceData>();
+
+        int count = 0;
         foreach (var obj in gameObjects)
         {
+            count++;
             switch (obj)
             {
                 case Box box:
                     boxes.Add(box.ToData());
+                    trackableLookup[box.EngineBox] = new BodyReferenceData
+                    {
+                        Type = BodyReferenceData.BodyType.GameObject, GameObjectId = box.Id
+                    };
                     break;
                 case Ball ball:
                     balls.Add(ball.ToData());
+                    // Balls don't implement IJointTrackable currently (only Box does via IBodyWithJoints)
+                    // If Ball implements it later, add here.
                     break;
                 case Cloth cloth:
-                    cloths.Add(cloth.ToData(includeParticleStates));
+                    cloths.Add(cloth.ToData());
+                    // Add all particles to lookup
+                    for (int i = 0; i < cloth.EngineCloth.SizeX; i++)
+                    {
+                        for (int j = 0; j < cloth.EngineCloth.SizeY; j++)
+                        {
+                            var particle = cloth.EngineCloth.Particles[i, j];
+                            trackableLookup[particle] = new BodyReferenceData
+                            {
+                                Type = BodyReferenceData.BodyType.ClothParticle,
+                                GameObjectId = cloth.Id,
+                                ParticleX = i,
+                                ParticleY = j
+                            };
+                        }
+                    }
+
                     break;
                 case Plane p:
                     plane = p.ToData();
                     break;
+            }
+        }
+
+        // Serialize Joints
+        var joints = new List<JointData>();
+        foreach (var joint in globalJoints.Joints)
+        {
+            if (joint.TrackableA != null && joint.TrackableB != null &&
+                trackableLookup.TryGetValue(joint.TrackableA, out var refA) &&
+                trackableLookup.TryGetValue(joint.TrackableB, out var refB))
+            {
+                joints.Add(new JointData
+                {
+                    Body1 = refA,
+                    Body2 = refB,
+                    RelativePosition1 = joint.RelativePositionA.ToData(),
+                    RelativePosition2 = joint.RelativePositionB.ToData(),
+                    Error = joint.Error
+                });
             }
         }
 
@@ -610,7 +599,7 @@ public static class SceneDataMappers
                 CreatedDate = DateTime.UtcNow,
                 ModifiedDate = DateTime.UtcNow,
                 Version = "1.0",
-                TotalObjects = gameObjects.Count
+                TotalObjects = count
             },
             CollisionSettings = new CollisionSettings
             {
@@ -621,13 +610,16 @@ public static class SceneDataMappers
             Plane = plane,
             Boxes = boxes,
             Balls = balls,
-            Cloths = cloths
+            Cloths = cloths,
+            Joints = joints
         };
     }
 
     public static List<GameObject> ToGameObjects(
         this SceneData sceneData,
         ForceRegistry forceRegistry,
+        Func<float> positionEpsilonProvider,
+        GlobalJointsList globalJoints,
         out Plane? plane,
         out CollisionData collisionData)
     {
@@ -647,21 +639,81 @@ public static class SceneDataMappers
         }
 
         // Create game objects
-        gameObjects.AddRange(sceneData.Boxes.Select(b => b.ToBox()));
+        var createdBoxes = sceneData.Boxes.Select(b => b.ToBox()).ToList();
+        gameObjects.AddRange(createdBoxes);
         gameObjects.AddRange(sceneData.Balls.Select(b => b.ToBall()));
-        gameObjects.AddRange(sceneData.Cloths.Select(c => c.ToCloth(forceRegistry)));
+        var createdCloths = sceneData.Cloths.Select(c => c.ToCloth(forceRegistry, positionEpsilonProvider)).ToList();
+        gameObjects.AddRange(createdCloths);
+
+        // Reconstruct Joints
+        // Build lookup map
+        var idToBox = createdBoxes.ToDictionary(b => b.Id, b => b);
+        var idToCloth = createdCloths.ToDictionary(c => c.Id, c => c);
+
+        foreach (var jointData in sceneData.Joints)
+        {
+            CollisionPrimitive? prim1 = ResolvePrimitive(jointData.Body1, idToBox, idToCloth);
+            CollisionPrimitive? prim2 = ResolvePrimitive(jointData.Body2, idToBox, idToCloth);
+
+            if (prim1 != null && prim2 != null)
+            {
+                var joint = new Joint(
+                    prim1,
+                    jointData.RelativePosition1.ToEngine(),
+                    prim2,
+                    jointData.RelativePosition2.ToEngine(),
+                    jointData.Error
+                );
+
+                int index = globalJoints.AddJoint(joint);
+                var connectedData = new ConnectedJointData(joint, index);
+
+                // Add to trackables
+                if (prim1 is IJointTrackable t1) t1.AddConnectedJoint(connectedData);
+                if (prim2 is IJointTrackable t2) t2.AddConnectedJoint(connectedData);
+            }
+        }
 
         return gameObjects;
     }
 
+    private static CollisionPrimitive? ResolvePrimitive(
+        BodyReferenceData refData,
+        Dictionary<Guid, Box> boxes,
+        Dictionary<Guid, Cloth> cloths)
+    {
+        if (refData.Type == BodyReferenceData.BodyType.GameObject)
+        {
+            if (boxes.TryGetValue(refData.GameObjectId, out var box))
+            {
+                return box.EngineBox;
+            }
+        }
+        else if (refData.Type == BodyReferenceData.BodyType.ClothParticle)
+        {
+            if (cloths.TryGetValue(refData.GameObjectId, out var cloth))
+            {
+                if (refData.ParticleX >= 0 && refData.ParticleX < cloth.EngineCloth.SizeX &&
+                    refData.ParticleY >= 0 && refData.ParticleY < cloth.EngineCloth.SizeY)
+                {
+                    return cloth.EngineCloth.Particles[refData.ParticleX, refData.ParticleY];
+                }
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Updates existing GameObjects from SceneData or creates new ones if they don't exist.
-    /// This preserves object identity, which is important for maintaining gizmo and selection references.
+    /// This preserves object identity, which is important for maintaining references.
     /// </summary>
     public static List<GameObject> ToGameObjectsWithUpdate(
         this SceneData sceneData,
         ForceRegistry forceRegistry,
         ICollection<GameObject> existingObjects,
+        Func<float> positionEpsilonProvider,
+        GlobalJointsList globalJoints,
         out Plane? plane,
         out CollisionData collisionData,
         out List<GameObject> objectsToRemove)
@@ -700,20 +752,25 @@ public static class SceneDataMappers
         }
 
         // Handle boxes
+        var currentBoxes = new Dictionary<Guid, Box>();
         foreach (var boxData in sceneData.Boxes)
         {
             idsInSceneData.Add(boxData.GameObjectSpecific.Id);
 
+            Box box;
             if (existingById.TryGetValue(boxData.GameObjectSpecific.Id, out var existingObj)
                 && existingObj is Box existingBox)
             {
                 existingBox.UpdateFromData(boxData);
-                gameObjects.Add(existingBox);
+                box = existingBox;
             }
             else
             {
-                gameObjects.Add(boxData.ToBox());
+                box = boxData.ToBox();
             }
+
+            gameObjects.Add(box);
+            currentBoxes[box.Id] = box;
         }
 
         // Handle balls
@@ -734,20 +791,25 @@ public static class SceneDataMappers
         }
 
         // Handle cloths
+        var currentCloths = new Dictionary<Guid, Cloth>();
         foreach (var clothData in sceneData.Cloths)
         {
             idsInSceneData.Add(clothData.GameObjectSpecific.Id);
 
+            Cloth cloth;
             if (existingById.TryGetValue(clothData.GameObjectSpecific.Id, out var existingObj)
                 && existingObj is Cloth existingCloth)
             {
-                existingCloth.UpdateFromData(clothData, forceRegistry);
-                gameObjects.Add(existingCloth);
+                existingCloth.UpdateFromData(clothData);
+                cloth = existingCloth;
             }
             else
             {
-                gameObjects.Add(clothData.ToCloth(forceRegistry));
+                cloth = clothData.ToCloth(forceRegistry, positionEpsilonProvider);
             }
+
+            gameObjects.Add(cloth);
+            currentCloths[cloth.Id] = cloth;
         }
 
         // Identify objects that need to be removed
@@ -756,6 +818,32 @@ public static class SceneDataMappers
             if (!idsInSceneData.Contains(existingObj.Id))
             {
                 objectsToRemove.Add(existingObj);
+            }
+        }
+
+        // Reconstruct Joints
+        // We clear all joints and rebuild from data for simplicity and safety.
+        globalJoints.Clear();
+        foreach (var jointData in sceneData.Joints)
+        {
+            CollisionPrimitive? prim1 = ResolvePrimitive(jointData.Body1, currentBoxes, currentCloths);
+            CollisionPrimitive? prim2 = ResolvePrimitive(jointData.Body2, currentBoxes, currentCloths);
+
+            if (prim1 != null && prim2 != null)
+            {
+                var joint = new Joint(
+                    prim1,
+                    jointData.RelativePosition1.ToEngine(),
+                    prim2,
+                    jointData.RelativePosition2.ToEngine(),
+                    jointData.Error
+                );
+
+                int index = globalJoints.AddJoint(joint);
+                var connectedData = new ConnectedJointData(joint, index);
+
+                if (prim1 is IJointTrackable t1) t1.AddConnectedJoint(connectedData);
+                if (prim2 is IJointTrackable t2) t2.AddConnectedJoint(connectedData);
             }
         }
 

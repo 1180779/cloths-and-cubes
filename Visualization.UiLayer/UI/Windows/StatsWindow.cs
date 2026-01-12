@@ -4,9 +4,9 @@ using Visualisation.Core.GameObjects.Scenes;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public class StatsWindow(SceneManager sceneManager) : IWindow
+public class StatsWindow(SceneRenderer sceneRenderer) : IWindow
 {
-    private readonly SceneManager _sceneManager = sceneManager; /* borrowed */
+    private readonly SceneRenderer _sceneRenderer = sceneRenderer; /* borrowed */
 
     public string Name => "Stats";
 
@@ -14,7 +14,7 @@ public class StatsWindow(SceneManager sceneManager) : IWindow
     {
         if (ImGui.Begin(Name, ref isOpen))
         {
-            Vector3 cameraPos = _sceneManager.CamerasManager.CurrentCamera.Position;
+            Vector3 cameraPos = _sceneRenderer.CamerasManager.CurrentCamera.Position;
 
             ImGui.Text($"Application FPS: {ImGui.GetIO().Framerate:0.0}");
             ImGui.Text($"Frame Time: {1000.0f / ImGui.GetIO().Framerate:0.0} ms");
