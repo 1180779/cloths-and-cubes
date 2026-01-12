@@ -1,5 +1,6 @@
 using Visualisation.Core.Display.Materials;
 using Visualisation.Core.GameObjects;
+using Visualisation.Core.GameObjects.Scenes;
 
 namespace Visualization.UiLayer.Applications.Demos;
 
@@ -8,7 +9,12 @@ public class BoxesMaterialsDemo : Application
     public BoxesMaterialsDemo()
     {
         _boxesDemoSettingsWindow =
-            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count)
+            new(() => _boxes.Length, () => _balls.Length, () => _cloths.Length, () => _joints.Joints.Count,
+                () => _sceneRenderer.EnvironmentMap.FileDescription,
+                _sceneRenderer.SetCurrentEnvironmentMap,
+                () => SceneRenderer.DefaultEnvironmentMapFile,
+                _collisionData
+            )
             {
                 SetBoxesCount = count =>
                 {
@@ -59,31 +65,31 @@ public class BoxesMaterialsDemo : Application
                         _balls[i].Material = Materials[i % Materials.Length].TypedClone();
                         rowCount++;
                     }
-                }
-            };
-        _boxesDemoSettingsWindow.SetClothsCount = count =>
-        {
-            int length = _cloths.Length;
-            for (int i = count; i < length; ++i)
-            {
-                _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
-                _cloths[i].Dispose();
-            }
+                },
+                SetClothsCount = (count, sizeX, sizeY, springLength, springConstant, particleMass) =>
+                {
+                    int length = _cloths.Length;
+                    for (int i = count; i < length; ++i)
+                    {
+                        _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
+                        _cloths[i].Dispose();
+                    }
 
-            Array.Resize(ref _cloths, count);
-            for (int i = length; i < count; ++i)
-            {
-                _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
-                    _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
-                    _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-                    _boxesDemoSettingsWindow.ParticleMass);
-            }
-        };
+                    Array.Resize(ref _cloths, count);
+                    for (int i = length; i < count; ++i)
+                    {
+                        _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
+                            sizeX, sizeY,
+                            springLength, springConstant,
+                            particleMass);
+                    }
+                },
+            };
     }
 
     protected int _nrOfRows = 5;
 
-    protected IMaterial[] Materials => MaterialsHelper.AllTexturedMaterials;
+    protected IMaterial[] Materials => MaterialsAndEnvironmentMapsHelper.AllTexturedMaterials;
 
     public override void Reset()
     {

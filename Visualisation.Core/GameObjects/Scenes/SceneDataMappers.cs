@@ -473,9 +473,7 @@ public static class SceneDataMappers
                 Type = MaterialData.MaterialType.Textured,
                 AlbedoTexturePath = textured.AlbedoMap,
                 NormalTexturePath = textured.NormalMap,
-                MetallicTexturePath = textured.MetallicMap,
-                RoughnessTexturePath = textured.RoughnessMap,
-                AoTexturePath = textured.AoMap,
+                ArmTexturePath = textured.ArmMap,
             },
             _ => new MaterialData { Name = "Unknown", Type = MaterialData.MaterialType.Constant }
         };
@@ -501,9 +499,7 @@ public static class SceneDataMappers
                 Name = data.Name,
                 AlbedoMap = data.AlbedoTexturePath ?? "",
                 NormalMap = data.NormalTexturePath ?? "",
-                MetallicMap = data.MetallicTexturePath ?? "",
-                RoughnessMap = data.RoughnessTexturePath ?? "",
-                AoMap = data.AoTexturePath ?? ""
+                ArmMap = data.ArmTexturePath ?? "",
             },
             _ => new MaterialConstant()
         };

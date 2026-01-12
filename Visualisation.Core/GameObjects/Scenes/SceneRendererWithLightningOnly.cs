@@ -7,9 +7,9 @@ using Visualisation.Core.Inputs;
 
 namespace Visualisation.Core.GameObjects.Scenes;
 
-public class SceneLightningOnly : SceneRenderer
+public class SceneRendererWithLightningOnly : SceneRenderer
 {
-    public SceneLightningOnly(
+    public SceneRendererWithLightningOnly(
         float aspectRatio,
         IInputProvider inputProvider,
         Func<IEnumerable<GameObject>> getGameObjects,

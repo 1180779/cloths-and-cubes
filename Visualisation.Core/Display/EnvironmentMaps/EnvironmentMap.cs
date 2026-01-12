@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 using OpenTK.Graphics.OpenGL4;
 
+using Visualisation.Core.Display.Materials;
 using Visualisation.Core.Display.Texture;
 
 namespace Visualisation.Core.Display.EnvironmentMaps;
@@ -10,7 +11,7 @@ namespace Visualisation.Core.Display.EnvironmentMaps;
 /// Manages PBR environment maps for rendering. Supports both cached (fast) and
 /// generated (slow but flexible) loading modes.
 /// </summary>
-public class EnvironmentMap : IDisposable
+public sealed class EnvironmentMap : IDisposable
 {
     public enum EnvironmentMapDisplayType
     {
@@ -19,6 +20,7 @@ public class EnvironmentMap : IDisposable
         PrefilterMap,
     }
 
+    public EnvMapFileDescription FileDescription { get; init; }
     public EnvironmentMapDisplayType DisplayType = EnvironmentMapDisplayType.EnvironmentCubemap;
     public float PrefilterMapValue = 1.0f;
 
@@ -28,14 +30,14 @@ public class EnvironmentMap : IDisposable
     /// <summary>
     /// Creates an EnvironmentMap by loading from cache or generating if cache doesn't exist.
     /// </summary>
-    /// <param name="hdrPath">Path to the HDR equirectangular map</param>
+    /// <param name="fileDescription">Path to the HDR equirectangular map</param>
     /// <param name="equirectangularToCubemapShader">Shader for converting equirectangular to cubemap</param>
     /// <param name="irradianceConvolutionShader">Shader for generating irradiance map</param>
     /// <param name="prefilterShader">Shader for generating prefilter map</param>
     /// <param name="brdfShader">Shader for generating BRDF LUT (shared resource)</param>
     /// <param name="forceRegenerate">If true, ignores cache and regenerates textures</param>
     public EnvironmentMap(
-        string hdrPath,
+        EnvMapFileDescription fileDescription,
         Shader equirectangularToCubemapShader,
         Shader irradianceConvolutionShader,
         Shader prefilterShader,
@@ -43,10 +45,13 @@ public class EnvironmentMap : IDisposable
         bool forceRegenerate = false
     )
     {
+        FileDescription = fileDescription;
+
         var hdrFileName = Path.Combine(
             Config.Pbr.CacheDirectory,
-            Path.GetFileNameWithoutExtension(hdrPath)
+            Path.GetFileNameWithoutExtension(FileDescription.FilePath)
         );
+        Debug.WriteLine("HDR File Name for caching: " + hdrFileName);
         bool allCached = !forceRegenerate &&
             PbrTextureCache.Exists(hdrFileName);
 
@@ -57,11 +62,12 @@ public class EnvironmentMap : IDisposable
         }
         else
         {
-            Debug.WriteLine($"Generating PBR textures from HDR: {hdrPath}");
+            Debug.WriteLine($"Generating PBR textures from HDR: {FileDescription}");
 
-            var hdr = LoadHdrTexture(hdrPath);
+            var hdr = LoadHdrTexture(FileDescription.FilePath);
             if (TexturesManager.IsPlaceholderTexture(hdr))
             {
+                Debug.WriteLine($"HDR texture is placeholder (failed to load?). Falling back to 1x1 generation.");
                 var monotextures = PbrTextureGenerator.Generate1X1(
                     equirectangularToCubemapShader,
                     irradianceConvolutionShader,
@@ -71,6 +77,7 @@ public class EnvironmentMap : IDisposable
             }
             else
             {
+                Debug.WriteLine($"HDR texture loaded successfully (ID: {hdr.TextureId}). Generating PBR textures.");
                 _textures = PbrTextureGenerator.GenerateFromHdr(
                     hdr.TextureId,
                     equirectangularToCubemapShader,
@@ -79,7 +86,7 @@ public class EnvironmentMap : IDisposable
                 TexturesManager.FreeTexture(hdr.TexturePath);
 
                 Debug.WriteLine($"Saving PBR textures to cache: {Config.Pbr.CacheDirectory}");
-                PbrTextureCache.Save(hdrFileName, _textures);   
+                PbrTextureCache.Save(hdrFileName, _textures);
             }
         }
 

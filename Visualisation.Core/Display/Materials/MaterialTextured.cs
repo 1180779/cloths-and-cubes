@@ -17,7 +17,7 @@ public sealed partial class MaterialTextured : IMaterial
 
     public IMaterial TypedClone()
     {
-        return new MaterialTextured(Name, AlbedoMap, NormalMap, MetallicMap, RoughnessMap, AoMap);
+        return new MaterialTextured(Name, AlbedoMap, NormalMap, ArmMap);
     }
 
 
@@ -25,8 +25,7 @@ public sealed partial class MaterialTextured : IMaterial
     {
         EnsureLoaded();
         Debug.Assert(
-            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null &&
-            _roughnessMapTextureData != null && _aoMapTextureData != null,
+            _albedoMapTextureData != null && _normalMapTextureData != null && _armMapTextureData != null,
             "Material not loaded"
         );
         sh.SetBool(IMaterial.UseMaps, true);
@@ -58,12 +57,8 @@ public sealed partial class MaterialTextured : IMaterial
                 _albedoMapTextureData.TextureId);
             sh.SetTexture(IMaterial.NormalMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture5,
                 _normalMapTextureData.TextureId);
-            sh.SetTexture(IMaterial.MetallicMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
-                _metallicMapTextureData.TextureId);
-            sh.SetTexture(IMaterial.RoughnessMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture7,
-                _roughnessMapTextureData.TextureId);
-            sh.SetTexture(IMaterial.AoMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture8,
-                _aoMapTextureData.TextureId);
+            sh.SetTexture(IMaterial.ArmMapShaderName, TextureTarget.Texture2D, TextureUnit.Texture6,
+                _armMapTextureData.TextureId);
         }
     }
 
@@ -78,40 +73,30 @@ public sealed partial class MaterialTextured : IMaterial
 
     public string AlbedoMap { get; init; }
     public string NormalMap { get; init; }
-    public string MetallicMap { get; init; }
-    public string RoughnessMap { get; init; }
-    public string AoMap { get; init; }
+    public string ArmMap { get; init; } // combined metallic, roughness, ao map
 
     private TexturesManager.TextureData? _albedoMapTextureData;
     private TexturesManager.TextureData? _normalMapTextureData;
-    private TexturesManager.TextureData? _metallicMapTextureData;
-    private TexturesManager.TextureData? _roughnessMapTextureData;
-    private TexturesManager.TextureData? _aoMapTextureData;
+    private TexturesManager.TextureData? _armMapTextureData;
 
     public MaterialTextured()
     {
         Name = "Empty Textured Material";
         AlbedoMap = "";
         NormalMap = "";
-        MetallicMap = "";
-        RoughnessMap = "";
-        AoMap = "";
+        ArmMap = "";
     }
 
     public MaterialTextured(
         string name,
         string albedoMap,
         string normalMap,
-        string metallicMap,
-        string roughnessMap,
-        string aoMap)
+        string armMap)
     {
         Name = name;
         this.AlbedoMap = albedoMap;
         this.NormalMap = normalMap;
-        this.MetallicMap = metallicMap;
-        this.RoughnessMap = roughnessMap;
-        this.AoMap = aoMap;
+        this.ArmMap = armMap;
     }
 
     public void EnsureLoaded()
@@ -121,9 +106,7 @@ public sealed partial class MaterialTextured : IMaterial
 
         _albedoMapTextureData = TexturesManager.GetOrLoadTexture(AlbedoMap, TextureInit);
         _normalMapTextureData = TexturesManager.GetOrLoadTexture(NormalMap, TextureInit);
-        _metallicMapTextureData = TexturesManager.GetOrLoadTexture(MetallicMap, TextureInit);
-        _roughnessMapTextureData = TexturesManager.GetOrLoadTexture(RoughnessMap, TextureInit);
-        _aoMapTextureData = TexturesManager.GetOrLoadTexture(AoMap, TextureInit);
+        _armMapTextureData = TexturesManager.GetOrLoadTexture(ArmMap, TextureInit);
         _loaded = true;
         return;
 
@@ -150,16 +133,13 @@ public sealed partial class MaterialTextured : IMaterial
         _isDisposed = true;
 
         Debug.Assert(
-            _albedoMapTextureData != null && _normalMapTextureData != null && _metallicMapTextureData != null &&
-            _roughnessMapTextureData != null && _aoMapTextureData != null,
+            _albedoMapTextureData != null && _normalMapTextureData != null && _armMapTextureData != null,
             "Material not loaded"
         );
 
         TexturesManager.FreeTexture(_albedoMapTextureData.TexturePath);
         TexturesManager.FreeTexture(_normalMapTextureData.TexturePath);
-        TexturesManager.FreeTexture(_metallicMapTextureData.TexturePath);
-        TexturesManager.FreeTexture(_roughnessMapTextureData.TexturePath);
-        TexturesManager.FreeTexture(_aoMapTextureData.TexturePath);
+        TexturesManager.FreeTexture(_armMapTextureData.TexturePath);
         GC.SuppressFinalize(this);
     }
 }

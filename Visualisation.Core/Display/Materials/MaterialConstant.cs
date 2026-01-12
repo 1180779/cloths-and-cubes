@@ -34,9 +34,7 @@ public sealed class MaterialConstant : IMaterial
 
         sh.ReserveTexture(IMaterial.AlbedoMapShaderName, TextureUnit.Texture4);
         sh.ReserveTexture(IMaterial.NormalMapShaderName, TextureUnit.Texture5);
-        sh.ReserveTexture(IMaterial.MetallicMapShaderName, TextureUnit.Texture6);
-        sh.ReserveTexture(IMaterial.RoughnessMapShaderName, TextureUnit.Texture7);
-        sh.ReserveTexture(IMaterial.AoMapShaderName, TextureUnit.Texture8);
+        sh.ReserveTexture(IMaterial.ArmMapShaderName, TextureUnit.Texture6);
 
         sh.SetVector3(IMaterial.AlbedoValue, Albedo);
         sh.SetFloat(IMaterial.MetallicValue, Metallic);

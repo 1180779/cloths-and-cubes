@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AssetPathGenerator\AssetPathGenerator.csproj"/>
         <ProjectReference Include="..\Engine\Engine.csproj"/>
     </ItemGroup>
 

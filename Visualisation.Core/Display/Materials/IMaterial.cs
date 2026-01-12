@@ -5,9 +5,7 @@ public interface IMaterial : IDisposable, ICloneable
     public string Name { get; set; }
     public static readonly string AlbedoMapShaderName = "albedoMap";
     public static readonly string NormalMapShaderName = "normalMap";
-    public static readonly string MetallicMapShaderName = "metallicMap";
-    public static readonly string RoughnessMapShaderName = "roughnessMap";
-    public static readonly string AoMapShaderName = "aoMap";
+    public static readonly string ArmMapShaderName = "armMap";
 
     public static readonly string UseMaps = "useMaps";
 
