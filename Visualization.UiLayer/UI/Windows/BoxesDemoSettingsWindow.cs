@@ -1,4 +1,8 @@
+using Engine.Collision;
+
 using ImGuiNET;
+
+using Visualisation.Core.Display.Materials;
 
 namespace Visualization.UiLayer.UI.Windows;
 
@@ -58,6 +62,14 @@ public sealed class BoxesDemoSettingsWindow(
         ImGui.End();
     }
 
+    private void DrawCollision()
+    {
+        ImGui.SeparatorText("Collision parameters");
+        ImGui.SliderFloat("Friction", ref _collisionData.Friction, 0.0f, 1.0f);
+        ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
+        ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
+    }
+
     private void SelectEnvironmentMap()
     {
         if (ImGui.CollapsingHeader("Environment Map"))
@@ -99,11 +111,15 @@ public sealed class BoxesDemoSettingsWindow(
         ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);
         ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f);
 
-        if(ImGui.Button("Add Cloth"))
+        const string addClothText = "Add Cloth";
+        if (ImGui.Button("Add Cloth", UiControls.Style.ButtonSizes.Medium(addClothText)))
         {
             SetClothsCount?.Invoke(GetClothsCount() + 1, GetClothsData!());
-        } 
-        if(ImGui.Button("Clear Cloths"))
+        }
+
+        ImGui.SameLine();
+        const string clearClothsText = "Clear Cloths";
+        if (ImGui.Button(clearClothsText, UiControls.Style.ButtonSizes.Medium(clearClothsText)))
         {
             SetClothsCount?.Invoke(0, []);
         }
@@ -129,6 +145,13 @@ public sealed class BoxesDemoSettingsWindow(
 
         int jointsCount = JointsCount();
         ImGui.Text($"Joints: {jointsCount}");
+    }
+
+    public sealed record CollisionState
+    {
+        public Real Friction { get; init; }
+        public Real Restitution { get; init; }
+        public Real Tolerance { get; init; }
     }
 
     public sealed record ClothParams
@@ -175,7 +198,7 @@ public sealed class BoxesDemoSettingsWindow(
             BoxesCount = GetBoxesCount(),
             SpheresCount = GetSpheresCount(),
             ClothsCount = GetClothsCount(),
-            ClothsData = GetClothsData!=null ? GetClothsData() : [],
+            ClothsData = GetClothsData != null ? GetClothsData() : [],
         };
     }
 
