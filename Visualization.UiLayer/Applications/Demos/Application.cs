@@ -133,7 +133,7 @@ public class Application : GameWindow
         new NativeWindowSettings { WindowState = WindowState.Maximized })
     {
         Size = (800, 600);
-        Title = "Boxes Demo";
+        Title = "Pallium";
 
         if (s_fpsCappedTo60) UpdateFrequency = 60.0;
 
@@ -216,6 +216,7 @@ public class Application : GameWindow
                             ParticleMass = engineCloth.ParticleMass
                         });
                     }
+
                     return clothsData;
                 },
                 SetBoxesCount = newCount =>
@@ -282,7 +283,7 @@ public class Application : GameWindow
             if (clothsData == null) return;
             for (int i = length; i < newCount; ++i)
             {
-                if(i<clothsData.Count)
+                if (i < clothsData.Count)
                 {
                     var data = clothsData[i];
                     _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
@@ -292,9 +293,9 @@ public class Application : GameWindow
                 }
                 else
                     _cloths[i] = new Cloth(_forceRegistry, _contactResolver.PositionEpsilon,
-                    _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
-                    _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
-                    _boxesDemoSettingsWindow.ParticleMass);
+                        _boxesDemoSettingsWindow.SizeX, _boxesDemoSettingsWindow.SizeY,
+                        _boxesDemoSettingsWindow.SpringLength, _boxesDemoSettingsWindow.SpringConstant,
+                        _boxesDemoSettingsWindow.ParticleMass);
             }
 
             _forceBVHRebuildOnNoUpdate = true;
@@ -726,9 +727,9 @@ public class Application : GameWindow
         _forceRegistry.Clear();
 
         var clothsData = _boxesDemoSettingsWindow.GetClothsData();
-        if(clothsData==null) clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
+        if (clothsData == null) clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
         int j = 0;
-        for(; j < clothsData.Count; j++)
+        for (; j < clothsData.Count; j++)
         {
             var data = clothsData[j];
             _cloths[j].EngineCloth.RegenerateGridPreservingTheCenter(
@@ -739,7 +740,8 @@ public class Application : GameWindow
                 data.ParticleMass);
             _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
         }
-        if(j < _cloths.Length)
+
+        if (j < _cloths.Length)
         {
             for (; j < _cloths.Length; j++)
             {
