@@ -17,29 +17,22 @@ public sealed class BoxesDemoSettingsWindow(
     CollisionData collisionData
 ) : IWindow
 {
+    public Func<int> GetBoxesCount { get; set; } = getBoxesCount;
+    public Func<int> GetSpheresCount { get; set; } = getSpheresCount;
+    public Func<int> GetClothsCount { get; set; } = getClothsCount;
+    public Func<int> JointsCount { get; set; } = getJointsCount;
+    public Func<List<ClothParams>>? GetClothsData { get; set; }
     private CollisionData _collisionData = collisionData; /* borrowed */
 
     public Func<EnvMapFileDescription> GetCurrentEnvironmentMap { get; init; } = getCurrentEnvironmentMap;
     public Action<EnvMapFileDescription> SetCurrentEnvironmentMap { get; init; } = setCurrentEnvironmentMap;
     public Func<EnvMapFileDescription> GetDefaultEnvironmentMap { get; init; } = getDefaultEnvironmentMap;
-    public Func<int> GetBoxesCount { get; init; } = getBoxesCount;
-    public Func<int> GetSpheresCount { get; init; } = getSpheresCount;
-    public Func<int> GetClothsCount { get; init; } = getClothsCount;
-    public Func<int> JointsCount { get; init; } = getJointsCount;
 
     public delegate void SetObjectCount(int count);
 
-    public delegate void SetClothCount(
-        int count,
-        int sizeX,
-        int sizeY,
-        Real springLength,
-        Real springConstant,
-        Real particleMass);
-
-    public SetObjectCount? SetBoxesCount { get; init; }
-    public SetObjectCount? SetSpheresCount { get; init; }
-    public SetClothCount? SetClothsCount { get; init; }
+    public SetObjectCount? SetBoxesCount { get; set; }
+    public SetObjectCount? SetSpheresCount { get; set; }
+    public Action<int, List<ClothParams>>? SetClothsCount { get; set; }
 
     private int _sizeX = 21;
     public int SizeX => _sizeX;
@@ -67,6 +60,14 @@ public sealed class BoxesDemoSettingsWindow(
         }
 
         ImGui.End();
+    }
+
+    private void DrawCollision()
+    {
+        ImGui.SeparatorText("Collision parameters");
+        ImGui.SliderFloat("Friction", ref _collisionData.Friction, 0.0f, 1.0f);
+        ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
+        ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
     }
 
     private void SelectEnvironmentMap()
@@ -109,6 +110,19 @@ public sealed class BoxesDemoSettingsWindow(
         ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f);
         ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);
         ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f);
+
+        const string addClothText = "Add Cloth";
+        if (ImGui.Button("Add Cloth", UiControls.Style.ButtonSizes.Medium(addClothText)))
+        {
+            SetClothsCount?.Invoke(GetClothsCount() + 1, GetClothsData!());
+        }
+
+        ImGui.SameLine();
+        const string clearClothsText = "Clear Cloths";
+        if (ImGui.Button(clearClothsText, UiControls.Style.ButtonSizes.Medium(clearClothsText)))
+        {
+            SetClothsCount?.Invoke(0, []);
+        }
     }
 
     private void DrawCounts()
@@ -127,21 +141,10 @@ public sealed class BoxesDemoSettingsWindow(
         }
 
         int clothsCount = GetClothsCount();
-        if (ImGui.SliderInt("Cloths", ref clothsCount, 0, 5))
-        {
-            SetClothsCount?.Invoke(clothsCount, SizeX, SizeY, SpringLength, SpringConstant, ParticleMass);
-        }
+        ImGui.Text($"Cloths: {clothsCount}");
 
         int jointsCount = JointsCount();
         ImGui.Text($"Joints: {jointsCount}");
-    }
-
-    private void DrawCollision()
-    {
-        ImGui.SeparatorText("Collision parameters");
-        ImGui.SliderFloat("Friction", ref _collisionData.Friction, 0.0f, 1.0f);
-        ImGui.SliderFloat("Restitution", ref _collisionData.Restitution, 0.0f, 1.0f);
-        ImGui.SliderFloat("Tolerance", ref _collisionData.Tolerance, 0.0f, 1.0f);
     }
 
     public sealed record CollisionState
@@ -149,6 +152,15 @@ public sealed class BoxesDemoSettingsWindow(
         public Real Friction { get; init; }
         public Real Restitution { get; init; }
         public Real Tolerance { get; init; }
+    }
+
+    public sealed record ClothParams
+    {
+        public int SizeX { get; init; }
+        public int SizeY { get; init; }
+        public Real SpringLength { get; init; }
+        public Real SpringConstant { get; init; }
+        public Real ParticleMass { get; init; }
     }
 
     public sealed record State
@@ -163,6 +175,7 @@ public sealed class BoxesDemoSettingsWindow(
         public int BoxesCount { get; init; }
         public int SpheresCount { get; init; }
         public int ClothsCount { get; init; }
+        public List<ClothParams> ClothsData { get; init; } = [];
     }
 
     public State SaveState()
@@ -185,6 +198,7 @@ public sealed class BoxesDemoSettingsWindow(
             BoxesCount = GetBoxesCount(),
             SpheresCount = GetSpheresCount(),
             ClothsCount = GetClothsCount(),
+            ClothsData = GetClothsData != null ? GetClothsData() : [],
         };
     }
 
@@ -212,9 +226,10 @@ public sealed class BoxesDemoSettingsWindow(
         _springConstant = state.SpringConstant;
         _particleMass = state.ParticleMass;
 
+
         SetBoxesCount?.Invoke(state.BoxesCount);
         SetSpheresCount?.Invoke(state.SpheresCount);
-        SetClothsCount?.Invoke(state.ClothsCount, SizeX, SizeY, SpringLength, SpringConstant, ParticleMass);
+        SetClothsCount?.Invoke(state.ClothsCount, state.ClothsData);
     }
 
     public string Name => "Boxes Demo Settings";
