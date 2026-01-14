@@ -8,8 +8,6 @@ using Visualisation.Core.GameObjects;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-#if DEBUG
-
 public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObjectProvider) : IWindow
 {
     private readonly Func<IEnumerable<GameObject>> _gameObjectProvider = gameObjectProvider;
@@ -17,7 +15,8 @@ public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObje
     private static readonly System.Numerics.Vector4 HeaderColor = new(0.2f, 0.5f, 0.8f, 1.0f);
     private static readonly System.Numerics.Vector4 SeparatorColor = new(0.5f, 0.5f, 0.5f, 0.5f);
 
-    public string Name => "Object Inspector";
+    public const string StaticName = "Object Inspector";
+    public string Name => StaticName;
 
     public void Draw(ref bool isOpen)
     {
@@ -26,9 +25,9 @@ public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObje
         DrawInternal(_gameObjectProvider().Select(g => g.PhysicsObject).ToArray(), ref isOpen);
     }
 
-    private void DrawInternal(object?[] objects, ref bool isOpen, String windowName = "Scene Objects Inspector")
+    private void DrawInternal(object?[] objects, ref bool isOpen)
     {
-        if (ImGui.Begin(windowName, ref isOpen))
+        if (ImGui.Begin(Name, ref isOpen))
         {
             ImGui.TextColored(new System.Numerics.Vector4(0.7f, 0.7f, 0.7f, 1.0f),
                 $"Total Objects: {objects.Length}".ToString());
@@ -329,5 +328,3 @@ public sealed class ObjectInspectorWindow(Func<IEnumerable<GameObject>> gameObje
         public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
     }
 }
-
-#endif

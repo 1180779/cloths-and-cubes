@@ -116,11 +116,10 @@ public class Application : GameWindow
     protected readonly PhysicsControlWindow _physicsControlWindow;
     protected readonly SceneManagementWindow _sceneManagementWindow;
     protected readonly BvhNodesWindow _bvhNodesWindow = new();
-#if DEBUG
     protected readonly CascadingShadowMapsWindow _cascadingShadowMapsWindow;
+#if DEBUG
     protected ContactsInspectorWindow _contactsInspectorWindow;
 #endif
-
     // Public accessors for scene management
     public SceneRenderer SceneRenderer => _sceneRenderer;
     public CollisionData CollisionData => _collisionData;
@@ -158,10 +157,8 @@ public class Application : GameWindow
         _sceneWindow = new SceneWindow(_imGuiController, _sceneRenderer, _inputProvider, Size);
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
 
-#if DEBUG
         _cascadingShadowMapsWindow =
             new CascadingShadowMapsWindow(_imGuiController, _sceneRenderer.LightsManager, Size);
-#endif
 
         // GL setup
         GL.ClearColor(0.2f, 0.3f, 0.5f, 1f);
@@ -173,10 +170,8 @@ public class Application : GameWindow
         // Initialize windows
         _windowsManager.Add(new StatsWindow(_sceneRenderer));
         _windowsManager.Add(new HelpWindow());
-#if DEBUG
         _windowsManager.Add(new ObjectInspectorWindow(() => GameObjects));
         _windowsManager.Add(_cascadingShadowMapsWindow);
-#endif
         _windowsManager.Add(new GraphicsSettingsWindow(
             () => _sceneRenderer.LightsManager.DirectionalLight,
             _sceneRenderer, _sceneWindow));
@@ -998,9 +993,7 @@ public class Application : GameWindow
             WindowsState = _windowsManager.SaveState(),
             GraphicsSettings =
                 ((GraphicsSettingsWindow)_windowsManager.GetWindow(GraphicsSettingsWindow.WindowName)).SaveState(),
-#if DEBUG
             CascadingShadowMaps = _cascadingShadowMapsWindow.SaveState(),
-#endif
             BvhNodes = _bvhNodesWindow.SaveState(),
             ClothSettings = _boxesDemoSettingsWindow.SaveState(),
             SelectionSettings = _selectionManagerWindow.SaveState(),
@@ -1023,12 +1016,10 @@ public class Application : GameWindow
                 state.GraphicsSettings);
         }
 
-#if DEBUG
         if (state.CascadingShadowMaps is not null)
         {
             _cascadingShadowMapsWindow.RestoreState(state.CascadingShadowMaps);
         }
-#endif
 
         // Restore BoxesDemo-specific state
         if (state.BvhNodes is not null)

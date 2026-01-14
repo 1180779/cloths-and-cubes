@@ -8,8 +8,6 @@ using Visualisation.Core.Display.Mesh;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-#if DEBUG
-
 public sealed class CascadingShadowMapsWindow(
     ImGuiController imGuiController,
     LightsManager lightsManager,
@@ -113,5 +111,3 @@ public sealed class CascadingShadowMapsWindow(
         DirectionalLightLayer = state.DirectionalLightLayer;
     }
 }
-
-#endif
