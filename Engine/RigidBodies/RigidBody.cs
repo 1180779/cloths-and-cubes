@@ -240,6 +240,64 @@ public class RigidBody : IFrictionProvider
         SetAwake();
     }
 
+    private const bool UseRk4Integrator = true;
+
+    private TwoVectors F(Real t, TwoVectors y)
+    {
+        Vector3 v = y.Bottom;
+
+        // Use the acceleration calculated from forces and gravity
+        Vector3 a = LastFrameAcceleration;
+
+        // Add drag
+        // v' = a - k*v
+        // k = -ln(LinearDamping)
+        Real k = -(Real)Math.Log((double)LinearDamping);
+        a -= v * k;
+
+        return new TwoVectors(v, a);
+    }
+
+    private TwoVectors Rk4Step(Real t, TwoVectors y, Real dt)
+    {
+        var k1 = F(t, y);
+        var k2 = F(t + 0.5f * dt, y + 0.5f * dt * k1);
+        var k3 = F(t + 0.5f * dt, y + 0.5f * dt * k2);
+        var k4 = F(t + dt, y + dt * k3);
+        return y + (dt / 6.0f) * (k1 + 2 * k2 + 2 * k3 + k4);
+    }
+
+    struct TwoVectors
+    {
+        public Vector3 Top;
+        public Vector3 Bottom;
+
+        public TwoVectors(Vector3 top, Vector3 bottom)
+        {
+            Top = top;
+            Bottom = bottom;
+        }
+
+        public static TwoVectors operator +(TwoVectors left, TwoVectors right)
+        {
+            return new TwoVectors(left.Top + right.Top, left.Bottom + right.Bottom);
+        }
+
+        public static TwoVectors operator *(float scalar, TwoVectors vec)
+        {
+            return new TwoVectors((Real)scalar * vec.Top, (Real)scalar * vec.Bottom);
+        }
+
+        public static TwoVectors operator *(double scalar, TwoVectors vec)
+        {
+            return new TwoVectors((Real)scalar * vec.Top, (Real)scalar * vec.Bottom);
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="duration"></param>
     public void Integrate(Real duration)
     {
         if (!IsAwake) return;
@@ -248,24 +306,46 @@ public class RigidBody : IFrictionProvider
         LastFrameAcceleration = Acceleration;
         LastFrameAcceleration += forceAccum * InverseMass;
 
-        // Calculate angular acceleration from torque inputs.
-        Vector3 angularAcceleration =
-            InverseInertiaTensorWorld.Transform(torqueAccum);
+        if (UseRk4Integrator)
+        {
+            // Linear Motion Integration using RK4
+            TwoVectors state = new TwoVectors(Position, Velocity);
+            TwoVectors newState = Rk4Step(0, state, duration);
+            Position = newState.Top;
+            Velocity = newState.Bottom;
 
-        // Adjust velocities
-        // Update linear velocity from both acceleration and impulse.
-        Velocity += LastFrameAcceleration * duration;
+            // Calculate angular acceleration from torque inputs.
+            Vector3 angularAcceleration =
+                InverseInertiaTensorWorld.Transform(torqueAccum);
 
-        // Update angular velocity from both acceleration and impulse.
-        Rotation += angularAcceleration * duration;
+            // Update angular velocity from both acceleration and impulse.
+            Rotation += angularAcceleration * duration;
 
-        // Impose drag.
-        Velocity *= (Real)Math.Pow(LinearDamping, duration);
-        Rotation *= (Real)Math.Pow(AngularDamping, duration);
+            // Impose drag.
+            Rotation *= (Real)Math.Pow(AngularDamping, duration);
+        }
+        else
+        {
+            // Calculate angular acceleration from torque inputs.
+            Vector3 angularAcceleration =
+                InverseInertiaTensorWorld.Transform(torqueAccum);
 
-        // Adjust positions
-        // Update linear position.
-        Position += Velocity * duration;
+            // Adjust velocities
+            // Update linear velocity from both acceleration and impulse.
+            Velocity += LastFrameAcceleration * duration;
+
+            // Update angular velocity from both acceleration and impulse.
+            Rotation += angularAcceleration * duration;
+
+            // Impose drag.
+            Velocity *= (Real)Math.Pow(LinearDamping, duration);
+            Rotation *= (Real)Math.Pow(AngularDamping, duration);
+
+            // Adjust positions
+            // Update linear position.
+            Position += Velocity * duration;
+        }
+
 
         // Update angular position.
         orientation.AddScaledVector(Rotation, duration);

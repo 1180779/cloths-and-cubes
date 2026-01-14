@@ -164,11 +164,15 @@ public class Cloth
     private void CreateSprings()
     {
         float diagonalLength = SpringLength * (float)Math.Sqrt(2.0);
+        // Structural springs (horizontal and vertical)
+        // Shear springs (diagonal)
+        // Bend springs (every second particle)
 
         for (int i = 0; i < SizeX; i++)
         {
             for (int j = 0; j < SizeY; j++)
             {
+                // Structural Springs
                 if (i != SizeX - 1)
                 {
                     // Horizontal spring - add for both directions
@@ -187,6 +191,7 @@ public class Cloth
                     Registry.Add(Particles[i, j].Body, spring);
                 }
 
+                // Shear Springs
                 if (i != SizeX - 1 && j != SizeY - 1)
                 {
                     // Diagonal spring has longer rest length: sqrt(2) * springLength
@@ -201,6 +206,24 @@ public class Cloth
                     // Diagonal spring (down-left)
                     var spring = new Spring(new Vector3(), Particles[i - 1, j + 1].Body,
                         new Vector3(), SpringConstant, diagonalLength);
+                    _particleSpringAssociations.Add(new(Particles[i, j].Body, spring));
+                    Registry.Add(Particles[i, j].Body, spring);
+                }
+
+                // Bend Springs (skip one particle)
+                // These help resist bending and add rigidity
+                if (i < SizeX - 2)
+                {
+                    var spring = new Spring(new Vector3(), Particles[i + 2, j].Body,
+                        new Vector3(), SpringConstant, SpringLength * 2);
+                    _particleSpringAssociations.Add(new(Particles[i, j].Body, spring));
+                    Registry.Add(Particles[i, j].Body, spring);
+                }
+
+                if (j < SizeY - 2)
+                {
+                    var spring = new Spring(new Vector3(), Particles[i, j + 2].Body,
+                        new Vector3(), SpringConstant, SpringLength * 2);
                     _particleSpringAssociations.Add(new(Particles[i, j].Body, spring));
                     Registry.Add(Particles[i, j].Body, spring);
                 }
@@ -256,15 +279,25 @@ public class Cloth
 
     public void Update(float duration)
     {
-        for (int i = 0; i < SizeX; i++)
-        {
-            for (int j = 0; j < SizeY; j++)
-            {
-                var box = Particles[i, j];
+        // Substepping
+        int subSteps = 8; // Increased substeps for stability
+        float subDt = duration / subSteps;
 
-                // Run the physics
-                box.Body.Integrate(duration);
-                box.CalculateInternals();
+        for (int step = 0; step < subSteps; step++)
+        {
+            // Update forces for this substep
+            Registry.updateForces(subDt);
+
+            for (int i = 0; i < SizeX; i++)
+            {
+                for (int j = 0; j < SizeY; j++)
+                {
+                    var box = Particles[i, j];
+
+                    // Run the physics
+                    box.Body.Integrate(subDt);
+                    box.CalculateInternals();
+                }
             }
         }
     }

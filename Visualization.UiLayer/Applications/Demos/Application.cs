@@ -78,7 +78,9 @@ public class Application : GameWindow
         Friction = (Real)0.9, Restitution = (Real)0.6, Tolerance = (Real)0.1,
     };
 
-    protected ContactResolver _contactResolver = new(MaxContacts * 8, positionEpsilon: 0.005f);
+    protected ContactResolver _contactResolver = new(
+        (uint)(MaxContacts * 8 / (float)SubSteps), // limit the iterations per substep to avoid slowdowns
+        positionEpsilon: 0.005f);
 
     // Scene Objects
     protected Plane _plane = null!; // initialized in scene initialization
@@ -558,6 +560,15 @@ public class Application : GameWindow
     }
 
     /// <summary>
+    /// Number of substeps to use when advancing the physics simulation.
+    ///
+    /// The collision resolution is performed for each substep but limited to the
+    /// number / SubSteps iterations computed for the full step. This is to avoid
+    /// even more slow-downs when using substepping. 
+    /// </summary>
+    const int SubSteps = 5;
+
+    /// <summary>
     /// Advances the physics simulation by the given time step.
     /// </summary>
     /// <param name="deltaTime"></param>
@@ -580,27 +591,32 @@ public class Application : GameWindow
 
         _lastFrameDuration = deltaTime;
 
-        // Update objects
-        UpdateObjects(deltaTime);
+        // Use sub-stepping to make cloth more rigid
+        float subStepDuration = deltaTime / SubSteps;
+        for (int i = 0; i < SubSteps; ++i)
+        {
+            // Update objects
+            UpdateObjects(subStepDuration);
 
-        BvhRebuild();
-        HandleInteractionsWithObjects();
+            BvhRebuild();
+            HandleInteractionsWithObjects();
 
-        // Perform the contact generation
-        GenerateContactsFromCollisions();
-        _joints.GenerateContactsFromJoints(_collisionData);
+            // Perform the contact generation
+            GenerateContactsFromCollisions();
+            _joints.GenerateContactsFromJoints(_collisionData);
 
 #if DEBUG
-        // Draw out of order to allow inspection of contacts before they are resolved
-        // This does cause the window not to be in the same dockspace as other windows, but
-        // it is acceptable for debugging purposes.
-        _windowsManager.DrawManualWindow(ContactsInspectorWindow.WindowName);
+            // Draw out of order to allow inspection of contacts before they are resolved
+            // This does cause the window not to be in the same dockspace as other windows, but
+            // it is acceptable for debugging purposes.
+            _windowsManager.DrawManualWindow(ContactsInspectorWindow.WindowName);
 #endif
-        _contactResolver.ResolveContacts(
-            _collisionData.ContactList,
-            _collisionData.ContactCount,
-            deltaTime
-        );
+            _contactResolver.ResolveContacts(
+                _collisionData.ContactList,
+                _collisionData.ContactCount,
+                subStepDuration
+            );
+        }
     }
 
     protected override void OnUpdateFrame(FrameEventArgs e)

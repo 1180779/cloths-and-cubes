@@ -1,8 +1,8 @@
 namespace Engine.Collision;
 
-public class CollisionPlane: IFrictionProvider
+public class CollisionPlane : IFrictionProvider
 {
-    public static Real CollisionPlaneFriction = 0.9f;
+    public static Real CollisionPlaneFriction = 0.3f;
     private Vector3 direction = new();
 
     /// <summary>

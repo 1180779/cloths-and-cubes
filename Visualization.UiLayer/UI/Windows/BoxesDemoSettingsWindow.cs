@@ -109,7 +109,7 @@ public sealed class BoxesDemoSettingsWindow(
 
         ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f);
         ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);
-        ImGui.DragFloat("Particle Mass", ref _particleMass, 0.005f, 0.01f, 10.0f);
+        ImGui.DragFloat("Particle Mass", ref _particleMass, 0.000_01f, 0.000_01f, 10.0f);
 
         const string addClothText = "Add Cloth";
         if (ImGui.Button("Add Cloth", UiControls.Style.ButtonSizes.Medium(addClothText)))

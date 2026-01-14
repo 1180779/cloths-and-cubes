@@ -50,8 +50,8 @@ public class CameraBase
     public float FarPlane => 100f;
 
     // Pitch limit in degrees
-    protected float _pitchLimitRadians = 80f * MathF.PI / 180f;
-    protected float _pitchLimitDegrees = 80f;
+    protected float _pitchLimitRadians = 89.999f * MathF.PI / 180f;
+    protected float _pitchLimitDegrees = 89.999f;
 
     public float PitchLimitDegrees
     {
