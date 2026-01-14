@@ -397,7 +397,8 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
             ImGui.TextWrapped(regenNote);
             ImGui.Indent();
 
-            if (ImGui.SliderFloat("Spring Length", ref editSpringLength, 0.005f, 1.0f))
+            ImGui.Text($"Spring Length: {editSpringLength:F6}");
+            if (ImGui.SliderFloat("Spring Length", ref editSpringLength, 0.000_01f, 1.0f))
             {
                 if (_lsctsl)
                 {
@@ -407,6 +408,7 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
                 needsRegeneration = true;
             }
 
+            ImGui.Text($"Spring Constant: {editSpringConstant:F6}");
             if (ImGui.DragFloat("Spring Constant", ref editSpringConstant, 0.005f, 0.0f, 100.0f))
             {
                 if (_lsctpm)
@@ -421,7 +423,8 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
                 needsRegeneration = true;
             }
 
-            if (ImGui.DragFloat("Particle Mass", ref editParticleMass, 0.005f, 0.01f, 10.0f))
+            ImGui.Text($"Particle Mass: {editParticleMass:F6}");
+            if (ImGui.DragFloat("Particle Mass", ref editParticleMass, 0.000_01f, 0.000_01f, 10.0f))
             {
                 if (_lsctpm)
                 {
@@ -456,9 +459,9 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
 
         if (needsRegeneration)
         {
-            editParticleMass = Math.Max(editParticleMass, 0.01f); // prevent zero or negative mass
-            editSpringLength = Math.Max(editSpringLength, 0.01f); // prevent zero or negative length
-            editSpringConstant = Math.Max(editSpringConstant, 0.01f); // prevent zero or negative constant
+            editParticleMass = Math.Max(editParticleMass, 0.000_01f); // prevent zero or negative mass
+            editSpringLength = Math.Max(editSpringLength, 0.000_01f); // prevent zero or negative length
+            editSpringConstant = Math.Max(editSpringConstant, 0.000_01f); // prevent zero or negative constant
 
             _interactionManager.ClearExcept(cloth);
             cloth.RegenerateClothPreservingTheCenter(editSizeX, editSizeY, editSpringLength, editSpringConstant,
@@ -678,9 +681,6 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
 
     private void DrawParticle(RigidParticle particle, int x = 0, int y = 0)
     {
-        // Note: Automatic pinning to box corners now happens during dragging.
-        // The old manual pinning interface has been removed.
-
         if (ImGui.CollapsingHeader("Transformation", ImGuiTreeNodeFlags.DefaultOpen))
         {
             ImGui.Indent();
