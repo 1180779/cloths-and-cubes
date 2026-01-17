@@ -60,6 +60,17 @@ public sealed class CascadingShadowMapsWindow(
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             _quadCsmShader.Use();
+
+            // Ensure the layer index is valid before rendering
+            if (_lightsManager.DirectionalLight != null)
+            {
+                int maxLayers = _lightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1;
+                if (_directionalLightLayer >= maxLayers)
+                {
+                    _directionalLightLayer = maxLayers - 1;
+                }
+            }
+
             _lightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader, DirectionalLightLayer);
             _quadMesh.Render();
 

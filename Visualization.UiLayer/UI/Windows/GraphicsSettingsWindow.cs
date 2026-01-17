@@ -34,6 +34,7 @@ public sealed class GraphicsSettingsWindow(
             {
                 var direction = light.Direction.ToNumerics();
                 DrawLightDirectionControls(ref direction, light);
+                DrawCascadesControls(light);
                 DrawShadowBiasControls(light);
             }
 
@@ -42,6 +43,34 @@ public sealed class GraphicsSettingsWindow(
         }
 
         ImGui.End();
+    }
+
+    private void DrawCascadesControls(LightDirectional light)
+    {
+        if (ImGui.CollapsingHeader("Cascaded Shadow Maps"))
+        {
+            ImGui.Indent();
+            int cascadeCount = light.CascadeCount;
+            if (ImGui.SliderInt("Cascade Count", ref cascadeCount, LightDirectional.MinCascades,
+                LightDirectional.MaxCascades))
+            {
+                light.CascadeCount = cascadeCount;
+            }
+
+            ImGui.TextWrapped("Lambda controls the distribution of cascade splits. It is a weight beteween 0 and 1 " +
+                "that determines how the splits are calculated. The formula used is a combination of uniform and logarithmic splits. " +
+                "0 means uniform splits, while 1 means logarithmic splits. The values in between provide a balance between the two methods. ");
+            ImGui.SliderFloat("Lambda", ref light.CascadeSplitLambda, 0.0f, 1.0f);
+
+            const string resetButtonText = "Reset to default";
+            if (ImGui.Button(resetButtonText, UiControls.Style.ButtonSizes.Medium(resetButtonText)))
+            {
+                light.CascadeCount = LightDirectional.DefaultCascades;
+                light.CascadeSplitLambda = LightDirectional.DefaultCascadeSplitLambda;
+            }
+
+            ImGui.Unindent();
+        }
     }
 
     private void DrawShadowBiasControls(LightDirectional light)

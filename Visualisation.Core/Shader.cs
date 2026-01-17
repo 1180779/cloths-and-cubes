@@ -195,6 +195,12 @@ public sealed class Shader : IDisposable
     /// <param name="data">The data to set</param>
     public void SetFloatN(string name, int n, float[] data)
     {
+        if (data.Length == 0)
+        {
+            // Nothing to set
+            return;
+        }
+
         GL.UseProgram(_handle);
         GL.Uniform1(_uniformLocations[name], n, ref data[0]);
         GlHelper.CheckGlError("Shader SetFloatN");

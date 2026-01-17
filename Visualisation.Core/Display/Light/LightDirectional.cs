@@ -25,9 +25,27 @@ public class LightDirectional : LightPoint
 
     public Func<CameraBase> GetCurrentCamera { get; set; }
 
-    // TODO: change the shader associated with the shadow to allow for specification of number of cascades before compilation
-    public const int CascadeCount = 4;
-    public const float CascadeSplitLambda = 0.5f;
+    public const int MaxCascades = 16;
+    public const int MinCascades = 1;
+    public const int DefaultCascades = 4;
+    public float CascadeSplitLambda = DefaultCascadeSplitLambda;
+    private int _cascadeCount = DefaultCascades;
+
+    public int CascadeCount
+    {
+        get => _cascadeCount + 1;
+        set
+        {
+            if (_cascadeCount + 1 != value)
+            {
+                _cascadeCount = value - 1;
+                Dispose();
+                Init();
+            }
+        }
+    }
+
+    public const float DefaultCascadeSplitLambda = 0.5f;
 
     public float[] ShadowCascadeLevels
     {
@@ -201,21 +219,27 @@ public class LightDirectional : LightPoint
     public Matrix4[] GetLightSpaceMatrices()
     {
         var camera = GetCurrentCamera();
+        var splits = ShadowCascadeLevels;
+
+        if (splits.Length == 0)
+        {
+            return [GetLightSpaceMatrix(camera.NearPlane, camera.FarPlane)];
+        }
 
         List<Matrix4> ret = new();
-        for (var i = 0; i < ShadowCascadeLevels.Length + 1; ++i)
+        for (var i = 0; i < splits.Length + 1; ++i)
         {
             if (i == 0)
             {
-                ret.Add(GetLightSpaceMatrix(camera.NearPlane, ShadowCascadeLevels[i]));
+                ret.Add(GetLightSpaceMatrix(camera.NearPlane, splits[i]));
             }
-            else if (i < ShadowCascadeLevels.Length)
+            else if (i < splits.Length)
             {
-                ret.Add(GetLightSpaceMatrix(ShadowCascadeLevels[i - 1], ShadowCascadeLevels[i]));
+                ret.Add(GetLightSpaceMatrix(splits[i - 1], splits[i]));
             }
             else
             {
-                ret.Add(GetLightSpaceMatrix(ShadowCascadeLevels[i - 1], camera.FarPlane));
+                ret.Add(GetLightSpaceMatrix(splits[i - 1], camera.FarPlane));
             }
         }
 
@@ -233,19 +257,21 @@ public class LightDirectional : LightPoint
         GL.BindTexture(TextureTarget.Texture2DArray, DepthMapsTextureArray);
         sh.SetInt("layer", layer);
 
+        var splits = ShadowCascadeLevels;
+
         if (layer == 0)
         {
             sh.SetFloat("near_plane", camera.NearPlane);
-            sh.SetFloat("far_plane", ShadowCascadeLevels[0]);
+            sh.SetFloat("far_plane", splits[0]);
         }
-        else if (layer < ShadowCascadeLevels.Length)
+        else if (layer < splits.Length)
         {
-            sh.SetFloat("near_plane", ShadowCascadeLevels[layer - 1]);
-            sh.SetFloat("far_plane", ShadowCascadeLevels[layer]);
+            sh.SetFloat("near_plane", splits[layer - 1]);
+            sh.SetFloat("far_plane", splits[layer]);
         }
         else
         {
-            sh.SetFloat("near_plane", ShadowCascadeLevels[layer - 1]);
+            sh.SetFloat("near_plane", splits[layer - 1]);
             sh.SetFloat("far_plane", camera.FarPlane);
         }
     }
@@ -263,7 +289,7 @@ public class LightDirectional : LightPoint
             PixelInternalFormat.DepthComponent32f,
             ShadowWidth,
             ShadowHeight,
-            ShadowCascadeLevels.Length + 1,
+            CascadeCount,
             0,
             PixelFormat.DepthComponent,
             PixelType.Float,
@@ -304,6 +330,7 @@ public class LightDirectional : LightPoint
 
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
+        sh.SetInt("cascadeCount", CascadeCount);
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, _depthMapFbo);
         GL.Clear(ClearBufferMask.DepthBufferBit);
@@ -357,11 +384,13 @@ public class LightDirectional : LightPoint
         sh.SetVector3Member(structShName + ".direction", -Direction);
 
         sh.SetTexture("shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
-        sh.SetInt("cascadeCount", ShadowCascadeLevels.Length);
+        sh.SetInt("cascadeCount", CascadeCount - 1);
 
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
-        sh.SetFloatN("cascadePlaneDistances[0]", ShadowCascadeLevels.Length, ShadowCascadeLevels);
+
+        var splits = ShadowCascadeLevels;
+        sh.SetFloatN("cascadePlaneDistances[0]", splits.Length, splits);
 
         // set shadow bias if it has changed
         if (_shadowsBiasChanged)
