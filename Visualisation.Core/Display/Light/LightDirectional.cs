@@ -304,13 +304,17 @@ public class LightDirectional : LightPoint
             PixelType.Float,
             IntPtr.Zero);
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter,
-            (int)TextureMinFilter.Nearest);
+            (int)TextureMinFilter.Linear);
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter,
-            (int)TextureMagFilter.Nearest);
+            (int)TextureMagFilter.Linear);
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS,
             (int)TextureWrapMode.ClampToBorder);
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT,
             (int)TextureWrapMode.ClampToBorder);
+        GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureCompareMode,
+            (int)TextureCompareMode.CompareRefToTexture);
+        GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureCompareFunc,
+            (int)All.Greater);
         float[] borderColor = { 1.0f, 1.0f, 1.0f, 1.0f };
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureBorderColor, borderColor);
 

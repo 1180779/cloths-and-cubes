@@ -43,7 +43,8 @@ struct LightPointOut {
     vec3 tangentPos;
 };
 
-/* PBR parameters*/
+// uniform vec2 texmapscale; // (1/x, 1/y) of shadow map dimentions
+
 uniform samplerCube irradianceMap;
 
 uniform bool useMaps; /* whether to use texture maps or uniform values */
@@ -66,7 +67,7 @@ uniform float BIAS_MIN;
 uniform float BIAS_MODIFIER;
 
 /* cascade shadow maps parameters (directional light only) */
-uniform sampler2DArray shadowMap;
+uniform sampler2DArrayShadow shadowMap;
 uniform mat4 lightSpaceMatrices[16];
 uniform float cascadePlaneDistances[16];
 uniform int cascadeCount;
@@ -155,33 +156,6 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 float ShadowCalculation(out int layer)
 {
-    if (cascadeCount == 0)
-    {
-        layer = 0;
-        vec4 fragPosLightSpace = lightSpaceMatrices[0] * vec4(FragPosition, 1.0);
-        vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-        projCoords = projCoords * 0.5 + 0.5;
-        float currentDepth = projCoords.z;
-        if (currentDepth > 1.0)
-        return 0.0;
-
-        float bias = max(BIAS_MAX * (1.0 - dot(Normal, lightD.direction)), BIAS_MIN);
-        bias *= 1 / (farPlane * BIAS_MODIFIER);
-
-        float shadow = 0.0;
-        vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
-        for (int x = -1; x <= 1; ++x)
-        {
-            for (int y = -1; y <= 1; ++y)
-            {
-                float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, 0)).r;
-                shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
-            }
-        }
-        shadow /= 9.0;
-        return shadow;
-    }
-
     // select cascade layer
     vec4 fragPosViewSpace = view * vec4(FragPosition, 1.0);
     float depthValue = abs(fragPosViewSpace.z);
@@ -228,15 +202,14 @@ float ShadowCalculation(out int layer)
     // PCF
     float shadow = 0.0;
     vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
-    for (int x = -1; x <= 1; ++x)
+    for (float x = -1.5; x <= 1.5; x += 1.0)
     {
-        for (int y = -1; y <= 1; ++y)
+        for (float y = -1.5; y <= 1.5; y += 1.0)
         {
-            float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r;
-            shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+            shadow += texture(shadowMap, vec4(projCoords.xy + vec2(x, y) * texelSize, layer, currentDepth - bias));
         }
     }
-    shadow /= 9.0;
+    shadow /= 16.0;
 
     return shadow;
 }
