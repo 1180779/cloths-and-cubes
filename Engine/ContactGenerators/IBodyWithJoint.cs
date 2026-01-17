@@ -16,6 +16,11 @@ public interface IBodyWithSingleJoint : IJointTrackable
             ConnectedJoint = jointData;
     }
 
+    void IJointTrackable.ClearConnectedJoints()
+    {
+        ConnectedJoint = new ConnectedJointData();
+    }
+
     void IJointTrackable.RemoveConnectedJoint(Joint joint)
     {
         if (ConnectedJoint.Joint == joint)

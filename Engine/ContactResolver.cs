@@ -63,7 +63,7 @@ public class ContactResolver
     }
 
     // For performance comparison purposes, we can switch between the standard loop or the contact graph
-    private const bool USE_CONTACT_GRAPH = true;
+    private const bool USE_CONTACT_GRAPH = false;
 
     protected void AdjustVelocities(Contact[] contacts, uint numContacts, Real duration)
     {
@@ -148,7 +148,7 @@ public class ContactResolver
         // iteratively resolve interpenetrations in order of severity.
         PositionIterationsUsed = 0;
         if (USE_CONTACT_GRAPH)
-        {        
+        {
             ContactGraph graph = ContactGraph.Build(contacts, numContacts);
             graph.ResolvePositions(positionIterations, positionEpsilon);
             return;

@@ -138,6 +138,9 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
             case ClothRigidParticleInCorner particleInCorner:
                 DrawParticle(particleInCorner);
                 break;
+            case ClothRigidParticle clothParticle:
+                DrawParticle(clothParticle);
+                break;
             case RigidParticle particle:
                 DrawParticle(particle);
                 break;
@@ -293,6 +296,13 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
             if (ImGui.DragFloat3("Rotation", ref tempEulerAngles, 0.01f))
             {
                 body.Orientation = Quaternion.FromEulerAngles(tempEulerAngles.ToOpenTK()).ToEngine();
+                returnValue = true;
+            }
+
+            const string resetOrientationText = "Reset Orientation";
+            if (ImGui.Button(resetOrientationText, UiControls.Style.ButtonSizes.Small(resetOrientationText)))
+            {
+                body.Orientation = Engine.Quaternion.Identity;
                 returnValue = true;
             }
 

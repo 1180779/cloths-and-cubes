@@ -1,16 +1,9 @@
 ﻿using Engine.RigidBodies;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Engine.Force
 {
     public class ForceRegistry
     {
- 
         public struct ForceRegistration
         {
             public RigidBody body;
@@ -43,6 +36,16 @@ namespace Engine.Force
         public void Remove(RigidBody body, IForceGenerator fg)
         {
             Registry.RemoveAll(r => r.body == body && r.fg == fg);
+        }
+
+        /// <summary>
+        /// <para>Removes all force generators for the given body. </para>
+        /// 
+        /// <para>This is useful when deleting a body to ensure no stale references remain. </para>
+        /// </summary>
+        public void ClearForcesForBody(RigidBody body)
+        {
+            Registry.RemoveAll(r => r.body == body);
         }
 
         /**

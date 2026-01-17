@@ -2,12 +2,22 @@ using Engine.RigidBodies;
 
 namespace Engine.Force;
 
+/// <summary>
+/// Applies a gravitational force to a rigid body.
+/// </summary>
+/// <note>
+/// <para>This is used rather sparingly if at all since the acceleration from gravity 
+/// is always the same (a = g).
+/// It is more efficient to just set it directly on the bodies as acceleration. </para>
+///
+/// <para>This class is provided for completeness. </para>
+/// </note>
 public class Gravity : IForceGenerator
 {
     /** Holds the acceleration due to gravity. */
     Vector3 gravity;
 
-    Gravity(Vector3 g)
+    public Gravity(Vector3 g)
     {
         gravity = g;
     }

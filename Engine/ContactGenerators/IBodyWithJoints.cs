@@ -15,6 +15,11 @@ public interface IBodyWithJoints : IJointTrackable
         ConnectedJoints.Add(jointData);
     }
 
+    void IJointTrackable.ClearConnectedJoints()
+    {
+        ConnectedJoints.Clear();
+    }
+
     void IJointTrackable.RemoveConnectedJoint(Joint joint)
     {
         ConnectedJoints.RemoveAll(jd => jd.Joint == joint);

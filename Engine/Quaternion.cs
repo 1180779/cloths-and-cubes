@@ -6,7 +6,7 @@ public struct Quaternion
 {
     public static readonly Quaternion Identity = new Quaternion(1, 0, 0, 0);
 
-    public Real I, J, K, R;
+    public Real R, I, J, K;
 
     [Conditional("DEBUG")]
     public void DebugAssertNotNan()

@@ -18,4 +18,5 @@ public interface IJointTrackable
 
     public void AddConnectedJoint(ConnectedJointData jointData);
     public void RemoveConnectedJoint(Joint joint);
+    public void ClearConnectedJoints();
 }

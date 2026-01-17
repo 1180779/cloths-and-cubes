@@ -25,7 +25,7 @@ public static class SceneDataMappers
         new(q.I, q.J, q.K, q.R);
 
     public static Engine.Quaternion ToEngine(this QuaternionData q) =>
-        new(q.I, q.J, q.K, q.R);
+        new(q.R, q.I, q.J, q.K);
 
     public static Matrix3Data ToData(this Matrix3 m) =>
         new(
@@ -277,9 +277,15 @@ public static class SceneDataMappers
 
     #region CollisionParticle
 
-    public static ClothParticleData ToData(this RigidParticle particle)
+    public static ClothParticleData ToData(this ClothRigidParticle particle)
     {
-        return new ClothParticleData { RigidBody = particle.Body.ToData(), Radius = particle.Radius.ToData() };
+        return new ClothParticleData
+        {
+            RigidBody = particle.Body.ToData(),
+            Radius = particle.Radius.ToData(),
+            ClothParticleX = particle.XIndex,
+            ClothParticleY = particle.YIndex
+        };
     }
 
     public static void UpdateFromData(this RigidParticle particle, ClothParticleData data)
@@ -291,10 +297,27 @@ public static class SceneDataMappers
 
     public static ClothRigidParticle ToEngineParticle(this ClothParticleData data, Engine.Cloth cloth)
     {
-        var particle = new ClothRigidParticle
+        bool isCorner = (data.ClothParticleX == 0 && data.ClothParticleY == 0) ||
+            (data.ClothParticleX == 0 && data.ClothParticleY == cloth.SizeY - 1) ||
+            (data.ClothParticleX == cloth.SizeX - 1 && data.ClothParticleY == 0) ||
+            (data.ClothParticleX == cloth.SizeX - 1 && data.ClothParticleY == cloth.SizeY - 1);
+
+        ClothRigidParticle particle;
+        if (isCorner)
         {
-            Cloth = cloth, XIndex = data.ClothParticleX, YIndex = data.ClothParticleY
-        };
+            particle = new ClothRigidParticleInCorner
+            {
+                Cloth = cloth, XIndex = data.ClothParticleX, YIndex = data.ClothParticleY
+            };
+        }
+        else
+        {
+            particle = new ClothRigidParticle
+            {
+                Cloth = cloth, XIndex = data.ClothParticleX, YIndex = data.ClothParticleY
+            };
+        }
+
         particle.UpdateFromData(data);
         return particle;
     }
@@ -401,7 +424,8 @@ public static class SceneDataMappers
             for (int j = 0; j < data.EngineCloth.SizeY; j++)
             {
                 var particleData = data.EngineCloth.ParticleStates[index++];
-                cloth.EngineCloth.Particles[i, j] = particleData.ToEngineParticle(cloth.EngineCloth);
+                // Update in place to preserve spring connections and corner types
+                cloth.EngineCloth.Particles[i, j].UpdateFromData(particleData);
             }
         }
 
