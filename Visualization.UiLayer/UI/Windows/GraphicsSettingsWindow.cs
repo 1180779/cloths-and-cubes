@@ -62,11 +62,18 @@ public sealed class GraphicsSettingsWindow(
                 "0 means uniform splits, while 1 means logarithmic splits. The values in between provide a balance between the two methods. ");
             ImGui.SliderFloat("Lambda", ref light.CascadeSplitLambda, 0.0f, 1.0f);
 
+            bool debugCascades = light.DebugCascades;
+            if (ImGui.Checkbox("Debug Cascades", ref debugCascades))
+            {
+                light.DebugCascades = debugCascades;
+            }
+
             const string resetButtonText = "Reset to default";
             if (ImGui.Button(resetButtonText, UiControls.Style.ButtonSizes.Medium(resetButtonText)))
             {
                 light.CascadeCount = LightDirectional.DefaultCascades;
                 light.CascadeSplitLambda = LightDirectional.DefaultCascadeSplitLambda;
+                light.DebugCascades = false;
             }
 
             ImGui.Unindent();
@@ -190,6 +197,7 @@ public sealed class GraphicsSettingsWindow(
         public float ShadowBiasModifier { get; init; }
         public float ZMult { get; init; }
         public System.Numerics.Vector3 Direction { get; init; }
+        public bool DebugCascades { get; init; }
     }
 
     public sealed record State
@@ -212,6 +220,7 @@ public sealed class GraphicsSettingsWindow(
                     ShadowBiasModifier = light.ShadowBiasModifier,
                     ZMult = light.ZMult,
                     Direction = light.Direction.ToNumerics(),
+                    DebugCascades = light.DebugCascades
                 }
                 : null,
             EnvironmentMap = new EnvironmentMapState
@@ -233,6 +242,7 @@ public sealed class GraphicsSettingsWindow(
             light.ShadowBiasModifier = state.Shadows.ShadowBiasModifier;
             light.ZMult = state.Shadows.ZMult;
             light.Direction = state.Shadows.Direction.ToOpenTK();
+            light.DebugCascades = state.Shadows.DebugCascades;
         }
 
         if (state.EnvironmentMap is not null)

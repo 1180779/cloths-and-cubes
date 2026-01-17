@@ -72,6 +72,7 @@ uniform float cascadePlaneDistances[16];
 uniform int cascadeCount;
 uniform mat4 view;
 uniform float farPlane;
+uniform bool debugCascades;
 
 /* inputs from vertex shader */
 in vec3 Normal;
@@ -152,13 +153,40 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 
 /* other helper functions */
 
-float ShadowCalculation()
+float ShadowCalculation(out int layer)
 {
+    if (cascadeCount == 0)
+    {
+        layer = 0;
+        vec4 fragPosLightSpace = lightSpaceMatrices[0] * vec4(FragPosition, 1.0);
+        vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+        projCoords = projCoords * 0.5 + 0.5;
+        float currentDepth = projCoords.z;
+        if (currentDepth > 1.0)
+        return 0.0;
+
+        float bias = max(BIAS_MAX * (1.0 - dot(Normal, lightD.direction)), BIAS_MIN);
+        bias *= 1 / (farPlane * BIAS_MODIFIER);
+
+        float shadow = 0.0;
+        vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
+        for (int x = -1; x <= 1; ++x)
+        {
+            for (int y = -1; y <= 1; ++y)
+            {
+                float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, 0)).r;
+                shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+            }
+        }
+        shadow /= 9.0;
+        return shadow;
+    }
+
     // select cascade layer
     vec4 fragPosViewSpace = view * vec4(FragPosition, 1.0);
     float depthValue = abs(fragPosViewSpace.z);
 
-    int layer = -1;
+    layer = -1;
     for (int i = 0; i < cascadeCount; ++i)
     {
         if (depthValue < cascadePlaneDistances[i])
@@ -213,7 +241,7 @@ float ShadowCalculation()
     return shadow;
 }
 
-vec3 lightdirectionalCalculate(LightDirectionalOut light, vec3 N, vec3 V, vec3 F0, PbrMaterial material) {
+vec3 lightdirectionalCalculate(LightDirectionalOut light, vec3 N, vec3 V, vec3 F0, PbrMaterial material, out int layer) {
     vec3 L = light.direction;
     vec3 H = normalize(V + L);
 
@@ -243,7 +271,7 @@ vec3 lightdirectionalCalculate(LightDirectionalOut light, vec3 N, vec3 V, vec3 F
     // scale light by NdotL
     float NdotL = max(dot(N, L), 0.0);
 
-    float shadow = ShadowCalculation();
+    float shadow = ShadowCalculation(layer);
 
     // add to outgoing radiance Lo
     return (kD * material.albedo / PI + specular) * radiance * NdotL * (1.0 - shadow);// note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
@@ -326,6 +354,24 @@ vec3 spotlightCalculate(LightSpotlightOut light, vec3 N, vec3 V, vec3 F0, PbrMat
 
 }
 
+// https://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
+// licensed under WTFPL (https://en.wikipedia.org/wiki/WTFPL) 
+// (at least the stack overflow author says so)
+// 
+// All components are in the range [0...1], including hue.
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+vec3 cascadeDebugColor(int layer, int layerCount) {
+    float h = fract((float(layer) + 0.5) / float(max(layerCount, 1)));
+    float s = 0.85;// high saturation
+    float v = 1.00;// bright
+    return hsv2rgb(vec3(h, s, v));
+}
 
 /* ------------------------------------------ /
 /            main shader function             /
@@ -383,9 +429,10 @@ void main()
     // reflectance equation
     vec3 Lo = vec3(0.0);
 
+    int layer = -1;
     // calculate per-light radiance
     if (lightDCount > 0) {
-        Lo += lightdirectionalCalculate(tangentLightD, N, V, F0, material);
+        Lo += lightdirectionalCalculate(tangentLightD, N, V, F0, material, layer);
     }
     for (int i = 0; i < lightSCount; ++i)
     {
@@ -425,6 +472,14 @@ void main()
 
     vec3 ambient = (kD * diffuse + specular) * ao;
     vec3 color = ambient + Lo;
+
+    // apply cascade debug coloring if enabled
+    if (debugCascades && layer != -1)
+    {
+        vec3 cascadeColor = cascadeDebugColor(layer, cascadeCount + 1);
+
+        color = mix(color, cascadeColor, 0.5);
+    }
 
     // TODO: move HDR tonemapping and gamma correct to post-processing shader
     color = color / (color + vec3(1.0));// HDR tonemapping

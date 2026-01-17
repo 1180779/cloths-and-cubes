@@ -33,12 +33,12 @@ public class LightDirectional : LightPoint
 
     public int CascadeCount
     {
-        get => _cascadeCount + 1;
+        get => _cascadeCount;
         set
         {
-            if (_cascadeCount + 1 != value)
+            if (_cascadeCount != value)
             {
-                _cascadeCount = value - 1;
+                _cascadeCount = value;
                 Dispose();
                 Init();
             }
@@ -125,6 +125,8 @@ public class LightDirectional : LightPoint
 
     // Tune this parameter according to the scene
     public float ZMult { get; set; }
+
+    public bool DebugCascades { get; set; } = false;
 
     public Matrix4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
@@ -259,6 +261,13 @@ public class LightDirectional : LightPoint
 
         var splits = ShadowCascadeLevels;
 
+        if (splits.Length == 0)
+        {
+            sh.SetFloat("near_plane", camera.NearPlane);
+            sh.SetFloat("far_plane", camera.FarPlane);
+            return;
+        }
+
         if (layer == 0)
         {
             sh.SetFloat("near_plane", camera.NearPlane);
@@ -385,6 +394,7 @@ public class LightDirectional : LightPoint
 
         sh.SetTexture("shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
         sh.SetInt("cascadeCount", CascadeCount - 1);
+        sh.SetBool("debugCascades", DebugCascades);
 
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);
