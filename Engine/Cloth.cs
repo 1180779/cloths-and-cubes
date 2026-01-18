@@ -136,8 +136,14 @@ public class Cloth
         int newSizeY,
         float newSpringLength,
         float newSpringConstant,
-        float newParticleMass)
+        float newParticleMass,
+        GlobalJointsList? jointsList = null)
     {
+        if (jointsList != null)
+        {
+            RemoveAllJoints(jointsList.Value);
+        }
+
         RemoveSpringsFromForceRegistry();
         _particleSpringAssociations.Clear();
 
@@ -165,10 +171,11 @@ public class Cloth
         int newSizeY,
         float newSpringLength,
         float newSpringConstant,
-        float newParticleMass)
+        float newParticleMass,
+        GlobalJointsList? jointsList = null)
     {
         var oldCenter = Center;
-        RegenerateGrid(newSizeX, newSizeY, newSpringLength, newSpringConstant, newParticleMass);
+        RegenerateGrid(newSizeX, newSizeY, newSpringLength, newSpringConstant, newParticleMass, jointsList);
         var newCenter = Center;
 
         var offset = oldCenter - newCenter;
