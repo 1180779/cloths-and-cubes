@@ -78,7 +78,7 @@ public class LightDirectional : LightPoint
     private const float CasterMargin = 0f;
 #endif
 
-    private const int ShadowWidth = 2 * 1024, ShadowHeight = 2 * 1024;
+    public const int ShadowMapSize = 2 * 1024;
 
     private float _shadowBiasMin;
     private float _shadowBiasMax;
@@ -126,8 +126,37 @@ public class LightDirectional : LightPoint
     // Tune this parameter according to the scene
     public float ZMult { get; set; }
 
-    public bool DebugCascades { get; set; } = false;
+    /// <summary>
+    /// Whether to visualize the different shadow cascades with colors.
+    /// </summary>
+    /// <remarks>
+    /// This is a rather simple visualization mode that colors the parts of the scene
+    /// according to which shadow cascade they belong to. This can be useful for debugging
+    /// and understanding how the cascades are distributed across the view frustum.
+    /// </remarks>
+    public bool DebugCascades { get; set; }
+
+    /// <summary>
+    /// Whether Percentage-Closer Filtering (PCF) is used for shadow rendering.
+    /// </summary>
+    /// <remarks>
+    /// Percentage-Closer Filtering (PCF) is a shadow-mapping technique that reduces aliasing and jagged edges
+    /// in shadow casting. When this property is enabled, multiple samples are taken within the shadow map
+    /// and their results are averaged. This results in softer and more natural-looking shadows but may
+    /// incur a performance cost depending on the hardware. 16 samples are used for filtering when enabled.
+    /// </remarks>
     public bool UsePCF { get; set; } = true;
+
+    /// <summary>
+    /// Whether shimmering in shadows is reduced.
+    /// </summary>
+    /// <remarks>
+    /// Shimmering in shadows often occurs due to precision and sampling issues in shadow mapping.
+    /// Enabling this property applies techniques to mitigate this artifact, improving the visual stability
+    /// of shadow edges as the camera or light source moves. This is at the cost of some shadow resolution, detail
+    /// and some performance.
+    /// </remarks>
+    public bool ReduceShimmering { get; set; } = true;
 
     public Matrix4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
@@ -159,40 +188,43 @@ public class LightDirectional : LightPoint
             center,
             up);
 
-        float minX, minY, minZ;
-        minX = minY = minZ = float.MaxValue;
-        float maxX, maxY, maxZ;
-        maxX = maxY = maxZ = float.MinValue;
+        Matrix4 lightProjection;
+        if (!ReduceShimmering)
+        {
+            float minX, minY, minZ;
+            minX = minY = minZ = float.MaxValue;
+            float maxX, maxY, maxZ;
+            maxX = maxY = maxZ = float.MinValue;
 
-        foreach (var corner in corners)
-        {
-            var trf = Vector4.TransformRow(corner, lightView);
-            minX = Math.Min(minX, trf.X);
-            minY = Math.Min(minY, trf.Y);
-            minZ = Math.Min(minZ, trf.Z);
+            foreach (var corner in corners)
+            {
+                var trf = Vector4.TransformRow(corner, lightView);
+                minX = Math.Min(minX, trf.X);
+                minY = Math.Min(minY, trf.Y);
+                minZ = Math.Min(minZ, trf.Z);
 
-            maxX = Math.Max(maxX, trf.X);
-            maxY = Math.Max(maxY, trf.Y);
-            maxZ = Math.Max(maxZ, trf.Z);
-        }
+                maxX = Math.Max(maxX, trf.X);
+                maxY = Math.Max(maxY, trf.Y);
+                maxZ = Math.Max(maxZ, trf.Z);
+            }
 
-        if (minZ < 0)
-        {
-            minZ *= ZMult;
-        }
-        else
-        {
-            minZ /= ZMult;
-        }
+            if (minZ < 0)
+            {
+                minZ *= ZMult;
+            }
+            else
+            {
+                minZ /= ZMult;
+            }
 
-        if (maxZ < 0)
-        {
-            maxZ /= ZMult;
-        }
-        else
-        {
-            maxZ *= ZMult;
-        }
+            if (maxZ < 0)
+            {
+                maxZ /= ZMult;
+            }
+            else
+            {
+                maxZ *= ZMult;
+            }
 
 #if INCLUDE_CAMERA
         // Include camera position so near occluders cast shadows
@@ -214,8 +246,62 @@ public class LightDirectional : LightPoint
         maxZ += CasterMargin;
 #endif
 
-        var lightProjection = Matrix4.CreateOrthographicOffCenter(
-            minX, maxX, minY, maxY, minZ, maxZ);
+            lightProjection = Matrix4.CreateOrthographicOffCenter(
+                minX, maxX, minY, maxY, minZ, maxZ);
+        }
+        else
+        {
+            // based on https://alextardif.com/shadowmapping.html
+
+            // use constant projection size
+            // and snap to texel size
+            // to reduce shimmering
+
+            // Calculate radius as max distance from centroid to any corner
+            // This ensures the sphere encloses the frustum
+            float radius = 0.0f;
+            foreach (var corner in corners)
+            {
+                float dist = (corner.Xyz - center).Length;
+                radius = Math.Max(radius, dist);
+            }
+
+            float texelsPerUnit = ShadowMapSize / (2.0f * radius);
+            Matrix4 scalar = Matrix4.CreateScale(texelsPerUnit, texelsPerUnit, texelsPerUnit);
+
+            // transform center to light space and scale
+            Vector4 centerLightSpace = Vector4.TransformRow(new Vector4(center, 1.0f), lightView);
+            centerLightSpace = Vector4.TransformRow(centerLightSpace, scalar);
+
+            // snap to the nearest texel
+            centerLightSpace.X = (float)Math.Floor(centerLightSpace.X);
+            centerLightSpace.Y = (float)Math.Floor(centerLightSpace.Y);
+
+            // transform back
+            Matrix4.Invert(scalar, out Matrix4 scalarInv);
+            centerLightSpace = Vector4.TransformRow(centerLightSpace, scalarInv);
+
+            // new center in light space
+            Vector3 newCenter = centerLightSpace.Xyz;
+
+            // Recalculate lightView to look at the new snapped center
+            lightView = Matrix4.LookAt(
+                newCenter - Direction, // Look from the direction of light towards the new center
+                newCenter,
+                up);
+
+            // Use fixed size projection
+            float minX = -radius;
+            float maxX = radius;
+            float minY = -radius;
+            float maxY = radius;
+            float minZ = -radius * ZMult;
+            float maxZ = radius * ZMult;
+
+            lightProjection = Matrix4.CreateOrthographicOffCenter(
+                minX, maxX, minY, maxY, minZ, maxZ);
+        }
+
         return lightView * lightProjection;
     }
 
@@ -297,8 +383,8 @@ public class LightDirectional : LightPoint
             TextureTarget.Texture2DArray,
             0,
             PixelInternalFormat.DepthComponent32f,
-            ShadowWidth,
-            ShadowHeight,
+            ShadowMapSize,
+            ShadowMapSize,
             CascadeCount,
             0,
             PixelFormat.DepthComponent,
@@ -339,7 +425,7 @@ public class LightDirectional : LightPoint
 
     public void RenderToDepthMap(Shader sh, IEnumerable<GameObject> objects)
     {
-        GL.Viewport(0, 0, ShadowWidth, ShadowHeight);
+        GL.Viewport(0, 0, ShadowMapSize, ShadowMapSize);
         sh.Use();
 
         var matrices = GetLightSpaceMatrices();
