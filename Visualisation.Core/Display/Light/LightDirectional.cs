@@ -127,6 +127,7 @@ public class LightDirectional : LightPoint
     public float ZMult { get; set; }
 
     public bool DebugCascades { get; set; } = false;
+    public bool UsePCF { get; set; } = true;
 
     public Matrix4 GetLightSpaceMatrix(float nearPlane, float farPlane)
     {
@@ -399,6 +400,7 @@ public class LightDirectional : LightPoint
         sh.SetTexture("shadowMap", TextureTarget.Texture2DArray, TextureUnit.Texture0, DepthMapsTextureArray);
         sh.SetInt("cascadeCount", CascadeCount - 1);
         sh.SetBool("debugCascades", DebugCascades);
+        sh.SetBool("usePCF", UsePCF);
 
         var matrices = GetLightSpaceMatrices();
         sh.SetMatrix4N("lightSpaceMatrices[0]", matrices.Length, matrices);

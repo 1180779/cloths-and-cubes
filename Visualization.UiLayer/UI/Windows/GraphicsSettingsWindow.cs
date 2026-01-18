@@ -68,12 +68,19 @@ public sealed class GraphicsSettingsWindow(
                 light.DebugCascades = debugCascades;
             }
 
+            bool usePCF = light.UsePCF;
+            if (ImGui.Checkbox("Use PCF", ref usePCF))
+            {
+                light.UsePCF = usePCF;
+            }
+
             const string resetButtonText = "Reset to default";
             if (ImGui.Button(resetButtonText, UiControls.Style.ButtonSizes.Medium(resetButtonText)))
             {
                 light.CascadeCount = LightDirectional.DefaultCascades;
                 light.CascadeSplitLambda = LightDirectional.DefaultCascadeSplitLambda;
                 light.DebugCascades = false;
+                light.UsePCF = true;
             }
 
             ImGui.Unindent();
@@ -198,6 +205,7 @@ public sealed class GraphicsSettingsWindow(
         public float ZMult { get; init; }
         public System.Numerics.Vector3 Direction { get; init; }
         public bool DebugCascades { get; init; }
+        public bool UsePCF { get; init; }
     }
 
     public sealed record State
@@ -220,7 +228,8 @@ public sealed class GraphicsSettingsWindow(
                     ShadowBiasModifier = light.ShadowBiasModifier,
                     ZMult = light.ZMult,
                     Direction = light.Direction.ToNumerics(),
-                    DebugCascades = light.DebugCascades
+                    DebugCascades = light.DebugCascades,
+                    UsePCF = light.UsePCF
                 }
                 : null,
             EnvironmentMap = new EnvironmentMapState
@@ -243,6 +252,7 @@ public sealed class GraphicsSettingsWindow(
             light.ZMult = state.Shadows.ZMult;
             light.Direction = state.Shadows.Direction.ToOpenTK();
             light.DebugCascades = state.Shadows.DebugCascades;
+            light.UsePCF = state.Shadows.UsePCF;
         }
 
         if (state.EnvironmentMap is not null)

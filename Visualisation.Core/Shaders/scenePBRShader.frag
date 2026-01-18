@@ -74,6 +74,7 @@ uniform int cascadeCount;
 uniform mat4 view;
 uniform float farPlane;
 uniform bool debugCascades;
+uniform bool usePCF;
 
 /* inputs from vertex shader */
 in vec3 Normal;
@@ -202,14 +203,22 @@ float ShadowCalculation(out int layer)
     // PCF
     float shadow = 0.0;
     vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));
-    for (float x = -1.5; x <= 1.5; x += 1.0)
+
+    if (usePCF)
     {
-        for (float y = -1.5; y <= 1.5; y += 1.0)
+        for (float x = -1.5; x <= 1.5; x += 1.0)
         {
-            shadow += texture(shadowMap, vec4(projCoords.xy + vec2(x, y) * texelSize, layer, currentDepth - bias));
+            for (float y = -1.5; y <= 1.5; y += 1.0)
+            {
+                shadow += texture(shadowMap, vec4(projCoords.xy + vec2(x, y) * texelSize, layer, currentDepth - bias));
+            }
         }
+        shadow /= 16.0;
     }
-    shadow /= 16.0;
+    else
+    {
+        shadow = texture(shadowMap, vec4(projCoords.xy, layer, currentDepth - bias));
+    }
 
     return shadow;
 }
