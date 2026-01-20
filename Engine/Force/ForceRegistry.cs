@@ -2,6 +2,7 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -64,6 +65,7 @@ namespace Engine.Force
             foreach (ForceRegistration body in Registry)
             {
                 body.fg.UpdateForce(body.body, duration);
+                Debug.Assert(!Real.IsNaN(body.body.ForceAccum.X));
             }
         }
     };
