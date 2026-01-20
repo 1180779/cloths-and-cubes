@@ -306,7 +306,7 @@ public class Application : GameWindow
         };
         _windowsManager.Add(_boxesDemoSettingsWindow);
 
-        _selectionManagerWindow = new(_sceneRenderer.InteractionManager);
+        _selectionManagerWindow = new(_sceneRenderer.InteractionManager, _joints);
         _windowsManager.Add(_selectionManagerWindow);
 
         _gizmoSettingsWindow = new(_sceneRenderer.InteractionManager);
@@ -755,7 +755,7 @@ public class Application : GameWindow
                 data.SizeY,
                 data.SpringLength,
                 data.SpringConstant,
-                data.ParticleMass);
+                data.ParticleMass, _joints);
             _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
         }
 
@@ -768,7 +768,7 @@ public class Application : GameWindow
                     _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength,
                     _boxesDemoSettingsWindow.SpringConstant,
-                    _boxesDemoSettingsWindow.ParticleMass);
+                    _boxesDemoSettingsWindow.ParticleMass, _joints);
                 _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
             }
         }

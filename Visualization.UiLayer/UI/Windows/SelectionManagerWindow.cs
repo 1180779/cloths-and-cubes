@@ -1,3 +1,4 @@
+using Engine.ContactGenerators;
 using Engine.Rays;
 using Engine.RigidBodies;
 
@@ -13,9 +14,10 @@ using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class SelectionManagerWindow(InteractionManager interactionManager) : IWindow
+public sealed class SelectionManagerWindow(InteractionManager interactionManager, GlobalJointsList joints) : IWindow
 {
     private InteractionManager _interactionManager = interactionManager;
+    private GlobalJointsList _globalJointsList = joints;
 
     private bool _debugRayDraw;
     private LineMesh? _selectionRayLineMesh;
@@ -475,7 +477,7 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
 
             _interactionManager.ClearExcept(cloth);
             cloth.RegenerateClothPreservingTheCenter(editSizeX, editSizeY, editSpringLength, editSpringConstant,
-                editParticleMass);
+                editParticleMass, _globalJointsList);
         }
     }
 

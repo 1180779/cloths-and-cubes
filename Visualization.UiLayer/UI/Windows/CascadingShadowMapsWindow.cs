@@ -23,6 +23,8 @@ public sealed class CascadingShadowMapsWindow(
     private readonly Shader _quadCsmShader = new("depthMapShader.vert", "depthMapShader.frag"); /* owned */
     private readonly QuadMesh _quadMesh = new(); /* owned */
 
+    private int _sampler;
+
     private int _directionalLightLayer;
 
     public int DirectionalLightLayer
@@ -60,8 +62,31 @@ public sealed class CascadingShadowMapsWindow(
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             _quadCsmShader.Use();
+
+            // Ensure the layer index is valid before rendering
+            if (_lightsManager.DirectionalLight != null)
+            {
+                int maxLayers = _lightsManager.DirectionalLight.ShadowCascadeLevels.Length + 1;
+                if (_directionalLightLayer >= maxLayers)
+                {
+                    _directionalLightLayer = maxLayers - 1;
+                }
+            }
+
+            if (_sampler == 0)
+            {
+                GL.GenSamplers(1, out _sampler);
+                GL.SamplerParameter(_sampler, SamplerParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+                GL.SamplerParameter(_sampler, SamplerParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+                GL.SamplerParameter(_sampler, SamplerParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+                GL.SamplerParameter(_sampler, SamplerParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+                GL.SamplerParameter(_sampler, SamplerParameterName.TextureCompareMode, (int)TextureCompareMode.None);
+            }
+
+            GL.BindSampler(0, _sampler);
             _lightsManager.DirectionalLight?.SetForDepthTextureShader(_quadCsmShader, DirectionalLightLayer);
             _quadMesh.Render();
+            GL.BindSampler(0, 0);
 
             _depthMapWindowFrb.Unbind();
 
@@ -94,6 +119,8 @@ public sealed class CascadingShadowMapsWindow(
         _depthMapWindowFrb.Dispose();
         _quadCsmShader.Dispose();
         _quadMesh.Dispose();
+        if (_sampler != 0)
+            GL.DeleteSamplers(1, ref _sampler);
     }
 
     public sealed record State
