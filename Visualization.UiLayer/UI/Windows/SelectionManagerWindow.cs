@@ -1,3 +1,4 @@
+using Engine.ContactGenerators;
 using Engine.Rays;
 using Engine.RigidBodies;
 
@@ -13,9 +14,10 @@ using Cylinder = Visualisation.Core.GameObjects.Cylinder;
 
 namespace Visualization.UiLayer.UI.Windows;
 
-public sealed class SelectionManagerWindow(InteractionManager interactionManager) : IWindow
+public sealed class SelectionManagerWindow(InteractionManager interactionManager, GlobalJointsList joints) : IWindow
 {
     private InteractionManager _interactionManager = interactionManager;
+    private GlobalJointsList _globalJointsList = joints;
 
     private bool _debugRayDraw;
     private LineMesh? _selectionRayLineMesh;
@@ -137,6 +139,9 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
                 break;
             case ClothRigidParticleInCorner particleInCorner:
                 DrawParticle(particleInCorner);
+                break;
+            case ClothRigidParticle clothParticle:
+                DrawParticle(clothParticle);
                 break;
             case RigidParticle particle:
                 DrawParticle(particle);
@@ -293,6 +298,13 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
             if (ImGui.DragFloat3("Rotation", ref tempEulerAngles, 0.01f))
             {
                 body.Orientation = Quaternion.FromEulerAngles(tempEulerAngles.ToOpenTK()).ToEngine();
+                returnValue = true;
+            }
+
+            const string resetOrientationText = "Reset Orientation";
+            if (ImGui.Button(resetOrientationText, UiControls.Style.ButtonSizes.Small(resetOrientationText)))
+            {
+                body.Orientation = Engine.Quaternion.Identity;
                 returnValue = true;
             }
 
@@ -465,7 +477,7 @@ public sealed class SelectionManagerWindow(InteractionManager interactionManager
 
             _interactionManager.ClearExcept(cloth);
             cloth.RegenerateClothPreservingTheCenter(editSizeX, editSizeY, editSpringLength, editSpringConstant,
-                editParticleMass);
+                editParticleMass, _globalJointsList);
         }
     }
 

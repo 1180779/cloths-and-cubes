@@ -202,7 +202,6 @@ public class Application : GameWindow
                     var clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
                     foreach (var cloth in _cloths)
                     {
-                        if (cloth == null) continue;
                         var engineCloth = cloth.EngineCloth;
                         clothsData.Add(new BoxesDemoSettingsWindow.ClothParams
                         {
@@ -226,6 +225,8 @@ public class Application : GameWindow
 
                     for (int i = newCount; i < length; ++i)
                     {
+                        _boxes[i].EngineBox.RemoveAllJoints(_joints);
+                        _forceRegistry.ClearForcesForBody(_boxes[i].EngineBox.Body);
                         _boxes[i].Dispose();
                     }
 
@@ -249,6 +250,7 @@ public class Application : GameWindow
 
                     for (int i = newCount; i < length; ++i)
                     {
+                        _forceRegistry.ClearForcesForBody(_balls[i].EngineBall.Body);
                         _balls[i].Dispose();
                     }
 
@@ -272,12 +274,17 @@ public class Application : GameWindow
             for (int i = newCount; i < length; ++i)
             {
                 _cloths[i].EngineCloth.RemoveSpringsFromForceRegistry();
+                _cloths[i].EngineCloth.RemoveAllJoints(_joints);
+                foreach (var particle in _cloths[i].EngineCloth.Particles)
+                {
+                    _forceRegistry.ClearForcesForBody(particle.Body);
+                }
+
                 _cloths[i].Dispose();
             }
 
             Array.Resize(ref _cloths, newCount);
 
-            if (clothsData == null) return;
             for (int i = length; i < newCount; ++i)
             {
                 if (i < clothsData.Count)
@@ -299,7 +306,7 @@ public class Application : GameWindow
         };
         _windowsManager.Add(_boxesDemoSettingsWindow);
 
-        _selectionManagerWindow = new(_sceneRenderer.InteractionManager);
+        _selectionManagerWindow = new(_sceneRenderer.InteractionManager, _joints);
         _windowsManager.Add(_selectionManagerWindow);
 
         _gizmoSettingsWindow = new(_sceneRenderer.InteractionManager);
@@ -738,8 +745,8 @@ public class Application : GameWindow
         _joints.Clear();
         _forceRegistry.Clear();
 
-        var clothsData = _boxesDemoSettingsWindow.GetClothsData();
-        if (clothsData == null) clothsData = new List<BoxesDemoSettingsWindow.ClothParams>();
+        var clothsData = _boxesDemoSettingsWindow.GetClothsData?.Invoke() ??
+            new List<BoxesDemoSettingsWindow.ClothParams>();
         int j = 0;
         for (; j < clothsData.Count; j++)
         {
@@ -749,7 +756,7 @@ public class Application : GameWindow
                 data.SizeY,
                 data.SpringLength,
                 data.SpringConstant,
-                data.ParticleMass);
+                data.ParticleMass, _joints);
             _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
         }
 
@@ -762,21 +769,10 @@ public class Application : GameWindow
                     _boxesDemoSettingsWindow.SizeY,
                     _boxesDemoSettingsWindow.SpringLength,
                     _boxesDemoSettingsWindow.SpringConstant,
-                    _boxesDemoSettingsWindow.ParticleMass);
+                    _boxesDemoSettingsWindow.ParticleMass, _joints);
                 _cloths[j].EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
             }
         }
-
-        //foreach (Cloth cloth in _cloths)
-        //{
-        //    cloth.EngineCloth.RegenerateGridPreservingTheCenter(
-        //        _boxesDemoSettingsWindow.SizeX,
-        //        _boxesDemoSettingsWindow.SizeY,
-        //        _boxesDemoSettingsWindow.SpringLength,
-        //        _boxesDemoSettingsWindow.SpringConstant,
-        //        _boxesDemoSettingsWindow.ParticleMass);
-        //    cloth.EngineCloth.Center = new(0.0f, 4.0f, 0.0f);
-        //}
 
         // reset plane
         _plane.EnginePlane.Direction = Engine.Vector3.Up;
@@ -881,6 +877,18 @@ public class Application : GameWindow
             if (obj is Cloth cloth)
             {
                 cloth.EngineCloth.RemoveSpringsFromForceRegistry();
+                foreach (var particle in cloth.EngineCloth.Particles)
+                {
+                    _forceRegistry.ClearForcesForBody(particle.Body);
+                }
+            }
+            else if (obj is Box box)
+            {
+                _forceRegistry.ClearForcesForBody(box.EngineBox.Body);
+            }
+            else if (obj is Ball ball)
+            {
+                _forceRegistry.ClearForcesForBody(ball.EngineBall.Body);
             }
 
             obj.Dispose();
@@ -894,13 +902,10 @@ public class Application : GameWindow
         }
     }
 
-    // === Methods from Application ===
-
     protected override void OnLoad()
     {
         base.OnLoad();
 
-        // Hook up SceneWindow debug rendering
         _sceneWindow.DebugRenderInScene += DebugRenderInScene;
 
         var state = _settingsSaverLoader.Load();
@@ -911,7 +916,6 @@ public class Application : GameWindow
 
         InitializeScene();
 
-        // set up internal scene objects after the scene is initialized
         _sceneRenderer.SetUp();
     }
 

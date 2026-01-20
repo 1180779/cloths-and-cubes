@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Engine.ContactGenerators;
 using Engine.Force;
 using Engine.RigidBodies;
 
@@ -71,6 +72,23 @@ public class Cloth
         CreateSprings();
     }
 
+    /// <summary>
+    /// Removes all joints associated with the cloth particles.
+    /// This removes the joints from the trackable objects and global joints list.
+    /// <param name="jointsList">The global joints list.</param>
+    /// </summary>
+    public void RemoveAllJoints(GlobalJointsList jointsList)
+    {
+        foreach (var particle in Particles)
+        {
+            jointsList.RemoveJoint(particle.ConnectedJoint);
+
+            // The joint method should take care of removing itself from the trackables, which includes the particle.
+            // No need to set the ConnectedJoint to new (i.e., clear it) then.
+            particle.ConnectedJoint.Joint?.RemoveFromTrackables();
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool IsCorner(int i, int j) =>
         (i == 0 && j == 0) ||
@@ -118,8 +136,14 @@ public class Cloth
         int newSizeY,
         float newSpringLength,
         float newSpringConstant,
-        float newParticleMass)
+        float newParticleMass,
+        GlobalJointsList? jointsList = null)
     {
+        if (jointsList != null)
+        {
+            RemoveAllJoints(jointsList.Value);
+        }
+
         RemoveSpringsFromForceRegistry();
         _particleSpringAssociations.Clear();
 
@@ -147,10 +171,11 @@ public class Cloth
         int newSizeY,
         float newSpringLength,
         float newSpringConstant,
-        float newParticleMass)
+        float newParticleMass,
+        GlobalJointsList? jointsList = null)
     {
         var oldCenter = Center;
-        RegenerateGrid(newSizeX, newSizeY, newSpringLength, newSpringConstant, newParticleMass);
+        RegenerateGrid(newSizeX, newSizeY, newSpringLength, newSpringConstant, newParticleMass, jointsList);
         var newCenter = Center;
 
         var offset = oldCenter - newCenter;

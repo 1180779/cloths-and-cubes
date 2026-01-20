@@ -30,12 +30,11 @@ public class ClothRigidParticle : RigidParticle, IBodyWithSingleJoint
     public ConnectedJointData ConnectedJoint { get; set; } = new();
 }
 
-public class RigidParticle : CollisionParticle, IBoxable, IFrictionProvider
+// The CollisionParticle already provides a default friction value.
+public class RigidParticle : CollisionParticle, IBoxable
 {
     public const float BoundingBoxHalfSize = 0.04f;
     public const float BoxScale = 2 * BoundingBoxHalfSize;
-
-    public float Friction => 0.85f;
 
     public virtual BoundingBox GetBoundingBox()
     {
@@ -63,7 +62,7 @@ public class RigidParticle : CollisionParticle, IBoxable, IFrictionProvider
         Body.LinearDamping = 0.95f;
         Body.AngularDamping = 0.8f;
         Body.ClearAccumulators();
-        Body.Acceleration = new(0, -10f, 0);
+        Body.Acceleration = Vector3.Gravity;
 
         Body.SetAwake();
         Body.CalculateDerivedData();

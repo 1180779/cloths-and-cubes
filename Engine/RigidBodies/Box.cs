@@ -50,7 +50,7 @@ public class Box : CollisionBox, IBoxable, IBodyWithJoints
         Body.LinearDamping = 0.95f;
         Body.AngularDamping = 0.8f;
         Body.ClearAccumulators();
-        Body.Acceleration = new(0, -10f, 0);
+        Body.Acceleration = Vector3.Gravity;
 
         Body.SetAwake();
 
@@ -139,5 +139,21 @@ public class Box : CollisionBox, IBoxable, IBodyWithJoints
         corners[7] = center + axisX * HalfSize.X + axisY * HalfSize.Y + axisZ * HalfSize.Z;
 
         return corners;
+    }
+
+    /// <summary>
+    /// Removes all joints associated with the box.
+    /// This removes the joints from the trackable objects and global joints list.
+    /// <param name="jointsList">The global joints list.</param>
+    /// </summary>
+    public void RemoveAllJoints(GlobalJointsList jointsList)
+    {
+        // Iterate backwards to avoid issues with removal
+        for (int i = ConnectedJoints.Count - 1; i >= 0; i--)
+        {
+            var jointData = ConnectedJoints[i];
+            jointsList.RemoveJoint(jointData);
+            jointData.Joint?.RemoveFromTrackables();
+        }
     }
 }

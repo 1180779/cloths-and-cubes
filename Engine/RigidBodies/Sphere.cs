@@ -48,7 +48,7 @@ public class Sphere : CollisionSphere, IBoxable
         Body.LinearDamping = 0.95f;
         Body.AngularDamping = 0.8f;
         Body.ClearAccumulators();
-        Body.Acceleration = new(0, -10f, 0);
+        Body.Acceleration = Vector3.Gravity;
 
         Body.SetAwake();
 

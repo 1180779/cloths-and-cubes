@@ -34,6 +34,7 @@ public sealed class GraphicsSettingsWindow(
             {
                 var direction = light.Direction.ToNumerics();
                 DrawLightDirectionControls(ref direction, light);
+                DrawCascadesControls(light);
                 DrawShadowBiasControls(light);
             }
 
@@ -42,6 +43,55 @@ public sealed class GraphicsSettingsWindow(
         }
 
         ImGui.End();
+    }
+
+    private void DrawCascadesControls(LightDirectional light)
+    {
+        if (ImGui.CollapsingHeader("Cascaded Shadow Maps"))
+        {
+            ImGui.Indent();
+            int cascadeCount = light.CascadeCount;
+            if (ImGui.SliderInt("Cascade Count", ref cascadeCount, LightDirectional.MinCascades,
+                LightDirectional.MaxCascades))
+            {
+                light.CascadeCount = cascadeCount;
+            }
+
+            ImGui.TextWrapped("Lambda controls the distribution of cascade splits. It is a weight beteween 0 and 1 " +
+                "that determines how the splits are calculated. The formula used is a combination of uniform and logarithmic splits. " +
+                "0 means uniform splits, while 1 means logarithmic splits. The values in between provide a balance between the two methods. ");
+            ImGui.SliderFloat("Lambda", ref light.CascadeSplitLambda, 0.0f, 1.0f);
+
+            bool debugCascades = light.DebugCascades;
+            if (ImGui.Checkbox("Debug Cascades", ref debugCascades))
+            {
+                light.DebugCascades = debugCascades;
+            }
+
+            bool usePCF = light.UsePCF;
+            if (ImGui.Checkbox("Use PCF", ref usePCF))
+            {
+                light.UsePCF = usePCF;
+            }
+
+            bool reduceShimmering = light.ReduceShimmering;
+            if (ImGui.Checkbox("Reduce Shimmering", ref reduceShimmering))
+            {
+                light.ReduceShimmering = reduceShimmering;
+            }
+
+            const string resetButtonText = "Reset to default";
+            if (ImGui.Button(resetButtonText, UiControls.Style.ButtonSizes.Medium(resetButtonText)))
+            {
+                light.CascadeCount = LightDirectional.DefaultCascades;
+                light.CascadeSplitLambda = LightDirectional.DefaultCascadeSplitLambda;
+                light.DebugCascades = false;
+                light.UsePCF = true;
+                light.ReduceShimmering = true;
+            }
+
+            ImGui.Unindent();
+        }
     }
 
     private void DrawShadowBiasControls(LightDirectional light)
@@ -161,6 +211,9 @@ public sealed class GraphicsSettingsWindow(
         public float ShadowBiasModifier { get; init; }
         public float ZMult { get; init; }
         public System.Numerics.Vector3 Direction { get; init; }
+        public bool DebugCascades { get; init; }
+        public bool UsePCF { get; init; }
+        public bool ReduceShimmering { get; init; }
     }
 
     public sealed record State
@@ -183,6 +236,9 @@ public sealed class GraphicsSettingsWindow(
                     ShadowBiasModifier = light.ShadowBiasModifier,
                     ZMult = light.ZMult,
                     Direction = light.Direction.ToNumerics(),
+                    DebugCascades = light.DebugCascades,
+                    UsePCF = light.UsePCF,
+                    ReduceShimmering = light.ReduceShimmering
                 }
                 : null,
             EnvironmentMap = new EnvironmentMapState
@@ -204,6 +260,9 @@ public sealed class GraphicsSettingsWindow(
             light.ShadowBiasModifier = state.Shadows.ShadowBiasModifier;
             light.ZMult = state.Shadows.ZMult;
             light.Direction = state.Shadows.Direction.ToOpenTK();
+            light.DebugCascades = state.Shadows.DebugCascades;
+            light.UsePCF = state.Shadows.UsePCF;
+            light.ReduceShimmering = state.Shadows.ReduceShimmering;
         }
 
         if (state.EnvironmentMap is not null)

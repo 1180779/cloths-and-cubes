@@ -1,4 +1,5 @@
 ﻿using Engine.Collision.Bounding_Volume_Hierarchy;
+using Engine.ContactGenerators;
 using Engine.Force;
 
 using Visualisation.Core.Display;
@@ -111,10 +112,11 @@ public sealed class Cloth : GameObject, IBoxable
         int newSizeY,
         float newSpringLength,
         float newSpringConstant,
-        float newParticleMass)
+        float newParticleMass,
+        GlobalJointsList? jointsList = null)
     {
         EngineCloth.RegenerateGridPreservingTheCenter(newSizeX, newSizeY, newSpringLength, newSpringConstant,
-            newParticleMass);
+            newParticleMass, jointsList);
 
         // The render strategy will take care of updating the mesh points
 
