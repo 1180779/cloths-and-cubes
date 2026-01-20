@@ -581,6 +581,7 @@ public class Application : GameWindow
     /// <param name="deltaTime"></param>
     protected void AdvancePhysics(float deltaTime)
     {
+        called++;
         if (!ShouldAdvancePhysics)
         {
             OnNoPhysicsUpdate();
@@ -625,7 +626,7 @@ public class Application : GameWindow
             );
         }
     }
-
+    int called = 0;
     protected override void OnUpdateFrame(FrameEventArgs e)
     {
         base.OnUpdateFrame(e);

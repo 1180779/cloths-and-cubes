@@ -10,6 +10,12 @@ public class Contact
     {
     }
 
+    public Contact? nextInOrder { get; set; } = null;
+    public Contact? previousInOrder { get; set; } = null;
+    public Contact?[] nextObject = new Contact?[2];
+
+    public int ContactQueueIdx { get; set; } = -1;
+
     /**
      * The contact resolver object needs access into the contacts to
      * set and affect the contact.
@@ -73,6 +79,7 @@ public class Contact
     /// Holds the required change in velocity for this contact to be resolved.
     /// </summary>
     public Real DesiredDeltaVelocity { get; set; }
+
 
     /// <summary>
     /// Holds the world space position of the contact point relative to
@@ -635,5 +642,65 @@ public class Contact
         }
 
         return impulseContact;
+    }
+
+    public void UpdatePenetration(Vector3[] linearChange, Vector3[] angularChange, bool isBodyA, bool isBodyAother)
+    {
+        int b = isBodyA ? 0 : 1;
+        int d = isBodyAother ? 0 : 1;
+
+        Vector3 deltaPosition = linearChange[d] +
+                                angularChange[d].VectorProduct(
+                                    RelativeContactPosition[b]);
+        Penetration +=
+            deltaPosition.ScalarProduct(ContactNormal)
+            * (b != 0 ? 1 : -1);
+    }
+
+    public void UpdatePenetration(Vector3[] linearChange, Vector3[] angularChange, Contact other)
+    {
+        int b, d;
+        Vector3 deltaPosition;
+        if (Body[0] == other.Body[0])
+        {
+            b = d = 0;
+            deltaPosition = linearChange[d] +
+                                    angularChange[d].VectorProduct(
+                                        RelativeContactPosition[b]);
+            Penetration +=
+                deltaPosition.ScalarProduct(ContactNormal)
+                * (b != 0 ? 1 : -1);
+        }
+        if (Body[1]!=null && other.Body[1] != null && Body[1] == other.Body[1])
+        {
+            b = d = 1;
+            deltaPosition = linearChange[d] +
+                                    angularChange[d].VectorProduct(
+                                        RelativeContactPosition[b]);
+            Penetration +=
+                deltaPosition.ScalarProduct(ContactNormal)
+                * (b != 0 ? 1 : -1);
+        }
+        if (other.Body[1]!=null && Body[0] == other.Body[1])
+        {
+            b = 0; d = 1;
+            deltaPosition = linearChange[d] +
+                                    angularChange[d].VectorProduct(
+                                        RelativeContactPosition[b]);
+            Penetration +=
+                deltaPosition.ScalarProduct(ContactNormal)
+                * (b != 0 ? 1 : -1);
+        }
+        if(Body[1] != null && Body[1] == other.Body[0])
+        {
+            b = 1; d = 0;
+            deltaPosition = linearChange[d] +
+                                    angularChange[d].VectorProduct(
+                                        RelativeContactPosition[b]);
+            Penetration +=
+                deltaPosition.ScalarProduct(ContactNormal)
+                * (b != 0 ? 1 : -1);
+        }
+
     }
 };

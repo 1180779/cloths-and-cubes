@@ -104,7 +104,7 @@ namespace Engine.Collision.ContactGraph
             nodeB.Edges.Add(edgeAB);
 
         }
-
+        private const bool VERBAL = false;
         public void ResolvePositions(uint maxPositionIterations, float positionEpsilon)
         {
             PriorityQueue<ContactGraphEdge, Real> edgeQueue = new PriorityQueue<ContactGraphEdge, Real>();
@@ -127,6 +127,9 @@ namespace Engine.Collision.ContactGraph
                     break;
                 }
 
+                if(VERBAL)
+                    Console.WriteLine($"ROUND {PositionIterationsUsed + 1}");
+
                 var contact = edge.Data;
                 contact.MatchAwakeState();
 
@@ -148,14 +151,20 @@ namespace Engine.Collision.ContactGraph
                     deltaPosition = linearChange[d] +
                                     angularChange[d].VectorProduct(
                                         adjacentEdge.Data.RelativeContactPosition[b]);
+                    var oldPen = adjacentEdge.Data.Penetration;
                     adjacentEdge.Data.Penetration +=
                                     deltaPosition.ScalarProduct(adjacentEdge.Data.ContactNormal)
                                     * (b != 0 ? 1 : -1);
+
+                    if(VERBAL)
+                        Console.WriteLine($"\t[{adjacentEdge.Data.ContactPoint.X:0.##}, {adjacentEdge.Data.ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({adjacentEdge.Data.Penetration:0.####})");
+                    //Console.WriteLine($"\t\tDelta Pos: {deltaPosition}");
                     //TODO: CHECK IF THERE IS A BETTER WAY TO UPDATE THE QUEUE
                     ContactGraphEdge actuallyRemoved;
                     float removedPriority;
-                    var _ = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
-                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
+                    var removed = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
+                    if(removed)
+                        edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
 
                 }
 
@@ -167,19 +176,28 @@ namespace Engine.Collision.ContactGraph
                     deltaPosition = linearChange[d] +
                                     angularChange[d].VectorProduct(
                                         adjacentEdge.Data.RelativeContactPosition[b]);
+                    var oldPen = adjacentEdge.Data.Penetration;
                     adjacentEdge.Data.Penetration +=
                                     deltaPosition.ScalarProduct(adjacentEdge.Data.ContactNormal)
                                     * (b != 0 ? 1 : -1);
+
+                    if(VERBAL)
+                        Console.WriteLine($"\t[{adjacentEdge.Data.ContactPoint.X:0.##}, {adjacentEdge.Data.ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({adjacentEdge.Data.Penetration:0.####})");
+                    //Console.WriteLine($"\t\tDelta Pos: {deltaPosition}");
                     ContactGraphEdge actuallyRemoved;
                     float removedPriority;
-                    var _ = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
-                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
+                    var removed = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
+                    if(removed)
+                        edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
                 }
                 PositionIterationsUsed++;
-                Edges.Remove(edge);
-                edge.NodeA?.Edges.Remove(edge);
-                edge.NodeB?.Edges.Remove(edge);
+                //Edges.Remove(edge);
+                //edge.NodeA?.Edges.Remove(edge);
+                //edge.NodeB?.Edges.Remove(edge);
             }
+
+            if(VERBAL)
+                Environment.Exit(0);
         }
 
         public void ResolveVelocities(uint maxVelocityIterations, Real velocityEpsilon, Real duration)
@@ -237,7 +255,7 @@ namespace Engine.Collision.ContactGraph
                     ContactGraphEdge actuallyRemoved;
                     float removedPriority;
                     var _ = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
-                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
+                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.DesiredDeltaVelocity);
 
                 }
 
@@ -259,12 +277,12 @@ namespace Engine.Collision.ContactGraph
                     ContactGraphEdge actuallyRemoved;
                     float removedPriority;
                     var _ = edgeQueue.Remove(adjacentEdge, out actuallyRemoved, out removedPriority);
-                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.Penetration);
+                    edgeQueue.Enqueue(adjacentEdge, -adjacentEdge.Data.DesiredDeltaVelocity);
                 }
                 VelocityIterationsUsed++;
-                Edges.Remove(edge);
-                edge.NodeA?.Edges.Remove(edge);
-                edge.NodeB?.Edges.Remove(edge);
+                //Edges.Remove(edge);
+                //edge.NodeA?.Edges.Remove(edge);
+                //edge.NodeB?.Edges.Remove(edge);
             }
         }
 

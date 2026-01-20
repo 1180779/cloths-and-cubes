@@ -37,7 +37,7 @@ namespace Engine.Collision.ContactGraph
         public List<ContactGraphEdge> GetAdjacentEdgesA()
         {
             List<ContactGraphEdge> adjacentEdges = [.. NodeA.Edges];
-            adjacentEdges.Remove(this);
+            //adjacentEdges.Remove(this);
             return adjacentEdges;
         }
 
@@ -45,7 +45,7 @@ namespace Engine.Collision.ContactGraph
         {
             if (NodeB == null) return new List<ContactGraphEdge>();
             List<ContactGraphEdge> adjacentEdges = [.. NodeB.Edges];
-            adjacentEdges.Remove(this);
+            //adjacentEdges.Remove(this);
             return adjacentEdges;
         }
     }

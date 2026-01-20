@@ -6,6 +6,9 @@ namespace Engine.RigidBodies;
 
 public class RigidBody : IFrictionProvider
 {
+    public List<Contact> Contacts { get; set; } = [];
+
+
     /// <summary>
     /// Holds the inverse of the mass of the rigid body. It is more
     /// useful to hold the inverse mass because integration is simpler,
@@ -99,6 +102,8 @@ public class RigidBody : IFrictionProvider
     /// integration step.
     /// </summary>
     private Vector3 forceAccum = new();
+
+    public Vector3 ForceAccum { get => forceAccum; }
 
     /// <summary>
     /// Holds the accumulated torque to be applied at the next
