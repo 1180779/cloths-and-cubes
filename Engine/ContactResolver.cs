@@ -17,8 +17,9 @@ public enum ContactResolverMode : uint
 public class ContactResolver
 {
     // Change this to switch between different contact resolution strategies
-    private const ContactResolverMode Mode = ContactResolverMode.LOOP;
-    private const bool VERBAL = false;
+    private const ContactResolverMode Mode = ContactResolverMode.SORTED_LIST;
+    private const bool VERBAL_POS = false;
+    private const bool VERBAL_VEL = false;
 
     private uint velocityIterations;
     private uint positionIterations;
@@ -136,14 +137,14 @@ public class ContactResolver
             {
                 _orderedContactsVel[i].nextInOrder = _orderedContactsVel[i + 1];
             }
-            _orderedContactsVel[i].Body[0]!.Contacts.Add(_orderedContactsVel[i]);
+            //_orderedContactsVel[i].Body[0]!.Contacts.Add(_orderedContactsVel[i]);
             if (_orderedContactsVel[i].Body[0]!.Contacts.Count > 0)
             {
                 _orderedContactsVel[i].Body[0]!.Contacts[_orderedContactsVel[i].Body[0]!.Contacts.Count - 1].nextObject[0] = _orderedContactsVel[i];
             }
             if (_orderedContactsVel[i].Body[1] != null)
             {
-                _orderedContactsVel[i].Body[1]!.Contacts.Add(_orderedContactsVel[i]);
+                //_orderedContactsVel[i].Body[1]!.Contacts.Add(_orderedContactsVel[i]);
                 if (_orderedContactsVel[i].Body[1]!.Contacts.Count > 0)
                 {
                     _orderedContactsVel[i].Body[1]!.Contacts[_orderedContactsVel[i].Body[1]!.Contacts.Count - 1].nextObject[1] = _orderedContactsVel[i];
@@ -203,7 +204,8 @@ public class ContactResolver
             var contact = _orderedContactsVel[0];
             var max = contact.DesiredDeltaVelocity;
             if (max < velocityEpsilon) break;
-
+            if(VERBAL_VEL)
+                Console.WriteLine($"ROUND {VelocityIterationsUsed + 1}");
 
             contact.MatchAwakeState();
             contact.ApplyVelocityChange(velocityChange, rotationChange);
@@ -216,6 +218,13 @@ public class ContactResolver
             var oldDelta = contact.DesiredDeltaVelocity;
             contact.CalculateDesiredDeltaVelocity(duration);
 
+            if (VERBAL_VEL)
+            {
+                Console.WriteLine($"\t[{contact.ContactPoint.X:0.##}, {contact.ContactPoint.Z:0.##}]: ({oldDelta:0.##}) -> ({contact.DesiredDeltaVelocity:0.##})");
+                Console.WriteLine($"\t\tVelocity: {contact.ContactVelocity}, Delta Velocity: {deltaVelOriginal}");
+            }
+
+
             if (contact.Body[1] != null)
             {
                 deltaVelOriginal = velocityChange[1] +
@@ -223,7 +232,16 @@ public class ContactResolver
                             contact.RelativeContactPosition[1]);
                 contact.ContactVelocity -=
                     contact.ContactToWorld.TransformTranspose(deltaVelOriginal);
+
+                oldDelta = contact.DesiredDeltaVelocity;
+
                 contact.CalculateDesiredDeltaVelocity(duration);
+
+                if (VERBAL_VEL)
+                {
+                    Console.WriteLine($"\t[{contact.ContactPoint.X:0.##}, {contact.ContactPoint.Z:0.##}]: ({oldDelta:0.##}) -> ({contact.DesiredDeltaVelocity:0.##})");
+                    Console.WriteLine($"\t\tVelocity: {contact.ContactVelocity}, Delta Velocity: {deltaVelOriginal}");
+                }
             }
 
             var moved = new bool[_orderedContactsVel.Count];
@@ -249,10 +267,18 @@ public class ContactResolver
                     * (b != 0 ? -1 : 1);
                 var oldDelta2 = bodyContact.DesiredDeltaVelocity;
                 bodyContact.CalculateDesiredDeltaVelocity(duration);
+
+                if (VERBAL_VEL)
+                {
+                    Console.WriteLine($"\t[{bodyContact.ContactPoint.X:0.##}, {bodyContact.ContactPoint.Z:0.##}]: ({oldDelta2:0.##}) -> ({bodyContact.DesiredDeltaVelocity:0.##})");
+                    Console.WriteLine($"\t\tVelocity: {bodyContact.ContactVelocity}, Delta Velocity: {deltaVel}");
+                }
+
                 if (!moved[bodyContact.ContactQueueIdx])
                 {
                     moved[bodyContact.ContactQueueIdx] = true;
-                    contactsToMove.Add(bodyContact); }
+                    contactsToMove.Add(bodyContact); 
+                }
             }
 
             if (contact.Body[1] != null)
@@ -271,11 +297,20 @@ public class ContactResolver
                     bodyContact.ContactVelocity +=
                         bodyContact.ContactToWorld.TransformTranspose(deltaVel)
                         * (b != 0 ? 1 : -1);
+                    var oldDelta2 = bodyContact.DesiredDeltaVelocity;
                     bodyContact.CalculateDesiredDeltaVelocity(duration);
+
+                    if (VERBAL_VEL)
+                    {
+                        Console.WriteLine($"\t[{bodyContact.ContactPoint.X:0.##}, {bodyContact.ContactPoint.Z:0.##}]: ({oldDelta2:0.##}) -> ({bodyContact.DesiredDeltaVelocity:0.##})");
+                        Console.WriteLine($"\t\tVelocity: {bodyContact.ContactVelocity}, Delta Velocity: {deltaVel}");
+                    }
+
                     if (!moved[bodyContact.ContactQueueIdx])
                     {
                         moved[bodyContact.ContactQueueIdx] = true;
-                        contactsToMove.Add(bodyContact); }
+                        contactsToMove.Add(bodyContact); 
+                    }
                 }
             }
 
@@ -320,6 +355,8 @@ public class ContactResolver
             VelocityIterationsUsed++;
             offset = 0;
         }
+        if(VERBAL_VEL)
+            Environment.Exit(0);
     }
 
 
@@ -335,7 +372,8 @@ public class ContactResolver
         Vector3[] rotationChange = [new(), new()];
         while (VelocityIterationsUsed < velocityIterations)
         {
-            //Console.WriteLine($"ROUND {VelocityIterationsUsed+1}");
+            if(VERBAL_VEL)
+                Console.WriteLine($"ROUND {VelocityIterationsUsed+1}");
             // Find contact with maximum magnitude of probable velocity change.
             var max = velocityEpsilon;
             var index = numContacts;
@@ -382,8 +420,13 @@ public class ContactResolver
                                     * (b != 0 ? -1 : 1);
                                 var oldDelta = contacts[i].DesiredDeltaVelocity;
                                 contacts[i].CalculateDesiredDeltaVelocity(duration);
-                                //Console.WriteLine($"\t[{contacts[i].ContactPoint.X:0.##}, {contacts[i].ContactPoint.Z:0.##}]: ({oldDelta:0.##}) -> ({contacts[i].DesiredDeltaVelocity:0.##})");
-                                //Console.WriteLine($"\t\tVelocity: {contacts[i].ContactVelocity}, Delta Velocity: {deltaVel}");
+
+                                if (VERBAL_VEL)
+                                {
+                                    Console.WriteLine($"\t[{contacts[i].ContactPoint.X:0.##}, {contacts[i].ContactPoint.Z:0.##}]: ({oldDelta:0.##}) -> ({contacts[i].DesiredDeltaVelocity:0.##})");
+                                    Console.WriteLine($"\t\tVelocity: {contacts[i].ContactVelocity}, Delta Velocity: {deltaVel}");
+                                }
+
                             }
                         }
                     }
@@ -391,6 +434,8 @@ public class ContactResolver
 
             VelocityIterationsUsed++;
         }
+        if(VERBAL_VEL)
+            Environment.Exit(0);
     }
 
     protected void AdjustVelocities(Contact[] contacts, uint numContacts, Real duration)
@@ -430,7 +475,8 @@ public class ContactResolver
             var contact = _orderedContactsPos[0];
             var max = contact.Penetration;
             if (max < positionEpsilon) break;
-
+            if(VERBAL_POS)
+                Console.WriteLine($"ROUND {i + 1}");
 
             contact.MatchAwakeState();
             contact.ApplyPositionChange(linearChange, angularChange, max);
@@ -438,8 +484,15 @@ public class ContactResolver
             Vector3 deltaPosOriginal = linearChange[0] +
                     angularChange[0].VectorProduct(
                         contact.RelativeContactPosition[0]);
+
+            var oldPen = contact.Penetration;
             contact.Penetration -=
                 deltaPosOriginal.ScalarProduct(contact.ContactNormal);
+
+            if (VERBAL_POS)
+            {
+                Console.WriteLine($"\t[{contact.ContactPoint.X:0.##}, {contact.ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({contact.Penetration:0.####})");
+            }
 
             if (contact.Body[1] != null)
             {
@@ -448,6 +501,10 @@ public class ContactResolver
                             contact.RelativeContactPosition[1]);
                 contact.Penetration +=
                     deltaPosOriginal.ScalarProduct(contact.ContactNormal);
+                if (VERBAL_POS)
+                {
+                    Console.WriteLine($"\t[{contact.ContactPoint.X:0.##}, {contact.ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({contact.Penetration:0.####})");
+                }
             }
 
             var moved = new bool[_orderedContactsPos.Count];
@@ -465,8 +522,12 @@ public class ContactResolver
                 Vector3 deltaPosition = linearChange[0] +
                     angularChange[0].VectorProduct(
                         bodyContact.RelativeContactPosition[0]);
+                oldPen = bodyContact.Penetration;
                 bodyContact.Penetration -=
                     deltaPosition.ScalarProduct(bodyContact.ContactNormal);
+
+                if(VERBAL_POS)
+                    Console.WriteLine($"\t[{bodyContact.ContactPoint.X:0.##}, {bodyContact.ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({bodyContact.Penetration:0.####})");
 
                 if (!moved[bodyContact.ContactQueueIdx])
                 {
@@ -484,8 +545,12 @@ public class ContactResolver
                     Vector3 deltaPosition = linearChange[1] +
                         angularChange[1].VectorProduct(
                             bodyContact.RelativeContactPosition[1]);
+                    oldPen = bodyContact.Penetration;
                     bodyContact.Penetration +=
                         deltaPosition.ScalarProduct(bodyContact.ContactNormal);
+                    if(VERBAL_POS)
+                        Console.WriteLine($"\t[{bodyContact.ContactPoint.X:0.##}, {bodyContact.ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({bodyContact.Penetration:0.####})");
+
                     if (!moved[bodyContact.ContactQueueIdx])
                     {
                         moved[bodyContact.ContactQueueIdx] = true;
@@ -538,7 +603,11 @@ public class ContactResolver
             }
             _adjustedContactsPos.Clear();
             offset = 0;
+
+
         }
+        if (VERBAL_POS)
+            Environment.Exit(0);
     }
 
     protected void PrepareContactsPos(Contact[] contacts, uint numContacts)
@@ -606,7 +675,7 @@ public class ContactResolver
 
             if (index == numContacts) break;
 
-            if (VERBAL)
+            if (VERBAL_POS)
                 Console.WriteLine($"ROUND {PositionIterationsUsed + 1}");
 
             // Match the awake state at the contact
@@ -645,7 +714,7 @@ public class ContactResolver
                                     deltaPosition.ScalarProduct(contacts[i].ContactNormal)
                                     * (b != 0 ? 1 : -1);
 
-                                if (VERBAL)
+                                if (VERBAL_POS)
                                     Console.WriteLine($"\t[{contacts[i].ContactPoint.X:0.##}, {contacts[i].ContactPoint.Z:0.##}]: ({oldPen:0.####}) -> ({contacts[i].Penetration:0.####})");
                                 //Console.WriteLine($"\t\tDelta Position: {deltaPosition}");
                             }
@@ -655,6 +724,8 @@ public class ContactResolver
 
             PositionIterationsUsed++;
         }
+        if(VERBAL_POS)
+            Environment.Exit(0);
     }
     protected void AdjustPositions(Contact[] contacts, uint numContacts, Real duration)
     {
