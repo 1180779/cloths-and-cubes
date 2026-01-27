@@ -17,8 +17,8 @@ public enum ContactResolverMode : uint
 public class ContactResolver
 {
     // Change this to switch between different contact resolution strategies
-    private const ContactResolverMode Mode = ContactResolverMode.SORTED_LIST;
-    private const bool VERBAL_POS = false;
+    private const ContactResolverMode Mode = ContactResolverMode.CONTACT_GRAPH;
+    private bool VERBAL_POS = false;
     private const bool VERBAL_VEL = false;
 
     private uint velocityIterations;
@@ -67,7 +67,7 @@ public class ContactResolver
         PrepareContacts(contacts, numContacts, duration);
         AdjustPositions(contacts, numContacts, duration);
         AdjustVelocities(contacts, numContacts, duration);
-
+    
         if(Mode == ContactResolverMode.SORTED_LIST)
             ClearInternals();
     }
@@ -100,7 +100,6 @@ public class ContactResolver
     private List<Contact> _orderedContactsVel = new();
     private List<Contact> _adjustedContactsVel = new();
     private int offset = 0;
-
     protected void PrepareContacts(Contact[] contacts, uint numContacts, Real duration)
     {
         for (var i = 0; i < numContacts; ++i)
@@ -659,6 +658,7 @@ public class ContactResolver
         Vector3[] angularChange = [new(), new()];
         Real max = 0;
         Vector3 deltaPosition = new();
+
         while (PositionIterationsUsed < positionIterations)
         {
             // Find biggest penetration
@@ -674,6 +674,7 @@ public class ContactResolver
             }
 
             if (index == numContacts) break;
+
 
             if (VERBAL_POS)
                 Console.WriteLine($"ROUND {PositionIterationsUsed + 1}");
@@ -724,6 +725,7 @@ public class ContactResolver
 
             PositionIterationsUsed++;
         }
+
         if(VERBAL_POS)
             Environment.Exit(0);
     }

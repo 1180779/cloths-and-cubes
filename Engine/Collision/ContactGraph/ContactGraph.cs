@@ -13,10 +13,10 @@ namespace Engine.Collision.ContactGraph
     {
         public Dictionary<int, ContactGraphComponent> Components = [];
         private Dictionary<RigidBody, int> _bodyToIdx = [];
-        private UnionFind _unionFind;
+        private UnionFind _unionFind = new();
+        private const bool PARALLEL_PROCESSING = true;
         public ContactGraph()
         {
-            _unionFind = new UnionFind();
         }
 
         public void AddContact(Contact contact)
@@ -29,6 +29,7 @@ namespace Engine.Collision.ContactGraph
             {
                 return;
             }
+
 
             // Get or create body IDs
             int idA = GetOrCreateBodyId(contact.Body[0]);
@@ -53,17 +54,16 @@ namespace Engine.Collision.ContactGraph
             }
             else
             {
-                // Merge components
-                _unionFind.Union(idA, idB);
-                int newRoot = _unionFind.Find(idA);
-
                 // Get or create components for both roots
                 var compA = GetOrCreateComponent(rootA);
                 var compB = GetOrCreateComponent(rootB);
 
+                int newRoot;
                 // Merge the smaller into the larger
                 if (compA.Bodies.Count >= compB.Bodies.Count)
                 {
+                    _unionFind.Union(rootA, rootB);
+                    newRoot = _unionFind.Find(idA);
                     compA += compB;
                     compA.AddContact(contact);
                     Components[newRoot] = compA;
@@ -71,6 +71,8 @@ namespace Engine.Collision.ContactGraph
                 }
                 else
                 {
+                    _unionFind.Union(rootB, rootA);
+                    newRoot = _unionFind.Find(idA);
                     compB += compA;
                     compB.AddContact(contact);
                     Components[newRoot] = compB;
@@ -115,11 +117,27 @@ namespace Engine.Collision.ContactGraph
 
         public void ResolvePositions(uint maxPositionIterations, float positionEpsilon)
         {
+            if(!PARALLEL_PROCESSING)
+            {
+                foreach (var comp in Components)
+                {
+                    comp.Value.ResolvePositions(maxPositionIterations, positionEpsilon);
+                }
+                return;
+            }
             Parallel.ForEach(Components, comp => comp.Value.ResolvePositions(maxPositionIterations, positionEpsilon));
         }
 
         public void ResolveVelocities(uint maxVelocityIterations, float velocityEpsilon, Real duration)
         {
+            if (!PARALLEL_PROCESSING)
+            {
+                foreach (var comp in Components)
+                {
+                    comp.Value.ResolveVelocities(maxVelocityIterations, velocityEpsilon, duration);
+                }
+                return;
+            }
             Parallel.ForEach(Components, comp => comp.Value.ResolveVelocities(maxVelocityIterations, velocityEpsilon, duration));
         }
 
