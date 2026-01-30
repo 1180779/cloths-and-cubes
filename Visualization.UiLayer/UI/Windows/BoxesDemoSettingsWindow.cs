@@ -104,8 +104,8 @@ public sealed class BoxesDemoSettingsWindow(
     {
         ImGui.SeparatorText("New cloth parameters");
 
-        ImGui.SliderInt("Size X", ref _sizeX, 1, 100);
-        ImGui.SliderInt("Size Y", ref _sizeY, 1, 100);
+        ImGui.SliderInt("Size X", ref _sizeX, 1, 30);
+        ImGui.SliderInt("Size Y", ref _sizeY, 1, 30);
 
         ImGui.SliderFloat("Spring Length", ref _springLength, 0.005f, 1.0f);
         ImGui.DragFloat("Spring Constant", ref _springConstant, 0.005f, 0.0f, 10_000.0f);

@@ -104,7 +104,7 @@ namespace Engine.Collision.ContactGraph
             nodeB.Edges.Add(edgeAB);
 
         }
-        private const bool VERBAL = false;
+        public bool VERBAL = false;
         public void ResolvePositions(uint maxPositionIterations, float positionEpsilon)
         {
             PriorityQueue<ContactGraphEdge, Real> edgeQueue = new PriorityQueue<ContactGraphEdge, Real>();
@@ -122,7 +122,8 @@ namespace Engine.Collision.ContactGraph
             while (edgeQueue.Count > 0 && PositionIterationsUsed < maxPositionIterations)
             {
                 var edge = edgeQueue.Dequeue();
-                if(edge.Data.Penetration < positionEpsilon)
+                if(VERBAL) Console.WriteLine($"Resolving contact at [{edge.Data.ContactPoint.X:0.##}, {edge.Data.ContactPoint.Z:0.##}] with penetration {edge.Data.Penetration:0.####}");
+                if (edge.Data.Penetration < positionEpsilon)
                 {
                     break;
                 }
@@ -196,7 +197,7 @@ namespace Engine.Collision.ContactGraph
                 //edge.NodeB?.Edges.Remove(edge);
             }
 
-            if(VERBAL)
+            if (VERBAL)
                 Environment.Exit(0);
         }
 

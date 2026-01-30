@@ -9,7 +9,7 @@ namespace Engine.Collision.ContactGraph
     public class UnionFind
     {
 
-        Dictionary<int, int> _rank = [];
+        //Dictionary<int, int> _rank = [];
         Dictionary<int, int> _parent = [];
 
         public UnionFind()
@@ -19,7 +19,7 @@ namespace Engine.Collision.ContactGraph
         public void MakeSet(int i)
         {
             _parent[i] = i;
-            _rank[i] = 0;
+            //_rank[i] = 0;
         }
 
         public int Find(int i)
@@ -36,19 +36,23 @@ namespace Engine.Collision.ContactGraph
             int rootJ = Find(j);
             if (rootI != rootJ)
             {
-                if (_rank[rootI] < _rank[rootJ])
-                {
-                    _parent[rootI] = rootJ;
-                }
-                else if (_rank[rootI] > _rank[rootJ])
-                {
-                    _parent[rootJ] = rootI;
-                }
-                else
-                {
-                    _parent[rootJ] = rootI;
-                    _rank[rootI]++;
-                }
+                _parent[rootJ] = rootI;
+                return;
+
+
+                //if (_rank[rootI] < _rank[rootJ])
+                //{
+                //    _parent[rootI] = rootJ;
+                //}
+                //else if (_rank[rootI] > _rank[rootJ])
+                //{
+                //    _parent[rootJ] = rootI;
+                //}
+                //else
+                //{
+                //    _parent[rootJ] = rootI;
+                //    _rank[rootI]++;
+                //}
             }
         }
     }
