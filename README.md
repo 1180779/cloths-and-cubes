@@ -9,11 +9,11 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 ## Screenshots
 
 ### Highlights
-<div class="row">
+<p float="left">
     <img src="./images/c1.png">
     <img src="./images/c2.png">
     <img src="./images/g3.png">
-</div>
+</p>
 
 ### Details
 
