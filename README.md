@@ -4,9 +4,18 @@ built in C# / OpenTK as a Bachelor's thesis project at the Warsaw University of
 Technology, Faculty of Mathematics and Information Science (2025–2026).
 
 > This is my fork of the team repository. See **[Authors](#authors)** for the
-> contribution split - my work covered the visualization and interaction layer.
+> contribution split &ndash; my work covered the visualization and interaction layer.
 
 ## Screenshots
+
+### Highlights
+<div class="row">
+    <img src="./images/c1.png">
+    <img src="./images/c2.png">
+    <img src="./images/g3.png">
+</div>
+
+### Details
 
 <details>
   <summary>Cloth interacting with rigid bodies</summary>
@@ -49,7 +58,7 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 **Interactive 3D editor**
 - PBR rendering pipeline based on Epic's *Real Shading in Unreal Engine 4*
 - Cascaded shadow maps
-- Transformation gizmos - translate / rotate / scale via mouse
+- Transformation gizmos &ndash; translate / rotate / scale via mouse
 - Ray-cast object picking with visual highlighting
 - Cloth-point pinning to cuboid corners (snap on proximity, release on distance)
 - Scene save / load, runtime addition of cuboids, spheres, and cloths
@@ -71,8 +80,8 @@ written thesis was a separate joint effort.
 | [Cam1lleFerros](https://github.com/Cam1lleFerros) | Cloth representation as a mass–spring grid, cloth display mesh, engine unit tests |
 
 ## References
-- Ian Millington, *Game Physics Engine Development* — engine foundation
-- Brian Karis, *Real Shading in Unreal Engine 4* — PBR shading model
+- Ian Millington, *Game Physics Engine Development* &ndash; engine foundation
+- Brian Karis, *Real Shading in Unreal Engine 4* &ndash; PBR shading model
 
 ## Build
 Open `Engine.sln` in JetBrains Rider or Visual Studio 2022 (with the .NET
