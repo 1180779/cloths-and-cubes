@@ -16,7 +16,7 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 </details>
 
 <details>
-  <summary>Highlight of the object that will be moved</summary>
+  <summary>Highlight of the selected object</summary>
     <img src="./images/s1.png">
     <img src="./images/s2.png">
     <img src="./images/s3.png">
@@ -24,7 +24,7 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 </details>
 
 <details>
-  <summary>Highlight of the selected object</summary>
+  <summary>Highlight of the object that will be moved</summary>
     <img src="./images/h1.png">
     <img src="./images/h2.png">
     <img src="./images/h3.png">
