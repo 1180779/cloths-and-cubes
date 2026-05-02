@@ -9,21 +9,22 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 ## Screenshots
 
 <details>
-  <summary>Cloth-rigid-body interaction</summary>
+  <summary>Cloth interacting with rigid bodies</summary>
     <img src="./images/c1.png">
     <img src="./images/c2.png">
     <img src="./images/c3.png">
 </details>
 
 <details>
-  <summary>Highlight of the object that will be moved; selection of cloth points</summary>
-    <img src="./images/g1.png">
-    <img src="./images/g2.png">
-    <img src="./images/g3.png">
+  <summary>Highlight of the object that will be moved</summary>
+    <img src="./images/s1.png">
+    <img src="./images/s2.png">
+    <img src="./images/s3.png">
+    <img src="./images/s4.png">
 </details>
 
 <details>
-  <summary>Gizmos</summary>
+  <summary>Highlight of the selected object</summary>
     <img src="./images/h1.png">
     <img src="./images/h2.png">
     <img src="./images/h3.png">
@@ -31,11 +32,10 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 </details>
 
 <details>
-  <summary>Selection highlight</summary>
-    <img src="./images/s1.png">
-    <img src="./images/s2.png">
-    <img src="./images/s3.png">
-    <img src="./images/s4.png">
+  <summary>Transformation gizmos</summary>
+    <img src="./images/g1.png">
+    <img src="./images/g2.png">
+    <img src="./images/g3.png">
 </details>
 
 ## Features
@@ -64,7 +64,7 @@ Technology, Faculty of Mathematics and Information Science (2025–2026).
 A 3-person Bachelor's thesis project. The table below covers code authorship; the
 written thesis was a separate joint effort.
 
-| Person | Main contribution |
+| Author | Main contribution |
 |---|---|
 | [1180779](https://github.com/1180779) *(this fork)* | Visualization & interaction layer - PBR rendering, cascaded shadow maps, transformation gizmos, ray-cast object picking with cloth-point pinning, scene save / load, ray-intersection unit tests |
 | [lowStakesDilemma](https://github.com/lowStakesDilemma) | Physics engine foundation, impulse-based contact resolver, BVH broad-phase, contact graph rework for performance, engine unit tests |
@@ -75,8 +75,9 @@ written thesis was a separate joint effort.
 - Brian Karis, *Real Shading in Unreal Engine 4* — PBR shading model
 
 ## Build
-Requires Visual Studio 2022 with the .NET desktop workload. Open `Engine.sln`,
-build the solution, and run the `Visualization.UiLayer` project.
+Open `Engine.sln` in JetBrains Rider or Visual Studio 2022 (with the .NET
+desktop workload), build the solution, and run the `Visualization.UiLayer`
+project.
 
 ## License
 Third-party dependency licenses are bundled under `Licenses/`.
